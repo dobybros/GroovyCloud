@@ -1,4 +1,4 @@
-package sdockerboot.gateway;//package sdockerboot.sdockerboot;
+package sdockerboot.container;//package sdockerboot.sdockerboot;
 
 import chat.utils.IPHolder;
 import com.dobybros.chat.handlers.ConsumeOfflineMessageHandler;
@@ -61,7 +61,7 @@ import java.util.*;
  * Description：
  */
 //@Component
-@Configuration
+//@Configuration
 //@PropertySource({"classpath:config/server_params.properties", "classpath:config/database.properties"})
 public class GatewayBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor {
     private String mongoHost;
@@ -104,7 +104,7 @@ public class GatewayBeanDefinitionRegistryPostProcessor implements BeanDefinitio
     private String dockerSslRpcPort;
 
     GatewayBeanDefinitionRegistryPostProcessor() {
-        InputStream inStream = GatewayBeanDefinitionRegistryPostProcessor.class.getClassLoader().getResourceAsStream("sdocker.properties");
+        InputStream inStream = GatewayBeanDefinitionRegistryPostProcessor.class.getClassLoader().getResourceAsStream("container.properties");
         InputStream appInStream = GatewayBeanDefinitionRegistryPostProcessor.class.getClassLoader().getResourceAsStream("application.properties");
         Properties prop = new Properties();
         Properties apppProp = new Properties();
@@ -192,7 +192,7 @@ public class GatewayBeanDefinitionRegistryPostProcessor implements BeanDefinitio
         httpsPortSchemeMap.put("type", "String");
         httpsSchemeContrutorList.add(httpsSchemeMap);
         httpsSchemeContrutorList.add(httpsPortSchemeMap);
-        registerBean(beanDefinitionRegistry, "httpsScheme", Scheme.class, httpsSchemeContrutorList, null, httpSchemeConstructorRefList, null);
+        registerBean(beanDefinitionRegistry, "httpsScheme", Scheme.class, httpsSchemeContrutorList, null, httpsSchemeConstructorRefList, null);
         Map refMap1 = new ManagedMap();
         Map refMap = new ManagedMap();
         refMap.put("https", new RuntimeBeanReference("httpsScheme"));
@@ -207,6 +207,8 @@ public class GatewayBeanDefinitionRegistryPostProcessor implements BeanDefinitio
         registerBean(beanDefinitionRegistry, "htttpParameters", MyHttpParameters.class, null, null, null, null);
         httpClientConstructorRefList.add("htttpParameters");
         registerBean(beanDefinitionRegistry, "httpClient", DefaultHttpClient.class, null, null, httpClientConstructorRefList, null);
+
+
         registerBean(beanDefinitionRegistry, "dockerStatusHelper", com.docker.storage.mongodb.MongoHelper.class, null, null, null, null);
         registerBean(beanDefinitionRegistry, "logsHelper", MongoHelper.class, null, null, null, null);
         registerBean(beanDefinitionRegistry, "configHelper", com.docker.storage.mongodb.MongoHelper.class, null, null, null, null);
@@ -226,6 +228,7 @@ public class GatewayBeanDefinitionRegistryPostProcessor implements BeanDefinitio
         fileAdapterRefMap.put("resourceHelper", "gridfsHelper");
         registerBean(beanDefinitionRegistry, "fileAdapter", GridFSFileHandler.class, null, fileAdapterRefMap, null, null);
 //mina
+
         registerBean(beanDefinitionRegistry, "upStreamAnnotationHandler", UpStreamAnnotationHandler.class, null, null, null, null);
         registerBean(beanDefinitionRegistry, "upstreamHandler", UpStreamHandler.class, null, null, null, null);
         Map customEditorConfigurerRefMap = new ManagedMap();
@@ -268,6 +271,7 @@ public class GatewayBeanDefinitionRegistryPostProcessor implements BeanDefinitio
         sslTcpIoAcceptorRefMap.put("handler", "upstreamHandler");
         sslTcpIoAcceptorRefMap.put("filterChainBuilder", "sslTcpFilterChainBuilder");
         registerBean(beanDefinitionRegistry, "sslTcpIoAcceptor", NioSocketAcceptorEx.class, null, sslTcpIoAcceptorRefMap, null, null);
+        //做到这
         registerBean(beanDefinitionRegistry, "webSocketCodecFactory", WebSocketCodecFactory.class, null, null, null, null);
         List<String> wsCodecFilterConstructorRefList = new ArrayList();
         wsCodecFilterConstructorRefList.add("webSocketCodecFactory");
@@ -282,6 +286,7 @@ public class GatewayBeanDefinitionRegistryPostProcessor implements BeanDefinitio
         wsIoAcceptorRefMap.put("handler", "upstreamHandler");
         wsIoAcceptorRefMap.put("filterChainBuilder", "wsFilterChainBuilder");
         registerBean(beanDefinitionRegistry, "wsIoAcceptor", NioSocketAcceptorEx.class, null, wsIoAcceptorRefMap, null, null);
+
         registerBean(beanDefinitionRegistry, "dockerStatusService", DockerStatusServiceImpl.class, null, null, null, null);
         Map bulkLogQueueServiceRefMap = new HashMap();
         bulkLogQueueServiceRefMap.put("dao", "bulkLogDAO");
@@ -377,6 +382,9 @@ public class GatewayBeanDefinitionRegistryPostProcessor implements BeanDefinitio
         clientConnectionManager.setDestroyMethodName("shutdown");
         MutablePropertyValues clientConnectionManagerPropertyValues = clientConnectionManager.getPropertyValues();
         clientConnectionManagerPropertyValues.addPropertyValue("maxTotal", "20");
+
+
+
         BeanDefinition dockerStatusHelper = configurableListableBeanFactory.getBeanDefinition("dockerStatusHelper");
         dockerStatusHelper.setInitMethodName("init");
         MutablePropertyValues dockerStatusHelperPropertyValues = dockerStatusHelper.getPropertyValues();

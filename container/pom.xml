@@ -55,7 +55,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>sdockerboot.gateway.GatewayApplication</mainClass>
+                            <mainClass>sdockerboot.container.GatewayApplication</mainClass>
                             <classpathPrefix>lib/</classpathPrefix>
                         </manifest>
                     </archive>
