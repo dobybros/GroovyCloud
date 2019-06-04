@@ -97,6 +97,8 @@ public class CommonBean {
         scriptManager.setDockerStatusService(instance.getDockerStatusService());
         scriptManager.setFileAdapter(instance.getFileAdapter());
         scriptManager.setHotDeployment(Boolean.valueOf(instance.getHotDeployment()));
+        scriptManager.setServerType(instance.getServerType());
+        scriptManager.setServiceVersionService(instance.getServiceVersionService());
         return scriptManager;
     }
 

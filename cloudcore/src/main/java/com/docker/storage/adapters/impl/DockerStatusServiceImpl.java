@@ -38,6 +38,15 @@ public class DockerStatusServiceImpl implements DockerStatusService {
 			throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_DELETE_FAILED, "Delete online server failed, " + e.getMessage());
 		}
 	}
+	@Override
+	public void deleteDockerStatusByServerType(String serverType) throws CoreException {
+		try {
+			DeleteResult result = dockerStatusDAO.delete(new Document().append(DockerStatus.FIELD_DOCKERSTATUS_SERVERTYPE, serverType));
+		} catch (DBException e) {
+			e.printStackTrace();
+			throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_DELETE_FAILED, "Delete online server failed, " + e.getMessage());
+		}
+	}
 
 	@Override
 	public void addDockerStatus(DockerStatus serverStatus)

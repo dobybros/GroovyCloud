@@ -89,4 +89,7 @@ public interface ChatErrorCodes {
 	public static final int ERROR_SDOCKER_QUERY_FAILED = CODE_CORE + 201;
 	public static final int ERROR_GET_FAILED = CODE_CORE + 202;
 	public static final int ERROR_NO_REMOTESERVERS= CODE_CORE + 203;
+	public static final int ERROR_NO_BASERUNTIME= CODE_CORE + 204;
+	public static final int ERROR_NO_GROOVYFILE= CODE_CORE + 205;
+	public static final int ERROR_DISCOVERY_NOTFOUND= CODE_CORE + 206;
 }

@@ -210,6 +210,11 @@ public class RequestHolder {
 				GroovyRuntime groovyRuntime = interceptor.getGroovyRuntime();
 				if(groovyRuntime != null) {
 					try {
+						GrayReleased grayReleased = new GrayReleased();
+						if(!StringUtils.isEmpty(GrayReleased.getCookieValue(request.getCookies()))){
+							grayReleased.setType(GrayReleased.getCookieValue(request.getCookies()));
+						}
+						GrayReleased.grayReleasedThreadLocal.set(grayReleased);
 						theInterceptor = interceptor.getObject();
 						if(theInterceptor != null) {
 							theInterceptor.invokeInternal(this);
@@ -243,11 +248,6 @@ public class RequestHolder {
 
 	public Object invokeMethod(String groovyMethod,
 			GroovyObjectEx<GroovyServlet> servletObj) throws CoreException {
-		GrayReleased grayReleased = new GrayReleased();
-		if(!StringUtils.isEmpty(GrayReleased.getCookieValue(request.getCookies()))){
-			grayReleased.setType(GrayReleased.getCookieValue(request.getCookies()));
-		}
-		GrayReleased.grayReleasedThreadLocal.set(grayReleased);
 		//TODO annotation
 		String parentTrackId = request.getHeader("X-Track-Id");
 		String trackId = ObjectId.get().toString();

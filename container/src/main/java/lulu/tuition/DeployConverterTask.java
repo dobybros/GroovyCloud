@@ -7,7 +7,7 @@ public class DeployConverterTask {
     public static void main(String[] args) throws Exception {
         String servicePath = TuitionConstants.PATH + "ConverterTask";
         String dockerName = TuitionConstants.DOCKERNAME;
-        String serviceName = "converter";
+        String serviceName = "otconverttask";
         String gridfsHost = TuitionConstants.GRIDFSHOST;
         String version = "1";
         String prefix = TuitionConstants.PREFIX;

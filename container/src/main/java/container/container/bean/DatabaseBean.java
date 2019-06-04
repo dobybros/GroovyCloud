@@ -6,10 +6,7 @@ import com.docker.storage.adapters.impl.LansServiceImpl;
 import com.docker.storage.adapters.impl.SDockersServiceImpl;
 import com.docker.storage.adapters.impl.ServersServiceImpl;
 import com.docker.storage.mongodb.MongoHelper;
-import com.docker.storage.mongodb.daos.DockerStatusDAO;
-import com.docker.storage.mongodb.daos.LansDAO;
-import com.docker.storage.mongodb.daos.SDockerDAO;
-import com.docker.storage.mongodb.daos.ServersDAO;
+import com.docker.storage.mongodb.daos.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -63,6 +60,12 @@ public class DatabaseBean{
         DockerStatusDAO dockerStatusDAO = instance.getDockerStatusDAO();
         dockerStatusDAO.setMongoHelper(instance.getDockerStatusHelper());
         return dockerStatusDAO;
+    }
+    @Bean
+    public ServiceVersionDAO serviceVersionDAO(){
+        ServiceVersionDAO serviceVersionDAO = instance.getServiceVersionDAO();
+        serviceVersionDAO.setMongoHelper(instance.getDockerStatusHelper());
+        return serviceVersionDAO;
     }
 //    @Bean(initMethod = "init")
     @Bean

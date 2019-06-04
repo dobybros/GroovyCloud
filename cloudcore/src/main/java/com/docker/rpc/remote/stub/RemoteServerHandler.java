@@ -98,7 +98,7 @@ public class RemoteServerHandler {
             this.remoteServers.setServers(servers);
             calculate();
         } else {
-            throw new CoreException(ChatErrorCodes.ERROR_LANSERVERS_NOSERVERS, "RemoteService " + service + " doesn't be found!");
+            throw new CoreException(ChatErrorCodes.ERROR_LANSERVERS_NOSERVERS, "RemoteServers doesn't be found! service:" + service);
         }
         touch();
         if (this.remoteServers.getSortedServers().isEmpty())
@@ -133,6 +133,7 @@ public class RemoteServerHandler {
                     port = server.getRpcPort();
                 }
                 request.setService(service + "_v" + server.getVersion());
+                LoggerEx.info(TAG, "The service: " + service + " ,the version being used is " + server.getVersion());
                 if (ip != null && port != null) {
                     RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     MethodResponse response = (MethodResponse) clientAdapter.call(request);

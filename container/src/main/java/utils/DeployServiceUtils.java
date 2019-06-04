@@ -187,7 +187,7 @@ public class DeployServiceUtils {
         if (version != null) {
             serviceName = serviceName + "_v" + version;
         }
-        doZip(new File(FilenameUtils.separatorsToUnix(root.getAbsolutePath()) + (prefix != null ? "/" + prefix : "") + "/" + dockerName + "/" + serviceName + "/1.zip"), deploy);
+        doZip(new File(FilenameUtils.separatorsToUnix(root.getAbsolutePath()) + (prefix != null ? "/" + prefix : "") + "/" + serviceName + "/1.zip"), deploy);
 //        clean(deploy, ".zip");
         FileUtils.deleteQuietly(deploy);
 
@@ -224,8 +224,6 @@ public class DeployServiceUtils {
                 String filePath = FilenameUtils.separatorsToUnix(file.getAbsolutePath());
                 String dirPath = FilenameUtils.separatorsToUnix(directory.getAbsolutePath());
                 String thePath = filePath.substring(dirPath.length());
-//				System.out.println("file " + thePath);
-
                 FileAdapter.PathEx path = new FileAdapter.PathEx(thePath);
                 fileHandler.saveFile(FileUtils.openInputStream(new File(filePath)), path, FileAdapter.FileReplaceStrategy.REPLACE);
 

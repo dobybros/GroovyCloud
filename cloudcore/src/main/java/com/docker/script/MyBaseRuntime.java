@@ -2,12 +2,15 @@ package com.docker.script;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import com.alibaba.fastjson.parser.ParserConfig;
+import com.alibaba.fastjson.util.TypeUtils;
 import com.docker.annotations.*;
 import com.docker.data.Lan;
 import com.docker.rpc.remote.skeleton.ServiceSkeletonAnnotationHandler;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.annotations.ServiceNotFound;
 import com.docker.script.annotations.ServiceNotFoundListener;
+import com.docker.script.i18n.I18nHandler;
 import com.docker.server.OnlineServer;
 import com.docker.storage.adapters.LansService;
 import com.docker.utils.SpringContextUtil;
@@ -15,6 +18,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.FieldInjectionListener;
 import script.groovy.runtime.GroovyRuntime;
 import script.groovy.runtime.classloader.ClassHolder;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
@@ -23,6 +27,7 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -104,6 +109,7 @@ public class MyBaseRuntime extends BaseRuntime {
 	@Override
 	public void prepare(String service, Properties properties, String localScriptPath) {
 		super.prepare(service, properties, localScriptPath);
+		fieldInjection(this);
 		ServiceSkeletonAnnotationHandler serviceSkeletonAnnotationHandler = new ServiceSkeletonAnnotationHandler();
 		serviceSkeletonAnnotationHandler.setService(getServiceName());
 		serviceSkeletonAnnotationHandler.setServiceVersion(getServiceVersion());
@@ -236,7 +242,77 @@ public class MyBaseRuntime extends BaseRuntime {
 	public void setServiceStubManager(ServiceStubManager serviceStubManager) {
 		this.serviceStubManager = serviceStubManager;
 	}
+	private void fieldInjection(MyBaseRuntime baseRuntime){
+		baseRuntime.addFieldInjectionListener(new FieldInjectionListener<ServiceBean>() {
+				public Class<ServiceBean> annotationClass() {
+					return ServiceBean.class;
+				}
 
+				@Override
+				public void inject(ServiceBean annotation, Field field, Object obj) {
+					String serviceName = annotation.name();
+					if (!StringUtils.isBlank(serviceName)) {
+						baseRuntime.prepareServiceStubProxy();
+						Object serviceStub = baseRuntime.getServiceStubManager().getService(serviceName, field.getType());
+						if (!field.isAccessible())
+							field.setAccessible(true);
+						try {
+							field.set(obj, serviceStub);
+						} catch (Throwable e) {
+							e.printStackTrace();
+							LoggerEx.error(TAG, "Set field " + field.getName() + " for service " + serviceName + " class " + field.getType() + " in class " + obj.getClass());
+						}
+					}
+				}
+			});
+
+
+			baseRuntime.addFieldInjectionListener(new FieldInjectionListener<ConfigProperty>() {
+				public Class<ConfigProperty> annotationClass() {
+					return ConfigProperty.class;
+				}
+
+				@Override
+				public void inject(ConfigProperty annotation, Field field, Object obj) {
+					String key = annotation.name();
+					if (!StringUtils.isBlank(key)) {
+						Properties properties = baseRuntime.getConfig();
+						if (properties == null)
+							return;
+						String value = properties.getProperty(key);
+						if (value == null)
+							return;
+						if (!field.isAccessible())
+							field.setAccessible(true);
+						try {
+							field.set(obj, TypeUtils.cast(value, field.getType(), ParserConfig.getGlobalInstance()));
+						} catch (Throwable e) {
+							e.printStackTrace();
+							LoggerEx.error(TAG, "Set field " + field.getName() + " for config key " + key + " class " + field.getType() + " in class " + obj.getClass());
+						}
+					}
+				}
+			});
+
+			baseRuntime.addFieldInjectionListener(new FieldInjectionListener<I18nBean>() {
+				public Class<I18nBean> annotationClass() {
+					return I18nBean.class;
+				}
+
+				@Override
+				public void inject(I18nBean annotation, Field field, Object obj) {
+					I18nHandler i18nHandler = baseRuntime.getI18nHandler();
+					if (!field.isAccessible())
+						field.setAccessible(true);
+					try {
+						field.set(obj, TypeUtils.cast(i18nHandler, field.getType(), ParserConfig.getGlobalInstance()));
+					} catch (Throwable e) {
+						e.printStackTrace();
+						LoggerEx.error(TAG, "Set field " + field.getName() + " for i18nhandler key " + i18nHandler + " class " + field.getType() + " in class " + obj.getClass());
+					}
+				}
+			});
+		}
     public BaseRuntime getRuntimeWhenNotFound(String service) {
         serviceNotFoundLock.readLock().lock();
         try {

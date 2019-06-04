@@ -1,5 +1,9 @@
 package com.docker.data;
 
+import com.alibaba.fastjson.JSONObject;
+import org.bson.Document;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -43,5 +47,11 @@ public class ServiceVersion {
 
     public void set_id(String _id) {
         this._id = _id;
+    }
+    public void fromDocument(Document dbObj) {
+        _id = dbObj.getString("_id");
+        type = dbObj.getString("type");
+        serverType = (List<String>) dbObj.get("serverType");
+        serviceVersions = (Map<String, String>)dbObj.get("serviceVersions");
     }
 }

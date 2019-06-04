@@ -127,6 +127,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		addClassAnnotationHandler(new ServerLifeCircleHandler());
 		addClassAnnotationHandler(new JsonFilterFactory());
 		addClassAnnotationHandler(new RequestPermissionHandler());
+
 	}
 
 	@Override

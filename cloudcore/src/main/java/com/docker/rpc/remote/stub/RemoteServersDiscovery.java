@@ -1,5 +1,6 @@
 package com.docker.rpc.remote.stub;
 
+import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.json.Result;
 import chat.logs.LoggerEx;
@@ -25,10 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RemoteServersDiscovery {
     private String host;
-    private String fromService;
-    private List<ServiceVersion> serviceVersions = null;
-    Map<String, List<RemoteServers.Server>> theServers = null;
-    List theServersList = new ArrayList();
+    private List<ServiceVersion> serviceVersions = new ArrayList<>();
+    Map<String, List<RemoteServers.Server>> theServersFinalMap = new ConcurrentHashMap();
     private static final String TAG = RemoteServersDiscovery.class.getSimpleName();
 
     public RemoteServersDiscovery(String host) {
@@ -37,40 +36,18 @@ public class RemoteServersDiscovery {
         } else {
             this.host = "http://" + host;
         }
-        TimerEx.schedule(discoveryServiceVersions, 1, 3000);
+        getCommonServiceversions();
+//        if(serviceVersions == null){
+//            TimerEx.schedule(discoveryServiceVersions, 1, 3000);
+//        }
     }
 
-    private TimerTaskEx discoveryServiceVersions = new TimerTaskEx() {
-        @Override
-        public void execute() {
-            ServiceVersionResult result = (ServiceVersionResult) ScriptHttpUtils.get(host + "/rest/discovery/serviceversion", ServiceVersionResult.class);
-            if (result != null) {
-                serviceVersions = result.getData();
-                if (serviceVersions != null) {
-                    for (ServiceVersion serviceVersion : serviceVersions) {
-                        serviceVersion.setServerType(Arrays.asList(serviceVersion.getServerType().get(0).substring(1, serviceVersion.getServerType().get(0).length() - 1).split(",")));
-                    }
-                    this.cancel();
-                    TimerEx.schedule(discoveryServersTask, 10, 10000);
-                }
-            }
-        }
-    };
-    private TimerTaskEx discoveryServersTask = new TimerTaskEx() {
-        @Override
-        public void execute() {
-            ServersResult result = (ServersResult) ScriptHttpUtils.post(JSON.toJSONString(serviceVersions), host + "/rest/discovery/serviceservers", ServersResult.class);
-            if (result != null) {
-                theServers = result.getData();
-                if(theServers != null){
-                    theServersList.add(theServers);
-                    if (theServersList.size() > 2) {
-                        theServersList.remove(0);
-                    }
-                }
-            }
-        }
-    };
+//    private TimerTaskEx discoveryServiceVersions = new TimerTaskEx() {
+//        @Override
+//        public void execute() {
+//            getCommonServiceversions();
+//        }
+//    };
 
     public static class ServersResult extends Result<Map<String, List<RemoteServers.Server>>> {
 
@@ -96,67 +73,100 @@ public class RemoteServersDiscovery {
                 type = grayReleased.getType();
             }
         }
-        String version = null;
-        List serverTypes = null;
-        String defaultVersion = null;
-        for (ServiceVersion serviceVersion : serviceVersions) {
-            if(grayReleased != null){
-                if(type.equals(GrayReleased.defaultVersion)){
-                    defaultVersion = serviceVersion.getServiceVersions().get(service);
+        Integer version = null;
+        List finalServerTypes = new ArrayList();
+        Integer defaultVersion = null;
+        if(serviceVersions.isEmpty()){
+            getCommonServiceversions();
+        }
+        if (!serviceVersions.isEmpty()) {
+            for (ServiceVersion serviceVersion : serviceVersions) {
+                //如果type里边的service没有指定版本,就去default里找默认版本
+                if (!type.equals(GrayReleased.defaultVersion)) {
+                    if(serviceVersion.getType().equals(GrayReleased.defaultVersion)){
+                        if (defaultVersion == null) {
+                            defaultVersion = Integer.valueOf(serviceVersion.getServiceVersions().get(service));
+                        } else {
+                            if (Integer.valueOf(serviceVersion.getServiceVersions().get(service)) > defaultVersion) {
+                                defaultVersion = Integer.valueOf(serviceVersion.getServiceVersions().get(service));
+                            }
+                        }
+                    }
                 }
-            }
-            if (type.equals(serviceVersion.getType())) {
-                if (serviceVersion.getServiceVersions() != null) {
-                    version = serviceVersion.getServiceVersions().get(service);
-                    serverTypes = serviceVersion.getServerType();
+                if (type.equals(serviceVersion.getType())) {
+                    if (serviceVersion.getServiceVersions() != null) {
+                        if(serviceVersion.getServiceVersions().get(service) != null){
+                            //如果不同的serverType中有相同的service，但是service版本不一样，就选择版本更大的
+                            if (version == null) {
+                                version = Integer.valueOf(serviceVersion.getServiceVersions().get(service));
+                            } else {
+                                if (Integer.valueOf(serviceVersion.getServiceVersions().get(service)) > version) {
+                                    version = Integer.valueOf(serviceVersion.getServiceVersions().get(service));
+                                }
+                            }
+                        }
+                        List serverTypes = serviceVersion.getServerType();
+                        if(serverTypes != null){
+                            for (Object serverType : serverTypes) {
+                                if (!finalServerTypes.contains(serverType)) {
+                                    finalServerTypes.add(serverType);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
         List<String> serviceServerList = new ArrayList<>();
         List<String> defaultServiceServerList = null;
-        if (version != null && serverTypes != null && serverTypes.size() > 0) {
-            for (int i = 0; i < serverTypes.size(); i++) {
-                if (!serviceServerList.contains(service + "_" + version + "_" + serverTypes.get(i))) {
-                    serviceServerList.add(service + "_" + version + "_" + serverTypes.get(i));
+        if (finalServerTypes != null && finalServerTypes.size() > 0) {
+            if(version != null){
+                for (int i = 0; i < finalServerTypes.size(); i++) {
+                    if (!serviceServerList.contains(service + "_" + version.toString() + "_" + finalServerTypes.get(i))) {
+                        serviceServerList.add(service + "_" + version.toString() + "_" + finalServerTypes.get(i));
+                    }
                 }
-            }
-            //如果type里边的service没有指定版本,就去default里找默认版本
-            if(grayReleased != null){
-                defaultServiceServerList = new ArrayList<>();
-                for (int i = 0; i < serverTypes.size(); i++) {
-                    if (!defaultServiceServerList.contains(service + "_" + defaultVersion + "_" + serverTypes.get(i))) {
-                        defaultServiceServerList.add(service + "_" + defaultVersion + "_" + serverTypes.get(i));
+            }else {
+                //如果type里边的service没有指定版本,就去default里找默认版本
+                if (!type.equals(GrayReleased.defaultVersion)) {
+                    defaultServiceServerList = new ArrayList<>();
+                    if(finalServerTypes != null){
+                        for (int i = 0; i < finalServerTypes.size(); i++) {
+                            if (!defaultServiceServerList.contains(service + "_" + defaultVersion.toString() + "_" + finalServerTypes.get(i))) {
+                                defaultServiceServerList.add(service + "_" + defaultVersion.toString() + "_" + finalServerTypes.get(i));
+                            }
+                        }
                     }
                 }
             }
         }
         List<RemoteServers.Server> serverList = null;
-        if(theServersList.size() > 0){
-            Map theServersMap = (Map) theServersList.get(theServersList.size() - 1);
-            if (theServersMap != null && theServersMap.size() > 0) {
-                serverList = new ArrayList<>();
-                //server重复性检查
-                List<String> list = new ArrayList();
-                for (String serviceVersion : serviceServerList) {
-                    List<RemoteServers.Server> servers = theServers.get(serviceVersion);
+        if(theServersFinalMap.isEmpty()){
+            getTheServersFinalMap();
+        }
+        if (theServersFinalMap.size() > 0) {
+            serverList = new ArrayList<>();
+            //server重复性检查
+            List<String> list = new ArrayList();
+            for (String serviceVersion : serviceServerList) {
+                List<RemoteServers.Server> servers = theServersFinalMap.get(serviceVersion);
+                if (servers != null) {
+                    for (int i = 0; i < servers.size(); i++) {
+                        if (!list.contains(servers.get(i).getServer())) {
+                            list.add(servers.get(i).getServer());
+                            serverList.add(servers.get(i));
+                        }
+                    }
+                }
+            }
+            if (serverList.isEmpty() && !type.equals(GrayReleased.defaultVersion)) {
+                for (String serviceVersion : defaultServiceServerList) {
+                    List<RemoteServers.Server> servers = theServersFinalMap.get(serviceVersion);
                     if (servers != null) {
                         for (int i = 0; i < servers.size(); i++) {
                             if (!list.contains(servers.get(i).getServer())) {
                                 list.add(servers.get(i).getServer());
                                 serverList.add(servers.get(i));
-                            }
-                        }
-                    }
-                }
-                if(serverList.isEmpty() && grayReleased != null){
-                    for (String serviceVersion : defaultServiceServerList) {
-                        List<RemoteServers.Server> servers = theServers.get(serviceVersion);
-                        if (servers != null) {
-                            for (int i = 0; i < servers.size(); i++) {
-                                if (!list.contains(servers.get(i).getServer())) {
-                                    list.add(servers.get(i).getServer());
-                                    serverList.add(servers.get(i));
-                                }
                             }
                         }
                     }
@@ -171,9 +181,41 @@ public class RemoteServersDiscovery {
             if (map.size() > 0) {
                 return map;
             }
-        }else {
+        } else {
             LoggerEx.error(TAG, "The service: " + service + " has no server,cant invoke!");
         }
         return null;
+    }
+    private synchronized void getCommonServiceversions(){
+        synchronized (serviceVersions){
+            if(serviceVersions.isEmpty()){
+                ServiceVersionResult result = (ServiceVersionResult) ScriptHttpUtils.get(host + "/rest/discovery/serviceversion", ServiceVersionResult.class);
+                if (result != null) {
+                    serviceVersions = result.getData();
+                    if (!serviceVersions.isEmpty()) {
+                        for (ServiceVersion serviceVersion : serviceVersions) {
+                            serviceVersion.setServerType(Arrays.asList(serviceVersion.getServerType().get(0).substring(1, serviceVersion.getServerType().get(0).length() - 1).split(",")));
+                        }
+//                        discoveryServiceVersions.cancel();
+                        TimerEx.schedule(discoveryServersTask, 10, 10000);
+                    }
+                }
+            }
+        }
+    }
+    private TimerTaskEx discoveryServersTask = new TimerTaskEx() {
+        @Override
+        public void execute() {
+            getTheServersFinalMap();
+        }
+    };
+    private void getTheServersFinalMap(){
+        ServersResult result = (ServersResult) ScriptHttpUtils.post(JSON.toJSONString(serviceVersions), host + "/rest/discovery/serviceservers", ServersResult.class);
+        if (result != null) {
+            Map<String, List<RemoteServers.Server>> theServers = result.getData();
+            if (theServers != null) {
+                theServersFinalMap = theServers;
+            }
+        }
     }
 }

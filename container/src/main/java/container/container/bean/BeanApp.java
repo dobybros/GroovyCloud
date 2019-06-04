@@ -22,11 +22,9 @@ import com.docker.rpc.remote.stub.RemoteServersDiscovery;
 import com.docker.script.ScriptManager;
 import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
 import com.docker.storage.adapters.impl.ServersServiceImpl;
+import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
 import com.docker.storage.mongodb.MongoHelper;
-import com.docker.storage.mongodb.daos.DockerStatusDAO;
-import com.docker.storage.mongodb.daos.LansDAO;
-import com.docker.storage.mongodb.daos.SDockerDAO;
-import com.docker.storage.mongodb.daos.ServersDAO;
+import com.docker.storage.mongodb.daos.*;
 import com.docker.utils.SpringContextUtil;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
@@ -72,6 +70,7 @@ public class BeanApp extends ConfigApp{
     private ServersDAO serversDAO;
     private LansDAO lansDAO;
     private SDockerDAO sdockerDAO;
+    private ServiceVersionDAO serviceVersionDAO;
 //    private BulkLogDAO bulkLogDAO;
     private GridFSFileHandler fileAdapter;
     private MongoHelper gridfsHelper;
@@ -115,6 +114,22 @@ public class BeanApp extends ConfigApp{
     private com.docker.rpc.impl.RMIServerImplWrapper dockerRpcServerSsl;
     private RMIServerHandler dockerRpcServerAdapterSsl;
     private ServersServiceImpl serversService;
+    private ServiceVersionServiceImpl serviceVersionService;
+
+    public synchronized ServiceVersionServiceImpl getServiceVersionService() {
+        if(serviceVersionService == null){
+            serviceVersionService = new ServiceVersionServiceImpl();
+            serviceVersionService.setServiceVersionDAO(getServiceVersionDAO());
+        }
+        return serviceVersionService;
+    }
+
+    public synchronized ServiceVersionDAO getServiceVersionDAO() {
+        if(serviceVersionDAO == null){
+            serviceVersionDAO = new ServiceVersionDAO();
+        }
+        return serviceVersionDAO;
+    }
 
     public synchronized ServersServiceImpl getServersService() {
         if(serversService == null){

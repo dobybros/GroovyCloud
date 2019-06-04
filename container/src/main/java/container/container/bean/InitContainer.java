@@ -9,10 +9,7 @@ import com.docker.onlineserver.OnlineServerWithStatus;
 import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.script.ScriptManager;
 import com.docker.storage.mongodb.MongoHelper;
-import com.docker.storage.mongodb.daos.DockerStatusDAO;
-import com.docker.storage.mongodb.daos.LansDAO;
-import com.docker.storage.mongodb.daos.SDockerDAO;
-import com.docker.storage.mongodb.daos.ServersDAO;
+import com.docker.storage.mongodb.daos.*;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -34,6 +31,8 @@ public class InitContainer implements CommandLineRunner{
     MongoHelper configHelper;
     @Autowired
     DockerStatusDAO dockerStatusDAO;
+    @Autowired
+    ServiceVersionDAO serviceVersionDAO;
     @Autowired
     ServersDAO serversDAO;
     @Autowired
@@ -69,6 +68,7 @@ public class InitContainer implements CommandLineRunner{
         dockerStatusHelper.init();
         configHelper.init();
         dockerStatusDAO.init();
+        serviceVersionDAO.init();
         serversDAO.init();
         lansDAO.init();
         sDockerDAO.init();
