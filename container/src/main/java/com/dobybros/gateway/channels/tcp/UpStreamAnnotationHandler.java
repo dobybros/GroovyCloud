@@ -6,6 +6,7 @@ import com.dobybros.chat.binary.data.Data;
 import com.dobybros.gateway.channels.msgs.MessageReceivedListener;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
@@ -50,8 +51,7 @@ public class UpStreamAnnotationHandler extends ClassAnnotationHandler {
 						Class<? extends Data> dataClass = messageReceivedAnnotation.dataClass();
 						Byte type = messageReceivedAnnotation.type();
 						if (dataClass != null && type != null) {
-							GroovyObjectEx<MessageReceivedListener> messageReceivedObj = groovyRuntime
-									.create(groovyClass);
+							GroovyObjectEx<MessageReceivedListener> messageReceivedObj = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 							if (messageReceivedObj != null) {
 								uriLogs.append("MessageReceivedListener " + dataClass + "#" + groovyClass + "\r\n");
 								newMessageReceivedMap.put(type, messageReceivedObj);

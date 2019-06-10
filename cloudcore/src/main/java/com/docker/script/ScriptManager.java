@@ -53,6 +53,7 @@ public class ScriptManager implements ShutdownListener {
     private ConcurrentHashMap<String, BaseRuntime> scriptRuntimeMap = new ConcurrentHashMap<>();
     private Class<?> baseRuntimeClass;
     boolean isShutdown = false;
+    boolean isLoaded = false;
 
     public static final String SERVICE_NOTFOUND = "servicenotfound";
     public static final Boolean DELETELOCAL = false;
@@ -71,12 +72,20 @@ public class ScriptManager implements ShutdownListener {
             TimerEx.schedule(new TimerTaskEx() {
                 @Override
                 public void execute() {
-                    synchronized (ScriptManager.this) {
-                        if (!isShutdown)
-                            reload();
+                    if(!isLoaded){
+                        synchronized (ScriptManager.this) {
+                            if (!isShutdown && !isLoaded)
+                               new Thread(new Runnable() {
+                                   @Override
+                                   public void run() {
+                                        reload();
+                                   }
+                               }).start();
+
+                        }
                     }
                 }
-            }, 5000, TimeUnit.SECONDS.toMillis(10));
+            }, 5000L, 10000L);
         }else {
             reload();
         }
@@ -126,6 +135,7 @@ public class ScriptManager implements ShutdownListener {
 
     private void reload() {
         try {
+            isLoaded = true;
             List<String> serviceVersionFinalList = getServiceVersions();
             if (serviceVersionFinalList != null) {
                 Set<String> remoteServices = new HashSet<>();
@@ -327,6 +337,8 @@ public class ScriptManager implements ShutdownListener {
             e.printStackTrace();
             LoggerEx.error(TAG, "reload failed, " + e.getMessage());
             System.exit(1);
+        }finally {
+            isLoaded = false;
         }
 
     }

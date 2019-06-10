@@ -15,6 +15,7 @@ import org.apache.commons.lang.StringUtils;
 
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 import script.groovy.servlet.annotation.ControllerMapping;
@@ -222,8 +223,7 @@ public class GroovyServletManager extends ClassAnnotationHandler {
 			for (String key : keys) {
 				Class<?> groovyClass = annotatedClassMap.get(key);
 				RequestURI requestUri = null;
-				GroovyObjectEx<GroovyServlet> groovyServlet = groovyRuntime
-						.create(groovyClass);
+				GroovyObjectEx<GroovyServlet> groovyServlet = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 				
 //					Class<GroovyServlet> groovyClass = groovyServlet.getGroovyClass();
 				if(groovyClass != null) {
@@ -235,8 +235,7 @@ public class GroovyServletManager extends ClassAnnotationHandler {
 						if(clazz == null || clazz.equals(Object.class)) {
 							String interceptClass = requestIntercepting.interceptClass();
 							if(!StringUtils.isBlank(interceptClass)) {
-								groovyInterceptor = groovyRuntime
-										.create(interceptClass);
+								groovyInterceptor = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(interceptClass);
 							}
 						} else {
 							groovyInterceptor = groovyRuntime

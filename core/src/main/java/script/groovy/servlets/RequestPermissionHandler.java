@@ -8,6 +8,7 @@ import java.util.Set;
 
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 import script.groovy.servlet.annotation.RequestPermission;
@@ -47,7 +48,7 @@ public class RequestPermissionHandler extends ClassAnnotationHandler {
 			for (String key : keys) {
 				if(intercepter == null) {
 					Class<?> groovyClass = annotatedClassMap.get(key);
-					intercepter = groovyRuntime.create(groovyClass);
+					intercepter = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 					
 					uriLogs.append("Mapped " + key + " | " + groovyClass + " to request permission intercepter." + "\r\n");
 					servletManager.setPermissionIntercepter(intercepter);

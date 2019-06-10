@@ -26,7 +26,7 @@ public class GroovyRedeployMainHandler extends ClassAnnotationHandler {
 			ConcurrentHashSet<GroovyObjectEx> newRedeploySet = new ConcurrentHashSet<>();
 			Collection<Class<?>> values = annotatedClassMap.values();
 			for(Class<?> groovyClass : values) {
-				GroovyObjectEx<?> groovyObj = getGroovyRuntime().create(groovyClass);
+				GroovyObjectEx<?> groovyObj = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 				try {
 					groovyObj.invokeRootMethod("main");
 				} catch (Throwable t) {

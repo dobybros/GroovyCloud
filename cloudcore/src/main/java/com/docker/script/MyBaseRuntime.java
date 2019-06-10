@@ -14,6 +14,7 @@ import com.docker.script.i18n.I18nHandler;
 import com.docker.server.OnlineServer;
 import com.docker.storage.adapters.LansService;
 import com.docker.utils.SpringContextUtil;
+import groovy.lang.GroovyObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import script.groovy.object.GroovyObjectEx;
@@ -335,5 +336,14 @@ public class MyBaseRuntime extends BaseRuntime {
 	public String getRemoteServiceHost() {
 		return remoteServiceHost;
 	}
-
+	public void injectBean(Object obj){
+		if(obj instanceof GroovyObject){
+			try {
+				GroovyObjectEx.fillGroovyObject((GroovyObject) obj, this);
+			} catch (IllegalAccessException e) {
+				LoggerEx.error(TAG, "fillGroovyObject " + obj + " failed, " + e.getMessage());
+				e.printStackTrace();
+			}
+		}
+	}
 }

@@ -93,7 +93,7 @@ public class ServerLifeCircleHandler extends ClassAnnotationHandler {
 			ConcurrentHashMap<String, GroovyObjectEx> newHandlerMap = new ConcurrentHashMap<>();
 			Collection<Class<?>> values = annotatedClassMap.values();
 			for(Class<?> groovyClass : values) {
-				GroovyObjectEx<?> groovyObj = getGroovyRuntime().create(groovyClass);
+				GroovyObjectEx<?> groovyObj = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 				newHandlerMap.put(groovyClass.getName(), groovyObj);
 			}
 			handlerMap = newHandlerMap;

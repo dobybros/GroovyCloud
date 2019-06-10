@@ -8,6 +8,7 @@ import com.docker.script.servlet.annotations.WebService;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
@@ -48,8 +49,7 @@ public class WebServiceAnnotationHandler extends ClassAnnotationHandler {
                     // Handle RequestIntercepting
                     WebService requestIntercepting = groovyClass.getAnnotation(WebService.class);
                     if (requestIntercepting != null) {
-                        GroovyObjectEx<?> serverAdapter = getGroovyRuntime()
-                                .create(groovyClass);
+                        GroovyObjectEx<?> serverAdapter = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
                         scanClass(groovyClass, serverAdapter, newMethodMap);
                     }
                 }

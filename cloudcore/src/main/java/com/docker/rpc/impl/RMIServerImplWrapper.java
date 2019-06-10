@@ -8,6 +8,7 @@ import com.docker.rpc.annotations.RPCServerHandler;
 import org.apache.commons.lang.StringUtils;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
@@ -113,8 +114,7 @@ public class RMIServerImplWrapper extends ClassAnnotationHandler {
 					if (requestIntercepting != null) {
 						String rpcType = requestIntercepting.rpcType();
 						if (!StringUtils.isBlank(rpcType)) {
-							GroovyObjectEx<RPCServerAdapter> serverAdapter = getGroovyRuntime()
-									.create(groovyClass);
+							GroovyObjectEx<RPCServerAdapter> serverAdapter = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 							if (serverAdapter != null) {
 								uriLogs.append("RPCServerHandler " + rpcType + "#" + groovyClass + "\r\n");
 								newServerAdapterMap.put(rpcType, serverAdapter);

@@ -1,41 +1,59 @@
 package chat.utils;
 
-import chat.logs.LoggerEx;
+import chat.main.ServerStart;
+import chat.scheduled.QuartzHandler;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 
-import java.util.TimerTask;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-
-public abstract class TimerTaskEx extends TimerTask {
-	private Future future;
-	private ScheduledThreadPoolExecutor scheduledExecutorService;
-
-	public void setScheduledExecutorService(ScheduledThreadPoolExecutor scheduledExecutorService) {
-		this.scheduledExecutorService = scheduledExecutorService;
-	}
-
-	public void setFuture(Future future) {
-		this.future = future;
-	}
+public class TimerTaskEx extends TimerTask implements Job{
+	private String id;
+	private Long delay;
+	private Long period;
+	private String cron;
 	@Override
-	public final void run() {
-		try {
-			execute();
-		} catch (Throwable t) {
-			t.printStackTrace();
-			LoggerEx.error("TimerTaskEx", "execute failed, " + t.getMessage());
+	public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+		TimerTaskEx task = (TimerTaskEx) jobExecutionContext.getMergedJobDataMap().get("TimerTaskEx");
+		if(task != null){
+			task.execute();
 		}
 	}
 
-	public abstract void execute();
-
-	@Override
-	public boolean cancel() {
-		if(future != null) {
-			boolean bool = future.cancel(false);
-			scheduledExecutorService.remove(this);
-			return bool;
+	public void cancel(){
+		if(this.id != null){
+			QuartzHandler.getInstance().removeJob(this.id);
 		}
-		return false;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public Long getDelay() {
+		return delay;
+	}
+
+	public void setDelay(Long delay) {
+		this.delay = delay;
+	}
+
+	public Long getPeriod() {
+		return period;
+	}
+
+	public void setPeriod(Long period) {
+		this.period = period;
+	}
+
+	public String getCron() {
+		return cron;
+	}
+
+	public void setCron(String cron) {
+		this.cron = cron;
 	}
 }

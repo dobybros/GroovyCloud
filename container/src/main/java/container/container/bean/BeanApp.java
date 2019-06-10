@@ -1,5 +1,6 @@
 package container.container.bean;
 
+import chat.scheduled.QuartzHandler;
 import chat.utils.IPHolder;
 import com.dobybros.chat.handlers.ConsumeOfflineMessageHandler;
 import com.dobybros.chat.props.GlobalLansProperties;
@@ -38,7 +39,9 @@ import org.apache.mina.filter.ssl.KeyStoreFactory;
 import org.apache.mina.filter.ssl.SslContextFactory;
 import org.apache.mina.filter.ssl.SslFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
-import org.springframework.context.annotation.Configuration;
+import org.quartz.SchedulerFactory;
+import org.quartz.impl.StdSchedulerFactory;
+import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import script.filter.JsonFilterFactory;
 import script.groovy.servlets.RequestPermissionHandler;
 
@@ -115,7 +118,22 @@ public class BeanApp extends ConfigApp{
     private RMIServerHandler dockerRpcServerAdapterSsl;
     private ServersServiceImpl serversService;
     private ServiceVersionServiceImpl serviceVersionService;
+    private SchedulerFactory schedulerFactory;
+    private QuartzHandler quartzHandler;
 
+//    public synchronized QuartzHandler getQuartzHandler() {
+//        if(quartzHandler == null){
+//            quartzHandler = new QuartzHandler();
+//            quartzHandler.setSchedulerFactory(getSchedulerFactory());
+//        }
+//        return quartzHandler;
+//    }
+    public synchronized SchedulerFactory getSchedulerFactory(){
+        if(schedulerFactory == null){
+            schedulerFactory = new StdSchedulerFactory();
+        }
+        return schedulerFactory;
+    }
     public synchronized ServiceVersionServiceImpl getServiceVersionService() {
         if(serviceVersionService == null){
             serviceVersionService = new ServiceVersionServiceImpl();

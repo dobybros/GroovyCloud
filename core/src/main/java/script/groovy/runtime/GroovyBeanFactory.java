@@ -20,7 +20,6 @@ public class GroovyBeanFactory extends ClassAnnotationHandler {
 
 	private ConcurrentHashMap<String, GroovyObjectEx> beanMap = new ConcurrentHashMap<>();
 //	private ConcurrentHashMap<String, Class<?>> proxyClassMap = new ConcurrentHashMap<>();
-
 	@Override
 	public void handlerShutdown() {
 		beanMap.clear();
@@ -28,7 +27,7 @@ public class GroovyBeanFactory extends ClassAnnotationHandler {
 	}
 
 	public GroovyBeanFactory() {
-//		instance = this;
+
 	}
 	
 //	public Class<?> getProxyClass(String className) {
@@ -48,7 +47,14 @@ public class GroovyBeanFactory extends ClassAnnotationHandler {
 		String groovyPath = GroovyRuntime.path(c);
 		return getBean(groovyPath);
 	}
-	
+
+	public<T> GroovyObjectEx<T> getClassBean(Class<?> c) {
+		return getObject(c);
+	}
+	public<T> GroovyObjectEx<T> getClassBean(String classStr) {
+		return getObject(classStr);
+	}
+
 	public <T> GroovyObjectEx<T> getBean(Class<?> c, boolean forceCreate) {
 		if(forceCreate)
 			return getObject(c);
@@ -56,32 +62,39 @@ public class GroovyBeanFactory extends ClassAnnotationHandler {
 			return getBean(c);
 	}
 
-	private <T> GroovyObjectEx<T> getObject(String beanName, Class<?> c, ConcurrentHashMap<String, GroovyObjectEx> beanMap) {
+	private <T> GroovyObjectEx<T> getObject(String beanName, String groovyPath, ConcurrentHashMap<String, GroovyObjectEx> beanMap) {
 		if(beanMap == null) {
 			beanMap = this.beanMap;
 		}
-		String groovyPath = GroovyRuntime.path(c);
 		GroovyObjectEx<T> goe = beanMap.get(groovyPath);
 		if(goe == null) {
-			
+
 			goe = getGroovyRuntime().create(groovyPath);
 			if(beanName == null) {
 				beanName = groovyPath;
 			}
 			if(goe != null) {
 				GroovyObjectEx<T> oldgoe = beanMap.putIfAbsent(beanName, goe);
-				if(oldgoe != null) 
+				if(oldgoe != null)
 					goe = oldgoe;
 			}
 		}
 		return goe;
 	}
+	private <T> GroovyObjectEx<T> getObject(String beanName, Class<?> c, ConcurrentHashMap<String, GroovyObjectEx> beanMap) {
+		String groovyPath = GroovyRuntime.path(c);
+		return getObject(beanName, groovyPath, beanMap);
+	}
+
 	private <T> GroovyObjectEx<T> getObject(Class<?> c, ConcurrentHashMap<String, GroovyObjectEx> beanMap) {
 		return getObject(null, c, beanMap);
 	}
 	
 	private <T> GroovyObjectEx<T> getObject(Class<?> c) {
 		return getObject(c, null);
+	}
+	private <T> GroovyObjectEx<T> getObject(String cstr) {
+		return getObject(null, cstr, null);
 	}
 
 	@Override

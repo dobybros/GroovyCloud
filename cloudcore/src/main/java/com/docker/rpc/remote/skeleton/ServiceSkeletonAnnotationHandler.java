@@ -15,6 +15,7 @@ import com.docker.script.ClassAnnotationHandlerEx;
 import com.docker.server.OnlineServer;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import script.groovy.object.GroovyObjectEx;
+import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 import script.groovy.servlets.Tracker;
@@ -72,8 +73,9 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                     // Handle RequestIntercepting
                     com.docker.rpc.remote.annotations.RemoteService requestIntercepting = groovyClass.getAnnotation(com.docker.rpc.remote.annotations.RemoteService.class);
                     if (requestIntercepting != null) {
-                        GroovyObjectEx<RemoteService> serverAdapter = getGroovyRuntime()
-                                .create(groovyClass);
+//                        GroovyObjectEx<RemoteService> serverAdapter = getGroovyRuntime()
+//                                .create(groovyClass);
+                        GroovyObjectEx<RemoteService> serverAdapter = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
                         scanClass(groovyClass, serverAdapter, newMethodMap);
                     }
                 }

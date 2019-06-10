@@ -12,6 +12,7 @@ import org.apache.commons.lang.StringUtils;
 import script.filter.annotations.JsonFilterClass;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
 import chat.logs.LoggerEx;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
@@ -136,8 +137,7 @@ public class JsonFilterFactory extends ClassAnnotationHandler{
 							LoggerEx.error(TAG, "JsonFilterClass " + filterKey + "#" + groovyClass + " is ignored, if targetClass is ParameterizedType, then key has to be specified. \r\n");
 							continue;
 						}
-						GroovyObjectEx<JsonFilter> serverAdapter = getGroovyRuntime()
-								.create(groovyClass);
+						GroovyObjectEx<JsonFilter> serverAdapter = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 						if (serverAdapter != null) {
 							if (StringUtils.isBlank(filterKey)) {
 								filterKey = targetClass.getName();
