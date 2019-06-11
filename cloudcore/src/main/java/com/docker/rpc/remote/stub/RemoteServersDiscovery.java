@@ -182,9 +182,9 @@ public class RemoteServersDiscovery {
         if (result != null) {
             List<ServiceVersion> theServiceVersions = result.getData();
             if (!theServiceVersions.isEmpty()) {
-                for (ServiceVersion serviceVersion : theServiceVersions) {
-                    serviceVersion.setServerType(Arrays.asList(serviceVersion.getServerType().get(0).substring(1, serviceVersion.getServerType().get(0).length() - 1).split(",")));
-                }
+//                for (ServiceVersion serviceVersion : theServiceVersions) {
+//                    serviceVersion.setServerType(Arrays.asList(serviceVersion.getServerType().get(0).substring(1, serviceVersion.getServerType().get(0).length() - 1).split(",")));
+//                }
                 serviceVersions = theServiceVersions;
                 getTheServersFinalMap();
             }
