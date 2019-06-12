@@ -8,7 +8,7 @@ import javax.servlet.http.Cookie;
  */
 public class GrayReleased {
     public  static ThreadLocal<GrayReleased> grayReleasedThreadLocal = new ThreadLocal<>();
-    public static final String COOKIETYPE = "type";
+    public static final String COOKIETYPE = "serviceVersionType";
     public static String defaultVersion = "default";
 
     private String type;//cookie中指定type，数据库中有对应type的s各个ervice的版本
