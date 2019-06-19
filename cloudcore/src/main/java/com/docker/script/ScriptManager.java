@@ -52,8 +52,10 @@ public class ScriptManager implements ShutdownListener {
     private String localPath;
     private ConcurrentHashMap<String, BaseRuntime> scriptRuntimeMap = new ConcurrentHashMap<>();
     private Class<?> baseRuntimeClass;
+    private Map<String, Integer> defalutServiceVersionMap = new ConcurrentHashMap<>();
     boolean isShutdown = false;
     boolean isLoaded = false;
+    private final String versionSeperator = "_v";
 
     public static final String SERVICE_NOTFOUND = "servicenotfound";
     public static final Boolean DELETELOCAL = false;
@@ -72,21 +74,15 @@ public class ScriptManager implements ShutdownListener {
             TimerEx.schedule(new TimerTaskEx() {
                 @Override
                 public void execute() {
-                    if(!isLoaded){
+                    if (!isLoaded) {
                         synchronized (ScriptManager.this) {
                             if (!isShutdown && !isLoaded)
-                               new Thread(new Runnable() {
-                                   @Override
-                                   public void run() {
-                                        reload();
-                                   }
-                               }).start();
-
+                                reload();
                         }
                     }
                 }
             }, 5000L, 10000L);
-        }else {
+        } else {
             reload();
         }
     }
@@ -97,7 +93,6 @@ public class ScriptManager implements ShutdownListener {
 
     private String getServiceName(String service) {
         Integer version = null;
-        String versionSeperator = "_v";
         int lastIndex = service.lastIndexOf(versionSeperator);
         if (lastIndex > 0) {
             String curVerStr = service.substring(lastIndex + versionSeperator.length());
@@ -117,7 +112,6 @@ public class ScriptManager implements ShutdownListener {
 
     private Integer getServiceVersion(String service) {
         Integer version = null;
-        String versionSeperator = "_v";
         int lastIndex = service.lastIndexOf(versionSeperator);
         if (lastIndex > 0) {
             String curVerStr = service.substring(lastIndex + versionSeperator.length());
@@ -278,7 +272,7 @@ public class ScriptManager implements ShutdownListener {
                                 theService.setType(Service.FIELD_SERVER_TYPE_DEPLOY_FAILED);
                                 throw t;
                             } finally {
-                                if(theService != null && dockerStatusService != null){
+                                if (theService != null && dockerStatusService != null) {
                                     dockerStatusService.addService(OnlineServer.getInstance().getServer(), theService);
                                 }
                                 if (DELETELOCAL) {
@@ -302,7 +296,7 @@ public class ScriptManager implements ShutdownListener {
                             }
 
                         }
-                    }else {
+                    } else {
                         throw new CoreException(ChatErrorCodes.ERROR_NO_GROOVYFILE, "Failed get groovy.zip, service is " + service_version);
                     }
                 }
@@ -337,34 +331,60 @@ public class ScriptManager implements ShutdownListener {
             e.printStackTrace();
             LoggerEx.error(TAG, "reload failed, " + e.getMessage());
             System.exit(1);
-        }finally {
+        } finally {
             isLoaded = false;
         }
 
     }
-    public BaseRuntime getBaseRuntime(String service){
+
+    public BaseRuntime getBaseRuntime(String service) {
+        if (!service.contains(versionSeperator)) {
+            if (defalutServiceVersionMap.size() > 0) {
+                Integer version = defalutServiceVersionMap.get(service);
+                if (version != -1) {
+                    service = service + versionSeperator + version;
+                }
+            }
+        }
         BaseRuntime runtime = scriptRuntimeMap.get(service);
-        if(runtime == null){
-            LoggerEx.error(TAG, "Service "  + service + "'s baseRuntime is null");
+        if (runtime == null) {
+            LoggerEx.error(TAG, "Service " + service + "'s baseRuntime is null");
         }
         return runtime;
     }
+
     private List<String> getServiceVersions() throws CoreException {
         List<ServiceVersion> serviceVersions = serviceVersionService.getServiceVersions(serverType);
         Map<String, List> serviceVersionFinalMap = new ConcurrentHashMap<>();
+        Map<String, Integer> defaultVersionMap = new ConcurrentHashMap();
         for (ServiceVersion serviceVersion : serviceVersions) {
             Map<String, Integer> serviceFinalMap = new ConcurrentHashMap<>();
             Map<String, String> serviceVersionMap = serviceVersion.getServiceVersions();
             if (serviceVersionMap != null) {
                 for (String serviceName : serviceVersionMap.keySet()) {
-                    if (serviceFinalMap.get(serviceName) == null) {
-                        if(StringUtils.isEmpty(serviceVersionMap.get(serviceName))){
-                            serviceFinalMap.put(serviceName, -1);
+                    if (serviceVersion.getType().equals("default")) {
+                        if (serviceFinalMap.get(serviceName) == null) {
+                            if (StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
+                                defaultVersionMap.put(serviceName, -1);
+                            } else {
+                                defaultVersionMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
+                            }
                         }else {
+                            if (!StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
+                                if (Integer.valueOf(serviceVersionMap.get(serviceName)) > defaultVersionMap.get(serviceName)) {
+                                    defaultVersionMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
+                                }
+                            }
+                        }
+                    }
+                    if (serviceFinalMap.get(serviceName) == null) {
+                        if (StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
+                            serviceFinalMap.put(serviceName, -1);
+                        } else {
                             serviceFinalMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
                         }
                     } else {
-                        if(!StringUtils.isEmpty(serviceVersionMap.get(serviceName))){
+                        if (!StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
                             if (Integer.valueOf(serviceVersionMap.get(serviceName)) > serviceFinalMap.get(serviceName)) {
                                 serviceFinalMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
                             }
@@ -376,7 +396,7 @@ public class ScriptManager implements ShutdownListener {
                     for (String serviceName : serviceFinalMap.keySet()) {
                         if (serviceFinalMap.get(serviceName) != -1) {
                             service_versionList.add(serviceName + "_v" + serviceFinalMap.get(serviceName).toString());
-                        }else {
+                        } else {
                             service_versionList.add(serviceName);
                         }
                     }
@@ -386,6 +406,9 @@ public class ScriptManager implements ShutdownListener {
                 }
             }
         }
+        if (defaultVersionMap != null && defaultVersionMap.size() > 0) {
+            defalutServiceVersionMap = defaultVersionMap;
+        }
         if (serviceVersionFinalMap.size() > 0) {
             List<String> serviceVersionFinalList = new ArrayList<>();
             List<String> discoveryServiceList = new ArrayList<>();
@@ -393,11 +416,11 @@ public class ScriptManager implements ShutdownListener {
                 List<String> service_versionList = serviceVersionFinalMap.get(type);
                 if (service_versionList != null && service_versionList.size() > 0) {
                     for (String serviceVersion : service_versionList) {
-                        if(serviceVersion.contains("discovery")){
-                            if(!discoveryServiceList.contains(serviceVersion)){
+                        if (serviceVersion.contains("discovery")) {
+                            if (!discoveryServiceList.contains(serviceVersion)) {
                                 discoveryServiceList.add(serviceVersion);
                             }
-                        }else {
+                        } else {
                             if (!serviceVersionFinalList.contains(serviceVersion)) {
                                 serviceVersionFinalList.add(serviceVersion);
                             }
@@ -405,12 +428,12 @@ public class ScriptManager implements ShutdownListener {
                     }
                 }
             }
-            if(discoveryServiceList.size() > 0){
-                for (int i = 0 ; i < discoveryServiceList.size(); i++){
+            if (discoveryServiceList.size() > 0) {
+                for (int i = 0; i < discoveryServiceList.size(); i++) {
                     serviceVersionFinalList.add(i, discoveryServiceList.get(i));
                 }
                 return serviceVersionFinalList;
-            }else {
+            } else {
                 throw new CoreException(ChatErrorCodes.ERROR_DISCOVERY_NOTFOUND, "Discovery service not found, cant process!");
             }
         }

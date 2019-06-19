@@ -21,8 +21,4 @@ public class UtilsBean {
     public SchedulerFactory schedulerFactory(){
         return instance.getSchedulerFactory();
     }
-//    @Bean
-//    public QuartzHandler quartzHandler(){
-//        return instance.getQuartzHandler();
-//    }
 }

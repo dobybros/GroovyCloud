@@ -48,13 +48,13 @@ public class InitContainer implements CommandLineRunner{
     @Autowired
     NioSocketAcceptorEx tcpIoAcceptor;
     @Autowired
+    NioSocketAcceptorEx wsIoAcceptor;
+    @Autowired
     IPHolder ipHolder;
     @Autowired
     AutoReloadProperties oauth2ClientProperties;
     @Autowired
     ScriptManager scriptManager;
-//    @Autowired
-//    RMIHandler rpcServerAdapter;
     @Autowired
     RMIServerHandler dockerRpcServerAdapter;
     @Autowired
@@ -76,6 +76,7 @@ public class InitContainer implements CommandLineRunner{
         gridfsHelper.init();
         fileAdapter.init();
         tcpIoAcceptor.bind();
+        wsIoAcceptor.bind();
         ipHolder.init();
         oauth2ClientProperties.init();
         onlineServer.start();

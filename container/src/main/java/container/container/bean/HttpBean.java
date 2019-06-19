@@ -48,18 +48,11 @@ public class HttpBean{
     }
     @Bean
     public SchemeRegistry schemeRegistry(){
-        SchemeRegistry schemeRegistry = instance.getSchemeRegistry();
-        Map map = new HashMap();
-        map.put("http", instance.getHttpScheme());
-        map.put("https", instance.getHttpsScheme());
-        schemeRegistry.setItems(map);
-        return schemeRegistry;
+        return instance.getSchemeRegistry();
     }
     @Bean(destroyMethod = "shutdown")
     public ThreadSafeClientConnManager clientConnectionManager(){
-        ThreadSafeClientConnManager clientConnManager = instance.getClientConnManager();
-        clientConnManager.setMaxTotal(20);
-        return clientConnManager;
+        return instance.getClientConnManager();
     }
     @Bean
     public DefaultHttpClient httpClient(){

@@ -24,68 +24,40 @@ public class DatabaseBean{
     }
     @Bean
     public MongoHelper dockerStatusHelper(){
-        MongoHelper dockerStatusHelper = instance.getDockerStatusHelper();
-        dockerStatusHelper.setHost(instance.getMongoHost());
-        dockerStatusHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
-        dockerStatusHelper.setDbName(instance.getDbName());
-        dockerStatusHelper.setUsername(instance.getMongoUsername());
-        dockerStatusHelper.setPassword(instance.getMongoPassword());
-        return dockerStatusHelper;
+        return instance.getDockerStatusHelper();
     }
 //    @Bean(initMethod = "init", destroyMethod = "disconnect")
     @Bean(destroyMethod = "disconnect")
     public MongoHelper logsHelper(){
-        MongoHelper logsHelper = instance.getLogsHelper();
-        logsHelper.setHost(instance.getMongoHost());
-        logsHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
-        logsHelper.setDbName(instance.getLogsDBName());
-        logsHelper.setUsername(instance.getMongoUsername());
-        logsHelper.setPassword(instance.getMongoPassword());
-        return logsHelper;
+        return instance.getLogsHelper();
     }
 //    @Bean(initMethod = "init")
     @Bean
     public MongoHelper configHelper(){
-        MongoHelper configHelper = instance.getConfigHelper();
-        configHelper.setHost(instance.getMongoHost());
-        configHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
-        configHelper.setDbName(instance.getConfigDBName());
-        configHelper.setUsername(instance.getMongoUsername());
-        configHelper.setPassword(instance.getMongoPassword());
-        return configHelper;
+        return instance.getConfigHelper();
     }
 //    @Bean(initMethod = "init")
     @Bean
     public DockerStatusDAO dockerStatusDAO(){
-        DockerStatusDAO dockerStatusDAO = instance.getDockerStatusDAO();
-        dockerStatusDAO.setMongoHelper(instance.getDockerStatusHelper());
-        return dockerStatusDAO;
+        return instance.getDockerStatusDAO();
     }
     @Bean
     public ServiceVersionDAO serviceVersionDAO(){
-        ServiceVersionDAO serviceVersionDAO = instance.getServiceVersionDAO();
-        serviceVersionDAO.setMongoHelper(instance.getDockerStatusHelper());
-        return serviceVersionDAO;
+        return instance.getServiceVersionDAO();
     }
 //    @Bean(initMethod = "init")
     @Bean
     public ServersDAO serversDAO(){
-        ServersDAO serversDAO = instance.getServersDAO();
-        serversDAO.setMongoHelper(instance.getConfigHelper());
-        return serversDAO;
+        return instance.getServersDAO();
     }
 //    @Bean(initMethod = "init")
     @Bean
     public LansDAO lansDAO(){
-        LansDAO lansDAO = instance.getLansDAO();
-        lansDAO.setMongoHelper(instance.getConfigHelper());
-        return lansDAO;
+        return instance.getLansDAO();
     }
     @Bean
     public DockerStatusServiceImpl dockerStatusService(){
-        DockerStatusServiceImpl dockerStatusService = instance.getDockerStatusService();
-        dockerStatusService.setDockerStatusDAO(instance.getDockerStatusDAO());
-        return dockerStatusService;
+        return instance.getDockerStatusService();
     }
 
     @Bean
@@ -104,33 +76,15 @@ public class DatabaseBean{
 //    @Bean(initMethod = "init")
     @Bean
     public SDockerDAO sdockerDAO(){
-        SDockerDAO sdockerDAO = instance.getSdockerDAO();
-        sdockerDAO.setMongoHelper(instance.getConfigHelper());
-        return sdockerDAO;
+        return instance.getSdockerDAO();
     }
-//    @Bean(initMethod = "init")
-//    public BulkLogDAO bulkLogDAO(){
-//        BulkLogDAO bulkLogDAO = getBulkLogDAO();
-//        bulkLogDAO.setMongoHelper(getLogsHelper());
-//        return bulkLogDAO;
-//    }
-//    @Bean(initMethod = "init", destroyMethod = "disconnect")
     @Bean(destroyMethod = "disconnect")
     public MongoHelper gridfsHelper(){
-        MongoHelper gridfsHelper = instance.getGridfsHelper();
-        gridfsHelper.setHost(instance.getGridHost());
-        gridfsHelper.setConnectionsPerHost(Integer.valueOf(instance.getGirdConnectionsPerHost()));
-        gridfsHelper.setDbName(instance.getGridDbName());
-        gridfsHelper.setUsername(instance.getGridUsername());
-        gridfsHelper.setPassword(instance.getGridPassword());
-        return gridfsHelper;
+        return instance.getGridfsHelper();
     }
 //    @Bean(initMethod = "init")
     @Bean
     public GridFSFileHandler fileAdapter(){
-        GridFSFileHandler fileAdapter = instance.getFileAdapter();
-        fileAdapter.setResourceHelper(instance.getGridfsHelper());
-        fileAdapter.setBucketName("imfs");
-        return fileAdapter;
+        return instance.getFileAdapter();
     }
 }

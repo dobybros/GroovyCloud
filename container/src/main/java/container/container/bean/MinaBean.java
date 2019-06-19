@@ -41,10 +41,7 @@ public class MinaBean {
 
     @Bean
     public UpStreamHandler upstreamHandler() {
-        UpStreamHandler upStreamHandler = instance.getUpstreamHandler();
-        upStreamHandler.setReadIdleTime(720);
-        upStreamHandler.setWriteIdleTime(720);
-        return upStreamHandler;
+        return instance.getUpstreamHandler();
     }
 
     @Bean
@@ -64,22 +61,12 @@ public class MinaBean {
     //TODO 检查
     @Bean
     public DefaultIoFilterChainBuilder tcpFilterChainBuilder() {
-        DefaultIoFilterChainBuilder tcpFilterChainBuilder = instance.getTcpFilterChainBuilder();
-        Map map = new LinkedHashMap();
-        map.put("codecFilter", instance.getTcpCodecFilter());
-        tcpFilterChainBuilder.setFilters(map);
-        return tcpFilterChainBuilder;
+        return instance.getTcpFilterChainBuilder();
     }
 
-//    @Bean(initMethod = "bind", destroyMethod = "unbind")
     @Bean(destroyMethod = "unbind")
     public NioSocketAcceptorEx tcpIoAcceptor() {
-        NioSocketAcceptorEx tcpIoAcceptor = instance.getTcpIoAcceptor();
-        tcpIoAcceptor.setHandler(instance.getUpstreamHandler());
-        tcpIoAcceptor.setFilterChainBuilder(instance.getTcpFilterChainBuilder());
-        tcpIoAcceptor.setReuseAddress(true);
-        tcpIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamPort())));
-        return tcpIoAcceptor;
+        return instance.getTcpIoAcceptor();
     }
 
     @Bean
@@ -94,31 +81,11 @@ public class MinaBean {
 
     @Bean
     public KeyStoreFactory keystoreFactory() {
-        KeyStoreFactory keyStoreFactory = instance.getKeystoreFactory();
-        keyStoreFactory.setPassword(instance.getKeystorePwd());
-        URL keystorePathUrl = null;
-        try {
-            keystorePathUrl = new URL(instance.getKeystorePath());
-            if (keystorePathUrl != null) {
-                keyStoreFactory.setDataUrl(keystorePathUrl);
-            }
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-        return keyStoreFactory;
+        return instance.getKeystoreFactory();
     }
     @Bean
     public SslContextFactory sslContextFactory() {
-        SslContextFactory sslContextFactory = instance.getSslContextFactory();
-        try {
-            sslContextFactory.setKeyManagerFactoryKeyStore(instance.getKeystoreFactory().newInstance());
-            sslContextFactory.setProtocol("TLSV1.2");
-            sslContextFactory.setKeyManagerFactoryAlgorithm("SunX509");
-            sslContextFactory.setKeyManagerFactoryKeyStorePassword(instance.getKeymanagerPwd());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return sslContextFactory;
+        return instance.getSslContextFactory();
     }
     @Bean
     public SslFilter sslFilter() {
@@ -126,22 +93,11 @@ public class MinaBean {
     }
     @Bean
     public DefaultIoFilterChainBuilder sslTcpFilterChainBuilder() {
-        DefaultIoFilterChainBuilder defaultIoFilterChainBuilder = instance.getSslTcpFilterChainBuilder();
-        Map map = new LinkedHashMap();
-        map.put("codecFilter", instance.getSslTcpCodecFilter());
-        map.put("sslFilter", instance.getSslFilter());
-        defaultIoFilterChainBuilder.setFilters(map);
-        return defaultIoFilterChainBuilder;
+        return instance.getSslTcpFilterChainBuilder();
     }
-//    @Bean(initMethod = "bind", destroyMethod = "unbind")
     @Bean(destroyMethod = "unbind")
     public NioSocketAcceptorEx sslTcpIoAcceptor() {
-        NioSocketAcceptorEx sslTcpIoAcceptor = instance.getSslTcpIoAcceptor();
-        sslTcpIoAcceptor.setHandler(instance.getUpstreamHandler());
-        sslTcpIoAcceptor.setFilterChainBuilder(instance.getSslTcpFilterChainBuilder());
-        sslTcpIoAcceptor.setReuseAddress(true);
-        sslTcpIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamSslPort())));
-        return sslTcpIoAcceptor;
+        return instance.getSslTcpIoAcceptor();
     }
     @Bean
     public ProtocolCodecFilter wsCodecFilter() {
@@ -149,20 +105,10 @@ public class MinaBean {
     }
     @Bean
     public DefaultIoFilterChainBuilder wsFilterChainBuilder() {
-        DefaultIoFilterChainBuilder wsFilterChainBuilder = instance.getWsFilterChainBuilder();
-        Map map = new LinkedHashMap();
-        map.put("codecFilter", instance.getWsCodecFilter());
-        map.put("sslFilter", instance.getSslFilter());
-        wsFilterChainBuilder.setFilters(map);
-        return wsFilterChainBuilder;
+        return instance.getWsFilterChainBuilder();
     }
     @Bean
     public NioSocketAcceptorEx wsIoAcceptor() {
-        NioSocketAcceptorEx wsIoAcceptor = instance.getWsIoAcceptor();
-        wsIoAcceptor.setHandler(instance.getUpstreamHandler());
-        wsIoAcceptor.setFilterChainBuilder(instance.getWsFilterChainBuilder());
-        wsIoAcceptor.setReuseAddress(true);
-        wsIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamWsPort())));
-        return wsIoAcceptor;
+        return instance.getWsIoAcceptor();
     }
 }

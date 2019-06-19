@@ -51,8 +51,6 @@ public class OnlineServer {
     private String sslTcpPort;
     private Integer status;
     private String configPath;
-    private String dockerRpcPort;
-    private String dockerSslRpcPort;
 
     private String lanId;
 
@@ -108,6 +106,10 @@ public class OnlineServer {
         dockerStatus.setHttpPort(port);
         dockerStatus.setLanId(lanId);
         dockerStatus.setHealth(0);
+        dockerStatus.setSslRpcPort(Integer.valueOf(sslRpcPort));
+        dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
+        dockerStatus.setWsPort(Integer.valueOf(wsPort));
+        dockerStatus.setRpcPort(Integer.valueOf(rpcPort));
         if (status == null)
             status = DockerStatus.STATUS_OK;
         dockerStatus.setStatus(status);
@@ -463,19 +465,4 @@ public class OnlineServer {
         this.sslTcpPort = sslTcpPort;
     }
 
-    public String getDockerRpcPort() {
-        return dockerRpcPort;
-    }
-
-    public void setDockerRpcPort(String dockerRpcPort) {
-        this.dockerRpcPort = dockerRpcPort;
-    }
-
-    public String getDockerSslRpcPort() {
-        return dockerSslRpcPort;
-    }
-
-    public void setDockerSslRpcPort(String dockerSslRpcPort) {
-        this.dockerSslRpcPort = dockerSslRpcPort;
-    }
 }

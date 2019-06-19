@@ -26,6 +26,7 @@ import com.docker.storage.adapters.impl.ServersServiceImpl;
 import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
+import com.docker.tasks.Task;
 import com.docker.utils.SpringContextUtil;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
@@ -45,7 +46,11 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import script.filter.JsonFilterFactory;
 import script.groovy.servlets.RequestPermissionHandler;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URL;
 import java.rmi.RemoteException;
+import java.util.*;
 
 //import com.dobybros.chat.log.LogIndexQueue;
 //import com.dobybros.chat.storage.mongodb.daos.BulkLogDAO;
@@ -145,6 +150,7 @@ public class BeanApp extends ConfigApp{
     public synchronized ServiceVersionDAO getServiceVersionDAO() {
         if(serviceVersionDAO == null){
             serviceVersionDAO = new ServiceVersionDAO();
+            serviceVersionDAO.setMongoHelper(instance.getDockerStatusHelper());
         }
         return serviceVersionDAO;
     }
@@ -159,6 +165,7 @@ public class BeanApp extends ConfigApp{
     public synchronized DockerStatusDAO getDockerStatusDAO() {
         if(dockerStatusDAO == null){
             dockerStatusDAO = new DockerStatusDAO();
+            dockerStatusDAO.setMongoHelper(instance.getDockerStatusHelper());
         }
         return dockerStatusDAO;
     }
@@ -166,6 +173,7 @@ public class BeanApp extends ConfigApp{
     public synchronized RMIServerHandler getDockerRpcServerAdapterSsl() {
         if(dockerRpcServerAdapterSsl == null){
             dockerRpcServerAdapterSsl = new RMIServerHandler();
+            dockerRpcServerAdapterSsl.setServerImpl(instance.getDockerRpcServerSsl());
         }
         return dockerRpcServerAdapterSsl;
     }
@@ -173,7 +181,8 @@ public class BeanApp extends ConfigApp{
     public synchronized com.docker.rpc.impl.RMIServerImplWrapper getDockerRpcServerSsl() {
         if(dockerRpcServerSsl == null){
             try {
-                dockerRpcServerSsl = new com.docker.rpc.impl.RMIServerImplWrapper(Integer.valueOf(getDockerSslRpcPort()));
+                dockerRpcServerSsl = new com.docker.rpc.impl.RMIServerImplWrapper(Integer.valueOf(getRpcPort()));
+                dockerRpcServerSsl.setRmiServerHandler(instance.getDockerRpcServerAdapterSsl());
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
@@ -184,6 +193,9 @@ public class BeanApp extends ConfigApp{
     public synchronized RMIServerHandler getDockerRpcServerAdapter() {
         if(dockerRpcServerAdapter == null){
             dockerRpcServerAdapter = new RMIServerHandler();
+            dockerRpcServerAdapter.setServerImpl(instance.getDockerRpcServer());
+            dockerRpcServerAdapter.setIpHolder(instance.getIpHolder());
+            dockerRpcServerAdapter.setRmiPort(Integer.valueOf(instance.getRpcPort()));
         }
         return dockerRpcServerAdapter;
     }
@@ -191,7 +203,8 @@ public class BeanApp extends ConfigApp{
     public synchronized com.docker.rpc.impl.RMIServerImplWrapper getDockerRpcServer() {
         if(dockerRpcServer == null){
             try {
-                dockerRpcServer = new com.docker.rpc.impl.RMIServerImplWrapper(Integer.valueOf(getDockerRpcPort()));
+                dockerRpcServer = new com.docker.rpc.impl.RMIServerImplWrapper(Integer.valueOf(getRpcPort()));
+                dockerRpcServer.setRmiServerHandler(instance.getDockerRpcServerAdapter());
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
@@ -245,6 +258,10 @@ public class BeanApp extends ConfigApp{
     public synchronized RPCClientAdapterMapTask getRpcClientAdapterMapTaskSsl() {
         if(rpcClientAdapterMapTaskSsl == null){
             rpcClientAdapterMapTaskSsl = new RPCClientAdapterMapTask();
+            rpcClientAdapterMapTaskSsl.setEnableSsl(true);
+            rpcClientAdapterMapTaskSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
+            rpcClientAdapterMapTaskSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
+            rpcClientAdapterMapTaskSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
         }
         return rpcClientAdapterMapTaskSsl;
     }
@@ -259,6 +276,29 @@ public class BeanApp extends ConfigApp{
     public synchronized OnlineServerWithStatus getOnlineServer() {
         if(onlineServer == null){
             onlineServer = new OnlineServerWithStatus();
+            onlineServer.setDockerStatusService(instance.getDockerStatusService());
+            List<Task> tasks = new ArrayList<>();
+            tasks.add(instance.getMessageSendingTask());
+            tasks.add(instance.getOfflineMessageSavingTask());
+            tasks.add(instance.getRpcClientAdapterMapTask());
+            tasks.add(instance.getRpcClientAdapterMapTaskSsl());
+            onlineServer.setTasks(tasks);
+            onlineServer.setServerType(instance.getServerType());
+            onlineServer.setHttpPort(Integer.valueOf(instance.getServerPort()));
+            onlineServer.setInternalKey(instance.getInternalKey());
+            onlineServer.setRpcPort(instance.getRpcPort());
+            onlineServer.setSslRpcPort(instance.getSslRpcPort());
+            onlineServer.setPublicDomain(instance.getPublicDomain());
+            onlineServer.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
+            onlineServer.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
+            onlineServer.setRpcSslJksPwd(instance.getRpcSslJksPwd());
+            onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
+            onlineServer.setTcpPort(instance.getUpstreamPort());
+            onlineServer.setSslRpcPort(instance.getUpstreamSslPort());
+            onlineServer.setWsPort(instance.getUpstreamWsPort());
+            onlineServer.setStatus(1);
+            onlineServer.setConfigPath("container.properties");
+            onlineServer.setIpHolder(instance.getIpHolder());
         }
         return onlineServer;
     }
@@ -266,6 +306,7 @@ public class BeanApp extends ConfigApp{
     public synchronized OnlineUserManagerImpl getOnlineUserManager() {
         if(onlineUserManager == null){
             onlineUserManager = new OnlineUserManagerImpl();
+            onlineUserManager.setAdminOnlineUserClass(com.dobybros.gateway.onlineusers.impl.AdminOnlineUserImpl.class);
         }
         return onlineUserManager;
     }
@@ -273,6 +314,15 @@ public class BeanApp extends ConfigApp{
     public synchronized ScriptManager getScriptManager() {
         if(scriptManager == null){
             scriptManager = new ScriptManager();
+            scriptManager.setLocalPath(instance.getLocalPath());
+            scriptManager.setRemotePath(instance.getRemotePath());
+            scriptManager.setBaseRuntimeClass(com.dobybros.chat.script.annotations.gateway.GatewayGroovyRuntime.class);
+            scriptManager.setRuntimeBootClass(instance.getRuntimeBootClass());
+            scriptManager.setDockerStatusService(instance.getDockerStatusService());
+            scriptManager.setFileAdapter(instance.getFileAdapter());
+            scriptManager.setHotDeployment(Boolean.valueOf(instance.getHotDeployment()));
+            scriptManager.setServerType(instance.getServerType());
+            scriptManager.setServiceVersionService(instance.getServiceVersionService());
         }
         return scriptManager;
     }
@@ -294,6 +344,7 @@ public class BeanApp extends ConfigApp{
     public synchronized RPCMessageSendingTask getMessageSendingTask() {
         if(messageSendingTask == null){
             messageSendingTask = new RPCMessageSendingTask();
+            messageSendingTask.setNumOfThreads(4);
         }
         return messageSendingTask;
     }
@@ -322,6 +373,8 @@ public class BeanApp extends ConfigApp{
     public synchronized IPHolder getIpHolder() {
         if(ipHolder == null){
             ipHolder = new IPHolder();
+            ipHolder.setEthPrefix(instance.getEthPrefix());
+            ipHolder.setIpPrefix(instance.getIpPrefix());
         }
         return ipHolder;
     }
@@ -343,6 +396,7 @@ public class BeanApp extends ConfigApp{
     public synchronized DockerStatusServiceImpl getDockerStatusService() {
         if(dockerStatusService == null){
             dockerStatusService = new DockerStatusServiceImpl();
+            dockerStatusService.setDockerStatusDAO(instance.getDockerStatusDAO());
         }
         return dockerStatusService;
     }
@@ -357,6 +411,10 @@ public class BeanApp extends ConfigApp{
     public synchronized NioSocketAcceptorEx getWsIoAcceptor() {
         if(wsIoAcceptor == null){
             wsIoAcceptor = new NioSocketAcceptorEx();
+            wsIoAcceptor.setHandler(instance.getUpstreamHandler());
+            wsIoAcceptor.setFilterChainBuilder(instance.getWsFilterChainBuilder());
+            wsIoAcceptor.setReuseAddress(true);
+            wsIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamWsPort())));
         }
         return wsIoAcceptor;
     }
@@ -364,6 +422,10 @@ public class BeanApp extends ConfigApp{
     public synchronized DefaultIoFilterChainBuilder getWsFilterChainBuilder() {
         if(wsFilterChainBuilder == null){
             wsFilterChainBuilder = new DefaultIoFilterChainBuilder();
+            Map map = new LinkedHashMap();
+            map.put("sslFilter", instance.getSslFilter());
+            map.put("codecFilter", instance.getWsCodecFilter());
+            wsFilterChainBuilder.setFilters(map);
         }
         return wsFilterChainBuilder;
     }
@@ -385,6 +447,10 @@ public class BeanApp extends ConfigApp{
     public synchronized NioSocketAcceptorEx getSslTcpIoAcceptor() {
         if(sslTcpIoAcceptor == null){
             sslTcpIoAcceptor = new NioSocketAcceptorEx();
+            sslTcpIoAcceptor.setHandler(instance.getUpstreamHandler());
+            sslTcpIoAcceptor.setFilterChainBuilder(instance.getSslTcpFilterChainBuilder());
+            sslTcpIoAcceptor.setReuseAddress(true);
+            sslTcpIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamSslPort())));
         }
         return sslTcpIoAcceptor;
     }
@@ -392,6 +458,10 @@ public class BeanApp extends ConfigApp{
     public DefaultIoFilterChainBuilder getSslTcpFilterChainBuilder() {
         if(sslTcpFilterChainBuilder == null){
             sslTcpFilterChainBuilder = new DefaultIoFilterChainBuilder();
+            Map map = new LinkedHashMap();
+            map.put("codecFilter", instance.getSslTcpCodecFilter());
+            map.put("sslFilter", instance.getSslFilter());
+            sslTcpFilterChainBuilder.setFilters(map);
         }
         return sslTcpFilterChainBuilder;
     }
@@ -410,6 +480,14 @@ public class BeanApp extends ConfigApp{
     public synchronized SslContextFactory getSslContextFactory() {
         if(sslContextFactory == null){
             sslContextFactory = new SslContextFactory();
+            try {
+                sslContextFactory.setKeyManagerFactoryKeyStore(instance.getKeystoreFactory().newInstance());
+                sslContextFactory.setProtocol("TLSV1.2");
+                sslContextFactory.setKeyManagerFactoryAlgorithm("SunX509");
+                sslContextFactory.setKeyManagerFactoryKeyStorePassword(instance.getKeymanagerPwd());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return sslContextFactory;
     }
@@ -417,6 +495,14 @@ public class BeanApp extends ConfigApp{
     public synchronized KeyStoreFactory getKeystoreFactory() {
         if(keystoreFactory == null){
             keystoreFactory = new KeyStoreFactory();
+            keystoreFactory.setPassword(instance.getKeystorePwd());
+            URL keystorePathUrl = null;
+            try {
+                keystorePathUrl = new URL(instance.getKeystorePath());
+                keystoreFactory.setDataUrl(keystorePathUrl);
+            }catch (IOException e){
+                e.printStackTrace();
+            }
         }
         return keystoreFactory;
     }
@@ -431,6 +517,10 @@ public class BeanApp extends ConfigApp{
     public synchronized NioSocketAcceptorEx getTcpIoAcceptor() {
         if(tcpIoAcceptor == null){
             tcpIoAcceptor = new NioSocketAcceptorEx();
+            tcpIoAcceptor.setHandler(instance.getUpstreamHandler());
+            tcpIoAcceptor.setFilterChainBuilder(instance.getTcpFilterChainBuilder());
+            tcpIoAcceptor.setReuseAddress(true);
+            tcpIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamPort())));
         }
         return tcpIoAcceptor;
     }
@@ -473,6 +563,10 @@ public class BeanApp extends ConfigApp{
     public synchronized SchemeRegistry getSchemeRegistry() {
         if(schemeRegistry == null){
             schemeRegistry = new SchemeRegistry();
+            Map map = new HashMap();
+            map.put("http", instance.getHttpScheme());
+            map.put("https", instance.getHttpsScheme());
+            schemeRegistry.setItems(map);
         }
         return schemeRegistry;
     }
@@ -480,6 +574,7 @@ public class BeanApp extends ConfigApp{
     public synchronized ThreadSafeClientConnManager getClientConnManager() {
         if(clientConnManager == null){
             clientConnManager = new ThreadSafeClientConnManager(getSchemeRegistry());
+            clientConnManager.setMaxTotal(20);
         }
         return clientConnManager;
     }
@@ -498,6 +593,11 @@ public class BeanApp extends ConfigApp{
     public synchronized MongoHelper getDockerStatusHelper() {
         if(dockerStatusHelper == null){
             dockerStatusHelper = new MongoHelper();
+            dockerStatusHelper.setHost(instance.getMongoHost());
+            dockerStatusHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
+            dockerStatusHelper.setDbName(instance.getDbName());
+            dockerStatusHelper.setUsername(instance.getMongoUsername());
+            dockerStatusHelper.setPassword(instance.getMongoPassword());
         }
         return dockerStatusHelper;
     }
@@ -505,6 +605,11 @@ public class BeanApp extends ConfigApp{
     public synchronized MongoHelper getLogsHelper() {
         if(logsHelper == null){
             logsHelper = new MongoHelper();
+            logsHelper.setHost(instance.getMongoHost());
+            logsHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
+            logsHelper.setDbName(instance.getLogsDBName());
+            logsHelper.setUsername(instance.getMongoUsername());
+            logsHelper.setPassword(instance.getMongoPassword());
         }
         return logsHelper;
     }
@@ -512,6 +617,11 @@ public class BeanApp extends ConfigApp{
     public synchronized MongoHelper getConfigHelper() {
         if(configHelper == null){
             configHelper = new MongoHelper();
+            configHelper.setHost(instance.getMongoHost());
+            configHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
+            configHelper.setDbName(instance.getConfigDBName());
+            configHelper.setUsername(instance.getMongoUsername());
+            configHelper.setPassword(instance.getMongoPassword());
         }
         return configHelper;
     }
@@ -519,6 +629,7 @@ public class BeanApp extends ConfigApp{
     public synchronized ServersDAO getServersDAO() {
         if(serversDAO == null){
             serversDAO = new ServersDAO();
+            serversDAO.setMongoHelper(instance.getConfigHelper());
         }
         return serversDAO;
     }
@@ -526,6 +637,7 @@ public class BeanApp extends ConfigApp{
     public synchronized LansDAO getLansDAO() {
         if(lansDAO == null){
             lansDAO = new LansDAO();
+            lansDAO.setMongoHelper(instance.getConfigHelper());
         }
         return lansDAO;
     }
@@ -533,6 +645,7 @@ public class BeanApp extends ConfigApp{
     public synchronized SDockerDAO getSdockerDAO() {
         if(sdockerDAO == null){
             sdockerDAO = new SDockerDAO();
+            sdockerDAO.setMongoHelper(instance.getConfigHelper());
         }
         return sdockerDAO;
     }
@@ -547,6 +660,11 @@ public class BeanApp extends ConfigApp{
     public synchronized MongoHelper getGridfsHelper() {
         if(gridfsHelper == null){
             gridfsHelper = new MongoHelper();
+            gridfsHelper.setHost(instance.getGridHost());
+            gridfsHelper.setConnectionsPerHost(Integer.valueOf(instance.getGirdConnectionsPerHost()));
+            gridfsHelper.setDbName(instance.getGridDbName());
+            gridfsHelper.setUsername(instance.getGridUsername());
+            gridfsHelper.setPassword(instance.getGridPassword());
         }
         return gridfsHelper;
     }
@@ -554,6 +672,8 @@ public class BeanApp extends ConfigApp{
     public synchronized GridFSFileHandler getFileAdapter() {
         if(fileAdapter == null){
             fileAdapter = new GridFSFileHandler();
+            fileAdapter.setResourceHelper(instance.getGridfsHelper());
+            fileAdapter.setBucketName(instance.getFileBucket());
         }
         return fileAdapter;
     }
@@ -561,6 +681,8 @@ public class BeanApp extends ConfigApp{
     public synchronized UpStreamHandler getUpstreamHandler() {
         if(upstreamHandler == null){
             upstreamHandler = new UpStreamHandler();
+            upstreamHandler.setReadIdleTime(720);
+            upstreamHandler.setWriteIdleTime(720);
         }
         return upstreamHandler;
     }
@@ -582,6 +704,9 @@ public class BeanApp extends ConfigApp{
     public synchronized DefaultIoFilterChainBuilder getTcpFilterChainBuilder() {
         if(tcpFilterChainBuilder == null){
             tcpFilterChainBuilder = new DefaultIoFilterChainBuilder();
+            Map map = new LinkedHashMap();
+            map.put("codecFilter", instance.getTcpCodecFilter());
+            tcpFilterChainBuilder.setFilters(map);
         }
         return tcpFilterChainBuilder;
     }

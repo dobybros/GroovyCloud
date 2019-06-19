@@ -24,74 +24,58 @@ public class RpcBean{
     }
     @Bean
     public RPCClientAdapterMapTask rpcClientAdapterMapTaskSsl(){
-        RPCClientAdapterMapTask rpcClientAdapterMapTaskSsl = instance.getRpcClientAdapterMapTaskSsl();
-        rpcClientAdapterMapTaskSsl.setEnableSsl(true);
-        rpcClientAdapterMapTaskSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
-        rpcClientAdapterMapTaskSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
-        rpcClientAdapterMapTaskSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
-        return rpcClientAdapterMapTaskSsl;
+        return instance.getRpcClientAdapterMapTaskSsl();
     }
-    @Bean
-    public RMIServerImplWrapper rpcServer(){
-        RMIServerImplWrapper rpcServer = instance.getRpcServer();
-        rpcServer.setRmiServerHandler(instance.getDockerRpcServerAdapter());
-        return rpcServer;
-    }
+//    @Bean
+//    public RMIServerImplWrapper rpcServer(){
+//        RMIServerImplWrapper rpcServer = instance.getRpcServer();
+//        rpcServer.setRmiServerHandler(instance.getDockerRpcServerAdapter());
+//        return rpcServer;
+//    }
 //    @Bean(initMethod = "serverStart")
-    @Bean
-    public RMIServerHandler rpcServerAdapter(){
-        RMIServerHandler rpcServerAdapter = instance.getDockerRpcServerAdapter();
-        rpcServerAdapter.setServerImpl(instance.getRpcServer());
-        rpcServerAdapter.setIpHolder(instance.getIpHolder());
-        rpcServerAdapter.setRmiPort(Integer.valueOf(instance.getRpcPort()));
-        return rpcServerAdapter;
-    }
-    @Bean
-    public RMIServerImplWrapper rpcServerSsl(){
-        RMIServerImplWrapper rpcServerSsl = instance.getRpcServerSsl();
-        rpcServerSsl.setRmiServerHandler(instance.getDockerRpcServerAdapterSsl());
-        return rpcServerSsl;
-    }
-    @Bean
-    public RMIServerHandler rpcServerAdapterSsl(){
-        RMIServerHandler rpcServerAdapterSsl = instance.getDockerRpcServerAdapterSsl();
-        rpcServerAdapterSsl.setServerImpl(instance.getRpcServerSsl());
-        rpcServerAdapterSsl.setRmiPort(Integer.valueOf(instance.getSslRpcPort()));
-        rpcServerAdapterSsl.setEnableSsl(true);
-        rpcServerAdapterSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
-        rpcServerAdapterSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
-        rpcServerAdapterSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
-        return rpcServerAdapterSsl;
-    }
+//    @Bean
+//    public RMIServerHandler rpcServerAdapter(){
+//        RMIServerHandler rpcServerAdapter = instance.getDockerRpcServerAdapter();
+//        rpcServerAdapter.setServerImpl(instance.getRpcServer());
+//        rpcServerAdapter.setIpHolder(instance.getIpHolder());
+//        rpcServerAdapter.setRmiPort(Integer.valueOf(instance.getRpcPort()));
+//        return rpcServerAdapter;
+//    }
+//    @Bean
+//    public RMIServerImplWrapper rpcServerSsl(){
+//        RMIServerImplWrapper rpcServerSsl = instance.getRpcServerSsl();
+//        rpcServerSsl.setRmiServerHandler(instance.getDockerRpcServerAdapterSsl());
+//        return rpcServerSsl;
+//    }
+//    @Bean
+//    public RMIServerHandler rpcServerAdapterSsl(){
+//        RMIServerHandler rpcServerAdapterSsl = instance.getDockerRpcServerAdapterSsl();
+//        rpcServerAdapterSsl.setServerImpl(instance.getRpcServerSsl());
+//        rpcServerAdapterSsl.setRmiPort(Integer.valueOf(instance.getSslRpcPort()));
+//        rpcServerAdapterSsl.setEnableSsl(true);
+//        rpcServerAdapterSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
+//        rpcServerAdapterSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
+//        rpcServerAdapterSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
+//        return rpcServerAdapterSsl;
+//    }
     @Bean
     public MessageEventHandler messageEventHandler(){
         return instance.getMessageEventHandler();
     }
     @Bean
     public com.docker.rpc.impl.RMIServerImplWrapper dockerRpcServer(){
-        com.docker.rpc.impl.RMIServerImplWrapper dockerRpcServer = instance.getDockerRpcServer();
-        dockerRpcServer.setRmiServerHandler(instance.getDockerRpcServerAdapter());
-        return dockerRpcServer;
+        return instance.getDockerRpcServer();
     }
-//    @Bean(initMethod = "serverStart")
     @Bean
     public RMIServerHandler dockerRpcServerAdapter(){
-        RMIServerHandler dockerRpcServerAdapter = instance.getDockerRpcServerAdapter();
-        dockerRpcServerAdapter.setServerImpl(instance.getDockerRpcServer());
-        dockerRpcServerAdapter.setIpHolder(instance.getIpHolder());
-        dockerRpcServerAdapter.setRmiPort(Integer.valueOf(instance.getDockerRpcPort()));
-        return dockerRpcServerAdapter;
+        return instance.getDockerRpcServerAdapter();
     }
     @Bean
     public com.docker.rpc.impl.RMIServerImplWrapper dockerRpcServerSsl(){
-        com.docker.rpc.impl.RMIServerImplWrapper dockerRpcServerSsl = instance.getDockerRpcServerSsl();
-        dockerRpcServerSsl.setRmiServerHandler(instance.getDockerRpcServerAdapterSsl());
-        return dockerRpcServerSsl;
+        return instance.getDockerRpcServerSsl();
     }
     @Bean
     public RMIServerHandler dockerRpcServerAdapterSsl(){
-        RMIServerHandler dockerRpcServerAdapterSsl = instance.getDockerRpcServerAdapterSsl();
-        dockerRpcServerAdapterSsl.setServerImpl(instance.getDockerRpcServerSsl());
-        return dockerRpcServerAdapterSsl;
+        return instance.getDockerRpcServerAdapterSsl();
     }
 }

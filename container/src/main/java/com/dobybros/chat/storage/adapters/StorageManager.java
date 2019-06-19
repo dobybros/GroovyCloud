@@ -69,12 +69,12 @@ public class StorageManager {
 
         String currentLanId = OnlineServer.getInstance().getLanId();
         String className = adapterClass.getName();
-        String serviceName = sdockerProperties.getProperty(className);
+        String serviceName = sdockerProperties.getProperty("service." + className);
         if (serviceName == null) {
             LoggerEx.warn(TAG, "service not exist, class:" + adapterClass);
             return null;
         } else {
-            String globalLanId = storageProperties.getProperty(className);
+            String globalLanId = storageProperties.getProperty("lan." + className);
 
             if (globalLanId != null) {
                 lanId = globalLanId;

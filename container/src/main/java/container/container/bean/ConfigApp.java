@@ -50,9 +50,8 @@ public class ConfigApp {
     private String runtimeBootClass;
     private String serverPort;
     private String maxUsers;
-    private String dockerRpcPort;
-    private String dockerSslRpcPort;
     private String hotDeployment;
+    private String fileBucket;
 
     ConfigApp(){
         InputStream inStream = ConfigApp.class.getClassLoader().getResourceAsStream("container.properties");
@@ -80,6 +79,7 @@ public class ConfigApp {
             internalKey = prop.getProperty("internal.key");
             rpcPort = prop.getProperty("rpc.port");
             sslRpcPort = prop.getProperty("rpc.sslport");
+            fileBucket = prop.getProperty("gridfs.bucket");
             publicDomain = prop.getProperty("public.domain");
             rpcSslClientTrustJksPath = prop.getProperty("rpc.ssl.clientTrust.jks.path");
             rpcSslServerJksPath = prop.getProperty("rpc.ssl.server.jks.path");
@@ -94,9 +94,7 @@ public class ConfigApp {
             upstreamSslPort = prop.getProperty("upstream-ssl-port");
             upstreamWsPort = prop.getProperty("upstream-ws-port");
             maxUsers = prop.getProperty("server.max.users");
-            dockerRpcPort = prop.getProperty("docker.rpc.port");
             hotDeployment = prop.getProperty("hotDeployment");
-            dockerSslRpcPort = prop.getProperty("docker.rpc.sslport");
             apppProp.load(appInStream);
             serverPort = apppProp.getProperty("server.port");
         } catch (IOException e) {
@@ -241,15 +239,12 @@ public class ConfigApp {
         return maxUsers;
     }
 
-    public String getDockerRpcPort() {
-        return dockerRpcPort;
-    }
-
-    public String getDockerSslRpcPort() {
-        return dockerSslRpcPort;
-    }
 
     public String getHotDeployment() {
         return hotDeployment;
+    }
+
+    public String getFileBucket() {
+        return fileBucket;
     }
 }

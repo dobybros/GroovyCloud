@@ -47,10 +47,7 @@ public class CommonBean {
 //    @Bean(initMethod = "init")
     @Bean
     public IPHolder ipHolder() {
-        IPHolder ipHolder = instance.getIpHolder();
-        ipHolder.setEthPrefix(instance.getEthPrefix());
-        ipHolder.setIpPrefix(instance.getIpPrefix());
-        return ipHolder;
+        return instance.getIpHolder();
     }
 
 //    @Bean(initMethod = "init")
@@ -71,9 +68,7 @@ public class CommonBean {
 
     @Bean
     public RPCMessageSendingTask messageSendingTask() {
-        RPCMessageSendingTask messageSendingTask = instance.getMessageSendingTask();
-        messageSendingTask.setNumOfThreads(4);
-        return messageSendingTask;
+        return instance.getMessageSendingTask();
     }
 
     @Bean
@@ -86,59 +81,18 @@ public class CommonBean {
         return instance.getRequestPermissionHandler();
     }
 
-//    @Bean(initMethod = "init", destroyMethod = "shutdown")
     @Bean(destroyMethod = "shutdown")
     public ScriptManager scriptManager() {
-        ScriptManager scriptManager = instance.getScriptManager();
-        scriptManager.setLocalPath(instance.getLocalPath());
-        scriptManager.setRemotePath(instance.getRemotePath());
-        scriptManager.setBaseRuntimeClass(com.dobybros.chat.script.annotations.gateway.GatewayGroovyRuntime.class);
-        scriptManager.setRuntimeBootClass(instance.getRuntimeBootClass());
-        scriptManager.setDockerStatusService(instance.getDockerStatusService());
-        scriptManager.setFileAdapter(instance.getFileAdapter());
-        scriptManager.setHotDeployment(Boolean.valueOf(instance.getHotDeployment()));
-        scriptManager.setServerType(instance.getServerType());
-        scriptManager.setServiceVersionService(instance.getServiceVersionService());
-        return scriptManager;
+        return instance.getScriptManager();
     }
 
-//    @Bean(initMethod = "init")
     @Bean
     public OnlineUserManagerImpl onlineUserManager() {
-        OnlineUserManagerImpl onlineUserManager = instance.getOnlineUserManager();
-        onlineUserManager.setAdminOnlineUserClass(com.dobybros.gateway.onlineusers.impl.AdminOnlineUserImpl.class);
-        return onlineUserManager;
+        return instance.getOnlineUserManager();
     }
 
-//    @Bean(initMethod = "start", destroyMethod = "shutdown")
     @Bean
     public OnlineServerWithStatus onlineServer() {
-        OnlineServerWithStatus onlineServer = instance.getOnlineServer();
-        onlineServer.setDockerStatusService(instance.getDockerStatusService());
-        List<Task> tasks = new ArrayList<>();
-        tasks.add(instance.getMessageSendingTask());
-        tasks.add(instance.getOfflineMessageSavingTask());
-        tasks.add(instance.getRpcClientAdapterMapTask());
-        tasks.add(instance.getRpcClientAdapterMapTaskSsl());
-        onlineServer.setTasks(tasks);
-        onlineServer.setServerType(instance.getServerType());
-        onlineServer.setHttpPort(Integer.valueOf(instance.getServerPort()));
-        onlineServer.setInternalKey(instance.getInternalKey());
-        onlineServer.setRpcPort(instance.getRpcPort());
-        onlineServer.setSslRpcPort(instance.getSslRpcPort());
-        onlineServer.setPublicDomain(instance.getPublicDomain());
-        onlineServer.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
-        onlineServer.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
-        onlineServer.setRpcSslJksPwd(instance.getRpcSslJksPwd());
-        onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
-        onlineServer.setDockerRpcPort(instance.getDockerRpcPort());
-        onlineServer.setDockerSslRpcPort(instance.getDockerSslRpcPort());
-        onlineServer.setTcpPort(instance.getUpstreamPort());
-        onlineServer.setSslRpcPort(instance.getUpstreamSslPort());
-        onlineServer.setWsPort(instance.getUpstreamWsPort());
-        onlineServer.setStatus(1);
-        onlineServer.setConfigPath("container.properties");
-        onlineServer.setIpHolder(instance.getIpHolder());
-        return onlineServer;
+        return instance.getOnlineServer();
     }
 }
