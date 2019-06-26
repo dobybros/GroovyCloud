@@ -7,6 +7,7 @@ import com.alibaba.fastjson.util.TypeUtils;
 import com.docker.annotations.*;
 import com.docker.data.Lan;
 import com.docker.rpc.remote.skeleton.ServiceSkeletonAnnotationHandler;
+import com.docker.rpc.remote.stub.RefreshServers;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.annotations.ServiceNotFound;
 import com.docker.script.annotations.ServiceNotFoundListener;
@@ -98,6 +99,7 @@ public class MyBaseRuntime extends BaseRuntime {
 					if(lan.getDomain() == null || lan.getPort() == null || lan.getProtocol() == null)
 						throw new NullPointerException("Lan " + lan + " is illegal for lanId " + lanId + " domain " + lan.getDomain() + " port " + lan.getPort() + " protocol " + lan.getProtocol());
 					manager.setHost(lan.getProtocol() + "://" + lan.getDomain() + ":" + lan.getPort());
+					RefreshServers.getInstance().addRemoteHost(manager.getHost());
                     manager.init();
 					stubManagerForLanIdMap.putIfAbsent(lanId, manager);
 					manager = stubManagerForLanIdMap.get(lanId);
@@ -168,9 +170,12 @@ public class MyBaseRuntime extends BaseRuntime {
 
 		remoteServiceHost = properties.getProperty("remote.service.host");
 		if(remoteServiceHost != null) {
-//			ServiceStubManager serviceStubManager = ServiceStubManager.getInstance();
 			serviceStubManager = new ServiceStubManager(service);
+			if (!remoteServiceHost.startsWith("http")) {
+				remoteServiceHost = "http://" + remoteServiceHost;
+			}
 			serviceStubManager.setHost(remoteServiceHost);
+			RefreshServers.getInstance().addRemoteHost(serviceStubManager.getHost());
 			serviceStubManager.init();
 		}
 		String libs = properties.getProperty("libs");

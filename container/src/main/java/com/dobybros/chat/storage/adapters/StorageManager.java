@@ -4,6 +4,7 @@ import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.dobybros.chat.props.GlobalLansProperties;
 import com.docker.data.Lan;
+import com.docker.rpc.remote.stub.RefreshServers;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.server.OnlineServer;
 import com.docker.storage.adapters.LansService;
@@ -118,6 +119,7 @@ public class StorageManager {
                         } else {
                             manager.setHost(dblan.getProtocol() + "://" + dblan.getDomain() + ":" + dblan.getPort());
                         }
+                        RefreshServers.getInstance().addRemoteHost(manager.getHost());
                         manager.init();
                         stubManagerForLanIdMap.putIfAbsent(lanId, manager);
                         manager = stubManagerForLanIdMap.get(lanId);

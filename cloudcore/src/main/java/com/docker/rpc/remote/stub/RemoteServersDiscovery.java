@@ -26,24 +26,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RemoteServersDiscovery {
     private String host;
-    Map<String, Map<String, List<RemoteServers.Server>>> theServersFinalMap = new ConcurrentHashMap();
     private static final String TAG = RemoteServersDiscovery.class.getSimpleName();
 
     public RemoteServersDiscovery(String host) {
-        if (host.startsWith("http")) {
-            this.host = host;
-        } else {
-            this.host = "http://" + host;
-        }
-        TimerEx.schedule(discoveryServersTask, null, 10000L);
-    }
-
-    public static class ServersResult extends Result<Map<String, Map<String, List<RemoteServers.Server>>>> {
-
-    }
-
-    public static class ServiceVersionResult extends Result<List<ServiceVersion>> {
-
+       this.host = host;
     }
 
     public Map<String, RemoteServers.Server> getServers(String service) {
@@ -54,7 +40,8 @@ public class RemoteServersDiscovery {
                 type = grayReleased.getType();
             }
         }
-        if (service != null && theServersFinalMap.size() > 0) {
+        Map<String, Map<String, List<RemoteServers.Server>>> theServersFinalMap = RefreshServers.getInstance().getFinalServersMap(this.host);
+        if (service != null && theServersFinalMap != null && theServersFinalMap.size() > 0) {
             Map<String, List<RemoteServers.Server>> typeMap = theServersFinalMap.get(type);
             if ((typeMap == null || typeMap.size() == 0) && !type.equals(GrayReleased.defaultVersion)) {
                 typeMap = theServersFinalMap.get(GrayReleased.defaultVersion);
@@ -89,22 +76,5 @@ public class RemoteServersDiscovery {
             LoggerEx.error(TAG, "theServersFinalMap is empty, please check");
         }
         return null;
-    }
-
-    private TimerTaskEx discoveryServersTask = new TimerTaskEx() {
-        @Override
-        public void execute() {
-            getTheServersFinalMap();
-        }
-    };
-
-    private void getTheServersFinalMap() {
-        ServersResult result = (ServersResult) ScriptHttpUtils.get(host + "/rest/discovery/serviceservers", ServersResult.class);
-        if (result != null) {
-            Map<String, Map<String, List<RemoteServers.Server>>> theServers = result.getData();
-            if (theServers != null) {
-                theServersFinalMap = theServers;
-            }
-        }
     }
 }
