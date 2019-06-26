@@ -25,7 +25,9 @@ public class GrayReleased {
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals(COOKIETYPE)) {
-                    return cookie.getValue();
+                    if(cookie.getValue() != null){
+                        return cookie.getValue().trim();
+                    }
                 }
             }
         }

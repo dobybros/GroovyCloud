@@ -5,6 +5,8 @@ import java.lang.annotation.IncompleteAnnotationException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.lang.StringUtils;
 import script.groovy.annotation.TimerTask;
@@ -50,9 +52,11 @@ public class GroovyTimerTaskHandler extends ClassAnnotationHandler {
                     String key = timerTask.key();
                     long period = timerTask.period();
                     String cron = timerTask.cron();
+                    int countThreads = timerTask.countThreads();
                     GroovyObjectEx<?> groovyObj = ((GroovyBeanFactory) getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
                     MyTimerTask task = new MyTimerTask(key, groovyObj);
                     task.setId(key);
+                    task.setThreadPoolExecutor((ThreadPoolExecutor) Executors.newFixedThreadPool(countThreads));
                     if (!StringUtils.isEmpty(cron)) {
                         task.setCron(cron);
                     } else if (period > 10) {

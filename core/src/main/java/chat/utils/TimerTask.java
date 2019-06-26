@@ -4,8 +4,13 @@ package chat.utils;
  * Created by lick on 2019/6/9.
  * Description：
  */
-public abstract class TimerTask {
+public abstract class TimerTask implements Runnable{
     public void execute(){
 
     };
+
+    @Override
+    public void run() {
+        execute();
+    }
 }

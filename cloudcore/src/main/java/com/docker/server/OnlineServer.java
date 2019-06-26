@@ -32,7 +32,7 @@ public class OnlineServer {
 
     private Integer httpPort;
     private String serverType;
-
+    private String dockerName;
     private IPHolder ipHolder;
     private SDockersService sdockersService;
 
@@ -90,6 +90,7 @@ public class OnlineServer {
         DockerStatus dockerStatus = new DockerStatus();
         dockerStatus.setServer(server);
         dockerStatus.setServerType(serverType);
+        dockerStatus.setDockerName(dockerName);
         dockerStatus.setIp(ipHolder.getIp());
         if (rpcPort != null) {
             try {
@@ -465,4 +466,7 @@ public class OnlineServer {
         this.sslTcpPort = sslTcpPort;
     }
 
+    public void setDockerName(String dockerName) {
+        this.dockerName = dockerName;
+    }
 }

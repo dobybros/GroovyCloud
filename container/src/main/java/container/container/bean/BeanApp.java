@@ -284,6 +284,7 @@ public class BeanApp extends ConfigApp{
             tasks.add(instance.getRpcClientAdapterMapTaskSsl());
             onlineServer.setTasks(tasks);
             onlineServer.setServerType(instance.getServerType());
+            onlineServer.setDockerName(instance.getDockerName());
             onlineServer.setHttpPort(Integer.valueOf(instance.getServerPort()));
             onlineServer.setInternalKey(instance.getInternalKey());
             onlineServer.setRpcPort(instance.getRpcPort());

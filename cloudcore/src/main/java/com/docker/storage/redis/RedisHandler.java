@@ -732,7 +732,7 @@ public class RedisHandler {
      * @return
      * @throws CoreException
      */
-    public Long rpush(String key, String value) throws CoreException {
+    public Long rpush(String key, String... value) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.rpush(key, value);
         });

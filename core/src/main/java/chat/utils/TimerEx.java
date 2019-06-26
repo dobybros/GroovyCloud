@@ -21,6 +21,9 @@ public class TimerEx {
             if (task.getId() == null) {
                 task.setId(ObjectId.get().toString());
             }
+            if(task.getThreadPoolExecutor() == null){
+                task.setThreadPoolExecutor((ThreadPoolExecutor) Executors.newFixedThreadPool(1));
+            }
             QuartzHandler.getInstance().addJob(task);
         } catch (Throwable e) {
             e.printStackTrace();
@@ -39,6 +42,9 @@ public class TimerEx {
             if (task.getId() == null) {
                 task.setId(ObjectId.get().toString());
             }
+            if(task.getThreadPoolExecutor() == null){
+                task.setThreadPoolExecutor((ThreadPoolExecutor) Executors.newFixedThreadPool(1));
+            }
             QuartzHandler.getInstance().addJob(task);
         } catch (Throwable e) {
             e.printStackTrace();
@@ -52,6 +58,9 @@ public class TimerEx {
             }
             if (task.getId() == null) {
                 task.setId(ObjectId.get().toString());
+            }
+            if(task.getThreadPoolExecutor() == null){
+                task.setThreadPoolExecutor((ThreadPoolExecutor) Executors.newFixedThreadPool(1));
             }
             QuartzHandler.getInstance().addCronJob(task);
         } catch (Throwable e) {

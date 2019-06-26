@@ -52,6 +52,7 @@ public class ConfigApp {
     private String maxUsers;
     private String hotDeployment;
     private String fileBucket;
+    private String dockerName;
 
     ConfigApp(){
         InputStream inStream = ConfigApp.class.getClassLoader().getResourceAsStream("container.properties");
@@ -95,6 +96,7 @@ public class ConfigApp {
             upstreamWsPort = prop.getProperty("upstream-ws-port");
             maxUsers = prop.getProperty("server.max.users");
             hotDeployment = prop.getProperty("hotDeployment");
+            dockerName = prop.getProperty("docker.name");
             apppProp.load(appInStream);
             serverPort = apppProp.getProperty("server.port");
         } catch (IOException e) {
@@ -246,5 +248,9 @@ public class ConfigApp {
 
     public String getFileBucket() {
         return fileBucket;
+    }
+
+    public String getDockerName() {
+        return dockerName;
     }
 }

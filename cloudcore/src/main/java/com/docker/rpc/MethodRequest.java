@@ -14,6 +14,7 @@ import com.docker.script.ScriptManager;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.io.IOUtils;
 
+import javax.annotation.Resource;
 import java.io.*;
 import java.util.List;
 
@@ -46,7 +47,6 @@ public class MethodRequest extends RPCRequest {
 	public MethodRequest() {
 		super(RPCTYPE);
 	}
-
 //    public Object invoke() {
 //        return methodMapping.invoke(args);
 //    }

@@ -26,6 +26,7 @@ public class DockerStatus extends DataObject {
 	public static final String FIELD_DOCKERSTATUS_SERVICES = "services";
 	public static final String FIELD_DOCKERSTATUS_HEALTH = "health";
 	public static final String FIELD_DOCKERSTATUS_SERVERTYPE = "serverType";
+	public static final String FIELD_DOCKERSTATUS_DOCKERNAME = "dockerName";
 	public static final String FIELD_DOCKERSTATUS_INFO = "serverInfo";
 
 	public static final String FIELD_SERVERSTATUS_RPCPORT = "rp";
@@ -41,7 +42,10 @@ public class DockerStatus extends DataObject {
 	 * 6位服务器名称， 随机生成的， 在数据库中是唯一字段
 	 */
 	private String server;
-
+	/**
+	 * 线上重启时，服务所在的docker的docker名字
+	 */
+	private String dockerName;
 	/**
 	 * 这是网卡上能取到的IP， 一般是内网IP， 可以用于相同局域网的服务器间通信。
 	 */
@@ -207,6 +211,7 @@ public class DockerStatus extends DataObject {
 		status = dbObj.getInteger(FIELD_DOCKERSTATUS_STATUS);
 		health = dbObj.getInteger(FIELD_DOCKERSTATUS_HEALTH);
 		serverType = (String) dbObj.get(FIELD_DOCKERSTATUS_SERVERTYPE);
+		dockerName = (String) dbObj.get(FIELD_DOCKERSTATUS_DOCKERNAME);
 		List<Document> servicesList = (List<Document>) dbObj.get(FIELD_DOCKERSTATUS_SERVICES);
 		if(servicesList != null) {
 			services = new ArrayList<>();
@@ -230,6 +235,9 @@ public class DockerStatus extends DataObject {
 			dbObj.put(FIELD_DOCKERSTATUS_SERVER, server);
 		if(serverType != null)
 			dbObj.put(FIELD_DOCKERSTATUS_SERVERTYPE, serverType);
+		if(dockerName != null){
+			dbObj.put(FIELD_DOCKERSTATUS_DOCKERNAME, dockerName);
+		}
 		if(publicDomain != null)
 			dbObj.put(FIELD_DOCKERSTATUS_PUBLICDOMAIN, publicDomain);
 		if(ip != null)
@@ -292,5 +300,13 @@ public class DockerStatus extends DataObject {
 
 	public void setWsPort(Integer wsPort) {
 		this.wsPort = wsPort;
+	}
+
+	public String getDockerName() {
+		return dockerName;
+	}
+
+	public void setDockerName(String dockerName) {
+		this.dockerName = dockerName;
 	}
 }

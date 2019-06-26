@@ -26,8 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RemoteServersDiscovery {
     private String host;
-    private List<ServiceVersion> serviceVersions = new ArrayList<>();
-    Map<String, List<RemoteServers.Server>> theServersFinalMap = new ConcurrentHashMap();
+    Map<String, Map<String, List<RemoteServers.Server>>> theServersFinalMap = new ConcurrentHashMap();
     private static final String TAG = RemoteServersDiscovery.class.getSimpleName();
 
     public RemoteServersDiscovery(String host) {
@@ -39,20 +38,12 @@ public class RemoteServersDiscovery {
         TimerEx.schedule(discoveryServersTask, null, 10000L);
     }
 
-    public static class ServersResult extends Result<Map<String, List<RemoteServers.Server>>> {
+    public static class ServersResult extends Result<Map<String, Map<String, List<RemoteServers.Server>>>> {
 
     }
 
     public static class ServiceVersionResult extends Result<List<ServiceVersion>> {
 
-    }
-
-    public List<ServiceVersion> getServiceVersions() {
-        return serviceVersions;
-    }
-
-    public void setServiceVersions(List<ServiceVersion> serviceVersions) {
-        this.serviceVersions = serviceVersions;
     }
 
     public Map<String, RemoteServers.Server> getServers(String service) {
@@ -63,145 +54,54 @@ public class RemoteServersDiscovery {
                 type = grayReleased.getType();
             }
         }
-        Integer version = null;
-        List finalServerTypes = new ArrayList();
-        Integer defaultVersion = null;
-        if(serviceVersions.isEmpty()){
-            getCommonServiceversions();
-        }
-        if (!serviceVersions.isEmpty()) {
-            for (ServiceVersion serviceVersion : serviceVersions) {
-                //如果type里边的service没有指定版本,就去default里找默认版本
-                if (!type.equals(GrayReleased.defaultVersion)) {
-                    if (serviceVersion.getType().equals(GrayReleased.defaultVersion)) {
-                        if (defaultVersion == null) {
-                            defaultVersion = Integer.valueOf(serviceVersion.getServiceVersions().get(service));
-                        } else {
-                            if (Integer.valueOf(serviceVersion.getServiceVersions().get(service)) > defaultVersion) {
-                                defaultVersion = Integer.valueOf(serviceVersion.getServiceVersions().get(service));
-                            }
-                        }
-                    }
-                }
-                if (type.equals(serviceVersion.getType())) {
-                    if (serviceVersion.getServiceVersions() != null) {
-                        if (serviceVersion.getServiceVersions().get(service) != null) {
-                            //如果不同的serverType中有相同的service，但是service版本不一样，就选择版本更大的
-                            if (version == null) {
-                                version = Integer.valueOf(serviceVersion.getServiceVersions().get(service));
-                            } else {
-                                if (Integer.valueOf(serviceVersion.getServiceVersions().get(service)) > version) {
-                                    version = Integer.valueOf(serviceVersion.getServiceVersions().get(service));
-                                }
-                            }
-                        }
-                        List serverTypes = serviceVersion.getServerType();
-                        if (serverTypes != null) {
-                            for (Object serverType : serverTypes) {
-                                if (!finalServerTypes.contains(serverType)) {
-                                    finalServerTypes.add(serverType);
-                                }
-                            }
-                        }
-                    }
-                }
+        if (service != null && theServersFinalMap.size() > 0) {
+            Map<String, List<RemoteServers.Server>> typeMap = theServersFinalMap.get(type);
+            if ((typeMap == null || typeMap.size() == 0) && !type.equals(GrayReleased.defaultVersion)) {
+                typeMap = theServersFinalMap.get(GrayReleased.defaultVersion);
+                LoggerEx.warn(TAG, "Service version cant find type: " + type + ", Now, find in default!!!");
             }
-        }
-        List<String> serviceServerList = new ArrayList<>();
-        List<String> defaultServiceServerList = null;
-        if (finalServerTypes != null && finalServerTypes.size() > 0) {
-            if (version != null) {
-                for (int i = 0; i < finalServerTypes.size(); i++) {
-                    if (!serviceServerList.contains(service + "_" + version.toString() + "_" + finalServerTypes.get(i))) {
-                        serviceServerList.add(service + "_" + version.toString() + "_" + finalServerTypes.get(i));
+            if (typeMap != null && typeMap.size() > 0) {
+                List<RemoteServers.Server> servers = (List<RemoteServers.Server>) typeMap.get(service);
+                //如果type不为default，查出来的servcers为空，那么就去default里找
+                if (servers == null || servers.isEmpty()) {
+                    if (!type.equals(GrayReleased.defaultVersion)) {
+                        typeMap = theServersFinalMap.get(GrayReleased.defaultVersion);
+                        if (typeMap != null && typeMap.size() > 0) {
+                            servers = (List<RemoteServers.Server>) typeMap.get(service);
+                        }
                     }
+                }
+                if (servers != null && servers.size() > 0) {
+                    Map map = new ConcurrentHashMap();
+                    for (int i = 0; i < servers.size(); i++) {
+                        map.put(servers.get(i).getServer(), servers.get(i));
+                    }
+                    if (map.size() > 0) {
+                        return map;
+                    }
+                } else {
+                    LoggerEx.error(TAG, "The service: " + service + " has no server,cant invoke!");
                 }
             } else {
-                //如果type里边的service没有指定版本,就去default里找默认版本
-                if (!type.equals(GrayReleased.defaultVersion)) {
-                    defaultServiceServerList = new ArrayList<>();
-                    if (finalServerTypes != null) {
-                        for (int i = 0; i < finalServerTypes.size(); i++) {
-                            if (!defaultServiceServerList.contains(service + "_" + defaultVersion.toString() + "_" + finalServerTypes.get(i))) {
-                                defaultServiceServerList.add(service + "_" + defaultVersion.toString() + "_" + finalServerTypes.get(i));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        List<RemoteServers.Server> serverList = null;
-        if(theServersFinalMap.isEmpty()){
-            getTheServersFinalMap();
-        }
-        if (theServersFinalMap.size() > 0) {
-            serverList = new ArrayList<>();
-            //server重复性检查
-            List<String> list = new ArrayList();
-            for (String serviceVersion : serviceServerList) {
-                List<RemoteServers.Server> servers = theServersFinalMap.get(serviceVersion);
-                if (servers != null) {
-                    for (int i = 0; i < servers.size(); i++) {
-                        if (!list.contains(servers.get(i).getServer())) {
-                            list.add(servers.get(i).getServer());
-                            serverList.add(servers.get(i));
-                        }
-                    }
-                }
-            }
-            if (serverList.isEmpty() && !type.equals(GrayReleased.defaultVersion)) {
-                for (String serviceVersion : defaultServiceServerList) {
-                    List<RemoteServers.Server> servers = theServersFinalMap.get(serviceVersion);
-                    if (servers != null) {
-                        for (int i = 0; i < servers.size(); i++) {
-                            if (!list.contains(servers.get(i).getServer())) {
-                                list.add(servers.get(i).getServer());
-                                serverList.add(servers.get(i));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (serverList != null && serverList.size() > 0) {
-            Map map = new ConcurrentHashMap();
-            for (int i = 0; i < serverList.size(); i++) {
-                map.put(serverList.get(i).getServer(), serverList.get(i));
-            }
-            if (map.size() > 0) {
-                return map;
+                LoggerEx.error(TAG, "The service: " + service + " has no server,cant invoke!");
             }
         } else {
-            LoggerEx.error(TAG, "The service: " + service + " has no server,cant invoke!");
+            LoggerEx.error(TAG, "theServersFinalMap is empty, please check");
         }
         return null;
-    }
-
-    private void getCommonServiceversions() {
-        ServiceVersionResult result = (ServiceVersionResult) ScriptHttpUtils.get(host + "/rest/discovery/serviceversion", ServiceVersionResult.class);
-        if (result != null) {
-            List<ServiceVersion> theServiceVersions = result.getData();
-            if (!theServiceVersions.isEmpty()) {
-//                for (ServiceVersion serviceVersion : theServiceVersions) {
-//                    serviceVersion.setServerType(Arrays.asList(serviceVersion.getServerType().get(0).substring(1, serviceVersion.getServerType().get(0).length() - 1).split(",")));
-//                }
-                serviceVersions = theServiceVersions;
-                getTheServersFinalMap();
-            }
-        }
     }
 
     private TimerTaskEx discoveryServersTask = new TimerTaskEx() {
         @Override
         public void execute() {
-            getCommonServiceversions();
+            getTheServersFinalMap();
         }
     };
 
     private void getTheServersFinalMap() {
-        ServersResult result = (ServersResult) ScriptHttpUtils.post(JSON.toJSONString(serviceVersions), host + "/rest/discovery/serviceservers", ServersResult.class);
+        ServersResult result = (ServersResult) ScriptHttpUtils.get(host + "/rest/discovery/serviceservers", ServersResult.class);
         if (result != null) {
-            Map<String, List<RemoteServers.Server>> theServers = result.getData();
+            Map<String, Map<String, List<RemoteServers.Server>>> theServers = result.getData();
             if (theServers != null) {
                 theServersFinalMap = theServers;
             }
