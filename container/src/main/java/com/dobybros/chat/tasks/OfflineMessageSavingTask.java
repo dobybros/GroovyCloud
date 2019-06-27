@@ -71,7 +71,8 @@ public class OfflineMessageSavingTask extends Task {
 		if(message.getTime() == null)
 			message.setTime(System.currentTimeMillis());
 		try {
-			messageQueue.put(message);
+			if(messageQueue != null)
+				messageQueue.put(message);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -91,7 +92,7 @@ public class OfflineMessageSavingTask extends Task {
 	
 	@Override
 	public void shutdown() {
-		LoggerEx.info(TAG, OfflineMessageSavingTask.class.getSimpleName() + " is shutting down, " + messageQueue.size() + " is still left. ");
+		LoggerEx.info(TAG, OfflineMessageSavingTask.class.getSimpleName() + " is shutting down, " + (messageQueue != null ? messageQueue.size() : 0) + " is still left. ");
 		isStarted = false;
 		Integer numOfThread = getNumOfThreads();
 		if(numOfThread == null) 

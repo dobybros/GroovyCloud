@@ -390,7 +390,8 @@ public class RPCMessageSendingTask extends Task {
 	
 	public void addMessage(Message message) {
 		try {
-			messageQueue.put(message);
+			if(messageQueue != null)
+				messageQueue.put(message);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -419,7 +420,7 @@ public class RPCMessageSendingTask extends Task {
 	
 	@Override
 	public void shutdown() {
-		LoggerEx.info(TAG, RPCMessageSendingTask.class.getSimpleName() + " is shutting down, " + messageQueue.size() + " is still left. ");
+		LoggerEx.info(TAG, RPCMessageSendingTask.class.getSimpleName() + " is shutting down, " + (messageQueue != null ? messageQueue.size() : 0) + " is still left. ");
 		isStarted = false;
 		Integer numOfThread = getNumOfThreads();
 		if(numOfThread == null) 
