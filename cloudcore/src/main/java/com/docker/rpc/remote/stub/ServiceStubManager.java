@@ -101,6 +101,10 @@ public class ServiceStubManager {
         if (host == null) {
             throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
         }
+        if (!host.startsWith("http")) {
+            host = "http://" + host;
+        }
+        RefreshServers.getInstance().addRemoteHost(host);
         this.clientAdapterMap = new RPCClientAdapterMap();
         if (clientTrustJksPath != null && serverJksPath != null && jksPwd != null) {
             this.clientAdapterMap.setEnableSsl(true);

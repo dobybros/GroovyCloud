@@ -119,7 +119,6 @@ public class StorageManager {
                         } else {
                             manager.setHost(dblan.getProtocol() + "://" + dblan.getDomain() + ":" + dblan.getPort());
                         }
-                        RefreshServers.getInstance().addRemoteHost(manager.getHost());
                         manager.init();
                         stubManagerForLanIdMap.putIfAbsent(lanId, manager);
                         manager = stubManagerForLanIdMap.get(lanId);
