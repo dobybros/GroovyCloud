@@ -521,6 +521,10 @@ public class RedisHandler {
         return null;
     }
 
+    public Long delObject(String prefix, String key) throws CoreException {
+        return del(prefix + "_" + key);
+    }
+
     public String get(String key) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.get(key);
