@@ -322,6 +322,7 @@ public class BeanApp extends ConfigApp{
             scriptManager.setDockerStatusService(instance.getDockerStatusService());
             scriptManager.setFileAdapter(instance.getFileAdapter());
             scriptManager.setHotDeployment(Boolean.valueOf(instance.getHotDeployment()));
+            scriptManager.setKillProcess(Boolean.valueOf(instance.getKillProcess()));
             scriptManager.setServerType(instance.getServerType());
             scriptManager.setServiceVersionService(instance.getServiceVersionService());
         }

@@ -51,6 +51,7 @@ public class ConfigApp {
     private String serverPort;
     private String maxUsers;
     private String hotDeployment;
+    private String killProcess;
     private String fileBucket;
     private String dockerName;
 
@@ -96,6 +97,7 @@ public class ConfigApp {
             upstreamWsPort = prop.getProperty("upstream-ws-port");
             maxUsers = prop.getProperty("server.max.users");
             hotDeployment = prop.getProperty("hotDeployment");
+            killProcess = prop.getProperty("killProcess");
             dockerName = prop.getProperty("docker.name");
             apppProp.load(appInStream);
             serverPort = apppProp.getProperty("server.port");
@@ -252,5 +254,9 @@ public class ConfigApp {
 
     public String getDockerName() {
         return dockerName;
+    }
+
+    public String getKillProcess() {
+        return killProcess;
     }
 }

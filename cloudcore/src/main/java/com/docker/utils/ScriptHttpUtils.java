@@ -10,6 +10,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -32,6 +33,16 @@ public class ScriptHttpUtils {
         CloseableHttpResponse response = null;
         CloseableHttpClient httpClient = HttpClients.createDefault();
         try {
+            RequestConfig requestConfig = RequestConfig.custom()
+                    // 设置连接超时时间(单位毫秒)
+                    .setConnectTimeout(5000)
+                    // 设置请求超时时间(单位毫秒)
+                    .setConnectionRequestTimeout(5000)
+                    // socket读写超时时间(单位毫秒)
+                    .setSocketTimeout(5000)
+                    // 设置是否允许重定向(默认为true)
+                    .setRedirectsEnabled(true).build();
+            post.setConfig(requestConfig);
             post = new HttpPost(url);
             // 构造消息头
             post.setHeader("Content-type", "application/json; charset=utf-8");
@@ -77,6 +88,16 @@ public class ScriptHttpUtils {
         HttpGet get = new HttpGet(url);
         CloseableHttpResponse response = null;
         try {
+            RequestConfig requestConfig = RequestConfig.custom()
+                    // 设置连接超时时间(单位毫秒)
+                    .setConnectTimeout(5000)
+                    // 设置请求超时时间(单位毫秒)
+                    .setConnectionRequestTimeout(5000)
+                    // socket读写超时时间(单位毫秒)
+                    .setSocketTimeout(5000)
+                    // 设置是否允许重定向(默认为true)
+                    .setRedirectsEnabled(true).build();
+            get.setConfig(requestConfig);
             response = httpClient.execute(get);
             if (response != null && response.getStatusLine().getStatusCode() == 200) {
                 HttpEntity responseEntity = response.getEntity();
