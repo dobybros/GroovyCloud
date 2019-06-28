@@ -72,7 +72,7 @@
 				<!-- The configuration of the plugin -->
 				<configuration>
 					<descriptors>
-						<descriptor>src/main/resources/assembly.xml</descriptor>
+						<descriptor>src/main/resources/config/assembly.xml</descriptor>
 					</descriptors>
 				</configuration>
 				<executions>
