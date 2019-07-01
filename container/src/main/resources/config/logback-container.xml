@@ -34,7 +34,20 @@
             <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
         </layout>
     </appender>
-
+    <appender name="ANALYTICS-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/analytics.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/analytics.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="analytics" level="INFO" additivity="false">
+        <appender-ref ref="ANALYTICS-FILE"/>
+    </logger>
     <root level="INFO">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="logFile" />

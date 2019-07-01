@@ -10,7 +10,11 @@ set permsizeelse=128m
 set largepagesize=128m
 set CMSInitiatingOccupancyFraction=70
 set SurvivorRatio=2
-
+set logsFile=logs
+set binFile=bin
+cd ..
+if not exist %logsFile%( mkdir %logsFile%)
+cd %binFile%
 if "%1" == "debug" (
     set JAVA_DEBUG_OPTS= -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n
     goto debug

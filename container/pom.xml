@@ -58,6 +58,9 @@
 							<mainClass>container.container.ContainerApplication</mainClass>
 							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
+<!--						<manifestEntries>-->
+<!--							<Class-Path>lib/cloudcore-0.0.1-SNAPSHOT.jar lib/core-0.0.1-SNAPSHOT.jar lib/mongodbconnector-0.0.1-SNAPSHOT.jar</Class-Path>-->
+<!--						</manifestEntries>-->
 					</archive>
 					<excludes>
 						<exclude>**/*.xml</exclude>
