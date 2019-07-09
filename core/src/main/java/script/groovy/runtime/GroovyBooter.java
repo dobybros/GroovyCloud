@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Description：
  */
 public class GroovyBooter implements RuntimeBootListener {
-    private static final String TAG = GroovyRuntime.class.getSimpleName();
+    private static final String TAG = GroovyBooter.class.getSimpleName();
     private MyGroovyClassLoader classLoader;
     private AtomicLong latestVersion = new AtomicLong(0);
 

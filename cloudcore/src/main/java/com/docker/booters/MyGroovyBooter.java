@@ -15,7 +15,7 @@ public class MyGroovyBooter extends GroovyBooter {
     public void beforeDeploy() {
         MyBaseRuntime myBaseRuntime = (MyBaseRuntime) getGroovyRuntime();
         if(myBaseRuntime != null){
-            new ScriptUtils().serviceStubProxy(myBaseRuntime, TAG);
+            ScriptUtils.serviceStubProxy(myBaseRuntime, TAG);
         }
     }
 }

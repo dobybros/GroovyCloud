@@ -340,7 +340,9 @@ public class ScriptManager implements ShutdownListener {
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.exit(1);
+            if(killProcess){
+                System.exit(1);
+            }
         } finally {
             isLoaded = false;
         }
@@ -365,6 +367,7 @@ public class ScriptManager implements ShutdownListener {
 
     private List<String> getServiceVersions() throws CoreException {
         List<ServiceVersion> serviceVersions = serviceVersionService.getServiceVersions(serverType);
+
         Map<String, List> serviceVersionFinalMap = new ConcurrentHashMap<>();
         Map<String, Integer> defaultVersionMap = new ConcurrentHashMap();
         for (ServiceVersion serviceVersion : serviceVersions) {

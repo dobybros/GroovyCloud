@@ -12,7 +12,7 @@ import java.io.IOException;
  * Description：
  */
 public class ScriptUtils {
-    public void serviceStubProxy(MyBaseRuntime myBaseRuntime, String TAG){
+    public static void serviceStubProxy(MyBaseRuntime myBaseRuntime, String TAG){
         String path = myBaseRuntime.getPath();
         if(myBaseRuntime.getRemoteServiceHost() != null) {
             String code =
