@@ -22,6 +22,7 @@ public class ServerStart {
 	private static String queueCapacity;
 	private static final String TAG = "ServerStart";
 	private Map<String, String> asyncServletMap;
+	private ThreadPoolExecutor threadPoolExecutor;
 
 	private static volatile ServerStart instance;
 	private boolean isStarted = false;
@@ -70,6 +71,9 @@ public class ServerStart {
 	}
 
 	public ThreadPoolExecutor getThreadPool() {
-		return new org.apache.tomcat.util.threads.ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)));
+		if(threadPoolExecutor == null){
+			threadPoolExecutor = new org.apache.tomcat.util.threads.ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)));
+		}
+		return threadPoolExecutor;
 	}
 }

@@ -300,6 +300,7 @@ public class ScriptManager implements ShutdownListener {
                                 LoggerEx.info(TAG, "=====Notice!!! The service: " + service + " has being redeployed====");
                             }
                         } else {
+                            LoggerEx.error(TAG, "Failed get groovy.zip, service is " + service_version);
                             throw new CoreException(ChatErrorCodes.ERROR_NO_GROOVYFILE, "Failed get groovy.zip, service is " + service_version);
                         }
                     }catch (Exception e){
@@ -447,6 +448,7 @@ public class ScriptManager implements ShutdownListener {
                 }
                 return serviceVersionFinalList;
             } else {
+                LoggerEx.error(TAG, "Discovery not specify, please check!");
                 throw new CoreException(ChatErrorCodes.ERROR_DISCOVERY_NOTFOUND, "Discovery service not found, cant process!");
             }
         }

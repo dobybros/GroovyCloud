@@ -111,6 +111,7 @@ public class OnlineServer {
         dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
         dockerStatus.setWsPort(Integer.valueOf(wsPort));
         dockerStatus.setRpcPort(Integer.valueOf(rpcPort));
+        dockerStatus.setTime(ChatUtils.dateString(System.currentTimeMillis()));
         if (status == null)
             status = DockerStatus.STATUS_OK;
         dockerStatus.setStatus(status);

@@ -33,6 +33,7 @@ public class DockerStatus extends DataObject {
 	public static final String FIELD_SERVERSTATUS_SSLRPCPORT = "srp";
 	public static final String FIELD_SERVERSTATUS_TCPPORT = "tp";
 	public static final String FIELD_SERVERSTATUS_WEBSOCKETPORT = "ws";
+	public static final String FIELD_SERVERSTATUS_TIME = "time";
 	/**
 	 * 服务器的类型， login， gateway， presence等
 	 */
@@ -111,6 +112,8 @@ public class DockerStatus extends DataObject {
 	 * 其他字段，例如gateway的sslRpcPort、tcpPort、webSocketPort、rpcPort
 	 */
 	public Map info;
+
+	private String time;
 
 	public String getServer() {
 		return server;
@@ -212,6 +215,7 @@ public class DockerStatus extends DataObject {
 		health = dbObj.getInteger(FIELD_DOCKERSTATUS_HEALTH);
 		serverType = (String) dbObj.get(FIELD_DOCKERSTATUS_SERVERTYPE);
 		dockerName = (String) dbObj.get(FIELD_DOCKERSTATUS_DOCKERNAME);
+		time =  (String) dbObj.get(FIELD_SERVERSTATUS_TIME);
 		List<Document> servicesList = (List<Document>) dbObj.get(FIELD_DOCKERSTATUS_SERVICES);
 		if(servicesList != null) {
 			services = new ArrayList<>();
@@ -256,6 +260,8 @@ public class DockerStatus extends DataObject {
 			dbObj.put(FIELD_DOCKERSTATUS_STATUS, status);
 		if(health != null)
 			dbObj.put(FIELD_DOCKERSTATUS_HEALTH, health);
+		if(time != null)
+			dbObj.put(FIELD_SERVERSTATUS_TIME, time);
 		if(services != null) {
 			List<Document> serviceList = new ArrayList<>();
 			for(Service service : services) {
@@ -308,5 +314,13 @@ public class DockerStatus extends DataObject {
 
 	public void setDockerName(String dockerName) {
 		this.dockerName = dockerName;
+	}
+
+	public String getTime() {
+		return time;
+	}
+
+	public void setTime(String time) {
+		this.time = time;
 	}
 }

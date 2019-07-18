@@ -405,6 +405,7 @@ public class RedisHandler {
         return doJedisExecute(jedis -> {
             return jedis.set(key, value, nxxx, expx, time);
         });
+
 /*
         ShardedJedis jedis = null;
         try {
@@ -421,7 +422,11 @@ public class RedisHandler {
         }
 */
     }
-
+    public String set(String key, String value, String nxxx) throws CoreException {
+        return doJedisExecute(jedis -> {
+            return jedis.set(key, value, nxxx);
+        });
+    }
     public Long del(String key) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.del(key);
