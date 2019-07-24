@@ -106,6 +106,7 @@ public class ConfigApp {
         } finally {
             try {
                 inStream.close();
+                appInStream.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }

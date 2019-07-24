@@ -1018,7 +1018,16 @@ public class RedisHandler {
             return jedis.hincrBy(key, field, value);
         });
     }
-
+    public Long sadd(String key, String... members) throws CoreException {
+        return doJedisExecute(jedis -> {
+            return jedis.sadd(key, members);
+        });
+    }
+    public Set<String> smembers(String key) throws CoreException {
+        return doJedisExecute(jedis -> {
+            return jedis.smembers(key);
+        });
+    }
     private <V> V doJedisExecute(JedisExcutor executor) throws CoreException {
         JedisCommands jedis = null;
         try {
