@@ -1,6 +1,7 @@
 package com.docker.data;
 
 import com.alibaba.fastjson.JSONObject;
+import com.docker.storage.mongodb.CleanDocument;
 import org.bson.Document;
 
 import java.util.ArrayList;
@@ -53,5 +54,14 @@ public class ServiceVersion {
         type = dbObj.getString("type");
         serverType = (List<String>) dbObj.get("serverType");
         serviceVersions = (Map<String, String>)dbObj.get("serviceVersions");
+
+    }
+    public Document toDocument() {
+        Document dbObj = new CleanDocument();
+       dbObj.append("_id", _id)
+               .append("type", type)
+               .append("serverType", serverType)
+               .append("serviceVersions", serviceVersions);
+        return dbObj;
     }
 }

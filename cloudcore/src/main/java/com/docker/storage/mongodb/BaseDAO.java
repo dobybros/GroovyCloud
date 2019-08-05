@@ -70,7 +70,13 @@ public abstract class BaseDAO implements DAO {
 		}
 		return iterable;
 	}
-	
+
+	@Override
+	public FindIterable find() throws DBException {
+		FindIterable iterable = col.find();
+		return iterable;
+	}
+
 	@Override
 	public void add(DataObject dObj) throws DBException {
 		dObj.generateId();
@@ -80,7 +86,16 @@ public abstract class BaseDAO implements DAO {
 			throw new DBException(getType(me), me.getCode(), getCollectionName() + " save failed", me.getMessage() + "; obj = " + dObj.toDocument());
 		}
 	}
-	
+
+	@Override
+	public void add(Document document) throws DBException{
+		try{
+			col.insertOne(document);
+		} catch (MongoException me) {
+			throw new DBException(getType(me), me.getCode(), getCollectionName() + " save failed", me.getMessage() + "; obj = " + document);
+		}
+	}
+
 	@Override
 	public UpdateResult replace(DataObject dObj) throws DBException {
 		dObj.generateId();
