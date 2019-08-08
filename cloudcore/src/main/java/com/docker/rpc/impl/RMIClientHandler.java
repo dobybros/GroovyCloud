@@ -183,9 +183,9 @@ public class RMIClientHandler extends RPCClientAdapter {
                 try {
                     boolean bool = UnicastRemoteObject.unexportObject(server, true);
                     LoggerEx.info(TAG, "RMI " + serverHost +  " port " + rmiPort + " server " + rmiId + " is destroyed, unexport " + server + " result " + bool);
-                } catch (NoSuchObjectException e) {
+                } catch (Throwable e) {
 //             e.printStackTrace();
-                    LoggerEx.info(TAG, "RMI " + serverHost +  " port " + rmiPort + " server " + rmiId + " is destroyed, NoSuchObject " + server + " error " + e.getMessage());
+//                    LoggerEx.info(TAG, "RMI " + serverHost +  " port " + rmiPort + " server " + rmiId + " is destroyed, NoSuchObject " + server + " error " + e.getMessage());
                 }
             }
             LoggerEx.info(TAG, "RMI " + serverHost +  " port " + rmiPort + " server " + rmiId + " monitor stopped...");
