@@ -1,6 +1,7 @@
 package container.container.bean;
 
 import chat.utils.IPHolder;
+import com.alibaba.fastjson.util.TypeUtils;
 import com.dobybros.chat.props.GlobalLansProperties;
 import com.dobybros.chat.utils.AutoReloadProperties;
 import com.dobybros.file.adapters.GridFSFileHandler;
@@ -13,7 +14,6 @@ import com.docker.storage.mongodb.daos.*;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -64,6 +64,7 @@ public class InitContainer implements CommandLineRunner{
 
     @Override
     public void run(String... args) throws Exception {
+        TypeUtils.compatibleWithJavaBean = true;
         globalLansProperties.init();
         dockerStatusHelper.init();
         configHelper.init();
