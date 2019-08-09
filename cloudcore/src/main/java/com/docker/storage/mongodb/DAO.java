@@ -18,6 +18,8 @@ public interface DAO {
 
     public void add(DataObject dObj) throws DBException;
 
+    public void add(Document document) throws DBException;
+
     public void addAll(Collection<DataObject> dObjs) throws DBException;
 
     public DeleteResult delete(Bson match) throws DBException;
@@ -36,6 +38,9 @@ public interface DAO {
             throws DBException;
 
     DataObject findOne(Bson query) throws DBException;
+
+    FindIterable<Document> find()
+            throws DBException;
 
     Document findAndUpdate(Bson query, Bson projection, Bson sort, Bson update,
                            boolean returnNew, boolean upsert) throws DBException;

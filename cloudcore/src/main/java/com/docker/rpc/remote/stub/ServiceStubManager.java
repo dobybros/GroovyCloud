@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ServiceStubManager {
     private static final String TAG = ServiceStubManager.class.getSimpleName();
+    private ConcurrentHashMap<Class<?>, Boolean> classScanedMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Long, MethodMapping> methodMap = new ConcurrentHashMap<>();
     private String clientTrustJksPath;
     private String serverJksPath;
@@ -56,12 +57,17 @@ public class ServiceStubManager {
 //                service = paths[paths.length - 2];
 //            }
 //        }
+        if(!classScanedMap.containsKey(clazz)) {
+            classScanedMap.put(clazz, true);
+        } else {
+            return;
+        }
         Method[] methods = ReflectionUtil.getMethods(clazz);
         if (methods != null) {
             for (Method method : methods) {
                 MethodMapping mm = new MethodMapping(method);
                 long value = ReflectionUtil.getCrc(method, service);
-                if (methodMap.contains(value)) {
+                if (methodMap.containsKey(value)) {
                     LoggerEx.fatal(TAG, "Don't support override methods, please rename your method " + method + " for crc " + value + " and existing method " + methodMap.get(value).getMethod());
                     continue;
                 }

@@ -1,5 +1,6 @@
 package com.docker.rpc;
 
+import chat.logs.LoggerEx;
 import com.docker.rpc.impl.ExpireListener;
 import com.docker.rpc.impl.RMIClientHandler;
 
@@ -19,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class RPCClientAdapterMap {
 	private static final String TAG = RPCClientAdapterMap.class.getSimpleName();
 	
-	private Map<String, RPCClientAdapter> clientAdapterMap = new ConcurrentHashMap<String, RPCClientAdapter>();
+	private ConcurrentHashMap<String, RPCClientAdapter> clientAdapterMap = new ConcurrentHashMap<String, RPCClientAdapter>();
 	private long expireTime = TimeUnit.MINUTES.toMillis(5);
 
 	private boolean enableSsl = false;
@@ -39,7 +40,7 @@ public class RPCClientAdapterMap {
 		return builder.toString();
 	}
 
-	public synchronized RPCClientAdapter registerServer(String ip, int rmiPort, final String serverName) {
+	public RPCClientAdapter registerServer(String ip, int rmiPort, final String serverName) {
 		return registerServer(ip, rmiPort, serverName, null);
 	}
 
@@ -47,7 +48,7 @@ public class RPCClientAdapterMap {
 		return clientAdapterMap.get(serverName);
 	}
 
-	public synchronized RPCClientAdapter registerServer(String ip, int rmiPort, final String serverName, RPCClientAdapter.ClientAdapterStatusListener statusListener) {
+	public RPCClientAdapter registerServer(String ip, int rmiPort, final String serverName, RPCClientAdapter.ClientAdapterStatusListener statusListener) {
 		if(serverName == null)
 			return null;
 		RPCClientAdapter clientAdapter = clientAdapterMap.get(serverName);
@@ -78,13 +79,18 @@ public class RPCClientAdapterMap {
 			clientAdapter = rmiClient;
 			
 			clientAdapter.clientStart();
-			clientAdapterMap.put(serverName, clientAdapter);
+			RPCClientAdapter existingClientAdapter = clientAdapterMap.putIfAbsent(serverName, clientAdapter);
+			if(existingClientAdapter != null) {
+				LoggerEx.info(TAG, "clientAdapterMap putIfAbsent returned existing clientAdapter " + existingClientAdapter + " close the new clientAdapter " + clientAdapter);
+				clientAdapter.clientDestroy();
+				clientAdapter = existingClientAdapter;
+			}
 		}
 		clientAdapter.addStatusListener(statusListener);
 		return clientAdapter;
 	}
 	
-	public synchronized RPCClientAdapter unregisterServer(String serverName) {
+	public RPCClientAdapter unregisterServer(String serverName) {
 		RPCClientAdapter handler = clientAdapterMap.remove(serverName);
 		if(handler != null) {
 			handler.clientDestroy();
@@ -104,7 +110,7 @@ public class RPCClientAdapterMap {
 		return clientAdapterMap;
 	}
 
-	public void setClientAdapterMap(Map<String, RPCClientAdapter> clientAdapterMap) {
+	public void setClientAdapterMap(ConcurrentHashMap<String, RPCClientAdapter> clientAdapterMap) {
 		this.clientAdapterMap = clientAdapterMap;
 	}
 

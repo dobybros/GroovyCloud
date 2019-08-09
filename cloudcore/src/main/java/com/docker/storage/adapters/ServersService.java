@@ -2,6 +2,9 @@ package com.docker.storage.adapters;
 
 import chat.errors.CoreException;
 import org.bson.Document;
+import org.bson.conversions.Bson;
+
+import java.util.List;
 
 
 /**
@@ -16,4 +19,9 @@ public interface ServersService {
 
 	Document getServerConfig(String serverType) throws CoreException;
 
+	void deleteServerConfig(Bson bson) throws CoreException;
+
+	void addServerConfig(Document document) throws CoreException;
+
+	List<Document> getServerConfigs() throws CoreException;
 }
