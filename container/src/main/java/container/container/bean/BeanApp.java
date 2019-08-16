@@ -179,9 +179,10 @@ public class BeanApp extends ConfigApp{
     public synchronized com.docker.rpc.impl.RMIServerImplWrapper getDockerRpcServerSsl() {
         if(dockerRpcServerSsl == null){
             try {
-                dockerRpcServerSsl = new com.docker.rpc.impl.RMIServerImplWrapper(Integer.valueOf(getRpcPort()));
+                dockerRpcServerSsl = instance.getRpcServerSsl();
+//                dockerRpcServerSsl = new com.docker.rpc.impl.RMIServerImplWrapper(Integer.valueOf(getRpcPort()));
                 dockerRpcServerSsl.setRmiServerHandler(instance.getDockerRpcServerAdapterSsl());
-            } catch (RemoteException e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
             }
         }
@@ -201,9 +202,10 @@ public class BeanApp extends ConfigApp{
     public synchronized com.docker.rpc.impl.RMIServerImplWrapper getDockerRpcServer() {
         if(dockerRpcServer == null){
             try {
-                dockerRpcServer = new com.docker.rpc.impl.RMIServerImplWrapper(Integer.valueOf(getRpcPort()));
+                dockerRpcServer = instance.getRpcServer();
+//                dockerRpcServer = new com.docker.rpc.impl.RMIServerImplWrapper(Integer.valueOf(getRpcPort()));
                 dockerRpcServer.setRmiServerHandler(instance.getDockerRpcServerAdapter());
-            } catch (RemoteException e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
             }
         }
