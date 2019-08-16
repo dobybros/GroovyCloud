@@ -7,7 +7,6 @@ import com.dobybros.chat.data.OfflineMessage;
 import com.dobybros.chat.errors.CoreErrorCodes;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.open.data.UserStatus;
-
 import com.dobybros.chat.rpc.reqres.balancer.ServerMessageRequest;
 import com.dobybros.chat.rpc.reqres.balancer.ServerMessageResponse;
 import com.dobybros.chat.script.annotations.gateway.GatewayGroovyRuntime;
@@ -16,6 +15,7 @@ import com.dobybros.chat.storage.adapters.UserInfoAdapter;
 import com.dobybros.chat.tasks.MessageSendingSingleThreadQueueWrapper.SpreadMessage;
 import com.dobybros.chat.utils.SingleThreadQueue;
 import com.docker.rpc.RPCClientAdapter;
+import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.script.BaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.utils.SpringContextUtil;
@@ -33,10 +33,10 @@ class MessageSendingSingleThreadQueueWrapper extends SingleThreadQueue<SpreadMes
 		private ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
 		
 		public MessageSendingSingleThreadQueueWrapper(final String server, String ip,
-                                                      Integer port, RPCClientAdapterMapTask rpcClientAdapterMapTask, final ConcurrentHashMap<String, MessageSendingSingleThreadQueueWrapper> serverQueueMap, OfflineMessageSavingTask offlineMessageSavingTask) {
+													  Integer port, RPCClientAdapterMap rpcClientAdapterMap, final ConcurrentHashMap<String, MessageSendingSingleThreadQueueWrapper> serverQueueMap, OfflineMessageSavingTask offlineMessageSavingTask) {
 			super("Message sending queue on Server " + server, new ConcurrentLinkedQueue<SpreadMessage>(), ServerStart.getInstance().getThreadPool());
 			
-			RPCClientAdapter clientAdapter = rpcClientAdapterMapTask.registerServer(ip, port, server, new RPCClientAdapter.ClientAdapterStatusListener(){
+			RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(ip, port, server, new RPCClientAdapter.ClientAdapterStatusListener(){
 				@Override
 				public void terminated(String serverName) {
 					synchronized (serverQueueMap) {

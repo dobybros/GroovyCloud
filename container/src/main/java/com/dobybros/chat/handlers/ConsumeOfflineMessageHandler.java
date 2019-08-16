@@ -15,9 +15,9 @@ import com.dobybros.chat.storage.adapters.OfflineMessageAdapter;
 import com.dobybros.chat.storage.adapters.StorageManager;
 import com.dobybros.chat.storage.adapters.UserInPresenceAdapter;
 import com.dobybros.chat.storage.adapters.UserInfoAdapter;
-import com.dobybros.chat.tasks.RPCClientAdapterMapTask;
 import com.dobybros.chat.tasks.RPCMessageSendingTask;
 import com.docker.rpc.RPCClientAdapter;
+import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.server.OnlineServer;
 
 import javax.annotation.Resource;
@@ -36,10 +36,10 @@ public class ConsumeOfflineMessageHandler {
     private RPCMessageSendingTask messageSendingTask;
 
     @Resource
-    private RPCClientAdapterMapTask rpcClientAdapterMapTask;
+    private RPCClientAdapterMap rpcClientAdapterMap;
 
     @Resource
-    private RPCClientAdapterMapTask rpcClientAdapterMapTaskSsl;
+    private RPCClientAdapterMap rpcClientAdapterMapSsl;
 
 	public ConsumeOfflineMessageHandler() {
 		
@@ -139,9 +139,9 @@ public class ConsumeOfflineMessageHandler {
                                 if(server != null && ip != null && port != null) {
                                     RPCClientAdapter gatewayClientAdapter = null;
                                     if(lanId.equals(OnlineServer.getInstance().getLanId())) {
-                                        gatewayClientAdapter = rpcClientAdapterMapTask.registerServer(ip, port, server);
+                                        gatewayClientAdapter = rpcClientAdapterMap.registerServer(ip, port, server);
                                     } else {
-                                        gatewayClientAdapter = rpcClientAdapterMapTaskSsl.registerServer(ip, port, server);
+                                        gatewayClientAdapter = rpcClientAdapterMapSsl.registerServer(ip, port, server);
                                     }
 
                                     ServerMessageRequest msgRequest = new ServerMessageRequest();
