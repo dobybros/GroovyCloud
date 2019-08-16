@@ -6,7 +6,6 @@ import com.dobybros.chat.handlers.ConsumeOfflineMessageHandler;
 import com.dobybros.chat.props.GlobalLansProperties;
 import com.dobybros.chat.services.impl.ConsumeQueueService;
 import com.dobybros.chat.tasks.OfflineMessageSavingTask;
-import com.dobybros.chat.tasks.RPCClientAdapterMapTask;
 import com.dobybros.chat.tasks.RPCMessageSendingTask;
 import com.dobybros.chat.utils.AutoReloadProperties;
 import com.dobybros.file.adapters.GridFSFileHandler;
@@ -17,9 +16,9 @@ import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.dobybros.http.MyHttpParameters;
 import com.docker.onlineserver.OnlineServerWithStatus;
+import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.rpc.impl.RMIServerImplWrapper;
-import com.docker.rpc.remote.stub.RemoteServersDiscovery;
 import com.docker.script.ScriptManager;
 import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
 import com.docker.storage.adapters.impl.ServersServiceImpl;
@@ -42,7 +41,6 @@ import org.apache.mina.filter.ssl.SslFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
 import org.quartz.SchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
-import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import script.filter.JsonFilterFactory;
 import script.groovy.servlets.RequestPermissionHandler;
 
@@ -110,8 +108,8 @@ public class BeanApp extends ConfigApp{
     private ScriptManager scriptManager;
     private OnlineUserManagerImpl onlineUserManager;
     private OnlineServerWithStatus onlineServer;
-    private RPCClientAdapterMapTask rpcClientAdapterMapTask;
-    private RPCClientAdapterMapTask rpcClientAdapterMapTaskSsl;
+    private RPCClientAdapterMap rpcClientAdapterMap;
+    private RPCClientAdapterMap rpcClientAdapterMapSsl;
     private RMIServerImplWrapper rpcServer;
 //    private RMIHandler rpcServerAdapter;
     private RMIServerImplWrapper rpcServerSsl;
@@ -255,22 +253,22 @@ public class BeanApp extends ConfigApp{
         return rpcServer;
     }
 
-    public synchronized RPCClientAdapterMapTask getRpcClientAdapterMapTaskSsl() {
-        if(rpcClientAdapterMapTaskSsl == null){
-            rpcClientAdapterMapTaskSsl = new RPCClientAdapterMapTask();
-            rpcClientAdapterMapTaskSsl.setEnableSsl(true);
-            rpcClientAdapterMapTaskSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
-            rpcClientAdapterMapTaskSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
-            rpcClientAdapterMapTaskSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
+    public synchronized RPCClientAdapterMap getRpcClientAdapterMapSsl() {
+        if(rpcClientAdapterMapSsl == null){
+            rpcClientAdapterMapSsl = new RPCClientAdapterMap();
+            rpcClientAdapterMapSsl.setEnableSsl(true);
+            rpcClientAdapterMapSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
+            rpcClientAdapterMapSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
+            rpcClientAdapterMapSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
         }
-        return rpcClientAdapterMapTaskSsl;
+        return rpcClientAdapterMapSsl;
     }
 
-    public synchronized RPCClientAdapterMapTask getRpcClientAdapterMapTask() {
-        if(rpcClientAdapterMapTask == null){
-            rpcClientAdapterMapTask = new RPCClientAdapterMapTask();
+    public synchronized RPCClientAdapterMap getRpcClientAdapterMap() {
+        if(rpcClientAdapterMap == null){
+            rpcClientAdapterMap = new RPCClientAdapterMap();
         }
-        return rpcClientAdapterMapTask;
+        return rpcClientAdapterMap;
     }
 
     public synchronized OnlineServerWithStatus getOnlineServer() {
@@ -280,8 +278,6 @@ public class BeanApp extends ConfigApp{
             List<Task> tasks = new ArrayList<>();
             tasks.add(instance.getMessageSendingTask());
             tasks.add(instance.getOfflineMessageSavingTask());
-            tasks.add(instance.getRpcClientAdapterMapTask());
-            tasks.add(instance.getRpcClientAdapterMapTaskSsl());
             onlineServer.setTasks(tasks);
             onlineServer.setServerType(instance.getServerType());
             onlineServer.setDockerName(instance.getDockerName());

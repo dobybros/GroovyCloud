@@ -80,7 +80,7 @@ public class RPCClientAdapterMapTask extends Task {
 			RMIClientHandler rmiClient = new RMIClientHandler();
 			rmiClient.setRmiPort(rmiPort);
 			rmiClient.setServerHost(ip);
-//			rmiClient.setServerName(serverName);
+			rmiClient.setRmiId(serverName);
 			rmiClient.setEnableSsl(enableSsl);
 			if (enableSsl) {
 				rmiClient.setRpcSslClientTrustJksPath(rpcSslClientTrustJksPath);

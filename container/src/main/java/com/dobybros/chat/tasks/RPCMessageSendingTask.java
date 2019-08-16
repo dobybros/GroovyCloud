@@ -14,6 +14,7 @@ import com.dobybros.chat.storage.adapters.StorageManager;
 import com.dobybros.chat.storage.adapters.UserInPresenceAdapter;
 import com.dobybros.chat.storage.adapters.UserInfoAdapter;
 import com.docker.onlineserver.OnlineServerWithStatus;
+import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.script.BaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.server.OnlineServer;
@@ -42,10 +43,10 @@ public class RPCMessageSendingTask extends Task {
 	private OfflineMessageSavingTask offlineMessageSavingTask;
 	
 	@Resource
-	private RPCClientAdapterMapTask rpcClientAdapterMapTask;
+	private RPCClientAdapterMap rpcClientAdapterMap;
 
 	@Resource
-	private RPCClientAdapterMapTask rpcClientAdapterMapTaskSsl;
+	private RPCClientAdapterMap rpcClientAdapterMapSsl;
 	
 	@Resource
 	private OnlineServerWithStatus onlineServer;
@@ -75,13 +76,13 @@ public class RPCMessageSendingTask extends Task {
 			synchronized (serverQueueMap) {
 				serverQueue = serverQueueMap.get(server);
 				if(serverQueue == null) {
-					RPCClientAdapterMapTask clientAdapterMapTask = null;
+					RPCClientAdapterMap clientAdapterMap = null;
 					if(lanId != null && !lanId.equals(OnlineServer.getInstance().getLanId())) {
-						clientAdapterMapTask = rpcClientAdapterMapTaskSsl;
+						clientAdapterMap = rpcClientAdapterMapSsl;
 					} else {
-						clientAdapterMapTask = rpcClientAdapterMapTask;
+						clientAdapterMap = rpcClientAdapterMap;
 					}
-					serverQueue = new MessageSendingSingleThreadQueueWrapper(server, ip, port, clientAdapterMapTask, serverQueueMap, offlineMessageSavingTask);
+					serverQueue = new MessageSendingSingleThreadQueueWrapper(server, ip, port, clientAdapterMap, serverQueueMap, offlineMessageSavingTask);
 					MessageSendingSingleThreadQueueWrapper actual = serverQueueMap.putIfAbsent(server, serverQueue);
 					if(actual != null) {
 						serverQueue = actual;

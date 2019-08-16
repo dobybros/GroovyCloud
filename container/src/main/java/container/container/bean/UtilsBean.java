@@ -1,11 +1,7 @@
 package container.container.bean;
 
-import chat.scheduled.QuartzHandler;
-import com.dobybros.chat.tasks.RPCClientAdapterMapTask;
 import org.quartz.SchedulerFactory;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 
 /**
  * Created by lick on 2019/6/9.

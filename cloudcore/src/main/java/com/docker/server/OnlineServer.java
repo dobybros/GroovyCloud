@@ -3,6 +3,7 @@ package com.docker.server;
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import chat.main.ServerStart;
 import chat.utils.ChatUtils;
 import chat.utils.IPHolder;
 import com.docker.data.DockerStatus;
@@ -19,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ThreadPoolExecutor;
 
 
 public class OnlineServer {
@@ -184,18 +186,18 @@ public class OnlineServer {
                 dockerStatusService.addDockerStatus(dockerStatus);
             }
 
-//            QueuedThreadPool threadPool = ServerStart.getInstance().getThreadPool();
-//            if (tasks != null) {
-//                for (Task task : tasks) {
-//                    task.setOnlineServer(this);
-//                    task.init();
-//                    LoggerEx.info(TAG, "Task " + task + " initialized!");
-//                    int numOfThreads = task.getNumOfThreads();
-//                    for (int i = 0; i < numOfThreads; i++) {
-//                        threadPool.execute(task);
-//                    }
-//                }
-//            }
+            ThreadPoolExecutor threadPool = ServerStart.getInstance().getThreadPool();
+            if (tasks != null) {
+                for (Task task : tasks) {
+                    task.setOnlineServer(this);
+                    task.init();
+                    LoggerEx.info(TAG, "Task " + task + " initialized!");
+                    int numOfThreads = task.getNumOfThreads();
+                    for (int i = 0; i < numOfThreads; i++) {
+                        threadPool.execute(task);
+                    }
+                }
+            }
 
             //Will call below only when server enter OK status from standby status.
 //			if(startHandler != null) {

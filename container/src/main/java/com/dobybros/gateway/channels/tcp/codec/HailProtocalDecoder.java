@@ -75,7 +75,7 @@ public class HailProtocalDecoder implements ProtocolDecoder {
 	public static Short getEncodeVersion(IoSession session) {
 		return (Short) session.getAttribute(ENCODEVERSION);
 	}
-	
+
 	private void setEncodeVersion(IoSession session, Short encodeVersion) {
 		session.setAttributeIfAbsent(ENCODEVERSION, encodeVersion);
 	}
