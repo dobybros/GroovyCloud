@@ -52,10 +52,10 @@ public abstract class BaseRuntime extends GroovyRuntime {
         String enableGroovyMVC = null;
         addClassAnnotationHandler(new GroovyBeanFactory());
         if(properties != null) {
-			Object rpcServerHandler = SpringContextUtil.getBean("rpcServer");
+			Object rpcServerHandler = SpringContextUtil.getBean("dockerRpcServer");
 			if(rpcServerHandler != null && rpcServerHandler instanceof ClassAnnotationHandler)
         		addClassAnnotationHandler((ClassAnnotationHandler) rpcServerHandler);
-			Object rpcServerSslHandler = SpringContextUtil.getBean("rpcServerSsl");
+			Object rpcServerSslHandler = SpringContextUtil.getBean("dockerRpcServerSsl");
 			if(rpcServerSslHandler != null && rpcServerSslHandler instanceof ClassAnnotationHandler)
 				addClassAnnotationHandler((ClassAnnotationHandler) rpcServerSslHandler);
 			Object upStreamAnnotationHandler = SpringContextUtil.getBean("upStreamAnnotationHandler");

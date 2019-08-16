@@ -3,7 +3,6 @@ package container.container.bean;
 import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.impl.RMIServerHandler;
-import com.docker.rpc.impl.RMIServerImplWrapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -26,12 +25,12 @@ public class RpcBean{
     public RPCClientAdapterMap rpcClientAdapterMapSsl(){
         return instance.getRpcClientAdapterMapSsl();
     }
-    @Bean
-    public RMIServerImplWrapper rpcServer(){
-        RMIServerImplWrapper rpcServer = instance.getRpcServer();
-        rpcServer.setRmiServerHandler(instance.getDockerRpcServerAdapter());
-        return rpcServer;
-    }
+//    @Bean
+//    public RMIServerImplWrapper rpcServer(){
+//        RMIServerImplWrapper rpcServer = instance.getRpcServer();
+//        rpcServer.setRmiServerHandler(instance.getDockerRpcServerAdapter());
+//        return rpcServer;
+//    }
 //    @Bean
 //    public RMIServerHandler rpcServerAdapter(){
 //        RMIServerHandler rpcServerAdapter = instance.getDockerRpcServerAdapter();
@@ -40,12 +39,12 @@ public class RpcBean{
 //        rpcServerAdapter.setRmiPort(Integer.valueOf(instance.getRpcPort()));
 //        return rpcServerAdapter;
 //    }
-    @Bean
-    public RMIServerImplWrapper rpcServerSsl(){
-        RMIServerImplWrapper rpcServerSsl = instance.getRpcServerSsl();
-        rpcServerSsl.setRmiServerHandler(instance.getDockerRpcServerAdapterSsl());
-        return rpcServerSsl;
-    }
+//    @Bean
+//    public RMIServerImplWrapper rpcServerSsl(){
+//        RMIServerImplWrapper rpcServerSsl = instance.getRpcServerSsl();
+//        rpcServerSsl.setRmiServerHandler(instance.getDockerRpcServerAdapterSsl());
+//        return rpcServerSsl;
+//    }
 //    @Bean
 //    public RMIServerHandler rpcServerAdapterSsl(){
 //        RMIServerHandler rpcServerAdapterSsl = instance.getDockerRpcServerAdapterSsl();
