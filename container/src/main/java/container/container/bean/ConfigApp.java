@@ -1,5 +1,6 @@
 package container.container.bean;
 
+import chat.logs.LoggerEx;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -14,6 +15,7 @@ import java.util.Properties;
  * @Date:2019/5/26 19:23
  */
 public class ConfigApp {
+    private static final String TAG = ConfigApp.class.getSimpleName();
     private String mongoHost;
     private String mongoConnectionsPerHost;
     private String dbName;
@@ -69,7 +71,6 @@ public class ConfigApp {
             configDBName = prop.getProperty("config.dbname");
             mongoUsername = prop.getProperty("mongo.username");
             mongoPassword = prop.getProperty("mongo.password");
-            mongoConnectionsPerHost = prop.getProperty("connectionsPerHost");
             gridHost = prop.getProperty("gridfs.host");
             girdConnectionsPerHost = prop.getProperty("gridfs.connectionsPerHost");
             gridDbName = prop.getProperty("gridfs.files.dbname");
