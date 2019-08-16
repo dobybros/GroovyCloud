@@ -75,30 +75,30 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
 					return response.getData();
 				}
 				return null;
-			}
-			//TODO need remove below code.
-			GroovyObjectEx<RPCServerAdapter> adapter = serverWrapper.serverAdapterMap.get(type);
-			if(adapter == null)
-				throw new CoreException(CoreErrorCodes.ERROR_RPC_TYPE_NOSERVERADAPTER, "No server adapter found by type " + type);
+			} else {
+				GroovyObjectEx<RPCServerAdapter> adapter = serverWrapper.serverAdapterMap.get(type);
+				if(adapter == null)
+					throw new CoreException(CoreErrorCodes.ERROR_RPC_TYPE_NOSERVERADAPTER, "No server adapter found by type " + type);
 
-			entity = serverWrapper.rmiServerHandler.getRPCEntityForServer(type, adapter.getGroovyClass());
-			serverAdapter = adapter.getObject();
-			request = entity.requestClass.newInstance();
+				entity = serverWrapper.rmiServerHandler.getRPCEntityForServer(type, adapter.getGroovyClass());
+				serverAdapter = adapter.getObject();
+				request = entity.requestClass.newInstance();
 
-			request.setEncode(encode);
-			request.setType(type);
-			request.setData(data);
-			request.resurrect();
-			RPCResponse response = serverAdapter.onCall(request);
-			if(response != null) {
-				byte[] responseData = response.getData();
-				if(responseData == null) {
-					if(response.getEncode() == null)
-						response.setEncode(RPCBase.ENCODE_PB);
-					response.persistent();
+				request.setEncode(encode);
+				request.setType(type);
+				request.setData(data);
+				request.resurrect();
+				RPCResponse response = serverAdapter.onCall(request);
+				if(response != null) {
+					byte[] responseData = response.getData();
+					if(responseData == null) {
+						if(response.getEncode() == null)
+							response.setEncode(RPCBase.ENCODE_PB);
+						response.persistent();
+					}
+
+					return response.getData();
 				}
-				
-				return response.getData();
 			}
 			return null;
 		} catch (Throwable t) {
