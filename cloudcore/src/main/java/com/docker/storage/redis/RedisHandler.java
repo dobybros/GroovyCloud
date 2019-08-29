@@ -5,6 +5,7 @@ import chat.logs.LoggerEx;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.docker.errors.CoreErrorCodes;
+import org.apache.commons.lang.StringUtils;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisMovedDataException;
 
@@ -70,7 +71,6 @@ public class RedisHandler {
                 }
             }
             pool = new ShardedJedisPool(config, shardJedis);
-            pipeline = pool.getResource().pipelined();
         } else if (type == TYPE_CLUSTER) {
             Set<HostAndPort> nodes = new HashSet<HostAndPort>();
             for (String host : detechedStrs) {
@@ -80,8 +80,6 @@ public class RedisHandler {
                 }
             }
             cluster = new JedisCluster(nodes, config);
-            pipeline = JedisClusterPipeline.pipelined(cluster);
-            ((JedisClusterPipeline) pipeline).refreshCluster();
         }
         pipelineMethodMap = new HashMap<>();
         LoggerEx.info(TAG, "Jedis Cluster connected, " + hosts);
@@ -372,6 +370,10 @@ public class RedisHandler {
         return setObject(prefix + "_" + key, obj, nxxx, expx, time);
     }
 
+    public String setObject(String prefix, String key, Object obj) throws CoreException {
+        return setObject(prefix + "_" + key, obj);
+    }
+
     public Long ttl(String key) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.ttl(key);
@@ -478,6 +480,13 @@ public class RedisHandler {
                 jedis.close();
         }
 */
+    }
+
+    public String setObject(String key, Object obj) throws CoreException {
+        return doJedisExecute(jedis -> {
+            String jsonStr = JSON.toJSONString(obj);
+            return jedis.set(key, jsonStr);
+        });
     }
 
     public String setObject(String key, Object obj, String nxxx, String expx, long time) throws CoreException {
@@ -1045,7 +1054,6 @@ public class RedisHandler {
         try {
             if (type == TYPE_SHARD) {
                 jedis = pool.getResource();
-                pipeline = ((ShardedJedis) jedis).pipelined();
             } else if (type == TYPE_CLUSTER) {
                 jedis = cluster;
             }
@@ -1054,40 +1062,65 @@ public class RedisHandler {
             e.printStackTrace();
             throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed."+e.getMessage());
         } finally {
-            if (jedis != null && jedis.getClass().equals(ShardedJedis.class)) {
+            if (jedis != null && jedis instanceof ShardedJedis) {
                 ((ShardedJedis) jedis).close();
             }
         }
     }
 
-    public List<Object> hgetAllByPipeline(List<String> keys) throws CoreException {
-        for (String key : keys) {
-            pipeline.hgetAll(key);
-        }
-        Object result = invokePipelineMethod(true, RedisContants.PIPELINE_SYNC_AND_RETURN_ALL);
+    public List<Object> hgetAllByPipeline(final List<String> keys, final String prefixKey) throws CoreException {
+        Object result = invokePipelineMethod(true, new PipelineExcutor() {
+            @Override
+            public void execute(PipelineBase pipelineBase) {
+                if (StringUtils.isBlank(prefixKey))
+                    for (String key : keys) {
+                        pipeline.hgetAll(key);
+                    }
+                else
+                    for (String key : keys) {
+                        pipeline.hgetAll(prefixKey + key);
+                    }
+            }
+        }, RedisContants.PIPELINE_SYNC_AND_RETURN_ALL);
         if (result instanceof List)
             return (List)result;
         return null;
     }
 
-    private Object invokePipelineMethod(Boolean needTryAgain, String methodName, Object... args) {
-        if (methodName != null && pipelineMethodMap != null) {
-            try {
-                Method method = pipelineMethodMap.get(methodName);
-                if (method == null)
-                    method = pipeline.getClass().getMethod(methodName);
-                return method.invoke(pipeline, args);
-            } catch (Throwable e) {
-                e.printStackTrace();
-                LoggerEx.error(TAG, "invokePipelineMethod: " + methodName + ", args: " + args + " error, eMsg: " + e.getMessage());
-                if (e instanceof JedisMovedDataException && pipeline instanceof JedisClusterPipeline) {
-                    LoggerEx.error(TAG, "Have occurred JedisMovedDataException, will refresh cluster!");
-                    JedisClusterPipeline clusterPipeline = (JedisClusterPipeline)pipeline;
-                    clusterPipeline.refreshCluster();
-                }
-                if (needTryAgain != null && needTryAgain)
-                    return invokePipelineMethod(false, methodName, args);
+    private Object invokePipelineMethod(Boolean needTryAgain, PipelineExcutor excutor, String methodName, Object... args) {
+        ShardedJedis shardedJedis = null;
+        try {
+            if (type == TYPE_SHARD) {
+                shardedJedis = pool.getResource();
+                pipeline = shardedJedis.pipelined();
+            } else if (type == TYPE_CLUSTER) {
+                pipeline = JedisClusterPipeline.pipelined(cluster);
             }
+            if (excutor != null)
+                excutor.execute(pipeline);
+            if (methodName != null && pipelineMethodMap != null) {
+                Method method = pipelineMethodMap.get(methodName);
+                if (method == null) {
+                    method = pipeline.getClass().getMethod(methodName);
+                    pipelineMethodMap.put(methodName, method);
+                }
+                return method.invoke(pipeline, args);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+            LoggerEx.error(TAG, "invokePipelineMethod: " + methodName + ", args: " + args + " error, eMsg: " + t.getMessage());
+            if (t instanceof JedisMovedDataException && pipeline instanceof JedisClusterPipeline) {
+                LoggerEx.error(TAG, "Have occurred JedisMovedDataException, will refresh cluster!");
+                JedisClusterPipeline clusterPipeline = (JedisClusterPipeline)pipeline;
+                clusterPipeline.refreshCluster();
+            }
+            if (needTryAgain != null && needTryAgain)
+                return invokePipelineMethod(false, excutor, methodName, args);
+        } finally {
+            if (shardedJedis != null)
+                shardedJedis.close();
+            if (pipeline instanceof JedisClusterPipeline)
+                ((JedisClusterPipeline) pipeline).close();
         }
         return null;
     }
@@ -1095,5 +1128,10 @@ public class RedisHandler {
     @FunctionalInterface
     interface JedisExcutor<T> {
         T execute(JedisCommands commands);
+    }
+
+    @FunctionalInterface
+    interface PipelineExcutor<T> {
+        void execute(PipelineBase pipelineBase);
     }
 }
