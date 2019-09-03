@@ -8,6 +8,7 @@ import com.dobybros.chat.binary.data.Data;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.open.data.MsgResult;
 import com.dobybros.chat.open.data.UserStatus;
+import com.dobybros.chat.script.annotations.handler.ServiceUserSessionAnnotationHandler;
 import com.dobybros.chat.utils.SingleThreadQueue;
 import com.dobybros.gateway.channels.data.DataVersioning;
 import com.dobybros.gateway.channels.data.OutgoingData;
@@ -19,11 +20,9 @@ import com.dobybros.gateway.onlineusers.OnlineUser;
 import com.dobybros.gateway.onlineusers.OnlineUserManager;
 import com.dobybros.gateway.open.GatewayMSGServers;
 import com.dobybros.gateway.pack.Pack;
-import com.docker.rpc.impl.RMIServerImplWrapper;
 import com.docker.script.MyBaseRuntime;
 import com.docker.utils.SpringContextUtil;
 import org.apache.mina.core.session.IoSession;
-import org.springframework.beans.factory.annotation.Autowired;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.GroovyRuntime;
@@ -36,7 +35,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class GatewayGroovyRuntime extends MyBaseRuntime {
     private static final String TAG = GatewayGroovyRuntime.class.getSimpleName();
-    private List<GroovyObjectEx<SessionListener>> sessionListeners;
+    private GroovyObjectEx<SessionListener> sessionListener;
     private List<GroovyObjectEx<MessageNotReceivedListener>> messageNotReceivedListeners;
 
 //	private ReadWriteLock sessionLock = new ReentrantReadWriteLock();
@@ -63,7 +62,6 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                     StringBuilder uriLogs = new StringBuilder(
                             "\r\n---------------------------------------\r\n");
 
-                    List<GroovyObjectEx<SessionListener>> newChannelRegisteredMap = new ArrayList<>();
                     Set<String> keys = annotatedClassMap.keySet();
                     GroovyRuntime groovyRuntime = instance;
                     for (String key : keys) {
@@ -75,14 +73,15 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                                         .create(groovyClass);
                                 if (listeners != null) {
                                     uriLogs.append("ChannelListener #" + groovyClass + "\r\n");
-                                    newChannelRegisteredMap.add(listeners);
+                                    instance.sessionListener = listeners;
+                                    break;
                                 }
                             }
                         }
                     }
 //					instance.sessionLock.writeLock().lock();
 //					try {
-                    instance.sessionListeners = newChannelRegisteredMap;
+//                    instance.sessionListeners = newChannelRegisteredMap;
 //					} finally {
 //						instance.sessionLock.writeLock().unlock();
 //					}
@@ -133,6 +132,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                 }
             }
         });
+        addClassAnnotationHandler(new ServiceUserSessionAnnotationHandler());
     }
 
     /**
@@ -145,19 +145,46 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     public List<Integer> channelRegistered(String userId, String service, Integer terminal) {
 //		sessionLock.readLock().lock();
 //		try {
-        if (sessionListeners != null) {
-            for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
+        if (sessionListener != null) {
+            try {
+                return sessionListener.getObject().channelRegisterd(userId, service, terminal);
+            } catch (Throwable t) {
+                t.printStackTrace();
+                LoggerEx.error(TAG, "Handle channel " + terminal + " regitered by " + userId + " failed, " + t.getMessage());
+            }
+        } else {
+            ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
+            if (listener != null)
                 try {
-                    return listener.getObject().channelRegisterd(userId, service, terminal);
+                    listener.channelRegisterd(terminal);
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    LoggerEx.error(TAG, "Handle channel " + terminal + " regitered by " + userId + " failed, " + t.getMessage());
+                    LoggerEx.error(TAG, "Handle channel " + terminal + " regitered by " + userId + "@" + service + " failed, " + t.getMessage());
                 }
-            }
         }
 //		} finally {
 //			sessionLock.readLock().unlock();
 //		}
+        return null;
+    }
+
+    private SingleThreadQueue<GWUserParams> getGWUserQueue(String userId, String service) {
+        SingleThreadQueue<GWUserParams> queue = singleThreadMap.get(userId + "@" + service);
+        if (queue == null) {
+            queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getThreadPool(), new GWUserHandler(sessionListener, this));
+            SingleThreadQueue old = singleThreadMap.putIfAbsent(userId + "@" + service, queue);
+            if (old != null)
+                queue = old;
+        }
+        return queue;
+    }
+
+    private ServiceUserSessionListener getServiceUserSessionListener(String userId, String service) {
+        ServiceUserSessionAnnotationHandler handler = (ServiceUserSessionAnnotationHandler) this.getClassAnnotationHandler(ServiceUserSessionHandler.class);
+        if (handler != null) {
+            ServiceUserSessionListener listener = handler.getAnnotatedListener(userId, service);
+            return listener;
+        }
         return null;
     }
 
@@ -166,16 +193,8 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
         channelCreatedMessage.put(PendingMessageContainer.getKey(userId, getService(), terminal), container);//0为channel还没有创建,1为已经创建
 //		sessionLock.readLock().lock();
 //		try {
-        if (sessionListeners != null) {
-            SingleThreadQueue<GWUserParams> queue = singleThreadMap.get(userId + "@" + service);
-            if (queue == null) {
-                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getThreadPool(), new GWUserHandler(sessionListeners, this));
-                SingleThreadQueue old = singleThreadMap.putIfAbsent(userId + "@" + service, queue);
-                if (old != null)
-                    queue = old;
-            }
-            queue.offerAndStart(new GWUserParams(GWUserParams.ACTION_CHANNELCREATED, userId, service, terminal));
-        }
+        SingleThreadQueue<GWUserParams> queue = getGWUserQueue(userId, service);
+        queue.offerAndStart(new GWUserParams(GWUserParams.ACTION_CHANNELCREATED, userId, service, terminal));
 //        queue.offerAndStart(new );
 //			if(sessionListeners != null) {
 //				for(GroovyObjectEx<SessionListener> listener : sessionListeners) {
@@ -193,16 +212,8 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     }
 
     public void channelClosed(String userId, String service, Integer terminal, int close) {
-        if (sessionListeners != null) {
-            SingleThreadQueue<GWUserParams> queue = singleThreadMap.get(userId + "@" + service);
-            if (queue == null) {
-                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getThreadPool(), new GWUserHandler(sessionListeners, this));
-                SingleThreadQueue old = singleThreadMap.putIfAbsent(userId + "@" + service, queue);
-                if (old != null)
-                    queue = old;
-            }
-            queue.offerAndStart(new GWUserParams(GWUserParams.ACTION_CHANNELCLOSED, userId, service, terminal, close));
-        }
+        SingleThreadQueue<GWUserParams> queue = getGWUserQueue(userId, service);
+        queue.offerAndStart(new GWUserParams(GWUserParams.ACTION_CHANNELCLOSED, userId, service, terminal, close));
 
 //		sessionLock.readLock().lock();
 //		try {
@@ -222,17 +233,9 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     }
 
     public void sessionClosed(String userId, String service, int close) {
-        if (sessionListeners != null) {
-            SingleThreadQueue<GWUserParams> queue = singleThreadMap.get(userId + "@" + service);
-            if (queue == null) {
-                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getThreadPool(), new GWUserHandler(sessionListeners, this));
-                SingleThreadQueue old = singleThreadMap.putIfAbsent(userId + "@" + service, queue);
-                if (old != null)
-                    queue = old;
-            }
-            queue.offerAndStart(new GWUserParams(GWUserParams.ACTION_SESSIONCLOSED, userId, service, null, close));
-            singleThreadMap.remove(userId + "@" + service);
-        }
+        SingleThreadQueue<GWUserParams> queue = getGWUserQueue(userId, service);
+        queue.offerAndStart(new GWUserParams(GWUserParams.ACTION_SESSIONCLOSED, userId, service, null, close));
+        singleThreadMap.remove(userId + "@" + service);
 
 //		sessionLock.readLock().lock();
 //		try {
@@ -252,16 +255,8 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     }
 
     public void sessionCreated(String userId, String service) {
-        if (sessionListeners != null) {
-            SingleThreadQueue<GWUserParams> queue = singleThreadMap.get(userId + "@" + service);
-            if (queue == null) {
-                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getThreadPool(), new GWUserHandler(sessionListeners, this));
-                SingleThreadQueue old = singleThreadMap.putIfAbsent(userId + "@" + service, queue);
-                if (old != null)
-                    queue = old;
-            }
-            queue.offerAndStart(new GWUserParams(GWUserParams.ACTION_SESSIONCREATED, userId, service));
-        }
+        SingleThreadQueue<GWUserParams> queue = getGWUserQueue(userId, service);
+        queue.offerAndStart(new GWUserParams(GWUserParams.ACTION_SESSIONCREATED, userId, service));
 
 //		sessionLock.readLock().lock();
 //		try {
@@ -283,15 +278,22 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     public Long getMaxInactiveInterval(String userId, String service) {
 //		sessionLock.readLock().lock();
 //		try {
-        if (sessionListeners != null) {
-            for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
+        if (sessionListener != null) {
+            try {
+                return sessionListener.getObject().getMaxInactiveInterval(userId, service);
+            } catch (Throwable t) {
+                t.printStackTrace();
+                LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getMaxInactiveInterval failed, " + t.getMessage());
+            }
+        } else {
+            ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
+            if (listener != null)
                 try {
-                    return listener.getObject().getMaxInactiveInterval(userId, service);
+                    listener.getMaxInactiveInterval();
                 } catch (Throwable t) {
                     t.printStackTrace();
                     LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getMaxInactiveInterval failed, " + t.getMessage());
                 }
-            }
         }
 //		} finally {
 //			sessionLock.readLock().unlock();
@@ -318,60 +320,68 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             return;
         } else {
             if (container.type == PendingMessageContainer.CHANNELCREATED) {
-                if (sessionListeners != null) {
-                    for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
-                        ServerStart.getInstance().getThreadPool().execute(() -> {
-                            try {
-                                MsgResult msgResult = listener.getObject().messageReceived(message, terminal);
-
-                                OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(message.getService());
-                                if (serviceUser == null)
-                                    throw new CoreException(GatewayErrorCodes.ERROR_ONLINESERVICEUSER_NULL, "Online service user " + message.getUserId() + "@" + message.getService() + " not found while sending result " + msgResult + " for message " + message);
-
-                                if (msgResult != null && msgResult.isShouldIntercept()) {
-                                    Result result = DataVersioning.getResultData(session, msgResult.getCode(), null, message.getClientId());
-                                    result.setContentEncode(msgResult.getDataEncode());
-                                    result.setContent(msgResult.getData());
-                                    result.setTime(message.getTime());
-                                    if (result != null) {
-                                        Pack resultPack = DataVersioning.getDataPack(session, result);
-                                        if (resultPack != null) {
-                                            session.write(resultPack);
-                                        }
-                                    }
+                ServerStart.getInstance().getThreadPool().execute(() -> {
+                    try {
+                        MsgResult msgResult = null;
+                        if (sessionListener != null)
+                            msgResult = sessionListener.getObject().messageReceived(message, terminal);
+                        else {
+                            ServiceUserSessionListener listener = getServiceUserSessionListener(message.getUserId(), message.getService());
+                            if (listener != null) {
+                                try {
+                                    msgResult = listener.messageReceived(message, terminal);
+                                } catch (Throwable t) {
+                                    t.printStackTrace();
+                                    LoggerEx.error(TAG, "ServiceUserSessionListener receive message error, eMsg: " + t.getMessage());
                                 }
+                            }
+                        }
+                        OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(message.getService());
+                        if (serviceUser == null)
+                            throw new CoreException(GatewayErrorCodes.ERROR_ONLINESERVICEUSER_NULL, "Online service user " + message.getUserId() + "@" + message.getService() + " not found while sending result " + msgResult + " for message " + message);
 
-                                Result resultEvent = (Result) serviceUser.sendTopic(message, needTcpResult, theTopic -> {
+                        if (msgResult != null && msgResult.isShouldIntercept()) {
+                            Result result = DataVersioning.getResultData(session, msgResult.getCode(), null, message.getClientId());
+                            result.setContentEncode(msgResult.getDataEncode());
+                            result.setContent(msgResult.getData());
+                            result.setTime(message.getTime());
+                            if (result != null) {
+                                Pack resultPack = DataVersioning.getDataPack(session, result);
+                                if (resultPack != null) {
+                                    session.write(resultPack);
+                                }
+                            }
+                        }
+
+                        Result resultEvent = (Result) serviceUser.sendTopic(message, needTcpResult, theTopic -> {
 //						onlineUserManager.sendEvent(msg, onlineUser);
-                                    try {
-                                        GatewayMSGServers.getInstance().sendMessage(message, terminal, null);
-                                    } catch (CoreException e) {
-                                        e.printStackTrace();
-                                        LoggerEx.error(TAG, "Handle message " + message + " sendMessage failed, " + e.getMessage());
-                                    }
-                                });
-
-                                // 组织result
-                                if (msgResult != null) {
-                                    if (msgResult.getCode() != null)
-                                        resultEvent.setCode(msgResult.getCode());
-                                    resultEvent.setContentEncode(msgResult.getDataEncode());
-                                    resultEvent.setContent(msgResult.getData());
-                                    resultEvent.setTime(message.getTime());
-                                    if (resultEvent != null) {
-                                        Pack resultPack = DataVersioning.getDataPack(session, resultEvent);
-                                        if (resultPack != null) {
-                                            session.write(resultPack);
-                                        }
-                                    }
-                                }
+                            try {
+                                GatewayMSGServers.getInstance().sendMessage(message, terminal, null);
                             } catch (CoreException e) {
                                 e.printStackTrace();
-                                LoggerEx.error(TAG, "Handle message " + message + " messageReceived failed, " + e.getMessage());
+                                LoggerEx.error(TAG, "Handle message " + message + " sendMessage failed, " + e.getMessage());
                             }
                         });
+
+                        // 组织result
+                        if (msgResult != null) {
+                            if (msgResult.getCode() != null)
+                                resultEvent.setCode(msgResult.getCode());
+                            resultEvent.setContentEncode(msgResult.getDataEncode());
+                            resultEvent.setContent(msgResult.getData());
+                            resultEvent.setTime(message.getTime());
+                            if (resultEvent != null) {
+                                Pack resultPack = DataVersioning.getDataPack(session, resultEvent);
+                                if (resultPack != null) {
+                                    session.write(resultPack);
+                                }
+                            }
+                        }
+                    } catch (CoreException e) {
+                        e.printStackTrace();
+                        LoggerEx.error(TAG, "Handle message " + message + " messageReceived failed, " + e.getMessage());
                     }
-                }
+                });
             } else if (container.type == PendingMessageContainer.CHANNELNOTCREATED) {
                 //和异步调用groovy层的channelCreated之后的更改为CREATED状态做同步处理， 防止丢消息
                 synchronized (container) {
@@ -424,62 +434,71 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             return;
         } else {
             if (container.type == PendingMessageContainer.CHANNELCREATED) {
-                if (sessionListeners != null) {
-                    for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
-                        ServerStart.getInstance().getThreadPool().execute(() -> {
-                            try {
-                                MsgResult msgResult = listener.getObject().dataReceived(message, terminal);
+                ServerStart.getInstance().getThreadPool().execute(() -> {
+                    try {
+                        MsgResult msgResult = null;
+                        if (sessionListener != null)
+                            msgResult = sessionListener.getObject().dataReceived(message, terminal);
+                        else {
+                            ServiceUserSessionListener listener = getServiceUserSessionListener(message.getUserId(), message.getService());
+                            if (listener != null) {
+                                try {
+                                    msgResult = listener.dataReceived(message, terminal);
+                                } catch (Throwable t) {
+                                    t.printStackTrace();
+                                    LoggerEx.error(TAG, "ServiceUserSessionListener receive data error, eMsg: " + t.getMessage());
+                                }
+                            }
+                        }
 //                                OnlineUser onlineUser = onlineUserManager.getOnlineUser(message.getUserId());
 //                                if (onlineUser == null)
 //                                    throw new CoreException(GatewayErrorCodes.ERROR_ONLINEUSER_NULL, "Online user " + message.getUserId() + " not found while sending result " + msgResult + " for message " + message);
-                                OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(message.getService());
-                                if (serviceUser == null)
-                                    throw new CoreException(GatewayErrorCodes.ERROR_ONLINESERVICEUSER_NULL, "Online service user " + message.getUserId() + "@" + message.getService() + " not found while sending result " + msgResult + " for message " + message);
+                        OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(message.getService());
+                        if (serviceUser == null)
+                            throw new CoreException(GatewayErrorCodes.ERROR_ONLINESERVICEUSER_NULL, "Online service user " + message.getUserId() + "@" + message.getService() + " not found while sending result " + msgResult + " for message " + message);
 
-                                if (msgResult != null && msgResult.isShouldIntercept()) {
-                                    Result result = DataVersioning.getResultData(session, msgResult.getCode(), null, message.getClientId());
-                                    result.setContentEncode(msgResult.getDataEncode());
-                                    result.setContent(msgResult.getData());
-                                    result.setTime(message.getTime());
-                                    if (result != null) {
-                                        Pack resultPack = DataVersioning.getDataPack(session, result);
-                                        if (resultPack != null) {
-                                            session.write(resultPack);
-                                        }
-                                    }
-                                    return;
+                        if (msgResult != null && msgResult.isShouldIntercept()) {
+                            Result result = DataVersioning.getResultData(session, msgResult.getCode(), null, message.getClientId());
+                            result.setContentEncode(msgResult.getDataEncode());
+                            result.setContent(msgResult.getData());
+                            result.setTime(message.getTime());
+                            if (result != null) {
+                                Pack resultPack = DataVersioning.getDataPack(session, result);
+                                if (resultPack != null) {
+                                    session.write(resultPack);
                                 }
-
-                                if (message.getService().equals(message.getReceiverService())) {
-                                    Collection<String> receiverIds = message.getReceiverIds();
-                                    if (receiverIds != null && receiverIds.contains(message.getUserId())) {
-                                        //If sender is also the receiver, send message to sender excluded the terminal where sent the message.
-                                        OutgoingData out = new OutgoingData();
-                                        out.fromMessage(message);
-                                        serviceUser.pushToChannels(out, terminal, null);
-                                    }
-                                }
-
-                                // 组织result
-                                if (msgResult != null) {
-                                    Result resultEvent = DataVersioning.getResultData(session, msgResult.getCode(), null, message.getClientId());
-                                    resultEvent.setContentEncode(msgResult.getDataEncode());
-                                    resultEvent.setContent(msgResult.getData());
-                                    resultEvent.setTime(message.getTime());
-                                    if (resultEvent != null) {
-                                        Pack resultPack = DataVersioning.getDataPack(session, resultEvent);
-                                        if (resultPack != null) {
-                                            session.write(resultPack);
-                                        }
-                                    }
-                                }
-                            } catch (CoreException e) {
-                                e.printStackTrace();
-                                LoggerEx.error(TAG, "Handle message " + message + " messageReceived failed, " + e.getMessage());
                             }
-                        });
+                            return;
+                        }
+
+                        if (message.getService().equals(message.getReceiverService())) {
+                            Collection<String> receiverIds = message.getReceiverIds();
+                            if (receiverIds != null && receiverIds.contains(message.getUserId())) {
+                                //If sender is also the receiver, send message to sender excluded the terminal where sent the message.
+                                OutgoingData out = new OutgoingData();
+                                out.fromMessage(message);
+                                serviceUser.pushToChannels(out, terminal, null);
+                            }
+                        }
+
+                        // 组织result
+                        if (msgResult != null) {
+                            Result resultEvent = DataVersioning.getResultData(session, msgResult.getCode(), null, message.getClientId());
+                            resultEvent.setContentEncode(msgResult.getDataEncode());
+                            resultEvent.setContent(msgResult.getData());
+                            resultEvent.setTime(message.getTime());
+                            if (resultEvent != null) {
+                                Pack resultPack = DataVersioning.getDataPack(session, resultEvent);
+                                if (resultPack != null) {
+                                    session.write(resultPack);
+                                }
+                            }
+                        }
+                    } catch (CoreException e) {
+                        e.printStackTrace();
+                        LoggerEx.error(TAG, "Handle message " + message + " messageReceived failed, " + e.getMessage());
                     }
-                }
+                });
             } else if (container.type == PendingMessageContainer.CHANNELNOTCREATED) {
                 synchronized (container) {
                     if(container.type == PendingMessageContainer.CHANNELNOTCREATED) {
@@ -559,18 +578,26 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     public void messageSent(Data data, Integer excludeTerminal, Integer toTerminal, String userId, String service) {
 //		sessionLock.readLock().lock();
 //		try {
-        if (sessionListeners != null) {
-            for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
-                ServerStart.getInstance().getThreadPool().execute(() -> {
-                    try {
-                        listener.getObject().messageSent(data, excludeTerminal, toTerminal, userId, service);
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                        LoggerEx.error(TAG, "Handle classroom " + data + " excludeTerminal " + excludeTerminal + " toTerminal " + toTerminal + " messageSent failed, " + t.getMessage());
+        ServerStart.getInstance().getThreadPool().execute(() -> {
+            try {
+                if (sessionListener != null)
+                    sessionListener.getObject().messageSent(data, excludeTerminal, toTerminal, userId, service);
+                else {
+                    ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
+                    if (listener != null) {
+                        try {
+                            listener.messageSent(data, excludeTerminal, toTerminal);
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                            LoggerEx.error(TAG, "ServiceUserSessionListener sent message error, eMsg: " + t.getMessage());
+                        }
                     }
-                });
+                }
+            } catch (Throwable t) {
+                t.printStackTrace();
+                LoggerEx.error(TAG, "Handle classroom " + data + " excludeTerminal " + excludeTerminal + " toTerminal " + toTerminal + " messageSent failed, " + t.getMessage());
             }
-        }
+        });
 //		} finally {
 //			sessionLock.readLock().unlock();
 //		}
@@ -579,18 +606,26 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     public void messageReceivedFromUsers(Message message, String receiverId, String receiverService) {
 //		sessionLock.readLock().lock();
 //		try {
-        if (sessionListeners != null) {
-            for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
-                ServerStart.getInstance().getThreadPool().execute(() -> {
+        ServerStart.getInstance().getThreadPool().execute(() -> {
+            if (sessionListener != null) {
+                try {
+                    sessionListener.getObject().messageReceivedFromUsers(message, receiverId, receiverService);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    LoggerEx.error(TAG, "Handle message " + message + " messageReceivedFromUsers failed, " + t.getMessage());
+                }
+            } else {
+                ServiceUserSessionListener listener = getServiceUserSessionListener(message.getUserId(), message.getService());
+                if (listener != null) {
                     try {
-                        listener.getObject().messageReceivedFromUsers(message, receiverId, receiverService);
+                        listener.messageReceivedFromUsers(message, receiverId, receiverService);
                     } catch (Throwable t) {
                         t.printStackTrace();
                         LoggerEx.error(TAG, "Handle message " + message + " messageReceivedFromUsers failed, " + t.getMessage());
                     }
-                });
+                }
             }
-        }
+        });
 //		} finally {
 //			sessionLock.readLock().unlock();
 //		}
@@ -603,18 +638,27 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     public void pingReceived(String userId, String service, Integer terminal) {
 //		sessionLock.readLock().lock();
 //		try {
-        if (sessionListeners != null) {
-            for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
-                ServerStart.getInstance().getThreadPool().execute(() -> {
+        ServerStart.getInstance().getThreadPool().execute(() -> {
+            if (sessionListener != null) {
+                try {
+                    sessionListener.getObject().pingReceived(userId, service, terminal);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    LoggerEx.error(TAG, "Handle pingReceived failed, " + t.getMessage());
+                }
+            } else {
+                ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
+                if (listener != null) {
                     try {
-                        listener.getObject().pingReceived(userId, service, terminal);
+                        listener.pingReceived(terminal);
                     } catch (Throwable t) {
                         t.printStackTrace();
                         LoggerEx.error(TAG, "Handle pingReceived failed, " + t.getMessage());
                     }
-                });
+                }
             }
-        }
+
+        });
 //		} finally {
 //			sessionLock.readLock().unlock();
 //		}

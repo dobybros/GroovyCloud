@@ -31,6 +31,10 @@ public abstract class Channel {
 	public abstract void offer(Data event);
 
 	public abstract boolean close(int close);
+
+	public abstract void setAttribute(String key, String value);
+
+	public abstract String getAttribute(String key);
 	
 	public Integer getTerminal() {
 		return terminal;
