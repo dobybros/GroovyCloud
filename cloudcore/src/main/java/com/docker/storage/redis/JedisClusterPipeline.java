@@ -127,25 +127,32 @@ public class JedisClusterPipeline extends PipelineBase implements Closeable {
 
     @Override
     public void close() {
-        clean();
+        try {
 
-        clients.clear();
+            clean();
 
-        for (Jedis jedis : jedisMap.values()) {
-            try {
-                if (hasDataInBuf) {
-                    flushCachedData(jedis);
+            clients.clear();
+
+            for (Jedis jedis : jedisMap.values()) {
+                try {
+                    if (hasDataInBuf) {
+                        flushCachedData(jedis);
+                    }
+
+                    jedis.close();
+                } catch (Throwable t) {
+                    LoggerEx.error(TAG, "Close redis error when close pipeline, eMsg:" + t.getMessage());
                 }
-
-                jedis.close();
-            } catch (Throwable t) {
-                LoggerEx.info(TAG, "Close redis error when close pipeline, eMsg:" + t.getMessage());
             }
+
+            jedisMap.clear();
+
+            hasDataInBuf = false;
+
+        } catch (Throwable t) {
+            LoggerEx.error(TAG, "Close cluster pipeline error, eMsg:" + t.getMessage());
         }
 
-        jedisMap.clear();
-
-        hasDataInBuf = false;
     }
 
     private void flushCachedData(Jedis jedis) {

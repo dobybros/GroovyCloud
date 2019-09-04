@@ -12,6 +12,7 @@ import com.dobybros.gateway.onlineusers.OnlineServiceUser;
 import com.dobybros.gateway.onlineusers.OnlineUser;
 import com.dobybros.gateway.onlineusers.OnlineUserManager;
 import com.docker.utils.SpringContextUtil;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.Collection;
 
@@ -82,6 +83,44 @@ public final class GatewayMSGServers extends MSGServers {
                 }
             }
         }
+    }
+
+    public void setChannelAttribute(String userId, String service, Integer terminal, String key, String value) throws CoreException {
+        if (StringUtils.isNotBlank(userId)
+                && StringUtils.isNotBlank(service)
+                && terminal != null
+                && StringUtils.isNotBlank(key)
+                && StringUtils.isNotBlank(value)) {
+            OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
+            if(onlineUser != null) {
+                OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(service);
+                if(serviceUser != null) {
+                    Channel channel = serviceUser.getChannel(terminal);
+                    if(channel != null) {
+                        channel.setAttribute(key, value);
+                    }
+                }
+            }
+        }
+    }
+
+    public String getChannelAttribute(String userId, String service, Integer terminal, String key) throws CoreException {
+        if (StringUtils.isNotBlank(userId)
+                && StringUtils.isNotBlank(service)
+                && terminal != null
+                && StringUtils.isNotBlank(key)) {
+            OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
+            if(onlineUser != null) {
+                OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(service);
+                if(serviceUser != null) {
+                    Channel channel = serviceUser.getChannel(terminal);
+                    if(channel != null) {
+                        return channel.getAttribute(key);
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public void sendMessage(Message message, Integer excludeTerminal, Integer toTerminal) throws CoreException {

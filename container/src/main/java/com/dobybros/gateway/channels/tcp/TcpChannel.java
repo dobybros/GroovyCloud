@@ -61,6 +61,26 @@ public class TcpChannel extends Channel {
 		return true;
 	}
 
+	@Override
+	public void setAttribute(String key, String value) {
+		if (session != null)
+			session.setAttribute(key, value);
+	}
+
+	@Override
+	public String getAttribute(String key) {
+		if (session != null) {
+			try {
+				return (String) session.getAttribute(key);
+			} catch (Throwable t) {
+				t.printStackTrace();
+				LoggerEx.error(TAG, "Get attribute error, key: " +  key + ", eMsg: " + t.getMessage());
+			}
+		}
+
+		return null;
+	}
+
 	public IoSession getSession() {
 		return session;
 	}
