@@ -92,4 +92,6 @@ public interface ChatErrorCodes {
 	public static final int ERROR_NO_BASERUNTIME= CODE_CORE + 204;
 	public static final int ERROR_NO_GROOVYFILE= CODE_CORE + 205;
 	public static final int ERROR_DISCOVERY_NOTFOUND= CODE_CORE + 206;
+	public static final int ERROR_ASYNC_ERROR= CODE_CORE + 207;
+	public static final int ERROR_ASYNC_TIMEOUT= CODE_CORE + 208;
 }

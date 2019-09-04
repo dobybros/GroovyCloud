@@ -33,6 +33,7 @@ public class RequestURIWrapper implements GroovyObjectListener{
 	private String responseType;
 	private LinkedHashMap<Parameter, HandleRequest> parameters = new LinkedHashMap<>();
 	private String[] permissions;
+	private Boolean asyncSupported;
 	
 	public static interface HandleRequest {
 	}
@@ -284,5 +285,13 @@ public class RequestURIWrapper implements GroovyObjectListener{
 			}
 			this.permissions = permissions;
 		}
+	}
+
+	public Boolean getAsyncSupported() {
+		return asyncSupported;
+	}
+
+	public void setAsyncSupported(Boolean asyncSupported) {
+		this.asyncSupported = asyncSupported;
 	}
 }

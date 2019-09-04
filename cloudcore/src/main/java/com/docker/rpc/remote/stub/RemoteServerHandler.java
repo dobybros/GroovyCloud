@@ -7,8 +7,11 @@ import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
 import com.docker.rpc.RPCClientAdapter;
 import com.docker.rpc.RPCClientAdapterMap;
+import com.docker.server.OnlineServer;
+import org.bson.types.ObjectId;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -92,18 +95,9 @@ public class RemoteServerHandler {
         touch = System.currentTimeMillis();
     }
 
-    public MethodResponse call(MethodRequest request) throws CoreException {
-        ConcurrentHashMap<String, RemoteServers.Server> servers = (ConcurrentHashMap<String, RemoteServers.Server>) this.serviceStubManager.getRemoteServersDiscovery().getServers(service);
-        if (servers != null && servers.size() > 0) {
-            this.remoteServers.setServers(servers);
-            calculate();
-        } else {
-            throw new CoreException(ChatErrorCodes.ERROR_LANSERVERS_NOSERVERS, "RemoteServers doesn't be found! service:" + service);
-        }
-        touch();
-        if (this.remoteServers.getSortedServers().isEmpty())
-            throw new CoreException(ChatErrorCodes.ERROR_LANSERVERS_NOSERVERS, "No server is found for service " + service + " fromService " + request.getFromService() + " crc " + request.getCrc());
-
+    public CompletableFuture<?> callAsync(MethodRequest request) throws CoreException {
+        String id = ObjectId.get().toString();
+        setSortedServers(request);
         List<RemoteServers.Server> keptSortedServers = this.remoteServers.getSortedServers();
         int count = 0;
         int maxCount = 5;
@@ -133,8 +127,75 @@ public class RemoteServerHandler {
                     port = server.getRpcPort();
                 }
                 request.setService(service + "_v" + server.getVersion());
+                request.setFromServerName(OnlineServer.getInstance().getServer());
                 LoggerEx.info(TAG, "The service: " + service + " ,the version being used is " + server.getVersion());
                 if (ip != null && port != null) {
+                    request.setSourceIp(OnlineServer.getInstance().getIp());
+                    request.setSourcePort(Integer.valueOf(OnlineServer.getInstance().getRpcPort()));
+                    RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(ip, port, server.getServer());
+                    CompletableFuture future = clientAdapter.callAsync(request);
+//                    if (response.getException() != null) {
+//                        LoggerEx.error(TAG, "Failed to callAsync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " return " + response.getReturnObject() + " exception " + response.getException() + " on server " + server + " " + count + "/" + maxCount);
+//                        throw response.getException();
+//                    }
+                    LoggerEx.info(TAG, "Successfully callAsync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount);
+                    return future;
+                } else {
+                    LoggerEx.info(TAG, "No ip " + ip + " or port " + port + ", fail to callSync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount);
+                }
+            } catch (Throwable t) {
+                if (t instanceof CoreException) {
+                    CoreException ce = (CoreException) t;
+                    switch (ce.getCode()) {
+                        case ChatErrorCodes.ERROR_RMICALL_CONNECT_FAILED:
+                        case ChatErrorCodes.ERROR_RPC_DISCONNECTED:
+                            break;
+                        default:
+                            throw t;
+                    }
+                }
+                LoggerEx.error(TAG, "Fail to callAsync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount + " available size " + keptSortedServers.size() + " error " + t.getMessage() + " exception " + t);
+            }
+        }
+        throw new CoreException(ChatErrorCodes.ERROR_RPC_CALLREMOTE_FAILED, "CallAsync request " + request + " outside failed with several retries.");
+    }
+
+    public MethodResponse call(MethodRequest request) throws CoreException {
+        setSortedServers(request);
+        List<RemoteServers.Server> keptSortedServers = this.remoteServers.getSortedServers();
+        int count = 0;
+        int maxCount = 5;
+        int size = keptSortedServers.size();
+        maxCount = size < 5 ? size : 5;
+        RandomDraw randomDraw = new RandomDraw(size);
+        for (int i = 0; i < maxCount; i++) {
+            int index = randomDraw.next();
+            if (index == -1)
+                continue;
+            RemoteServers.Server server = keptSortedServers.get(index);
+            if (server == null)
+                continue;
+            if (count++ > maxCount)
+                break;
+            try {
+                String ip = null;
+                if (this.usePublicDomain) {
+                    ip = server.getPublicDomain();
+                } else {
+                    ip = server.getIp();
+                }
+                Integer port = null;
+                if (rpcClientAdapterMap.isEnableSsl()) {
+                    port = server.getSslRpcPort();
+                } else {
+                    port = server.getRpcPort();
+                }
+                request.setService(service + "_v" + server.getVersion());
+                request.setFromServerName(OnlineServer.getInstance().getServer());
+                LoggerEx.info(TAG, "The service: " + service + " ,the version being used is " + server.getVersion());
+                if (ip != null && port != null) {
+                    request.setSourceIp(ip);
+                    request.setSourcePort(port);
                     RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     MethodResponse response = (MethodResponse) clientAdapter.call(request);
                     if (response.getException() != null) {
@@ -161,5 +222,19 @@ public class RemoteServerHandler {
             }
         }
         throw new CoreException(ChatErrorCodes.ERROR_RPC_CALLREMOTE_FAILED, "Call request " + request + " outside failed with several retries.");
+    }
+
+    private void setSortedServers(MethodRequest request) throws CoreException {
+        ConcurrentHashMap<String, RemoteServers.Server> servers = (ConcurrentHashMap<String, RemoteServers.Server>) this.serviceStubManager.getRemoteServersDiscovery().getServers(service);
+        if (servers != null && servers.size() > 0) {
+            this.remoteServers.setServers(servers);
+            //TODO Calculate everytime will slow down performance too.
+            calculate();
+        } else {
+            throw new CoreException(ChatErrorCodes.ERROR_LANSERVERS_NOSERVERS, "RemoteServers doesn't be found! service:" + service);
+        }
+        touch();
+        if (this.remoteServers.getSortedServers().isEmpty())
+            throw new CoreException(ChatErrorCodes.ERROR_LANSERVERS_NOSERVERS, "No server is found for service " + service + " fromService " + request.getFromService() + " crc " + request.getCrc());
     }
 }

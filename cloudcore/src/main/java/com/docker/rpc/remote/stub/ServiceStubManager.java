@@ -4,6 +4,7 @@ import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
+import com.alibaba.fastjson.JSON;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
 import com.docker.rpc.RPCClientAdapterMap;
@@ -11,7 +12,9 @@ import com.docker.rpc.remote.MethodMapping;
 import script.groovy.servlets.Tracker;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServiceStubManager {
@@ -94,6 +97,16 @@ public class ServiceStubManager {
                 returnType = ReflectionUtil.getInitiatableClass(returnType);
                 mm.setReturnClass(returnType);
                 mm.setGenericReturnClass(method.getGenericReturnType());
+                if(method.getGenericReturnType() instanceof ParameterizedType){
+                    Type[] tArgs = ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments();
+                    mm.setGenericReturnActualTypeArguments(tArgs);
+                }
+
+                if(method.getGenericReturnType().getTypeName().contains(CompletableFuture.class.getTypeName())){
+                    mm.setAsync(true);
+                }else {
+                    mm.setAsync(false);
+                }
                 methodMap.put(value, mm);
 //                RemoteProxy.cacheMethodCrc(method, value);
                 LoggerEx.info("SCAN", "Mapping crc " + value + " for class " + clazz.getName() + " method " + method.getName() + " for service " + service);
@@ -159,6 +172,7 @@ public class ServiceStubManager {
         if (service == null)
             throw new NullPointerException("Service can not be nulll");
         T adapterService = null;
+        //TODO should cache adapterService. class as Key, value is adapterService,every class -> adaService
         scanClass(adapterClass, service);
         if (serviceStubProxyClass != null) {
             try {

@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
-
+@WebServlet(urlPatterns = "/",asyncSupported = true)
 public class GroovyServletDispatcher extends HttpServlet {
 	/**
 	 * 

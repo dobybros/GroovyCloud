@@ -16,4 +16,5 @@ public @interface RequestMapping {
 	public String uri();
 	public String responseType() default GroovyServletManager.RESPONSETYPE_JSON;
 	public String[] perms() default "";
+	public boolean asyncSupported() default false;
 }

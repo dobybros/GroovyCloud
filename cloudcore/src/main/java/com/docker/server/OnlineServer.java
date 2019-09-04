@@ -186,7 +186,7 @@ public class OnlineServer {
                 dockerStatusService.addDockerStatus(dockerStatus);
             }
 
-            ThreadPoolExecutor threadPool = ServerStart.getInstance().getThreadPool();
+            ThreadPoolExecutor threadPool = ServerStart.getInstance().getCoreThreadPoolExecutor();
             if (tasks != null) {
                 for (Task task : tasks) {
                     task.setOnlineServer(this);

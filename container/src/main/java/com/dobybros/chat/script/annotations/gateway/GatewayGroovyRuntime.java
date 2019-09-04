@@ -169,7 +169,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
         if (sessionListeners != null) {
             SingleThreadQueue<GWUserParams> queue = singleThreadMap.get(userId + "@" + service);
             if (queue == null) {
-                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getThreadPool(), new GWUserHandler(sessionListeners, this));
+                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getCoreThreadPoolExecutor(), new GWUserHandler(sessionListeners, this));
                 SingleThreadQueue old = singleThreadMap.putIfAbsent(userId + "@" + service, queue);
                 if (old != null)
                     queue = old;
@@ -196,7 +196,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
         if (sessionListeners != null) {
             SingleThreadQueue<GWUserParams> queue = singleThreadMap.get(userId + "@" + service);
             if (queue == null) {
-                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getThreadPool(), new GWUserHandler(sessionListeners, this));
+                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getCoreThreadPoolExecutor(), new GWUserHandler(sessionListeners, this));
                 SingleThreadQueue old = singleThreadMap.putIfAbsent(userId + "@" + service, queue);
                 if (old != null)
                     queue = old;
@@ -225,7 +225,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
         if (sessionListeners != null) {
             SingleThreadQueue<GWUserParams> queue = singleThreadMap.get(userId + "@" + service);
             if (queue == null) {
-                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getThreadPool(), new GWUserHandler(sessionListeners, this));
+                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getCoreThreadPoolExecutor(), new GWUserHandler(sessionListeners, this));
                 SingleThreadQueue old = singleThreadMap.putIfAbsent(userId + "@" + service, queue);
                 if (old != null)
                     queue = old;
@@ -255,7 +255,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
         if (sessionListeners != null) {
             SingleThreadQueue<GWUserParams> queue = singleThreadMap.get(userId + "@" + service);
             if (queue == null) {
-                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getThreadPool(), new GWUserHandler(sessionListeners, this));
+                queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getCoreThreadPoolExecutor(), new GWUserHandler(sessionListeners, this));
                 SingleThreadQueue old = singleThreadMap.putIfAbsent(userId + "@" + service, queue);
                 if (old != null)
                     queue = old;
@@ -320,7 +320,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             if (container.type == PendingMessageContainer.CHANNELCREATED) {
                 if (sessionListeners != null) {
                     for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
-                        ServerStart.getInstance().getThreadPool().execute(() -> {
+                        ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
                             try {
                                 MsgResult msgResult = listener.getObject().messageReceived(message, terminal);
 
@@ -426,7 +426,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             if (container.type == PendingMessageContainer.CHANNELCREATED) {
                 if (sessionListeners != null) {
                     for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
-                        ServerStart.getInstance().getThreadPool().execute(() -> {
+                        ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
                             try {
                                 MsgResult msgResult = listener.getObject().dataReceived(message, terminal);
 //                                OnlineUser onlineUser = onlineUserManager.getOnlineUser(message.getUserId());
@@ -541,7 +541,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 //		try {
         if (messageNotReceivedListeners != null) {
             for (GroovyObjectEx<MessageNotReceivedListener> listener : messageNotReceivedListeners) {
-                ServerStart.getInstance().getThreadPool().execute(() -> {
+                ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
                     try {
                         listener.getObject().messageNotReceived(message, userStatusMap);
                     } catch (Throwable t) {
@@ -561,7 +561,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 //		try {
         if (sessionListeners != null) {
             for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
-                ServerStart.getInstance().getThreadPool().execute(() -> {
+                ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
                     try {
                         listener.getObject().messageSent(data, excludeTerminal, toTerminal, userId, service);
                     } catch (Throwable t) {
@@ -581,7 +581,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 //		try {
         if (sessionListeners != null) {
             for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
-                ServerStart.getInstance().getThreadPool().execute(() -> {
+                ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
                     try {
                         listener.getObject().messageReceivedFromUsers(message, receiverId, receiverService);
                     } catch (Throwable t) {
@@ -605,7 +605,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 //		try {
         if (sessionListeners != null) {
             for (GroovyObjectEx<SessionListener> listener : sessionListeners) {
-                ServerStart.getInstance().getThreadPool().execute(() -> {
+                ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
                     try {
                         listener.getObject().pingReceived(userId, service, terminal);
                     } catch (Throwable t) {

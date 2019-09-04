@@ -79,7 +79,7 @@ public class ConsumeOfflineMessageHandler {
 
         public void start() {
             if(started.compareAndSet(STATUS_IDLE, STATUS_STARTED)) {
-                ServerStart.getInstance().getThreadPool().execute(this);
+                ServerStart.getInstance().getCoreThreadPoolExecutor().execute(this);
             } else {
                 LoggerEx.error(TAG, "OfflineMessageReader has already been started, userId " + userId + " service " + service);
             }

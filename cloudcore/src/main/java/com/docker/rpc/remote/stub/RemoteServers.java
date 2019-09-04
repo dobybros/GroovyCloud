@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Description：
  */
 public class RemoteServers {
+    //Aplomb 8.29 no need to new ConcurrentHashMap
     private ConcurrentHashMap<String, Server> servers = new ConcurrentHashMap<>();
     private List<Server> sortedServers = new ArrayList<>();
 

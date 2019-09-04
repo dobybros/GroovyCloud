@@ -354,7 +354,7 @@ public class ScriptManager implements ShutdownListener {
         if (!service.contains(versionSeperator)) {
             if (defalutServiceVersionMap.size() > 0) {
                 Integer version = defalutServiceVersionMap.get(service);
-                if (version != -1) {
+                if (version != null && version != -1) {
                     service = service + versionSeperator + version;
                 }
             }

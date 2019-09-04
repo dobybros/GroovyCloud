@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RefreshServers {
     public static RefreshServers instance;
     private List<String> remoteHostList = new ArrayList();
-    private Map<String, Map<String, Map<String, List<RemoteServers.Server>>>> remoteServersMap = new ConcurrentHashMap();
+    private Map<String, Map<String, Map<String, Map<String, RemoteServers.Server>>>> remoteServersMap = new ConcurrentHashMap<String, Map<String, Map<String, Map<String, RemoteServers.Server>>>>();
     public void addRemoteHost(final String host){
         if(!remoteHostList.contains(host)){
             remoteHostList.add(host);
@@ -28,7 +28,28 @@ public class RefreshServers {
                     if (result != null) {
                         Map<String, Map<String, List<RemoteServers.Server>>> theServers = result.getData();
                         if (theServers != null) {
-                            remoteServersMap.put(host, theServers);
+                            Map<String, Map<String, Map<String, RemoteServers.Server>>> grayTypeServersMap = null;
+                            for (String grayType: theServers.keySet()){
+                                grayTypeServersMap = new ConcurrentHashMap<String, Map<String, Map<String, RemoteServers.Server>>>();
+                                Map<String, List<RemoteServers.Server>> grayTypeMap = theServers.get(grayType);
+                                if(grayTypeMap != null && !grayTypeMap.isEmpty()){
+                                    Map<String, Map<String, RemoteServers.Server>> serversMap = new ConcurrentHashMap<String, Map<String, RemoteServers.Server>>();
+                                    for (String service : theServers.get(grayType).keySet()){
+                                        List<RemoteServers.Server> servers = (List<RemoteServers.Server>)grayTypeMap.get(service);
+                                        if(servers != null && !servers.isEmpty()){
+                                            Map<String, RemoteServers.Server> serverMap = new ConcurrentHashMap<String, RemoteServers.Server>();
+                                            for (int i = 0; i < servers.size(); i++) {
+                                                serverMap.put(servers.get(i).getServer(), servers.get(i));
+                                            }
+                                            serversMap.put(service, serverMap);
+                                        }
+                                    }
+                                    grayTypeServersMap.put(grayType, serversMap);
+                                }
+                            }
+                            if(grayTypeServersMap != null && !grayTypeServersMap.isEmpty()){
+                                remoteServersMap.put(host, grayTypeServersMap);
+                            }
                         }
                     }
                 }
@@ -44,7 +65,7 @@ public class RefreshServers {
 
     }
 
-    Map<String, Map<String, List<RemoteServers.Server>>> getFinalServersMap(String host){
+    Map<String, Map<String, Map<String, RemoteServers.Server>>> getFinalServersMap(String host){
         if(remoteServersMap.size() > 0){
             return remoteServersMap.get(host);
         }

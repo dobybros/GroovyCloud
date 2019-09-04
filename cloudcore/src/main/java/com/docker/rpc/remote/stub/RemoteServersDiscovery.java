@@ -27,33 +27,27 @@ public class RemoteServersDiscovery {
                 type = grayReleased.getType();
             }
         }
-        Map<String, Map<String, List<RemoteServers.Server>>> theServersFinalMap = RefreshServers.getInstance().getFinalServersMap(this.host);
+        Map<String, Map<String, Map<String, RemoteServers.Server>>> theServersFinalMap = RefreshServers.getInstance().getFinalServersMap(this.host);
         if (service != null && theServersFinalMap != null && theServersFinalMap.size() > 0) {
-            Map<String, List<RemoteServers.Server>> typeMap = theServersFinalMap.get(type);
+            Map<String, Map<String, RemoteServers.Server>> typeMap = theServersFinalMap.get(type);
             if ((typeMap == null || typeMap.size() == 0) && !type.equals(GrayReleased.defaultVersion)) {
                 typeMap = theServersFinalMap.get(GrayReleased.defaultVersion);
                 LoggerEx.warn(TAG, "Service version cant find type: " + type + ", Now, find in default!!!");
             }
             if (typeMap != null && typeMap.size() > 0) {
-                List<RemoteServers.Server> servers = (List<RemoteServers.Server>) typeMap.get(service);
+                Map<String, RemoteServers.Server> servers = (Map<String, RemoteServers.Server>) typeMap.get(service);
                 //如果type不为default，查出来的servcers为空，那么就去default里找
                 if (servers == null || servers.isEmpty()) {
                     if (!type.equals(GrayReleased.defaultVersion)) {
                         typeMap = theServersFinalMap.get(GrayReleased.defaultVersion);
                         if (typeMap != null && typeMap.size() > 0) {
-                            servers = (List<RemoteServers.Server>) typeMap.get(service);
+                            servers = (Map<String, RemoteServers.Server>) typeMap.get(service);
                         }
                     }
                 }
-                if (servers != null && servers.size() > 0) {
-                    Map map = new ConcurrentHashMap();
-                    for (int i = 0; i < servers.size(); i++) {
-                        map.put(servers.get(i).getServer(), servers.get(i));
-                    }
-                    if (map.size() > 0) {
-                        return map;
-                    }
-                } else {
+                if(servers != null && !servers.isEmpty()){
+                    return servers;
+                }else {
                     LoggerEx.error(TAG, "The service: " + service + " has no server,cant invoke!");
                 }
             } else {

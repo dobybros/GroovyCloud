@@ -9,6 +9,9 @@ public class MethodMapping {
     protected Type[] genericParameterTypes;
     protected Class<?> returnClass;
     protected Type genericReturnClass;
+    //返回值的泛型类型
+    protected Type[] genericReturnActualTypeArguments;
+    protected Boolean isAsync;
 
     public MethodMapping(Method method) {
         this.method = method;
@@ -48,5 +51,21 @@ public class MethodMapping {
 
     public void setGenericParameterTypes(Type[] genericParameterTypes) {
         this.genericParameterTypes = genericParameterTypes;
+    }
+
+    public Type[] getGenericReturnActualTypeArguments() {
+        return genericReturnActualTypeArguments;
+    }
+
+    public void setGenericReturnActualTypeArguments(Type[] genericReturnActualTypeArguments) {
+        this.genericReturnActualTypeArguments = genericReturnActualTypeArguments;
+    }
+
+    public Boolean getAsync() {
+        return isAsync;
+    }
+
+    public void setAsync(Boolean async) {
+        isAsync = async;
     }
 }

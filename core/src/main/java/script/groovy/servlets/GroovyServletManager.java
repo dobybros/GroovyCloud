@@ -264,6 +264,7 @@ public class GroovyServletManager extends ClassAnnotationHandler {
 										requestUriWrapper.analyzeMethod(method);
 										requestUriWrapper.setResponseType(requestMapping.responseType());
 										requestUriWrapper.setPermissions(requestMapping.perms());
+										requestUriWrapper.setAsyncSupported(requestMapping.asyncSupported());
 										handleRequestUri(key, requestUri, requestUriWrapper, tree, uriLogs);
 //											requestUriWrapper.setGroovyObject(groovyServlet);
 									}

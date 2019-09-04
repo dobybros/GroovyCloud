@@ -30,6 +30,7 @@ public class ScriptUtils {
                             "    }\n" +
                             "    def methodMissing(String methodName,methodArgs) {\n" +
                             "        Long crc = chat.utils.ReflectionUtil.getCrc(remoteServiceStub, methodName, remoteServerHandler.getService());\n" +
+                            "        com.docker.rpc.remote.stub.ServerCacheManager.getInstance().getCrcMethodMap().put(crc, remoteServerHandler.getService() + '_' + remoteServiceStub.getSimpleName() + '_' + methodName);\n" +
                             "        return invoke(crc, methodArgs);\n" +
                             "    }\n" +
                             "    public static def getProxy(com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler, Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager) {\n" +
