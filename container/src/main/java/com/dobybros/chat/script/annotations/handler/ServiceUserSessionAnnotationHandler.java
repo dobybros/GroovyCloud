@@ -3,6 +3,7 @@ package com.dobybros.chat.script.annotations.handler;
 import chat.logs.LoggerEx;
 import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionHandler;
 import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionListener;
+import com.docker.script.MyBaseRuntime;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.GroovyRuntime;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
@@ -42,6 +43,10 @@ public class ServiceUserSessionAnnotationHandler extends ClassAnnotationHandler 
                         listener = (ServiceUserSessionListener)obj;
                         listener.setUserId(userId);
                         listener.setService(service);
+                        if (getGroovyRuntime() instanceof MyBaseRuntime) {
+                            MyBaseRuntime myBaseRuntime = (MyBaseRuntime)getGroovyRuntime();
+                            myBaseRuntime.injectBean(listener);
+                        }
                     }
                 } catch (Throwable t) {
                     LoggerEx.error(TAG, "Create listener error, eMsg : " + t.getMessage());
