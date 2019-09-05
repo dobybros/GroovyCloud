@@ -3,6 +3,8 @@ package com.docker.rpc;
 import chat.errors.CoreException;
 import chat.utils.ConcurrentHashSet;
 
+import java.util.concurrent.CompletableFuture;
+
 public abstract class RPCClientAdapter {
 	protected ConcurrentHashSet<ClientAdapterStatusListener> statusListeners = new ConcurrentHashSet<>();
 	
@@ -30,6 +32,8 @@ public abstract class RPCClientAdapter {
 	}
 
 	public abstract RPCResponse call(RPCRequest request) throws CoreException;
+
+	public abstract CompletableFuture<?> callAsync(RPCRequest request) throws CoreException;
 
 	public abstract void touch();
 

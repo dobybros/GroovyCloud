@@ -68,8 +68,15 @@ public class TimerEx {
             LoggerEx.error(TAG, "Schedule TimerTask " + task + " failed, " + e.getMessage());
         }
     }
-    public static void cancel() {
-        LoggerEx.warn(TAG, "Why you want to cancel a Timer? Please email to aplomb@aculearn.com.cn");
+    public static void cancel(TimerTaskEx task) {
+        try {
+            if(task.getId() != null){
+                QuartzHandler.getInstance().removeJob(task.getId());
+            }
+        }catch (Throwable e){
+            e.printStackTrace();
+            LoggerEx.error(TAG, "Remove timetask filed, taskId: " + task.getId());
+        }
     }
 
 

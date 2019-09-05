@@ -34,7 +34,7 @@ class MessageSendingSingleThreadQueueWrapper extends SingleThreadQueue<SpreadMes
 		
 		public MessageSendingSingleThreadQueueWrapper(final String server, String ip,
 													  Integer port, RPCClientAdapterMap rpcClientAdapterMap, final ConcurrentHashMap<String, MessageSendingSingleThreadQueueWrapper> serverQueueMap, OfflineMessageSavingTask offlineMessageSavingTask) {
-			super("Message sending queue on Server " + server, new ConcurrentLinkedQueue<SpreadMessage>(), ServerStart.getInstance().getThreadPool());
+			super("Message sending queue on Server " + server, new ConcurrentLinkedQueue<SpreadMessage>(), ServerStart.getInstance().getCoreThreadPoolExecutor());
 			
 			RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(ip, port, server, new RPCClientAdapter.ClientAdapterStatusListener(){
 				@Override

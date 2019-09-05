@@ -20,36 +20,32 @@ public class ServerStart {
 	private static String maximumPoolSize;
 	private static String keepAliveTime;
 	private static String queueCapacity;
-	private static final String TAG = "ServerStart";
-	private Map<String, String> asyncServletMap;
 	private ThreadPoolExecutor threadPoolExecutor;
+	private ThreadPoolExecutor coreThreadPoolExecutor;
 
 	private static volatile ServerStart instance;
-	private boolean isStarted = false;
-//	private static int coreSize = 0;
-//	private static int maximumPoolSize = 0;
-//	private static long keepAliveTime = 0L;
 	public static ServerStart getInstance(){
-        ClassPathResource configResource = new ClassPathResource("container.properties");
-        Properties properties = new Properties();
-        try {
-            properties.load(configResource.getInputStream());
-            coreSize = properties.getProperty("thread.coreSize");
-            maximumPoolSize = properties.getProperty("thread.maximumPoolSize");
-            keepAliveTime = properties.getProperty("thread.keepAliveTime");
-            queueCapacity = properties.getProperty("thread.queueCapacity");
-        }catch (IOException e){
-            e.printStackTrace();
-        }finally {
-            try {
-                configResource.getInputStream().close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+
 		if(instance == null){
 			synchronized (ServerStart.class){
 				if(instance == null){
+					ClassPathResource configResource = new ClassPathResource("container.properties");
+					Properties properties = new Properties();
+					try {
+						properties.load(configResource.getInputStream());
+						coreSize = properties.getProperty("thread.coreSize");
+						maximumPoolSize = properties.getProperty("thread.maximumPoolSize");
+						keepAliveTime = properties.getProperty("thread.keepAliveTime");
+						queueCapacity = properties.getProperty("thread.queueCapacity");
+					}catch (IOException e){
+						e.printStackTrace();
+					}finally {
+						try {
+							configResource.getInputStream().close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
 					instance = new ServerStart();
 				}
 			}
@@ -62,18 +58,16 @@ public class ServerStart {
 		System.out.println(f.getAbsolutePath());
 	}
 
-	public Map<String, String> getAsyncServletMap() {
-		return asyncServletMap;
-	}
-
-	public void setAsyncServletMap(Map<String, String> asyncServletMap) {
-		this.asyncServletMap = asyncServletMap;
-	}
-
 	public ThreadPoolExecutor getThreadPool() {
 		if(threadPoolExecutor == null){
-			threadPoolExecutor = new org.apache.tomcat.util.threads.ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)));
+			threadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)));
 		}
 		return threadPoolExecutor;
+	}
+	public ThreadPoolExecutor getCoreThreadPoolExecutor(){
+		if(coreThreadPoolExecutor == null){
+			coreThreadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)));
+		}
+		return coreThreadPoolExecutor;
 	}
 }

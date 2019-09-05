@@ -119,7 +119,7 @@ public class OnlineServiceUser implements ChannelListener {
 	
 	public void initOnlineUser() {
 		if(status < STATUS_INITED) {
-			acuEventQueue = new SingleThreadQueue<>(userInfo() + " event receiving thread. sid " + sessionId, eventQueue, ServerStart.getInstance().getThreadPool(), new BulkHandler<PushInfo>() {
+			acuEventQueue = new SingleThreadQueue<>(userInfo() + " event receiving thread. sid " + sessionId, eventQueue, ServerStart.getInstance().getCoreThreadPoolExecutor(), new BulkHandler<PushInfo>() {
 				public boolean bulkHandle(ArrayList<PushInfo> pushInfoList) {
 					pushToChannelsSync(pushInfoList);
 //					Event event = pushInfo.event;

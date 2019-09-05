@@ -4,15 +4,23 @@ import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.AnalyticsLogger;
 import chat.logs.LoggerEx;
+import chat.main.ServerStart;
 import chat.utils.ReflectionUtil;
+import chat.utils.TimerEx;
+import chat.utils.TimerTaskEx;
 import com.alibaba.fastjson.JSON;
 import com.docker.data.ServiceAnnotation;
-import com.docker.rpc.MethodRequest;
-import com.docker.rpc.MethodResponse;
+import com.docker.rpc.*;
 import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.RemoteService;
+import com.docker.rpc.remote.stub.ServerCacheManager;
+import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.ClassAnnotationHandlerEx;
+import com.docker.script.MyBaseRuntime;
+import com.docker.script.ScriptManager;
 import com.docker.server.OnlineServer;
+import com.docker.utils.SpringContextUtil;
+import io.netty.util.concurrent.CompleteFuture;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.GroovyBeanFactory;
@@ -26,14 +34,16 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
-	private static final String TAG = ServiceSkeletonAnnotationHandler.class.getSimpleName();
+    private static final String TAG = ServiceSkeletonAnnotationHandler.class.getSimpleName();
     private ConcurrentHashMap<Long, SkelectonMethodMapping> methodMap = new ConcurrentHashMap<>();
 
     private Integer serviceVersion;
-	private String service;
+    private String service;
     private List<Class<? extends Annotation>> extraAnnotations;
     private List<ServiceAnnotation> annotationList = new ArrayList<>();
 
@@ -41,12 +51,13 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
     public void handlerShutdown() {
         methodMap.clear();
     }
+
     public ServiceSkeletonAnnotationHandler() {
         extraAnnotations = new ArrayList<>();
     }
 
     public void addExtraAnnotation(Class<? extends Annotation> annotationClass) {
-        if(!extraAnnotations.contains(annotationClass)) {
+        if (!extraAnnotations.contains(annotationClass)) {
             extraAnnotations.add(annotationClass);
         }
     }
@@ -75,7 +86,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                     if (requestIntercepting != null) {
 //                        GroovyObjectEx<RemoteService> serverAdapter = getGroovyRuntime()
 //                                .create(groovyClass);
-                        GroovyObjectEx<RemoteService> serverAdapter = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
+                        GroovyObjectEx<RemoteService> serverAdapter = ((GroovyBeanFactory) getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
                         scanClass(groovyClass, serverAdapter, newMethodMap);
                     }
                 }
@@ -109,44 +120,32 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
             super(method);
         }
 
-        public MethodResponse invoke(MethodRequest request) throws CoreException {
+        private Object[] prepareMethodArgs(MethodRequest request) throws CoreException {
             Object[] rawArgs = request.getArgs();
-            Long crc = request.getCrc();
-            if(method == null)
+            if (method == null)
                 throw new CoreException(ChatErrorCodes.ERROR_METHODMAPPING_METHOD_NULL, "Invoke method is null");
             int argLength = rawArgs != null ? rawArgs.length : 0;
             Object[] args = null;
-            if(parameterTypes.length == argLength) {
+            if (parameterTypes.length == argLength) {
                 args = rawArgs;
-            } else if(parameterTypes.length < argLength) {
+            } else if (parameterTypes.length < argLength) {
                 args = new Object[parameterTypes.length];
                 System.arraycopy(rawArgs, 0, args, 0, parameterTypes.length);
             } else {
                 args = new Object[parameterTypes.length];
                 System.arraycopy(rawArgs, 0, args, 0, rawArgs.length);
             }
-//            if(parameterClasses != null) {
-//                for(int i = 0; i < parameterClasses.length; i++) {
-//                    Class<?> clazz = parameterClasses[i];
-//                    if(i < rawArgs.length) {
-//                        if(rawArgs[i] != null) {
-//                            if(String.class.equals(clazz) && rawArgs[i] instanceof String) {
-//                                args[i] = rawArgs[i];
-//                            } else if(!ClassUtils.isPrimitiveOrWrapper(clazz) && rawArgs[i] instanceof JSON) {
-//                                args[i] = JSON.parseObject((String) rawArgs[i], clazz);
-//                            } else if(ClassUtils.isPrimitiveOrWrapper(clazz)) {
-//                                args[i] = TypeUtils.cast(rawArgs[i], clazz, ParserConfig.getGlobalInstance());
-//                            }
-//                        }
-//                    }
-//                }
-//            }
+            return args;
+        }
 
+        public MethodResponse invoke(MethodRequest request) throws CoreException {
+             Object[] args = prepareMethodArgs(request);
+            Long crc = request.getCrc();
             Object returnObj = null;
             CoreException exception = null;
             String parentTrackId = request.getTrackId();
             String currentTrackId = null;
-            if(parentTrackId != null) {
+            if (parentTrackId != null) {
                 currentTrackId = ObjectId.get().toString();
                 Tracker tracker = new Tracker(currentTrackId, parentTrackId);
                 Tracker.trackerThreadLocal.set(tracker);
@@ -155,23 +154,21 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
             boolean error = false;
             long time = System.currentTimeMillis();
             try {
-                builder.append("$$methodrequest:: " + method.getDeclaringClass().getSimpleName() + "#" + method.getName() + " $$service:: " + service + " $$serviceversion:: " + serviceVersion + " $$parenttrackid:: " + parentTrackId + " $$currenttrackid:: " + currentTrackId + " $$args:: " + request.getArgsTmpStr() );
-
+                builder.append("$$methodrequest:: " + method.getDeclaringClass().getSimpleName() + "#" + method.getName() + " $$service:: " + service + " $$serviceversion:: " + serviceVersion + " $$parenttrackid:: " + parentTrackId + " $$currenttrackid:: " + currentTrackId + " $$args:: " + request.getArgsTmpStr());
                 returnObj = remoteService.invokeRootMethod(method.getName(), args);
             } catch (Throwable t) {
                 error = true;
                 builder.append(" $$error" +
                         ":: " + t.getClass() + " $$errormsg:: " + t.getMessage());
-                if(t instanceof InvokerInvocationException) {
+                if (t instanceof InvokerInvocationException) {
                     Throwable theT = ((InvokerInvocationException) t).getCause();
-                    if(theT != null) {
+                    if (theT != null) {
                         t = theT;
                     }
                 }
-                if(t instanceof CoreException) {
+                if (t instanceof CoreException) {
                     exception = (CoreException) t;
-                }
-                else {
+                } else {
                     exception = new CoreException(ChatErrorCodes.ERROR_METHODMAPPING_INVOKE_UNKNOWNERROR, t.getMessage());
                 }
             } finally {
@@ -186,14 +183,28 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
             response.setRequest(request);
             response.setEncode(MethodResponse.ENCODE_JAVABINARY);
             response.setCrc(crc);
-            if(returnObj != null)
+            if (returnObj != null)
                 response.setReturnTmpStr(JSON.toJSONString(returnObj));
             builder.append(" $$returnobj:: " + response.getReturnTmpStr());
-            if(error)
+            if (error)
                 AnalyticsLogger.error(TAG, builder.toString());
             else
                 AnalyticsLogger.info(TAG, builder.toString());
             return response;
+        }
+
+        public Object invokeAsync(MethodRequest request, String callbackFutureId) throws CoreException {
+            Object[] args = prepareMethodArgs(request);
+            Long crc = request.getCrc();
+            String parentTrackId = request.getTrackId();
+            String currentTrackId = null;
+            if (parentTrackId != null) {
+                currentTrackId = ObjectId.get().toString();
+                Tracker tracker = new Tracker(currentTrackId, parentTrackId);
+                Tracker.trackerThreadLocal.set(tracker);
+            }
+            Object returnObj = remoteService.invokeRootMethod(method.getName(), args);
+            return returnObj;
         }
 
         public GroovyObjectEx<RemoteService> getRemoteService() {
@@ -210,7 +221,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
     }
 
     public void scanClass(Class<?> clazz, GroovyObjectEx<RemoteService> serverAdapter, ConcurrentHashMap<Long, SkelectonMethodMapping> methodMap) {
-        if(clazz == null)
+        if (clazz == null)
             return;
 //        Object obj = cachedInstanceMap.get(clazz);
 //        if(obj == null) {
@@ -229,30 +240,30 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
 //        }
 
         Method[] methods = ReflectionUtil.getMethods(clazz);
-        if(methods != null) {
-            for(Method method : methods) {
-                if(method.isSynthetic() || method.getModifiers() == Modifier.PRIVATE)
+        if (methods != null) {
+            for (Method method : methods) {
+                if (method.isSynthetic() || method.getModifiers() == Modifier.PRIVATE)
                     continue;
                 SkelectonMethodMapping mm = new SkelectonMethodMapping(method);
                 mm.setRemoteService(serverAdapter);
                 long value = ReflectionUtil.getCrc(method, service);
-                if(methodMap.contains(value)) {
+                if (methodMap.contains(value)) {
                     LoggerEx.warn(TAG, "Don't support override methods, please rename your method " + method + " for crc " + value + " and existing method " + methodMap.get(value).getMethod());
                     continue;
                 }
                 Class<?>[] parameterTypes = method.getParameterTypes();
-                if(parameterTypes != null) {
+                if (parameterTypes != null) {
                     boolean failed = false;
-                    for(int i = 0; i < parameterTypes.length; i++) {
+                    for (int i = 0; i < parameterTypes.length; i++) {
                         parameterTypes[i] = ReflectionUtil.getInitiatableClass(parameterTypes[i]);
                         Class<?> parameterType = parameterTypes[i];
-                        if(!ReflectionUtil.canBeInitiated(parameterType)) {
+                        if (!ReflectionUtil.canBeInitiated(parameterType)) {
                             failed = true;
                             LoggerEx.warn(TAG, "Parameter " + parameterType + " in method " + method + " couldn't be initialized. ");
                             break;
                         }
                     }
-                    if(failed)
+                    if (failed)
                         continue;
                 }
                 mm.setParameterTypes(parameterTypes);
@@ -261,32 +272,32 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 returnType = ReflectionUtil.getInitiatableClass(returnType);
                 mm.setReturnClass(returnType);
                 methodMap.put(value, mm);
-
+                ServerCacheManager.getInstance().getCrcMethodMap().put(value, service + "_" + clazz.getSimpleName() + "_" + method.getName());
                 //TODO DTS
                 Annotation[] annotations = method.getDeclaredAnnotations();
-                for(Annotation annotation : annotations) {
+                for (Annotation annotation : annotations) {
                     boolean isExists = extraAnnotations.contains(annotation.annotationType());
-                    if(isExists) {
+                    if (isExists) {
                         Method annotationMethodContainer = null;
                         try {
                             Method theMethod = annotation.annotationType().getDeclaredMethod("values");
-                            if(theMethod != null)
+                            if (theMethod != null)
                                 annotationMethodContainer = theMethod;
                         } catch (NoSuchMethodException e) {
                         }
-                        if(annotationMethodContainer != null) {
+                        if (annotationMethodContainer != null) {
                             Annotation[] innerAnnotations = new Annotation[0];
                             try {
                                 innerAnnotations = (Annotation[]) annotationMethodContainer.invoke(annotation);
                             } catch (IllegalAccessException e) {
                                 e.printStackTrace();
-                                LoggerEx.warn(TAG, "(IllegalAccessException)Try to get annotations for key values in class " + annotationMethodContainer.getDeclaringClass()+ " method " + annotationMethodContainer.getName() + " failed, " + e.getMessage());
+                                LoggerEx.warn(TAG, "(IllegalAccessException)Try to get annotations for key values in class " + annotationMethodContainer.getDeclaringClass() + " method " + annotationMethodContainer.getName() + " failed, " + e.getMessage());
                             } catch (InvocationTargetException e) {
                                 e.printStackTrace();
-                                LoggerEx.warn(TAG, "(InvocationTargetException)Try to get annotations for key values in class " + annotationMethodContainer.getDeclaringClass()+ " method " + annotationMethodContainer.getName() + " failed, " + e.getMessage());
+                                LoggerEx.warn(TAG, "(InvocationTargetException)Try to get annotations for key values in class " + annotationMethodContainer.getDeclaringClass() + " method " + annotationMethodContainer.getName() + " failed, " + e.getMessage());
                             }
-                            if(innerAnnotations != null) {
-                                for(Annotation innerAnnotation : innerAnnotations) {
+                            if (innerAnnotations != null) {
+                                for (Annotation innerAnnotation : innerAnnotations) {
                                     ServiceAnnotation serviceAnnotation = getServiceAnnotationFromAnnotation(innerAnnotation, method);
                                     annotationList.add(serviceAnnotation);
                                 }
@@ -295,7 +306,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                             ServiceAnnotation serviceAnnotation = getServiceAnnotationFromAnnotation(annotation, method);
                             annotationList.add(serviceAnnotation);
                         }
-                    }else{
+                    } else {
                         continue;
                     }
                 }
@@ -310,19 +321,19 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
         Map<String, Object> annotationParams = new HashMap<>();
 
         Method[] innerAnnotationMethods = annotation.annotationType().getDeclaredMethods();
-        for(Method innerAnnotationMethod : innerAnnotationMethods) {
+        for (Method innerAnnotationMethod : innerAnnotationMethods) {
             String annotationKey = innerAnnotationMethod.getName();
             Object annotationValue = null;
             try {
                 annotationValue = innerAnnotationMethod.invoke(annotation);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
-                LoggerEx.warn(TAG, "(IllegalAccessException)Try to get annotation value for key " + annotationKey + " in class " + method.getDeclaringClass()+ " method " + method.getName() + " failed, " + e.getMessage());
+                LoggerEx.warn(TAG, "(IllegalAccessException)Try to get annotation value for key " + annotationKey + " in class " + method.getDeclaringClass() + " method " + method.getName() + " failed, " + e.getMessage());
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
-                LoggerEx.warn(TAG, "(InvocationTargetException)Try to get annotation value for key " + annotationKey + " in class " + method.getDeclaringClass()+ " method " + method.getName() + " failed, " + e.getMessage());
+                LoggerEx.warn(TAG, "(InvocationTargetException)Try to get annotation value for key " + annotationKey + " in class " + method.getDeclaringClass() + " method " + method.getName() + " failed, " + e.getMessage());
             }
-            if(annotationValue != null)
+            if (annotationValue != null)
                 annotationParams.put(annotationKey, annotationValue);
         }
         serviceAnnotation.setAnnotationParams(annotationParams);
@@ -333,7 +344,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
     }
 
     @Override
-    public void configService(com.docker.data.Service theService){
+    public void configService(com.docker.data.Service theService) {
         theService.appendServiceAnnotation(annotationList);
     }
 }

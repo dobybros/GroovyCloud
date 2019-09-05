@@ -171,7 +171,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     private SingleThreadQueue<GWUserParams> getGWUserQueue(String userId, String service) {
         SingleThreadQueue<GWUserParams> queue = singleThreadMap.get(userId + "@" + service);
         if (queue == null) {
-            queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getThreadPool(), new GWUserHandler(sessionListener, this));
+            queue = new SingleThreadQueue<GWUserParams>("GWUserHandler userId " + userId + " service " + service, new ConcurrentLinkedQueue<>(), ServerStart.getInstance().getCoreThreadPoolExecutor(), new GWUserHandler(sessionListener, this));
             SingleThreadQueue old = singleThreadMap.putIfAbsent(userId + "@" + service, queue);
             if (old != null)
                 queue = old;
@@ -320,7 +320,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             return;
         } else {
             if (container.type == PendingMessageContainer.CHANNELCREATED) {
-                ServerStart.getInstance().getThreadPool().execute(() -> {
+                ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
                     try {
                         MsgResult msgResult = null;
                         if (sessionListener != null)
@@ -434,7 +434,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             return;
         } else {
             if (container.type == PendingMessageContainer.CHANNELCREATED) {
-                ServerStart.getInstance().getThreadPool().execute(() -> {
+                ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
                     try {
                         MsgResult msgResult = null;
                         if (sessionListener != null)
@@ -525,7 +525,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             for(GroovyObjectEx<SessionListener> listener : sessionListeners) {
                 try {
                     if(listener.getObject().needAsync()) {
-                        ServerStart.getInstance().getThreadPool().execute(() -> {
+                        ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
                             try {
                                 listener.getObject().messageReceivedAsync(message, terminal);
                             } catch (CoreException e) {
@@ -560,7 +560,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 //		try {
         if (messageNotReceivedListeners != null) {
             for (GroovyObjectEx<MessageNotReceivedListener> listener : messageNotReceivedListeners) {
-                ServerStart.getInstance().getThreadPool().execute(() -> {
+                ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
                     try {
                         listener.getObject().messageNotReceived(message, userStatusMap);
                     } catch (Throwable t) {
@@ -578,7 +578,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     public void messageSent(Data data, Integer excludeTerminal, Integer toTerminal, String userId, String service) {
 //		sessionLock.readLock().lock();
 //		try {
-        ServerStart.getInstance().getThreadPool().execute(() -> {
+        ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
             try {
                 if (sessionListener != null)
                     sessionListener.getObject().messageSent(data, excludeTerminal, toTerminal, userId, service);
@@ -606,7 +606,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     public void messageReceivedFromUsers(Message message, String receiverId, String receiverService) {
 //		sessionLock.readLock().lock();
 //		try {
-        ServerStart.getInstance().getThreadPool().execute(() -> {
+        ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
             if (sessionListener != null) {
                 try {
                     sessionListener.getObject().messageReceivedFromUsers(message, receiverId, receiverService);
@@ -638,7 +638,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     public void pingReceived(String userId, String service, Integer terminal) {
 //		sessionLock.readLock().lock();
 //		try {
-        ServerStart.getInstance().getThreadPool().execute(() -> {
+        ServerStart.getInstance().getCoreThreadPoolExecutor().execute(() -> {
             if (sessionListener != null) {
                 try {
                     sessionListener.getObject().pingReceived(userId, service, terminal);

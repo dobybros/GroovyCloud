@@ -2,9 +2,14 @@ package com.docker.rpc.remote.stub;
 
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
+import chat.logs.LoggerEx;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
+import com.docker.rpc.remote.MethodMapping;
+import org.bson.types.ObjectId;
 import script.groovy.servlets.Tracker;
+
+import java.util.concurrent.CompletableFuture;
 
 public class Proxy {
     private static final String TAG = Proxy.class.getSimpleName();
@@ -27,19 +32,29 @@ public class Proxy {
         request.setTrackId(tracker == null ? null : tracker.getTrackId());
         request.setCrc(crc);
         request.setServiceStubManager(serviceStubManager);
-
-        /**
-         remoteServersDiscovery.
-         */
-        MethodResponse response = remoteServerHandler.call(request);
-        if (response != null) {
-            CoreException e = response.getException();
-            if (e != null) {
-                throw e;
+        request.setFromService(serviceStubManager.getFromService());
+        MethodMapping methodMapping = serviceStubManager.getMethodMapping(crc);
+        if(methodMapping.getAsync()){
+            CompletableFuture completableFuture = null;
+            try {
+                completableFuture = remoteServerHandler.callAsync(request);
+            }catch (Throwable t){
+                completableFuture = new CompletableFuture();
+                completableFuture.completeExceptionally(t);
             }
-            Object returnObject = response.getReturnObject();
-            return returnObject;
+            return completableFuture;
+        }else {
+
+            MethodResponse response = remoteServerHandler.call(request);
+            if (response != null) {
+                CoreException e = response.getException();
+                if (e != null) {
+                    throw e;
+                }
+                Object returnObject = response.getReturnObject();
+                return returnObject;
+            }
+            throw new CoreException(ChatErrorCodes.ERROR_METHODRESPONSE_NULL, "Method response is null for request " + request);
         }
-        throw new CoreException(ChatErrorCodes.ERROR_METHODRESPONSE_NULL, "Method response is null for request " + request);
     }
 }
