@@ -1,6 +1,7 @@
 package chat.main;
 
 import org.apache.tomcat.util.threads.TaskQueue;
+import org.eclipse.jetty.util.thread.ThreadPool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -70,4 +71,14 @@ public class ServerStart {
 		}
 		return coreThreadPoolExecutor;
 	}
+//	public String threadPoolStatus() {
+//		StringBuffer buffer = new StringBuffer("Web ThreadPool");
+//		buffer.append(" threadPool: " + threadPoolExecutor);
+//		return buffer.toString();
+//	}
+//	public String coretThreadPoolStatus() {
+//		StringBuffer buffer = new StringBuffer("Web ThreadPool");
+//		buffer.append(" threadPool: " + coreThreadPoolExecutor);
+//		return buffer.toString();
+//	}
 }

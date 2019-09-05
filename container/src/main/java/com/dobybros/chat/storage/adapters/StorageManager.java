@@ -120,6 +120,7 @@ public class StorageManager {
                             manager.setHost(dblan.getProtocol() + "://" + dblan.getDomain() + ":" + dblan.getPort());
                         }
                         manager.init();
+                        //TODO 强制写死的，注意！！！
                         manager.setFromService("gws");
                         stubManagerForLanIdMap.putIfAbsent(lanId, manager);
                         manager = stubManagerForLanIdMap.get(lanId);
