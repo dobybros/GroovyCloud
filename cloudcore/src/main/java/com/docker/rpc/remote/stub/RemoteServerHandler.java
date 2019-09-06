@@ -191,7 +191,11 @@ public class RemoteServerHandler {
                     port = server.getRpcPort();
                 }
                 request.setService(service + "_v" + server.getVersion());
-                request.setFromServerName(OnlineServer.getInstance().getServer());
+                if(OnlineServer.getInstance() != null){
+                    request.setFromServerName(OnlineServer.getInstance().getServer());
+                }else {
+                    request.setFromServerName("acucom");
+                }
                 LoggerEx.info(TAG, "The service: " + service + " ,the version being used is " + server.getVersion());
                 if (ip != null && port != null) {
                     request.setSourceIp(ip);
@@ -208,6 +212,7 @@ public class RemoteServerHandler {
                     LoggerEx.info(TAG, "No ip " + ip + " or port " + port + ", fail to call Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount);
                 }
             } catch (Throwable t) {
+                t.printStackTrace();
                 if (t instanceof CoreException) {
                     CoreException ce = (CoreException) t;
                     switch (ce.getCode()) {

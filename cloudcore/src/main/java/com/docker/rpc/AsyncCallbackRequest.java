@@ -3,6 +3,8 @@ package com.docker.rpc;
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import chat.utils.DataInputStreamEx;
+import chat.utils.DataOutputStreamEx;
 import chat.utils.GZipUtils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -14,9 +16,9 @@ import com.docker.script.ScriptManager;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -45,10 +47,10 @@ public class AsyncCallbackRequest extends RPCRequest {
                 switch (encode) {
                     case ENCODE_JAVABINARY:
                         ByteArrayInputStream bais = null;
-                        DataInputStream dis = null;
+                        DataInputStreamEx dis = null;
                         try {
                             bais = new ByteArrayInputStream(bytes);
-                            dis = new DataInputStream(bais);
+                            dis = new DataInputStreamEx(bais);
                             callbackFutureId = dis.readUTF();
                             crc = dis.readLong();
                             fromService = dis.readUTF();
@@ -109,6 +111,9 @@ public class AsyncCallbackRequest extends RPCRequest {
                         } catch (Throwable e) {
                             e.printStackTrace();
                             throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed when callback, " + e.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                        }finally {
+                            IOUtils.closeQuietly(bais);
+                            IOUtils.closeQuietly(dis.original());
                         }
                         break;
                     default:
@@ -128,10 +133,10 @@ public class AsyncCallbackRequest extends RPCRequest {
         switch (encode) {
             case ENCODE_JAVABINARY:
                 ByteArrayOutputStream baos = null;
-                DataOutputStream dis = null;
+                DataOutputStreamEx dis = null;
                 try {
                     baos = new ByteArrayOutputStream();
-                    dis = new DataOutputStream(baos);
+                    dis = new DataOutputStreamEx(baos);
                     dis.writeUTF(callbackFutureId);
                     dis.writeLong(crc);
                     dis.writeUTF(fromService);
@@ -185,7 +190,7 @@ public class AsyncCallbackRequest extends RPCRequest {
                     throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed when call back, " + t.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
                 } finally {
                     IOUtils.closeQuietly(baos);
-                    IOUtils.closeQuietly(dis);
+                    IOUtils.closeQuietly(dis.original());
                 }
                 break;
             default:
