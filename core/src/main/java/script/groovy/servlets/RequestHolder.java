@@ -246,6 +246,7 @@ public class RequestHolder {
                 }
             }
 //			servletObj.invokeRootMethod(groovyMethod, this);
+            //TODO 没有做异步实现，不影响
             invokeMethod(groovyMethod, servletObj);
         } else {
             LoggerEx.error(TAG,

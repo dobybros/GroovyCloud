@@ -9,6 +9,7 @@ import chat.utils.ReflectionUtil;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.util.TypeUtils;
 import com.docker.data.ServiceAnnotation;
 import com.docker.rpc.*;
 import com.docker.rpc.remote.MethodMapping;
@@ -20,6 +21,7 @@ import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.server.OnlineServer;
 import com.docker.utils.SpringContextUtil;
+import com.google.common.collect.Lists;
 import io.netty.util.concurrent.CompleteFuture;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import script.groovy.object.GroovyObjectEx;
@@ -30,6 +32,7 @@ import script.groovy.servlets.Tracker;
 import script.memodb.ObjectId;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -139,7 +142,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
         }
 
         public MethodResponse invoke(MethodRequest request) throws CoreException {
-             Object[] args = prepareMethodArgs(request);
+            Object[] args = prepareMethodArgs(request);
             Long crc = request.getCrc();
             Object returnObj = null;
             CoreException exception = null;
@@ -334,7 +337,22 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 LoggerEx.warn(TAG, "(InvocationTargetException)Try to get annotation value for key " + annotationKey + " in class " + method.getDeclaringClass() + " method " + method.getName() + " failed, " + e.getMessage());
             }
             if (annotationValue != null)
-                annotationParams.put(annotationKey, annotationValue);
+                if (annotationValue.getClass().isArray()) {
+                    List list = new ArrayList();
+                    try {
+                        String[] strs = (String[]) annotationValue;
+                        for (int i = 0; i < strs.length; i++) {
+                            list.add(strs[i]);
+                        }
+                        annotationValue = list;
+                        annotationParams.put(annotationKey, annotationValue);
+                    }catch (Throwable t){
+                        t.printStackTrace();
+                        LoggerEx.error(TAG, t.getMessage());
+                    }
+                }else {
+                    annotationParams.put(annotationKey, annotationValue);
+                }
         }
         serviceAnnotation.setAnnotationParams(annotationParams);
         serviceAnnotation.setClassName(method.getDeclaringClass().getSimpleName());
