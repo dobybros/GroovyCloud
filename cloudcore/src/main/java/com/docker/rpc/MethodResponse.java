@@ -3,6 +3,8 @@ package com.docker.rpc;
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import chat.utils.DataInputStreamEx;
+import chat.utils.DataOutputStreamEx;
 import chat.utils.GZipUtils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -53,10 +55,10 @@ public class MethodResponse extends RPCResponse {
                 switch (encode) {
                     case ENCODE_JAVABINARY:
                         ByteArrayInputStream bais = null;
-                        DataInputStream dis = null;
+                        DataInputStreamEx dis = null;
                         try {
                             bais = new ByteArrayInputStream(bytes);
-                            dis = new DataInputStream(bais);
+                            dis = new DataInputStreamEx(bais);
                             version = dis.readByte();
                             crc = dis.readLong();
                             if (crc == null || crc == 0 || crc == -1)
@@ -117,6 +119,9 @@ public class MethodResponse extends RPCResponse {
                         } catch (Throwable e) {
                             e.printStackTrace();
                             throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + e.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                        }finally {
+                            IOUtils.closeQuietly(bais);
+                            IOUtils.closeQuietly(dis.original());
                         }
                         break;
                     default:
@@ -134,10 +139,10 @@ public class MethodResponse extends RPCResponse {
         switch (encode) {
             case ENCODE_JAVABINARY:
                 ByteArrayOutputStream baos = null;
-                DataOutputStream dis = null;
+                DataOutputStreamEx dis = null;
                 try {
                     baos = new ByteArrayOutputStream();
-                    dis = new DataOutputStream(baos);
+                    dis = new DataOutputStreamEx(baos);
                     dis.writeByte(version);
                     dis.writeLong(crc);
 
@@ -191,7 +196,7 @@ public class MethodResponse extends RPCResponse {
                     throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + t.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
                 } finally {
                     IOUtils.closeQuietly(baos);
-                    IOUtils.closeQuietly(dis);
+                    IOUtils.closeQuietly(dis.original());
                 }
                 break;
             default:

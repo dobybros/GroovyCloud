@@ -77,6 +77,12 @@ public class DataOutputStreamEx {
 		  dos.writeByte(paramInt);
   }
 
+	public void writeByte(Byte param)
+			throws IOException {
+		if(writeValueStatus(param))
+			dos.writeByte(param);
+	}
+
   public void writeShort(Integer paramInt)
     throws IOException {
 	  if(writeValueStatus(paramInt))
