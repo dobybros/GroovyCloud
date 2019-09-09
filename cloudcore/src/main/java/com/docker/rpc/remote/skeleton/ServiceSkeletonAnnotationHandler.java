@@ -133,7 +133,8 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 System.arraycopy(rawArgs, 0, args, 0, parameterTypes.length);
             } else {
                 args = new Object[parameterTypes.length];
-                System.arraycopy(rawArgs, 0, args, 0, rawArgs.length);
+                if(rawArgs != null)
+                    System.arraycopy(rawArgs, 0, args, 0, rawArgs.length);
             }
             return args;
         }

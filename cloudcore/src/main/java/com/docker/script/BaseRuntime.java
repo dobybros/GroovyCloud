@@ -16,6 +16,7 @@ import connectors.mongodb.annotations.handlers.MongoDBHandler;
 import connectors.mongodb.annotations.handlers.MongoDatabaseAnnotationHolder;
 import connectors.mongodb.annotations.handlers.MongoDocumentAnnotationHolder;
 import script.filter.JsonFilterFactory;
+import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.*;
 import script.groovy.servlets.GroovyServletDispatcher;
 import script.groovy.servlets.RequestPermissionHandler;
@@ -183,6 +184,18 @@ public abstract class BaseRuntime extends GroovyRuntime {
             }
 		}
 		return null;
+	}
+	public <T> T getBean(Class<T> beanClass) {
+		GroovyObjectEx<T> groovyObjectEx = getBeanFactory().getBean(beanClass);
+		if(groovyObjectEx == null) return null;
+
+		try {
+			return groovyObjectEx.getObject();
+		} catch (CoreException e) {
+			e.printStackTrace();
+			LoggerEx.error(TAG, "getBean failed for class " + beanClass + " error " + e.getMessage());
+			return null;
+		}
 	}
 
 	public MongoDBHandler getMongoDBHandler() {

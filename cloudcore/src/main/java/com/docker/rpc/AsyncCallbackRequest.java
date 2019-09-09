@@ -101,7 +101,7 @@ public class AsyncCallbackRequest extends RPCRequest {
                                     String json = new String(data, "utf8");
                                     JSONObject jsonObj = (JSONObject) JSON.parse(json);
                                     if (jsonObj != null) {
-                                        exception = new CoreException(jsonObj.getInteger("code"), jsonObj.getString("message")+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                                        exception = new CoreException(jsonObj.getInteger("code"), jsonObj.getString("message")+ (crc != null ? ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc) : ""));
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();

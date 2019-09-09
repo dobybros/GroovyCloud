@@ -135,7 +135,7 @@ public class ServiceStubManager {
         inited = true;
     }
 
-    public Object call(String service, String className, String method, Integer version, Object... args) throws CoreException {
+    private MethodRequest getMethodRequest(String service, String className, String method, Object[] args) {
         Long crc = ReflectionUtil.getCrc(className, method, service);
         MethodRequest request = new MethodRequest();
         request.setEncode(MethodRequest.ENCODE_JAVABINARY);
@@ -146,17 +146,18 @@ public class ServiceStubManager {
         Tracker tracker = Tracker.trackerThreadLocal.get();
         request.setTrackId(tracker == null ? null : tracker.getTrackId());
         request.setServiceStubManager(this);
-        MethodResponse response = new RemoteServerHandler(service, this).call(request);
-        if (response != null) {
-            CoreException e = response.getException();
-            if (e != null) {
-                throw e;
-            }
-            Object returnObject = response.getReturnObject();
-            return returnObject;
-        }
-        throw new CoreException(ChatErrorCodes.ERROR_METHODRESPONSE_NULL, "Method response is null for request " + request);
+        return request;
+    }
 
+    public CompletableFuture<?> callAsync(String service, String className, String method, Object... args) throws CoreException {
+        CompletableFuture<?> future = new RemoteServerHandler(service, this).callAsync(getMethodRequest(service, className, method, args));
+        return future;
+    }
+
+    public Object call(String service, String className, String method, Object... args) throws CoreException {
+        MethodRequest request = getMethodRequest(service, className, method, args);
+        MethodResponse response = new RemoteServerHandler(service, this).call(request);
+        return Proxy.getReturnObject(request, response);
     }
 
     public <T> T getService(String service, Class<T> adapterClass) {
