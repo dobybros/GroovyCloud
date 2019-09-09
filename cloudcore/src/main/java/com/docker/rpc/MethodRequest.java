@@ -97,46 +97,52 @@ public class MethodRequest extends RPCRequest {
                             throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_METHODNOTFOUND, "Method doesn't be found by service_class_method " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
 
                         argCount = dis.readInt();
-                        Integer length = dis.readInt();
-                        byte[] argsData = new byte[length];
-                        dis.readFully(argsData);
-
-                        Class<?>[] parameterTypes = methodMapping.getParameterTypes();
-						if(parameterTypes != null && parameterTypes.length > 0) {
-                            if(parameterTypes.length > argCount) {
-                                LoggerEx.debug(TAG, "Parameter types not equal actual is " + parameterTypes.length + " but expected " + argCount + ". Cut off,service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
-                                Class<?>[] newParameterTypes = new Class<?>[argCount];
-                                System.arraycopy(parameterTypes, 0, newParameterTypes, 0, argCount);
-                                parameterTypes = newParameterTypes;
-                            } else if(parameterTypes.length < argCount){
-                                LoggerEx.debug(TAG, "Parameter types not equal actual is " + parameterTypes.length + " but expected " + argCount + ". Fill with Object.class,service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
-                                Class<?>[] newParameterTypes = new Class<?>[argCount];
-                                for(int i = parameterTypes.length; i < argCount; i++) {
-                                    newParameterTypes[i] = Object.class;
+                        if(argCount > 0) {
+                            Integer length = dis.readInt();
+                            byte[] argsData = new byte[length];
+                            dis.readFully(argsData);
+                            Class<?>[] parameterTypes = methodMapping.getParameterTypes();
+                            if(parameterTypes != null && parameterTypes.length > 0) {
+                                if(parameterTypes.length > argCount) {
+                                    LoggerEx.debug(TAG, "Parameter types not equal actual is " + parameterTypes.length + " but expected " + argCount + ". Cut off,service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                                    Class<?>[] newParameterTypes = new Class<?>[argCount];
+                                    System.arraycopy(parameterTypes, 0, newParameterTypes, 0, argCount);
+                                    parameterTypes = newParameterTypes;
+                                } else if(parameterTypes.length < argCount){
+                                    LoggerEx.debug(TAG, "Parameter types not equal actual is " + parameterTypes.length + " but expected " + argCount + ". Fill with Object.class,service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                                    Class<?>[] newParameterTypes = new Class<?>[argCount];
+                                    for(int i = parameterTypes.length; i < argCount; i++) {
+                                        newParameterTypes[i] = Object.class;
+                                    }
+                                    parameterTypes = newParameterTypes;
                                 }
-                                parameterTypes = newParameterTypes;
+                                try {
+                                    byte[] rawData = argsData;
+                                    if(rawData.length > 0) {
+                                        byte[] data = GZipUtils.decompress(rawData);
+                                        String json = new String(data, "utf8");
+                                        argsTmpStr = json;
+                                        List<Object> array = JSON.parseArray(json, parameterTypes);
+                                        if(array != null)
+                                            args = array.toArray();
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                    LoggerEx.error(TAG, "Parse bytes failed, " + e.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                                }
                             }
-							try {
-                                byte[] rawData = argsData;
-                                if(rawData.length > 0) {
-                                    byte[] data = GZipUtils.decompress(rawData);
-                                    String json = new String(data, "utf8");
-                                    argsTmpStr = json;
-                                    List<Object> array = JSON.parseArray(json, parameterTypes);
-                                    if(array != null)
-                                        args = array.toArray();
-                                }
-							} catch (IOException e) {
-								e.printStackTrace();
-                                LoggerEx.error(TAG, "Parse bytes failed, " + e.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
-							}
-						}
-						boolean hasTrackId = dis.readBoolean();
-						if(hasTrackId) {
-                            trackId = dis.readUTF();
                         }
+
+                        trackId = dis.readUTF();
+//						boolean hasTrackId = dis.readBoolean();
+//						if(hasTrackId) {
+//                            trackId = dis.readUTF();
+//                        }
 					} catch (Throwable e) {
 						e.printStackTrace();
+						if(e instanceof CoreException) {
+						    throw (CoreException)e;
+                        }
 						throw new CoreException(ChatErrorCodes.ERROR_RPC_DECODE_FAILED, "PB parse data failed, " + e.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
 					} finally {
 					    IOUtils.closeQuietly(bais);
@@ -197,7 +203,7 @@ public class MethodRequest extends RPCRequest {
                         argCount = 0;
                 }
                 dis.writeInt(argCount);
-                if(args != null) {
+                if(argCount > 0) {
                     String json = null;
                     if(argsTmpStr == null)
                         json = JSON.toJSONString(args);
@@ -212,12 +218,13 @@ public class MethodRequest extends RPCRequest {
                         LoggerEx.error(TAG, "Generate " + json + " to bytes failed, " + e.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
                     }
                 }
-                if(trackId != null) {
-                    dis.writeBoolean(true);
-                    dis.writeUTF(trackId);
-                } else {
-                    dis.writeBoolean(false);
-                }
+                dis.writeUTF(trackId);
+//                if(trackId != null) {
+//                    dis.writeBoolean(true);
+//                    dis.writeUTF(trackId);
+//                } else {
+//                    dis.writeBoolean(false);
+//                }
 
 
                 byte[] bytes = baos.toByteArray();

@@ -351,6 +351,7 @@ public class ScriptManager implements ShutdownListener {
     }
 
     public BaseRuntime getBaseRuntime(String service) {
+        if(service == null) return null;
         if (!service.contains(versionSeperator)) {
             if (defalutServiceVersionMap.size() > 0) {
                 Integer version = defalutServiceVersionMap.get(service);

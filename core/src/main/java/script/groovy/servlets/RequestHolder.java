@@ -82,6 +82,10 @@ public class RequestHolder {
     }
 
     public HttpServletResponse getResponse() {
+        Boolean isAsync = isAysnc();
+        if(isAsync != null && isAsync && asyncContext != null) {
+            return (HttpServletResponse) asyncContext.getResponse();
+        }
         return response;
     }
 
@@ -336,7 +340,9 @@ public class RequestHolder {
         return this.requestUriWrapper.getAsyncSupported();
     }
     public void complete(){
-        this.asyncContext.complete();
+        Boolean isAsync = isAysnc();
+        if(isAsync != null && isAsync)
+            this.asyncContext.complete();
     }
     private class MyAsyncListener implements AsyncListener {
         private String uri;

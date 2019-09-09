@@ -46,15 +46,20 @@ public class Proxy {
         }else {
 
             MethodResponse response = remoteServerHandler.call(request);
-            if (response != null) {
-                CoreException e = response.getException();
-                if (e != null) {
-                    throw e;
-                }
-                Object returnObject = response.getReturnObject();
-                return returnObject;
-            }
-            throw new CoreException(ChatErrorCodes.ERROR_METHODRESPONSE_NULL, "Method response is null for request " + request);
+            return Proxy.getReturnObject(request, response);
+
         }
+    }
+
+    public static Object getReturnObject(MethodRequest request, MethodResponse response) throws CoreException {
+        if (response != null) {
+            CoreException e = response.getException();
+            if (e != null) {
+                throw e;
+            }
+            Object returnObject = response.getReturnObject();
+            return returnObject;
+        }
+        throw new CoreException(ChatErrorCodes.ERROR_METHODRESPONSE_NULL, "Method response is null for request " + request);
     }
 }

@@ -13,6 +13,7 @@ import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.utils.SpringContextUtil;
+import org.codehaus.groovy.runtime.InvokerInvocationException;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.servlets.grayreleased.GrayReleased;
 import sun.rmi.server.UnicastServerRef;
@@ -24,6 +25,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.BiConsumer;
 
 public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
@@ -151,7 +153,11 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                         asyncCallbackRequest.setCrc((request).getCrc());
                         asyncCallbackRequest.setFromService((request).getFromService());
                     } catch (Throwable t) {
+                        t.printStackTrace();
                         String message = null;
+                        if(t instanceof InvokerInvocationException) {
+                            t = t.getCause();
+                        }
                         if (t instanceof CoreException) {
                             message = ((CoreException) t).getCode() + "|" + t.getMessage();
                         } else {
@@ -162,30 +168,41 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                     } finally {
                         if (throwable != null) {
                             Exception exception = null;
+                            if(throwable instanceof InvokerInvocationException) {
+                                Throwable t = throwable.getCause();
+                                if(t != null)
+                                    throwable = t;
+                            }
                             if (throwable instanceof CoreException) {
                                 exception = (CoreException) throwable;
                             } else {
                                 exception = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + exception.getMessage());
                             }
-                            asyncCallbackRequest.setCrc(0L);
-                            asyncCallbackRequest.setFromService("000000000");
+//                            asyncCallbackRequest.setCrc(0L);
+//                            asyncCallbackRequest.setFromService("000000000");
                             asyncCallbackRequest.setException((CoreException) exception);
                             handlePersistent(asyncCallbackRequest, request);
                         } else {
                             if (returnObj != null && returnObj instanceof CompletableFuture) {
                                 CompletableFuture completeFuture = (CompletableFuture) returnObj;
+//                                completeFuture.get()?
                                 completeFuture.whenCompleteAsync((result, e) -> {
                                     if (result != null) {
                                         asyncCallbackRequest.setDataObject(result);
                                     }
                                     if (e != null) {
-                                        Exception exception = (Exception) e;
-                                        if (exception instanceof CoreException) {
-                                            exception = (CoreException) exception;
-                                        } else {
-                                            exception = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + exception.getMessage());
+                                        Throwable throwable1 = (Throwable) e;
+                                        Throwable cause = throwable1.getCause();
+                                        if(cause != null) {
+                                            throwable1 = cause;
                                         }
-                                        asyncCallbackRequest.setException((CoreException) exception);
+                                        throwable1.printStackTrace();
+                                        if (throwable1 instanceof CoreException) {
+                                            throwable1 = (CoreException) throwable1;
+                                        } else {
+                                            throwable1 = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + throwable1.getMessage());
+                                        }
+                                        asyncCallbackRequest.setException((CoreException) throwable1);
                                     }
                                     handlePersistent(asyncCallbackRequest, request);
                                 }, ServerStart.getInstance().getCoreThreadPoolExecutor());

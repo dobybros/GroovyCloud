@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Created by aplomb on 17-5-16.
  */
-public class RPCServerMethodInvocation implements RPCServerAdapter<MethodRequest, MethodResponse> {
+public class RPCServerMethodInvocation extends RPCServerAdapter<MethodRequest, MethodResponse> {
 
     private static final String TAG = RPCServerMethodInvocation.class.getSimpleName();
 
