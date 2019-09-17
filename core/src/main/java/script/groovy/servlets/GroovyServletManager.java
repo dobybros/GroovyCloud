@@ -233,7 +233,7 @@ public class GroovyServletManager extends ClassAnnotationHandler {
 						GroovyObjectEx<RequestIntercepter> groovyInterceptor = null;
 						Class<?> clazz = requestIntercepting.intercept();
 						if(clazz == null || clazz.equals(Object.class)) {
-							String interceptClass = requestIntercepting.interceptClass();
+							String interceptClass = getGroovyRuntime().processAnnotationString(requestIntercepting.interceptClass());
 							if(!StringUtils.isBlank(interceptClass)) {
 								groovyInterceptor = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(interceptClass);
 							}
@@ -255,14 +255,18 @@ public class GroovyServletManager extends ClassAnnotationHandler {
 								if(method.isAnnotationPresent(RequestMapping.class)) {
 									RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
 									if(requestMapping != null) {
-										String uri = handleUri(requestMapping.uri(), groovyServlet, method);
+										String uri = handleUri(getGroovyRuntime().processAnnotationString(requestMapping.uri()), groovyServlet, method);
 										if(uri == null)
 											continue;
-										requestUri = new RequestURI(uri.trim(), requestMapping.method(), key, method.getName());
+										requestUri = new RequestURI(uri.trim(), getGroovyRuntime().processAnnotationString(requestMapping.method()), key, method.getName());
 										
 										RequestURIWrapper requestUriWrapper = new RequestURIWrapper(groovyServlet);
 										requestUriWrapper.analyzeMethod(method);
-										requestUriWrapper.setResponseType(requestMapping.responseType());
+										requestUriWrapper.setResponseType(getGroovyRuntime().processAnnotationString(requestMapping.responseType()));
+										String[] perms = requestMapping.perms();
+										for (int i = 0; i < perms.length; i++) {
+											perms[i] = getGroovyRuntime().processAnnotationString(perms[i]);
+										}
 										requestUriWrapper.setPermissions(requestMapping.perms());
 										requestUriWrapper.setAsyncSupported(requestMapping.asyncSupported());
 										handleRequestUri(key, requestUri, requestUriWrapper, tree, uriLogs);

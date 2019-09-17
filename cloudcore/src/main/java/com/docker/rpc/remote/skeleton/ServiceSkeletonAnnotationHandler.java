@@ -16,6 +16,7 @@ import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.RemoteService;
 import com.docker.rpc.remote.stub.ServerCacheManager;
 import com.docker.rpc.remote.stub.ServiceStubManager;
+import com.docker.script.BaseRuntime;
 import com.docker.script.ClassAnnotationHandlerEx;
 import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
@@ -343,7 +344,10 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                     try {
                         String[] strs = (String[]) annotationValue;
                         for (int i = 0; i < strs.length; i++) {
-                            list.add(strs[i]);
+                            String markParam = getGroovyRuntime().processAnnotationString(strs[i]);
+                            if(markParam != null){
+                                list.add(markParam);
+                            }
                         }
                         annotationValue = list;
                         annotationParams.put(annotationKey, annotationValue);
@@ -351,6 +355,8 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                         t.printStackTrace();
                         LoggerEx.error(TAG, t.getMessage());
                     }
+                }else if(annotationValue instanceof String){
+                    annotationParams.put(annotationKey, getGroovyRuntime().processAnnotationString((String) annotationValue));
                 }else {
                     annotationParams.put(annotationKey, annotationValue);
                 }
@@ -361,7 +367,6 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
         serviceAnnotation.setType(annotation.annotationType().getSimpleName());
         return serviceAnnotation;
     }
-
     @Override
     public void configService(com.docker.data.Service theService) {
         theService.appendServiceAnnotation(annotationList);

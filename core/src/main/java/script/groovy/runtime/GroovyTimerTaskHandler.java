@@ -49,9 +49,9 @@ public class GroovyTimerTaskHandler extends ClassAnnotationHandler {
             for (Class<?> groovyClass : values) {
                 TimerTask timerTask = groovyClass.getAnnotation(TimerTask.class);
                 if (timerTask != null) {
-                    String key = timerTask.key();
+                    String key = getGroovyRuntime().processAnnotationString(timerTask.key());
                     long period = timerTask.period();
-                    String cron = timerTask.cron();
+                    String cron = getGroovyRuntime().processAnnotationString(timerTask.cron());
                     int countThreads = timerTask.countThreads();
                     GroovyObjectEx<?> groovyObj = ((GroovyBeanFactory) getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
                     MyTimerTask task = new MyTimerTask(key, groovyObj);

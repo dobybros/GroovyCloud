@@ -259,6 +259,10 @@ public class GroovyRuntime extends ScriptRuntime{
         LoggerEx.info(TAG, "Reload groovy scripts");
     }
 
+    public String processAnnotationString(String str) {
+        return str;
+    }
+
     public static String path(Class<?> c) {
         return c.getName().replace(".", "/") + ".groovy";
     }
