@@ -111,7 +111,7 @@ public class GroovyBeanFactory extends ClassAnnotationHandler {
 			Collection<Class<?>> values = annotatedClassMap.values();
 			for (Class<?> groovyClass : values) {
 				Bean bean = groovyClass.getAnnotation(Bean.class);
-				String name = bean.name();
+				String name = getGroovyRuntime().processAnnotationString(bean.name());
 				if (StringUtils.isBlank(name)) {
 					name = null;
 				}

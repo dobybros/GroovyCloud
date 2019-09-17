@@ -112,7 +112,7 @@ public class RMIServerImplWrapper extends ClassAnnotationHandler {
 					// Handle RequestIntercepting
 					RPCServerHandler requestIntercepting = groovyClass.getAnnotation(RPCServerHandler.class);
 					if (requestIntercepting != null) {
-						String rpcType = requestIntercepting.rpcType();
+						String rpcType = getGroovyRuntime().processAnnotationString(requestIntercepting.rpcType());
 						if (!StringUtils.isBlank(rpcType)) {
 							GroovyObjectEx<RPCServerAdapter> serverAdapter = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 							if (serverAdapter != null) {

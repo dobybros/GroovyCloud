@@ -102,7 +102,7 @@ public class MongoDBHandler extends ClassAnnotationHandler{
 		for(Class<?> databaseClass : databaseClasses) {
 			Database mongoDatabase = databaseMap.get(databaseClass);
 			if(mongoDatabase != null) {
-				String dbName = mongoDatabase.name();
+				String dbName = getGroovyRuntime().processAnnotationString(mongoDatabase.name());
 				if(dbName != null) {
 					com.mongodb.client.MongoDatabase database = mongoClientHelper.getMongoDatabase(dbName);
 					newDatabaseMap.put(databaseClass, database);
@@ -113,10 +113,10 @@ public class MongoDBHandler extends ClassAnnotationHandler{
 		for(Class<?> collectionClass : collectionClasses) {
 			DBCollection mongoCollection = collectionMap.get(collectionClass);
 			if(mongoCollection != null) {
-				String collectionName = mongoCollection.name();
+				String collectionName = getGroovyRuntime().processAnnotationString(mongoCollection.name());
 				Class<?> databaseClass = mongoCollection.database();
 				if(databaseClass == null || databaseClass.equals(Object.class)) {
-					String dClass = mongoCollection.databaseClass();
+					String dClass = getGroovyRuntime().processAnnotationString(mongoCollection.databaseClass());
 					databaseClass = groovyRuntime.getClass(dClass);
 				}
 				if(databaseClass == null)
@@ -143,7 +143,7 @@ public class MongoDBHandler extends ClassAnnotationHandler{
 				String[] filters = mongoDocument.filters();
 				Class<?> collectionClass = mongoDocument.collection();
 				if(collectionClass == null || collectionClass.equals(Object.class)) {
-					collectionClass = groovyRuntime.getClass(mongoDocument.collectionClass());
+					collectionClass = groovyRuntime.getClass(getGroovyRuntime().processAnnotationString(mongoDocument.collectionClass()));
 				}
 				CollectionHolder holder = null;
 				if(collectionClass != null) {
@@ -162,10 +162,10 @@ public class MongoDBHandler extends ClassAnnotationHandler{
 						HashTree<String, String> children = null;
 						if(i >= filters.length - 1) {
 							//This is the last one in filter array.
-							value = filters[i];
+							value = getGroovyRuntime().processAnnotationString(filters[i]);
 							children = tree.getChildren(value.toString(), true);
 						} else {
-							children = tree.getChildren(filters[i], true);
+							children = tree.getChildren(getGroovyRuntime().processAnnotationString(filters[i]), true);
 						}
 						tree = children;
 					}
@@ -192,7 +192,7 @@ public class MongoDBHandler extends ClassAnnotationHandler{
 		public String getFieldKey(Field field) {
 			DocumentField documentField = field.getAnnotation(DocumentField.class);
 			if(documentField != null) {
-				String key = documentField.key();
+				String key = getGroovyRuntime().processAnnotationString(documentField.key());
 				if(StringUtils.isBlank(key)) {
 					return field.getName();
 				} else {
@@ -207,7 +207,7 @@ public class MongoDBHandler extends ClassAnnotationHandler{
 			DocumentField documentField = field.getAnnotation(DocumentField.class);
 			if(documentField != null) {
 //				String key = documentField.key();
-				String mapKey = documentField.mapKey();
+				String mapKey = getGroovyRuntime().processAnnotationString(documentField.mapKey());
 				FieldEx fieldEx = new FieldEx(field);
 				if(!StringUtils.isBlank(mapKey))
 					fieldEx.put(MAPKEY, mapKey);

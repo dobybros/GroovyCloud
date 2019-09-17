@@ -58,13 +58,14 @@ public class ServerStart {
 		File f = new File("./tmp");
 		System.out.println(f.getAbsolutePath());
 	}
-
+	//业务使用
 	public ThreadPoolExecutor getThreadPool() {
 		if(threadPoolExecutor == null){
 			threadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)));
 		}
 		return threadPoolExecutor;
 	}
+	//底层使用
 	public ThreadPoolExecutor getCoreThreadPoolExecutor(){
 		if(coreThreadPoolExecutor == null){
 			coreThreadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)));
