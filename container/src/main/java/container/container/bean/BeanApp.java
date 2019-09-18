@@ -174,6 +174,10 @@ public class BeanApp extends ConfigApp{
             dockerRpcServerAdapterSsl.setServerImpl(instance.getDockerRpcServerSsl());
             dockerRpcServerAdapterSsl.setIpHolder(instance.getIpHolder());
             dockerRpcServerAdapterSsl.setRmiPort(Integer.valueOf(instance.getSslRpcPort()));
+            dockerRpcServerAdapterSsl.setEnableSsl(true);
+            dockerRpcServerAdapterSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
+            dockerRpcServerAdapterSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
+            dockerRpcServerAdapterSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
         }
         return dockerRpcServerAdapterSsl;
     }
