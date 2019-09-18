@@ -277,52 +277,57 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
     }
 
     private RPCClientAdapter getClientAdapter(RPCRequest request) {
-        ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
-        MyBaseRuntime baseRuntime = (MyBaseRuntime) scriptManager.getBaseRuntime(((MethodRequest) request).getFromService());
-
-        ServiceStubManager serviceStubManager = baseRuntime.getServiceStubManager();
-        if (serviceStubManager != null) {
-            RPCClientAdapterMap rpcClientAdapterMap = serviceStubManager.getClientAdapterMap();
-            if (rpcClientAdapterMap != null) {
-                RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(((MethodRequest) request).getSourceIp(), ((MethodRequest) request).getSourcePort(), ((MethodRequest) request).getFromServerName());
-                if (clientAdapter != null) {
-                    return clientAdapter;
+        if(((MethodRequest) request).getSourceIp() != null && ((MethodRequest) request).getSourcePort() != null && ((MethodRequest) request).getFromServerName() != null){
+            ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
+            MyBaseRuntime baseRuntime = (MyBaseRuntime) scriptManager.getBaseRuntime(((MethodRequest) request).getFromService());
+            ServiceStubManager serviceStubManager = baseRuntime.getServiceStubManager();
+            if (serviceStubManager != null) {
+                RPCClientAdapterMap rpcClientAdapterMap = serviceStubManager.getClientAdapterMap();
+                if (rpcClientAdapterMap != null) {
+                    RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(((MethodRequest) request).getSourceIp(), ((MethodRequest) request).getSourcePort(), ((MethodRequest) request).getFromServerName());
+                    if (clientAdapter != null) {
+                        return clientAdapter;
+                    }
                 }
             }
+        }else {
+            LoggerEx.warn(TAG, "The request cant callback async, sourceIp: " + ((MethodRequest) request).getSourceIp() +", sourcePort: " + ((MethodRequest) request).getSourcePort() + ",fromServerName: " + ((MethodRequest) request).getFromServerName());
         }
         return null;
     }
 
     private void callClientAdapterAsync(RPCClientAdapter clientAdapter, AsyncCallbackRequest asyncCallbackRequest, RPCRequest request) {
-        try {
-            clientAdapter.callAsync(asyncCallbackRequest);
-        } catch (CoreException c) {
-            //重試
-            TimerEx.schedule(new TimerTaskEx() {
-                int tryTimes = 1;
+        if(clientAdapter != null){
+            try {
+                clientAdapter.callAsync(asyncCallbackRequest);
+            } catch (CoreException c) {
+                //重試
+                TimerEx.schedule(new TimerTaskEx() {
+                    int tryTimes = 1;
 
-                @Override
-                public void execute() {
-                    Boolean callStatus = true;
-                    try {
-                        clientAdapter.callAsync(asyncCallbackRequest);
-                    } catch (CoreException ex) {
-                        ex.printStackTrace();
-                        callStatus = false;
-                        LoggerEx.error(TAG, "Async callback failed, try again, tryTimes: " + tryTimes + ", host: " + ((MethodRequest) request).getSourceIp() + ",port: " + ((MethodRequest) request).getSourcePort() + ",serverName: " + ((MethodRequest) request).getFromServerName());
-                        if (tryTimes == 5) {
-                            TimerEx.cancel(this);
-                            LoggerEx.error(TAG, "Async callback failed, cant try again, tryTimes: " + tryTimes + ", host: " + ((MethodRequest) request).getSourceIp() + ",port: " + ((MethodRequest) request).getSourcePort() + ",serverName: " + ((MethodRequest) request).getFromServerName());
-                        }
-                        tryTimes++;
-                    } finally {
-                        if (callStatus) {
-                            TimerEx.cancel(this);
-                            LoggerEx.info(TAG, "Async callback success, cant try again, tryTimes: " + tryTimes + ", host: " + ((MethodRequest) request).getSourceIp() + ",port: " + ((MethodRequest) request).getSourcePort() + ",serverName: " + ((MethodRequest) request).getFromServerName());
+                    @Override
+                    public void execute() {
+                        Boolean callStatus = true;
+                        try {
+                            clientAdapter.callAsync(asyncCallbackRequest);
+                        } catch (CoreException ex) {
+                            ex.printStackTrace();
+                            callStatus = false;
+                            LoggerEx.error(TAG, "Async callback failed, try again, tryTimes: " + tryTimes + ", host: " + ((MethodRequest) request).getSourceIp() + ",port: " + ((MethodRequest) request).getSourcePort() + ",serverName: " + ((MethodRequest) request).getFromServerName());
+                            if (tryTimes == 5) {
+                                TimerEx.cancel(this);
+                                LoggerEx.error(TAG, "Async callback failed, cant try again, tryTimes: " + tryTimes + ", host: " + ((MethodRequest) request).getSourceIp() + ",port: " + ((MethodRequest) request).getSourcePort() + ",serverName: " + ((MethodRequest) request).getFromServerName());
+                            }
+                            tryTimes++;
+                        } finally {
+                            if (callStatus) {
+                                TimerEx.cancel(this);
+                                LoggerEx.info(TAG, "Async callback success, cant try again, tryTimes: " + tryTimes + ", host: " + ((MethodRequest) request).getSourceIp() + ",port: " + ((MethodRequest) request).getSourcePort() + ",serverName: " + ((MethodRequest) request).getFromServerName());
+                            }
                         }
                     }
-                }
-            }, 1000L, 5000L);
+                }, 1000L, 5000L);
+            }
         }
     }
 
