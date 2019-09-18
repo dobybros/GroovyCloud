@@ -293,7 +293,6 @@ public class BeanApp extends ConfigApp{
             onlineServer.setRpcSslJksPwd(instance.getRpcSslJksPwd());
             onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
             onlineServer.setTcpPort(instance.getUpstreamPort());
-            onlineServer.setSslRpcPort(instance.getUpstreamSslPort());
             onlineServer.setWsPort(instance.getUpstreamWsPort());
             onlineServer.setStatus(1);
             onlineServer.setConfigPath("container.properties");
