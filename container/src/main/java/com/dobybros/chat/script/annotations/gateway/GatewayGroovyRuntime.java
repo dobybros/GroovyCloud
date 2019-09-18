@@ -156,7 +156,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
             if (listener != null)
                 try {
-                    listener.channelRegisterd(terminal);
+                    listener.channelRegistered(terminal);
                 } catch (Throwable t) {
                     t.printStackTrace();
                     LoggerEx.error(TAG, "Handle channel " + terminal + " regitered by " + userId + "@" + service + " failed, " + t.getMessage());
@@ -180,7 +180,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     }
 
     private ServiceUserSessionListener getServiceUserSessionListener(String userId, String service) {
-        ServiceUserSessionAnnotationHandler handler = (ServiceUserSessionAnnotationHandler) this.getClassAnnotationHandler(ServiceUserSessionHandler.class);
+        ServiceUserSessionAnnotationHandler handler = (ServiceUserSessionAnnotationHandler) this.getClassAnnotationHandler(ServiceUserSessionAnnotationHandler.class);
         if (handler != null) {
             ServiceUserSessionListener listener = handler.getAnnotatedListener(userId, service);
             return listener;
