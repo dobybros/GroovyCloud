@@ -172,6 +172,8 @@ public class BeanApp extends ConfigApp{
         if(dockerRpcServerAdapterSsl == null){
             dockerRpcServerAdapterSsl = new RMIServerHandler();
             dockerRpcServerAdapterSsl.setServerImpl(instance.getDockerRpcServerSsl());
+            dockerRpcServerAdapterSsl.setIpHolder(instance.getIpHolder());
+            dockerRpcServerAdapterSsl.setRmiPort(Integer.valueOf(instance.getSslRpcPort()));
         }
         return dockerRpcServerAdapterSsl;
     }

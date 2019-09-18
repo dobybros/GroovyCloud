@@ -191,13 +191,11 @@ public class RemoteServerHandler {
                 request.setService(service + "_v" + server.getVersion());
                 if(OnlineServer.getInstance() != null){
                     request.setFromServerName(OnlineServer.getInstance().getServer());
+                    request.setSourceIp(OnlineServer.getInstance().getIp());
+                    request.setSourcePort(Integer.valueOf(OnlineServer.getInstance().getRpcPort()));
                 }
                 LoggerEx.info(TAG, "The service: " + service + " ,the version being used is " + server.getVersion());
                 if (ip != null && port != null) {
-                    if(OnlineServer.getInstance() != null){
-                        request.setSourceIp(OnlineServer.getInstance().getIp());
-                        request.setSourcePort(Integer.valueOf(OnlineServer.getInstance().getRpcPort()));
-                    }
                     RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     MethodResponse response = (MethodResponse) clientAdapter.call(request);
                     if (response.getException() != null) {

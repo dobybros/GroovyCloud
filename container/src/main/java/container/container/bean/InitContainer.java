@@ -57,6 +57,8 @@ public class InitContainer implements CommandLineRunner{
     @Autowired
     RMIServerHandler dockerRpcServerAdapter;
     @Autowired
+    RMIServerHandler dockerRpcServerAdapterSsl;
+    @Autowired
     OnlineServerWithStatus onlineServer;
     @Autowired
     OnlineUserManagerImpl onlineUserManager;
@@ -85,5 +87,6 @@ public class InitContainer implements CommandLineRunner{
         onlineUserManager.init();
 //        rpcServerAdapter.serverStart();
         dockerRpcServerAdapter.serverStart();
+        dockerRpcServerAdapterSsl.serverStart();
     }
 }
