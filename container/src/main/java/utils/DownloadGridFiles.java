@@ -4,6 +4,7 @@ import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.storage.DBException;
 import com.docker.storage.mongodb.MongoHelper;
 import org.apache.commons.io.FileUtils;
+import org.springframework.cache.annotation.CacheEvict;
 import script.file.FileAdapter;
 
 import java.io.File;
@@ -18,7 +19,8 @@ public class DownloadGridFiles {
 
     public static void download() throws DBException, IOException {
         MongoHelper helper = new MongoHelper();
-        helper.setHost("mongodb://192.168.3.200:7900");
+//        helper.setHost("mongodb://192.168.80.102:27017"); //北京
+        helper.setHost("mongodb://localhost:27017"); //本地
         helper.setDbName("gridfiles");
 //		helper.setUsername("socialshopsim");
 //		helper.setPassword("eDANviLHQtjwmFlywyKu");
@@ -27,11 +29,11 @@ public class DownloadGridFiles {
 
         GridFSFileHandler fileHandler = new GridFSFileHandler();
         fileHandler.setResourceHelper(helper);
-        fileHandler.setBucketName("fs");
+        fileHandler.setBucketName("imfs");
         fileHandler.init();
 
 //		File directory = new File("/home/aplomb/dev/github/PKUserService/deploy");
-        File directory = new File("C:\\Users\\lulia\\Desktop\\bj_package\\20190511");
+        File directory = new File("/Users/guoliujie/dev/deploy/20190919_v2");
 
         List<FileAdapter.FileEntity> files = fileHandler.getFilesInDirectory(new FileAdapter.PathEx("/"), null, true);
         for(FileAdapter.FileEntity entity : files) {
@@ -40,7 +42,6 @@ public class DownloadGridFiles {
             fileHandler.readFile(path, FileUtils.openOutputStream(new File(directory.getAbsoluteFile() + entity.getAbsolutePath())));
         }
     }
-
     public void upload() throws DBException, IOException {
         MongoHelper helper = new MongoHelper();
         helper.setHost("mongodb://192.168.1.55:7900");
