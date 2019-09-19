@@ -15,6 +15,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
 
+import org.codehaus.groovy.runtime.NullObject;
 import script.ScriptRuntime;
 import script.groovy.object.GroovyObjectEx;
 import chat.errors.CoreException;
@@ -22,7 +23,7 @@ import chat.logs.LoggerEx;
 import script.groovy.runtime.classloader.ClassHolder;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
-public class GroovyRuntime extends ScriptRuntime{
+public class GroovyRuntime extends ScriptRuntime {
     private static final String TAG = GroovyRuntime.class.getSimpleName();
     private ArrayList<ClassAnnotationHandler> annotationHandlers = new ArrayList<>();
     private ConcurrentHashMap<Object, ClassAnnotationHandler> annotationHandlerMap = new ConcurrentHashMap<>();
@@ -35,20 +36,21 @@ public class GroovyRuntime extends ScriptRuntime{
     private Class<?> groovyObjectExProxyClass;
     private HashMap<String, ClassHolder> cachedClasses;
 
+
     public void addLibPath(String libPath) {
-        if(StringUtils.isBlank(libPath))
+        if (StringUtils.isBlank(libPath))
             return;
-        if(libPaths == null) {
+        if (libPaths == null) {
             libPaths = new ArrayList<>();
         }
-        if(!libPaths.contains(libPath)) {
+        if (!libPaths.contains(libPath)) {
             libPaths.add(libPath);
         }
         return;
     }
 
     public boolean removeLibPath(String libPath) {
-        if(StringUtils.isBlank(libPath) || libPaths == null)
+        if (StringUtils.isBlank(libPath) || libPaths == null)
             return false;
         return libPaths.remove(libPath);
     }
@@ -66,16 +68,16 @@ public class GroovyRuntime extends ScriptRuntime{
     }
 
     public GroovyRuntime addFieldInjectionListener(FieldInjectionListener listener) {
-        if(fieldInjectionListeners == null) {
+        if (fieldInjectionListeners == null) {
             fieldInjectionListeners = new ArrayList<>();
         }
-        if(!fieldInjectionListeners.contains(listener))
+        if (!fieldInjectionListeners.contains(listener))
             fieldInjectionListeners.add(listener);
         return this;
     }
 
     public void removeFieldInjectionListener(FieldInjectionListener listener) {
-        if(fieldInjectionListeners != null)
+        if (fieldInjectionListeners != null)
             fieldInjectionListeners.remove(listener);
     }
 
@@ -84,10 +86,10 @@ public class GroovyRuntime extends ScriptRuntime{
     }
 
     public static GroovyRuntime getCurrentGroovyRuntime(ClassLoader currentClassLoader) {
-        if(currentClassLoader == null)
+        if (currentClassLoader == null)
             return null;
         ClassLoader classLoader = currentClassLoader.getParent();
-        if(classLoader != null && classLoader instanceof MyGroovyClassLoader) {
+        if (classLoader != null && classLoader instanceof MyGroovyClassLoader) {
             return ((MyGroovyClassLoader) classLoader).getGroovyRuntime();
         }
         return null;
@@ -123,7 +125,7 @@ public class GroovyRuntime extends ScriptRuntime{
     }
 
     private void closeLibClassloader(URLClassLoader oldLibClassLoader) {
-        if(libClassLoader != null) {
+        if (libClassLoader != null) {
             try {
                 oldLibClassLoader.close();
                 LoggerEx.info(TAG, "oldLibClassLoader " + oldLibClassLoader + " has been closed.");
@@ -133,19 +135,20 @@ public class GroovyRuntime extends ScriptRuntime{
             }
         }
     }
+
     @Override
     public synchronized void start() throws CoreException {
         URLClassLoader newLibClassLoader = null, oldLibClassLoader = libClassLoader;
 
-        if(parentClassLoader == null)
+        if (parentClassLoader == null)
             parentClassLoader = GroovyRuntime.class.getClassLoader();
         File libsPath = new File(path + "/libs");
-        if(libsPath.exists() && libsPath.isDirectory()) {
+        if (libsPath.exists() && libsPath.isDirectory()) {
             List<URL> urls = new ArrayList<>();
             Collection<File> jars = FileUtils.listFiles(libsPath,
                     FileFilterUtils.suffixFileFilter(".jar"),
                     FileFilterUtils.directoryFileFilter());
-            for(File jar : jars) {
+            for (File jar : jars) {
                 String path = "jar:file://" + jar.getAbsolutePath() + "!/";
                 try {
                     urls.add(jar.toURI().toURL());
@@ -155,18 +158,18 @@ public class GroovyRuntime extends ScriptRuntime{
                     LoggerEx.warn(TAG, "MalformedURL " + path + " while load jars, error " + e.getMessage());
                 }
             }
-            if(!urls.isEmpty()) {
+            if (!urls.isEmpty()) {
                 URL[] theUrls = new URL[urls.size()];
                 urls.toArray(theUrls);
                 parentClassLoader = new URLClassLoader(theUrls, parentClassLoader);
             }
         }
 
-        if(runtimeBootListener != null) {
+        if (runtimeBootListener != null) {
             runtimeBootListener.start(parentClassLoader);
         }
 
-        String[] strs = new String[] {
+        String[] strs = new String[]{
                 "package script.groovy.runtime;",
                 "import script.groovy.object.GroovyObjectEx",
                 "class GroovyObjectExProxy implements GroovyInterceptable{",
@@ -188,9 +191,9 @@ public class GroovyRuntime extends ScriptRuntime{
 
         final Map<ClassAnnotationHandler, Map<String, Class<?>>> handlerMap = new LinkedHashMap<ClassAnnotationHandler, Map<String, Class<?>>>();
         Class[] loadedClasses = runtimeBootListener.getLoadedClasses();
-        if(loadedClasses != null) {
+        if (loadedClasses != null) {
             cachedClasses = new HashMap<>();
-            for(Class clazz : loadedClasses) {
+            for (Class clazz : loadedClasses) {
                 ClassHolder classHolder = new ClassHolder();
                 classHolder.setParsedClass(clazz);
                 LoggerEx.info(TAG, "Loaded class " + clazz.getName());
@@ -227,10 +230,10 @@ public class GroovyRuntime extends ScriptRuntime{
                 @Override
                 public void run() {
                     Collection<ClassAnnotationHandler> handlers = annotationHandlers;
-                    for(ClassAnnotationHandler annotationHandler : handlers) {
-                        if(annotationHandler.getGroovyRuntime() == null)
+                    for (ClassAnnotationHandler annotationHandler : handlers) {
+                        if (annotationHandler.getGroovyRuntime() == null)
                             annotationHandler.setGroovyRuntime(GroovyRuntime.this);
-                        if(annotationHandler instanceof GroovyBeanFactory) {
+                        if (annotationHandler instanceof GroovyBeanFactory) {
                             beanFactory = (GroovyBeanFactory) annotationHandler;
                         }
                         Map<String, Class<?>> values = handlerMap.get(annotationHandler);
@@ -323,7 +326,7 @@ public class GroovyRuntime extends ScriptRuntime{
         try {
             Constructor<?> constructor = groovyObjectExProxyClass.getConstructor(GroovyObjectEx.class);
             obj = constructor.newInstance(goe);
-        } catch (Throwable  e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             LoggerEx.error(TAG, "New proxy instance "
                     + groovyObjectClass + " failed, " + e.getMessage());
@@ -351,7 +354,7 @@ public class GroovyRuntime extends ScriptRuntime{
     @Override
     public void close() {
         Collection<ClassAnnotationHandler> handlers = annotationHandlers;
-        for(ClassAnnotationHandler annotationHandler : handlers) {
+        for (ClassAnnotationHandler annotationHandler : handlers) {
             try {
                 annotationHandler.handlerShutdown();
             } catch (Throwable t) {
@@ -362,7 +365,7 @@ public class GroovyRuntime extends ScriptRuntime{
             }
         }
         runtimeBootListener.close();
-        if(libClassLoader != null) {
+        if (libClassLoader != null) {
             closeLibClassloader(libClassLoader);
         }
         annotationHandlerMap.clear();
@@ -370,7 +373,7 @@ public class GroovyRuntime extends ScriptRuntime{
     }
 
     public MyGroovyClassLoader getClassLoader() {
-        if(runtimeBootListener == null)
+        if (runtimeBootListener == null)
             return null;
         return runtimeBootListener.getClassLoader();
     }
@@ -390,13 +393,14 @@ public class GroovyRuntime extends ScriptRuntime{
     public void setAnnotationHandlers(
             List<ClassAnnotationHandler> annotationHandlers) {
         if (annotationHandlers != null) {
-            for(ClassAnnotationHandler handler : annotationHandlers) {
+            for (ClassAnnotationHandler handler : annotationHandlers) {
                 handler.setGroovyRuntime(this);
                 this.annotationHandlers.add(handler);
                 this.annotationHandlerMap.put(handler.getKey(), handler);
             }
         }
     }
+
 
     public ClassAnnotationHandler getClassAnnotationHandler(Object key) {
         return this.annotationHandlerMap.get(key);
@@ -419,11 +423,11 @@ public class GroovyRuntime extends ScriptRuntime{
     }
 
     public Class<?> getClass(String classStr) {
-        if(StringUtils.isBlank(classStr))
+        if (StringUtils.isBlank(classStr))
             return null;
 
         ClassHolder holder = getClassLoader().getClass(classStr);
-        if(holder != null) {
+        if (holder != null) {
             return holder.getParsedClass();
         }
         return null;

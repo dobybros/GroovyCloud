@@ -7,14 +7,12 @@ import com.alibaba.fastjson.util.TypeUtils;
 import com.docker.annotations.*;
 import com.docker.data.Lan;
 import com.docker.rpc.remote.skeleton.ServiceSkeletonAnnotationHandler;
-import com.docker.rpc.remote.stub.RefreshServers;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.annotations.ServiceNotFound;
 import com.docker.script.annotations.ServiceNotFoundListener;
 import com.docker.script.i18n.I18nHandler;
 import com.docker.server.OnlineServer;
 import com.docker.storage.adapters.LansService;
-import com.docker.utils.SpringContextUtil;
 import groovy.lang.GroovyObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -40,6 +38,7 @@ public class MyBaseRuntime extends BaseRuntime {
 	private String remoteServiceHost;
 	private ServiceStubManager serviceStubManager;
 	private ConcurrentHashMap<String, ServiceStubManager> stubManagerForLanIdMap = new ConcurrentHashMap<>();
+
 	@Resource
 	LansService lansService;
 
@@ -182,6 +181,9 @@ public class MyBaseRuntime extends BaseRuntime {
 			}
 		}
 	}
+
+
+
 	ClassHolder serviceStubProxyClass = null;
 	public void prepareServiceStubProxy() {
 		MyGroovyClassLoader classLoader = getClassLoader();

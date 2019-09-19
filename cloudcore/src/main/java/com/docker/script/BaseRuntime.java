@@ -6,6 +6,9 @@ import com.docker.script.i18n.I18nHandler;
 import com.docker.script.i18n.MessageProperties;
 import com.docker.script.servlet.GroovyServletManagerEx;
 import com.docker.script.servlet.WebServiceAnnotationHandler;
+import com.docker.storage.cache.CacheAnnotationHandler;
+import com.docker.storage.cache.CacheStorageFactory;
+import com.docker.storage.cache.RedisCacheStorageHandler;
 import com.docker.storage.kafka.KafkaConfCenter;
 import com.docker.storage.kafka.KafkaProducerHandler;
 import com.docker.storage.redis.RedisHandler;
@@ -45,12 +48,13 @@ public abstract class BaseRuntime extends GroovyRuntime {
 	private Integer serviceVersion;
 
 	private Properties config;
+	private CacheStorageFactory cacheStorageFactory;
 
 	public void prepare(String service, Properties properties, String rootPath) {
 		LoggerEx.info(TAG,"prepare service: " + service + " properties: " + properties + " rootPath: " + rootPath);
 	    this.service = service.toLowerCase();
 	    this.config = properties;
-        String enableGroovyMVC = null;
+		String enableGroovyMVC = null;
         addClassAnnotationHandler(new GroovyBeanFactory());
         if(properties != null) {
 			Object rpcServerHandler = SpringContextUtil.getBean("dockerRpcServer");
@@ -123,11 +127,18 @@ public abstract class BaseRuntime extends GroovyRuntime {
             GroovyServletDispatcher.removeGroovyServletManagerEx(this.service);
         }
 
+		cacheStorageFactory = new CacheStorageFactory();
+		RedisCacheStorageHandler redisCacheStorageHandler = new RedisCacheStorageHandler();
+		redisCacheStorageHandler.setRedisHandler(getRedisHandler());
+		redisCacheStorageHandler.setGroovyRuntime(this);
+		cacheStorageFactory.registerCacheStorageAdapter(redisCacheStorageHandler);
+
 		addClassAnnotationHandler(new GroovyTimerTaskHandler());
 		addClassAnnotationHandler(new GroovyRedeployMainHandler());
 		addClassAnnotationHandler(new ServerLifeCircleHandler());
 		addClassAnnotationHandler(new JsonFilterFactory());
 		addClassAnnotationHandler(new RequestPermissionHandler());
+		addClassAnnotationHandler(new CacheAnnotationHandler(cacheStorageFactory));
 
 	}
 
@@ -260,5 +271,13 @@ public abstract class BaseRuntime extends GroovyRuntime {
 
 	public void setServiceVersion(Integer serviceVersion) {
 		this.serviceVersion = serviceVersion;
+	}
+
+	public CacheStorageFactory getCacheStorageFactory() {
+		return cacheStorageFactory;
+	}
+
+	public void setCacheStorageFactory(CacheStorageFactory cacheStorageFactory) {
+		this.cacheStorageFactory = cacheStorageFactory;
 	}
 }

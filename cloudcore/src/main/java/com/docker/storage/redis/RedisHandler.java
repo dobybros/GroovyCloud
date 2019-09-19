@@ -22,6 +22,10 @@ import java.util.*;
  * @create time 2016-3-8 下午3:28:32
  */
 public class RedisHandler {
+
+    public static final String NXXX = "NX";
+    public static final String XXXX = "XX";
+    public static final String EXPX = "PX";
     static final Integer TYPE_SHARD = 1;
     static final String TYPE_SHARD_PROTOCOL_NAME = "shard";
 

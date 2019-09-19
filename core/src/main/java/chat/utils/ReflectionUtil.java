@@ -1,5 +1,6 @@
 package chat.utils;
 
+import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 
 import java.lang.reflect.*;
@@ -212,6 +213,46 @@ public class ReflectionUtil {
 		}
 	}
 
+
+	public static Object getFieldValueByGetter(Object owner, Method method) throws Exception{
+//		fieldName = ChatUtils.captureName(fieldName);
+//		Method me = getDeclaredMethod(owner.getClass(), "get"+fieldName, null);
+		if(method != null){
+			return method.invoke(owner) ;
+		}
+		return null;
+	}
+
+	public static Method getMethodByField(Class clazz, String fieldName) throws Exception {
+		fieldName = ChatUtils.captureName(fieldName);
+		Method me = getDeclaredMethod(clazz, "get"+fieldName, null);
+		return me;
+	}
+
+	/**
+	 * 循环向上转型, 获取对象的 DeclaredMethod
+	 * @param
+	 * @param methodName
+	 * @param parameterTypes
+	 * @return
+	 */
+	public static Method getDeclaredMethod(Class clazz, String methodName, Class<?>[] parameterTypes) throws SecurityException{
+
+		for(Class<?> superClass = clazz; superClass != Object.class; superClass = superClass.getSuperclass()){
+			try {
+				//superClass.getMethod(methodName, parameterTypes);
+				return superClass.getDeclaredMethod(methodName, parameterTypes);
+			} catch (NoSuchMethodException e) {
+				//Method 不在当前类定义, 继续向上转型
+			}
+			//..
+		}
+
+		return null;
+	}
+
+
+
 	/**
 	 * 1. 得到某个对象的属性
 	 * 
@@ -388,7 +429,22 @@ public class ReflectionUtil {
 //	public static long getCrc(Method method) {
 //		return getCrc(method, null);
 //	}
-//TODO public static long getCrc(Method method, String service, String actualMethodName)
+
+	public static long getCrc(Class<?> clazz, String methodName) {
+		return getCrc(clazz.getSimpleName(), methodName);
+	}
+
+	public static long getCrc(String className, String methodName) {
+		if(methodName == null || className == null)
+			return -1;
+		String name = methodName;
+		CRC32 crc = new CRC32();
+		String str = name + "#" + className;
+		crc.update(str.getBytes());
+		long value = crc.getValue();
+		return value;
+	}
+
 	public static long getCrc(Method method, String service) {
 		return getCrc(method.getDeclaringClass(), method.getName(), service);
 	}
@@ -412,5 +468,12 @@ public class ReflectionUtil {
 //		if(value == 2380642687L)
 //			System.out.print("");
 		return value;
+	}
+
+	public static String getMethodKey(Class<?> clazz, String methodName){
+		if(clazz == null || methodName == null){
+			return "";
+		}
+		return clazz.getSimpleName() + "#" + methodName;
 	}
 }
