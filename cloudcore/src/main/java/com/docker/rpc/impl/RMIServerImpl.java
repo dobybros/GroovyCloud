@@ -2,20 +2,26 @@ package com.docker.rpc.impl;
 
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
+import chat.logs.AnalyticsLogger;
 import chat.logs.LoggerEx;
 import chat.main.ServerStart;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
+import com.alibaba.fastjson.JSON;
 import com.docker.errors.CoreErrorCodes;
 import com.docker.rpc.*;
+import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.stub.ServerCacheManager;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
+import com.docker.server.OnlineServer;
 import com.docker.utils.SpringContextUtil;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import script.groovy.object.GroovyObjectEx;
+import script.groovy.servlets.Tracker;
 import script.groovy.servlets.grayreleased.GrayReleased;
+import script.memodb.ObjectId;
 import sun.rmi.server.UnicastServerRef;
 
 import javax.rmi.ssl.SslRMIClientSocketFactory;
@@ -142,6 +148,8 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                     MethodRequest request = new MethodRequest();
                     Object returnObj = null;
                     Throwable throwable = null;
+                    Long time = System.currentTimeMillis();
+                    StringBuilder builder = new StringBuilder();
                     try {
                         if (serverWrapper.serverMethodInvocation == null)
                             serverWrapper.serverMethodInvocation = new RPCServerMethodInvocation();
@@ -149,6 +157,15 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                         request.setType(type);
                         request.setData(data);
                         request.resurrect();
+                        String parentTrackId = ((MethodRequest)request).getTrackId();
+                        String currentTrackId = null;
+                        if (parentTrackId != null) {
+                            currentTrackId = ObjectId.get().toString();
+                            Tracker tracker = new Tracker(currentTrackId, parentTrackId);
+                            Tracker.trackerThreadLocal.set(tracker);
+                        }
+                        MethodMapping methodMapping = serverWrapper.serverMethodInvocation.getMethodMapping(request);
+                        builder.append("$$async methodrequest:: " + methodMapping.getMethod().getDeclaringClass().getSimpleName() + "#" + methodMapping.getMethod().getName() + " $$service:: " + request.getService() + " $$parenttrackid:: " + parentTrackId + " $$currenttrackid:: " + currentTrackId + " $$args:: " + request.getArgsTmpStr());
                         returnObj = serverWrapper.serverMethodInvocation.oncallAsync(request, callbackFutureId);
                         asyncCallbackRequest.setCrc((request).getCrc());
                         asyncCallbackRequest.setFromService((request).getFromService());
@@ -166,6 +183,11 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                         throwable = t;
                         LoggerEx.error(TAG, "Async call remote failed, service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(ServerCacheManager.getInstance().getFutureCrcMap().get(callbackFutureId)) + ", err: " + message);
                     } finally {
+                        String ip = OnlineServer.getInstance().getIp();
+                        Tracker.trackerThreadLocal.remove();
+                        long invokeTokes = System.currentTimeMillis() - time;
+                        builder.append(" $$takes:: " + invokeTokes);
+                        builder.append(" $$sdockerip:: " + ip);
                         if (throwable != null) {
                             Exception exception = null;
                             if(throwable instanceof InvokerInvocationException) {
@@ -178,14 +200,13 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                             } else {
                                 exception = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + exception.getMessage());
                             }
-//                            asyncCallbackRequest.setCrc(0L);
-//                            asyncCallbackRequest.setFromService("000000000");
                             asyncCallbackRequest.setException((CoreException) exception);
                             handlePersistent(asyncCallbackRequest, request);
+                            builder.append(" $$returnobj:: " + JSON.toJSONString(exception));
+                            AnalyticsLogger.error(TAG, builder.toString());
                         } else {
                             if (returnObj != null && returnObj instanceof CompletableFuture) {
                                 CompletableFuture completeFuture = (CompletableFuture) returnObj;
-//                                completeFuture.get()?
                                 completeFuture.whenCompleteAsync((result, e) -> {
                                     if (result != null) {
                                         asyncCallbackRequest.setDataObject(result);
@@ -205,6 +226,13 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                                         asyncCallbackRequest.setException((CoreException) throwable1);
                                     }
                                     handlePersistent(asyncCallbackRequest, request);
+                                    if(asyncCallbackRequest.getException() != null){
+                                        builder.append(" $$returnobj:: " + JSON.toJSONString(asyncCallbackRequest.getException()));
+                                        AnalyticsLogger.error(TAG, builder.toString());
+                                    }else {
+                                        builder.append(" $$returnobj:: " + JSON.toJSONString(asyncCallbackRequest.getDataObject()));
+                                        AnalyticsLogger.info(TAG, builder.toString());
+                                    }
                                 }, ServerStart.getInstance().getCoreThreadPoolExecutor());
                             }
                         }
@@ -333,6 +361,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
 
     private void handlePersistent(AsyncCallbackRequest asyncCallbackRequest, RPCRequest request) {
         boolean persistentSuccess = true;
+
         try {
             asyncCallbackRequest.persistent();
         } catch (CoreException ex) {
