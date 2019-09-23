@@ -34,7 +34,7 @@ public class RPCServerMethodInvocation extends RPCServerAdapter<MethodRequest, M
         return methodMapping.invokeAsync(request, callbackFutureId);
     }
 
-    private ServiceSkeletonAnnotationHandler.SkelectonMethodMapping getMethodMapping(MethodRequest request) throws CoreException{
+    public ServiceSkeletonAnnotationHandler.SkelectonMethodMapping getMethodMapping(MethodRequest request) throws CoreException{
         Long crc = request.getCrc();
 //        if(crc == 0 || crc == -1)
 //            throw new CoreException(CoreErrorCodes.ERROR_METHODREQUEST_CRC_ILLEGAL, "CRC is illegal for MethodRequest");

@@ -200,14 +200,6 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
 
         public Object invokeAsync(MethodRequest request, String callbackFutureId) throws CoreException {
             Object[] args = prepareMethodArgs(request);
-            Long crc = request.getCrc();
-            String parentTrackId = request.getTrackId();
-            String currentTrackId = null;
-            if (parentTrackId != null) {
-                currentTrackId = ObjectId.get().toString();
-                Tracker tracker = new Tracker(currentTrackId, parentTrackId);
-                Tracker.trackerThreadLocal.set(tracker);
-            }
             Object returnObj = remoteService.invokeRootMethod(method.getName(), args);
             return returnObj;
         }

@@ -102,7 +102,6 @@ public class RMIServerHandler {
 //        System.setProperty("javax.net.ssl.keyStore", "/Users/liyazhou/workspace/tcpssl/certificate/server.jks");
         System.setProperty("javax.net.ssl.keyStore", rpcSslServerJksPath);
         System.setProperty("javax.net.ssl.keyStorePassword", rpcSslJksPwd);
-        System.setProperty("https.protocols", "TLSv1.2,TLSv1.1,SSLv3");
     }
 
     private void resetSslProp() {
