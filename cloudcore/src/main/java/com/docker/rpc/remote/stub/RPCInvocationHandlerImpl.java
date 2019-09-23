@@ -62,7 +62,7 @@ public class RPCInvocationHandlerImpl extends InvacationHandler implements RPCIn
 
     @Override
     public CompletableFuture<?> handleAsync(MethodMapping methodMapping, MethodRequest request) {
-        return null;
+        return super.handleAsync(request);
     }
 
     private Object parseSpel(String[] paramNames, Object[] arguments, String spel) {

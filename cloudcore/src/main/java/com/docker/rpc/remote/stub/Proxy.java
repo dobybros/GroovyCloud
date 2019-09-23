@@ -37,25 +37,9 @@ public class Proxy {
         MethodMapping methodMapping = serviceStubManager.getMethodMapping(crc);
 
         if (methodMapping.getAsync()) {
-            if (invocationHandler != null) {
-                return invocationHandler.handleAsync(methodMapping, request);
-            } else {
-                CompletableFuture completableFuture = null;
-                try {
-                    completableFuture = remoteServerHandler.callAsync(request);
-                } catch (Throwable t) {
-                    completableFuture = new CompletableFuture();
-                    completableFuture.completeExceptionally(t);
-                }
-                return completableFuture;
-            }
+           return invocationHandler.handleAsync(methodMapping, request);
         } else {
-            if (invocationHandler != null) {
-                return invocationHandler.handleSync(methodMapping, request);
-            } else {
-                MethodResponse response = remoteServerHandler.call(request);
-                return Proxy.getReturnObject(request, response);
-            }
+           return invocationHandler.handleSync(methodMapping, request);
         }
     }
 

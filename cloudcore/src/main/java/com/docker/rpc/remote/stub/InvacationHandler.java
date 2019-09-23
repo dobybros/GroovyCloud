@@ -35,7 +35,14 @@ MethodMapping methodMapping = serviceStubManager.getMethodMapping(crc);
          return Proxy.getReturnObject(request, response);
      }
 
-//     public CompletableFuture<?> handleAsync(MethodRequest request){
-//
-//     }
+     public CompletableFuture<?> handleAsync(MethodRequest request){
+         CompletableFuture completableFuture = null;
+         try {
+             completableFuture = remoteServerHandler.callAsync(request);
+         }catch (Throwable t){
+             completableFuture = new CompletableFuture();
+             completableFuture.completeExceptionally(t);
+         }
+         return completableFuture;
+     }
 }
