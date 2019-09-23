@@ -129,17 +129,13 @@ public class RemoteServerHandler {
                 request.setService(service + "_v" + server.getVersion());
                 if(OnlineServer.getInstance() != null){
                     request.setFromServerName(OnlineServer.getInstance().getServer());
+                    request.setSourceIp(OnlineServer.getInstance().getIp());
+                    request.setSourcePort(Integer.valueOf(OnlineServer.getInstance().getRpcPort()));
                 }
                 LoggerEx.info(TAG, "The service: " + service + " ,the version being used is " + server.getVersion());
                 if (ip != null && port != null) {
-                    request.setSourceIp(OnlineServer.getInstance().getIp());
-                    request.setSourcePort(Integer.valueOf(OnlineServer.getInstance().getRpcPort()));
                     RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     CompletableFuture future = clientAdapter.callAsync(request);
-//                    if (response.getException() != null) {
-//                        LoggerEx.error(TAG, "Failed to callAsync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " return " + response.getReturnObject() + " exception " + response.getException() + " on server " + server + " " + count + "/" + maxCount);
-//                        throw response.getException();
-//                    }
                     LoggerEx.info(TAG, "Successfully callAsync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount);
                     return future;
                 } else {
@@ -195,11 +191,11 @@ public class RemoteServerHandler {
                 request.setService(service + "_v" + server.getVersion());
                 if(OnlineServer.getInstance() != null){
                     request.setFromServerName(OnlineServer.getInstance().getServer());
+                    request.setSourceIp(OnlineServer.getInstance().getIp());
+                    request.setSourcePort(Integer.valueOf(OnlineServer.getInstance().getRpcPort()));
                 }
                 LoggerEx.info(TAG, "The service: " + service + " ,the version being used is " + server.getVersion());
                 if (ip != null && port != null) {
-                    request.setSourceIp(ip);
-                    request.setSourcePort(port);
                     RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     MethodResponse response = (MethodResponse) clientAdapter.call(request);
                     if (response.getException() != null) {

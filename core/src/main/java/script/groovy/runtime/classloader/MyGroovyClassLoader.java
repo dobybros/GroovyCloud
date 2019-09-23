@@ -47,6 +47,7 @@ public class MyGroovyClassLoader extends GroovyClassLoader {
         cc.setMinimumRecompilationInterval(Integer.MAX_VALUE);
         cc.setVerbose(false);
         cc.setDebug(false);
+        cc.setParameters(true);
 //		try {
 //			cc.setOutput(new PrintWriter(new File("/Users/aplomb/Dev/taineng/test/log.txt")));
 //		} catch (FileNotFoundException e) {

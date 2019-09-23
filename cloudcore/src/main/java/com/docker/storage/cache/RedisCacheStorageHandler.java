@@ -12,7 +12,7 @@ public class RedisCacheStorageHandler extends CacheStorageAdapter {
     @Override
     public Object addCacheData(CacheObj cacheObj) throws CoreException {
         if (cacheObj != null && !cacheObj.isEmpty()) {
-           return redisHandler.setObject(cacheObj.getPrefix(), cacheObj.getCacheKeyObj().getKey(), cacheObj.getValue(), RedisHandler.NXXX, RedisHandler.EXPX, cacheObj.getExpired());
+           return redisHandler.setObject(cacheObj.getPrefix(), cacheObj.getKey(), cacheObj.getValue(), RedisHandler.NXXX, RedisHandler.EXPX, cacheObj.getExpired());
         }
         return null;
     }
@@ -26,7 +26,7 @@ public class RedisCacheStorageHandler extends CacheStorageAdapter {
     public Object getCacheData(CacheObj cacheObj) throws CoreException {
         if (cacheObj != null && !cacheObj.isEmpty()) {
             if(cacheObj.getValue() != null){
-                return redisHandler.getObject(cacheObj.getPrefix(), cacheObj.getCacheKeyObj().getKey(), cacheObj.getValue().getClass());
+                return redisHandler.getObject(cacheObj.getPrefix(), cacheObj.getKey(), cacheObj.getValue().getClass());
             }
         }
         return null;

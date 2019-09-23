@@ -4,57 +4,21 @@ import java.lang.reflect.Method;
 
 public class CacheObj {
     private String cacheMethod;
+    private Method method;
     private Long expired;
     private String prefix;
-    private CacheKeyObj cacheKeyObj;
     private Object value;
+    private String spelKey;
+    private String key;
+    private String[] paramNames;
 
-    public class CacheKeyObj {
-        private Integer index;
-        private String key;
-        private String field;
-        private Method method;
-
-        public int getIndex() {
-            return index;
-        }
-
-        public void setIndex(int index) {
-            this.index = index;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public void setKey(String key) {
-            this.key = key;
-        }
-
-        public String getField() {
-            return field;
-        }
-
-        public void setField(String field) {
-            this.field = field;
-        }
-
-        public void setMethod(Method method) {
-            this.method = method;
-        }
-
-        public Method getMethod() {
-            return method;
-        }
-
-        public Boolean isEmpty() {
-            if (key != "") {
-                return false;
-            }
-            return true;
-        }
+    public Method getMethod() {
+        return method;
     }
 
+    public void setMethod(Method method) {
+        this.method = method;
+    }
 
     public String getCacheMethod() {
         return cacheMethod;
@@ -80,12 +44,20 @@ public class CacheObj {
         this.prefix = prefix;
     }
 
-    public CacheKeyObj getCacheKeyObj() {
-        return cacheKeyObj;
+    public String getKey() {
+        return key;
     }
 
-    public void setCacheKeyObj(CacheKeyObj cacheKeyObj) {
-        this.cacheKeyObj = cacheKeyObj;
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getSpelKey() {
+        return spelKey;
+    }
+
+    public void setSpelKey(String spelKey) {
+        this.spelKey = spelKey;
     }
 
     public Object getValue() {
@@ -96,9 +68,16 @@ public class CacheObj {
         this.value = value;
     }
 
+    public String[] getParamNames() {
+        return paramNames;
+    }
+
+    public void setParamNames(String[] paramNames) {
+        this.paramNames = paramNames;
+    }
 
     public Boolean isEmpty() {
-        if (cacheKeyObj != null && !cacheKeyObj.isEmpty() && expired != null && prefix != null && value != null) {
+        if (spelKey != null && !spelKey.isEmpty() && expired != null && prefix != null && value != null) {
             return false;
         }
         return true;

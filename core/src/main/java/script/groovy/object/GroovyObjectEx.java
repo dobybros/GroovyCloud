@@ -41,13 +41,14 @@ public class GroovyObjectEx<T> {
     }
 
     public Object invokeRootMethod(String method, Object... parameters) throws CoreException {
-        if (methodInterceptorMap != null) {
-            List<MethodInterceptor> methodInterceptors = methodInterceptorMap.get(method);
-            if (methodInterceptors.isEmpty()) {
-                return invokeMethod(method, parameters);
-            } else {
+        String methodKey = method;//ReflectionUtil.getMethodKey(getGroovyClass(),method);
+        if (methodInterceptorMap != null && methodKey != null) {
+            List<MethodInterceptor> methodInterceptors = methodInterceptorMap.get(methodKey);
+            if(methodInterceptors != null && !methodInterceptors.isEmpty()){
                 MethodInvocation invocation = new MethodInvocation(getObject(), method, parameters, methodInterceptors);
                 return invocation.proceed();
+            }else{
+                return invokeMethod(method, parameters);
             }
         } else {
             return invokeMethod(method, parameters);

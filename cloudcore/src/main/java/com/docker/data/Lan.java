@@ -14,7 +14,7 @@ public class Lan extends DataObject {
 
 	private String domain;
 
-	private Integer port;
+	private String port;
 
 	private String protocol;
 
@@ -26,11 +26,11 @@ public class Lan extends DataObject {
 		this.domain = domain;
 	}
 
-	public Integer getPort() {
+	public String getPort() {
 		return port;
 	}
 
-	public void setPort(Integer port) {
+	public void setPort(String port) {
 		this.port = port;
 	}
 
@@ -47,7 +47,7 @@ public class Lan extends DataObject {
 		super.fromDocument(dbObj);
 		domain = dbObj.getString(FIELD_LAN_DOMAIN);
 		protocol = dbObj.getString(FIELD_LAN_PROTOCOL);
-		port = dbObj.getInteger(FIELD_LAN_PORT);
+		port = dbObj.getString(FIELD_LAN_PORT);
 	}
 
 	@Override

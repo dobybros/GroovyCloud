@@ -1,6 +1,6 @@
 package script.groovy.runtime;
 
-import groovy.lang.GroovyClassLoader;
+
 
 import java.io.*;
 import java.lang.annotation.Annotation;
@@ -14,8 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
-
-import org.codehaus.groovy.runtime.NullObject;
 import script.ScriptRuntime;
 import script.groovy.object.GroovyObjectEx;
 import chat.errors.CoreException;
@@ -260,6 +258,10 @@ public class GroovyRuntime extends ScriptRuntime {
             }
         }
         LoggerEx.info(TAG, "Reload groovy scripts");
+    }
+
+    public String processAnnotationString(String str) {
+        return str;
     }
 
     public static String path(Class<?> c) {

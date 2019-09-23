@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class InitContainer implements CommandLineRunner{
-
     @Autowired
     MongoHelper dockerStatusHelper;
     @Autowired
@@ -58,6 +57,8 @@ public class InitContainer implements CommandLineRunner{
     @Autowired
     RMIServerHandler dockerRpcServerAdapter;
     @Autowired
+    RMIServerHandler dockerRpcServerAdapterSsl;
+    @Autowired
     OnlineServerWithStatus onlineServer;
     @Autowired
     OnlineUserManagerImpl onlineUserManager;
@@ -65,6 +66,7 @@ public class InitContainer implements CommandLineRunner{
     @Override
     public void run(String... args) throws Exception {
         TypeUtils.compatibleWithJavaBean = true;
+        System.setProperty("es.set.netty.runtime.available.processors", "false");
         globalLansProperties.init();
         dockerStatusHelper.init();
         configHelper.init();
@@ -85,5 +87,6 @@ public class InitContainer implements CommandLineRunner{
         onlineUserManager.init();
 //        rpcServerAdapter.serverStart();
         dockerRpcServerAdapter.serverStart();
+        dockerRpcServerAdapterSsl.serverStart();
     }
 }

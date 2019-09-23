@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public class CacheStorageFactory {
 
-    public static final String CLASS_EXTENSION = "CacheHandler";
+    public static final String CLASS_EXTENSION = "CacheStorageHandler";
 
     private Map<String, CacheStorageAdapter> cacheAdapterMap;
 

@@ -172,6 +172,12 @@ public class BeanApp extends ConfigApp{
         if(dockerRpcServerAdapterSsl == null){
             dockerRpcServerAdapterSsl = new RMIServerHandler();
             dockerRpcServerAdapterSsl.setServerImpl(instance.getDockerRpcServerSsl());
+            dockerRpcServerAdapterSsl.setIpHolder(instance.getIpHolder());
+            dockerRpcServerAdapterSsl.setRmiPort(Integer.valueOf(instance.getSslRpcPort()));
+            dockerRpcServerAdapterSsl.setEnableSsl(true);
+            dockerRpcServerAdapterSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
+            dockerRpcServerAdapterSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
+            dockerRpcServerAdapterSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
         }
         return dockerRpcServerAdapterSsl;
     }
@@ -293,7 +299,6 @@ public class BeanApp extends ConfigApp{
             onlineServer.setRpcSslJksPwd(instance.getRpcSslJksPwd());
             onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
             onlineServer.setTcpPort(instance.getUpstreamPort());
-            onlineServer.setSslRpcPort(instance.getUpstreamSslPort());
             onlineServer.setWsPort(instance.getUpstreamWsPort());
             onlineServer.setStatus(1);
             onlineServer.setConfigPath("container.properties");

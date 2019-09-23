@@ -1,49 +1,53 @@
-package com.docker.interceptor;
+package com.docker.rpc.remote.stub;
 
 import chat.errors.CoreException;
 import chat.utils.ReflectionUtil;
 import com.docker.data.CacheObj;
-import com.docker.storage.cache.CacheAnnotationHandler;
+import com.docker.rpc.MethodRequest;
+import com.docker.rpc.remote.MethodMapping;
+import com.docker.script.BaseRuntime;
 import com.docker.storage.cache.CacheStorageAdapter;
 import com.docker.storage.cache.CacheStorageFactory;
-import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import script.groovy.object.MethodInvocation;
-import script.groovy.runtime.MethodInterceptor;
+import script.groovy.runtime.GroovyRuntime;
+
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class CacheMethodInterceptor implements MethodInterceptor {
-    public static final String TAG = CacheMethodInterceptor.class.getSimpleName();
-    private ConcurrentHashMap<String, CacheObj> cacheMethodMap;
-    private CacheStorageFactory cacheStorageFactory;
-    private CacheAnnotationHandler cacheAnnotationHandler;
+public class RPCInvocationHandlerImpl extends InvacationHandler implements RPCInvocationHandler {
     private ExpressionParser parser = new SpelExpressionParser();
-    private LocalVariableTableParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
+
+    protected RPCInvocationHandlerImpl(RemoteServerHandler remoteServerHandler) {
+        super(remoteServerHandler);
+    }
 
     @Override
-    public Object invoke(MethodInvocation methodInvocation) throws CoreException {
-        String methodKey = ReflectionUtil.getMethodKey(methodInvocation.target.getClass(), methodInvocation.method);
+    public Object handleSync(MethodMapping methodMapping, MethodRequest request) throws CoreException {
+        BaseRuntime baseRuntime = (BaseRuntime) GroovyRuntime.getCurrentGroovyRuntime(methodMapping.getMethod().getDeclaringClass().getClassLoader());
+        ConcurrentHashMap<String, CacheObj> cacheMethodMap = baseRuntime.getCacheMethodMap();
+        CacheStorageFactory cacheStorageFactory = baseRuntime.getCacheStorageFactory();
+        String methodKey = ReflectionUtil.getMethodKey(methodMapping.getMethod().getDeclaringClass(), methodMapping.getMethod().getName());
         if (cacheMethodMap != null && !cacheMethodMap.isEmpty()) {
             CacheObj cacheObj = cacheMethodMap.get(methodKey);
             if (cacheObj != null) {
                 CacheStorageAdapter cacheStorageAdapter = cacheStorageFactory.getCacheStorageAdapter(cacheObj.getCacheMethod());
                 if (cacheStorageAdapter == null && cacheObj.isEmpty()) {
-                    return methodInvocation.proceed();
+                    return super.handleSync(request);
                 }
-                Object key = parseSpel(cacheObj.getParamNames(), methodInvocation.arguments, cacheObj.getSpelKey());
+                Object key = parseSpel(cacheObj.getParamNames(), request.getArgs(), cacheObj.getSpelKey());
                 if (key == null) {
-                    return methodInvocation.proceed();
+                    return super.handleSync(request);
                 } else {
                     cacheObj.setKey((String) key);
                     Object result = cacheStorageAdapter.getCacheData(cacheObj);
                     if (result != null) {
                         return result;
                     } else {
-                        result = methodInvocation.invokeMethod();
+                        result = super.handleSync(request);
                         if (result != null) {
                             cacheObj.setValue(result);
                             cacheStorageAdapter.addCacheData(cacheObj);
@@ -53,9 +57,13 @@ public class CacheMethodInterceptor implements MethodInterceptor {
                 }
             }
         }
-        return methodInvocation.proceed();
+        return super.handleSync(request);
     }
 
+    @Override
+    public CompletableFuture<?> handleAsync(MethodMapping methodMapping, MethodRequest request) {
+        return null;
+    }
 
     private Object parseSpel(String[] paramNames, Object[] arguments, String spel) {
         EvaluationContext context = new StandardEvaluationContext();
@@ -71,15 +79,5 @@ public class CacheMethodInterceptor implements MethodInterceptor {
 //            return defaultResult;
         }
         return null;
-    }
-
-    public CacheAnnotationHandler getCacheAnnotationHandler() {
-        return cacheAnnotationHandler;
-    }
-
-    public void setCacheAnnotationHandler(CacheAnnotationHandler cacheAnnotationHandler) {
-        this.cacheAnnotationHandler = cacheAnnotationHandler;
-//        this.cacheMethodMap = cacheAnnotationHandler.cacheMethodMap;
-        this.cacheStorageFactory = cacheAnnotationHandler.cacheStorageFactory;
     }
 }
