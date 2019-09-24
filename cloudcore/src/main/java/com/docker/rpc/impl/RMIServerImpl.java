@@ -201,9 +201,9 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                                 exception = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + exception.getMessage());
                             }
                             asyncCallbackRequest.setException((CoreException) exception);
-                            handlePersistent(asyncCallbackRequest, request);
                             builder.append(" $$returnobj:: " + JSON.toJSONString(exception));
                             AnalyticsLogger.error(TAG, builder.toString());
+                            handlePersistent(asyncCallbackRequest, request);
                         } else {
                             if (returnObj != null && returnObj instanceof CompletableFuture) {
                                 CompletableFuture completeFuture = (CompletableFuture) returnObj;
@@ -225,7 +225,6 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                                         }
                                         asyncCallbackRequest.setException((CoreException) throwable1);
                                     }
-                                    handlePersistent(asyncCallbackRequest, request);
                                     if(asyncCallbackRequest.getException() != null){
                                         builder.append(" $$returnobj:: " + JSON.toJSONString(asyncCallbackRequest.getException()));
                                         AnalyticsLogger.error(TAG, builder.toString());
@@ -233,6 +232,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                                         builder.append(" $$returnobj:: " + JSON.toJSONString(asyncCallbackRequest.getDataObject()));
                                         AnalyticsLogger.info(TAG, builder.toString());
                                     }
+                                    handlePersistent(asyncCallbackRequest, request);
                                 }, ServerStart.getInstance().getCoreThreadPoolExecutor());
                             }
                         }

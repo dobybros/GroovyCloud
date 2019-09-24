@@ -9,6 +9,7 @@ import com.docker.rpc.RPCResponse;
 import com.docker.rpc.RPCServerAdapter;
 import com.docker.server.OnlineServer;
 import com.docker.utils.SpringContextUtil;
+import org.apache.commons.lang.StringUtils;
 
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.rmi.ssl.SslRMIServerSocketFactory;
@@ -102,6 +103,7 @@ public class RMIServerHandler {
 //        System.setProperty("javax.net.ssl.keyStore", "/Users/liyazhou/workspace/tcpssl/certificate/server.jks");
         System.setProperty("javax.net.ssl.keyStore", rpcSslServerJksPath);
         System.setProperty("javax.net.ssl.keyStorePassword", rpcSslJksPwd);
+        System.setProperty("https.protocols", "TLSv1.2,TLSv1.1,SSLv3");
     }
 
     private void resetSslProp() {
@@ -122,24 +124,30 @@ public class RMIServerHandler {
         }
     }
     RPCEntity getRPCEntityForServer(String requestType, Class<RPCServerAdapter> serverAdapterClass) throws CoreException {
+        if(StringUtils.isBlank(requestType)) return null;
+
         RPCEntity entity = typeEntityMap.get(requestType);
         if(entity == null) {
             Class<? extends RPCRequest> requestClass = null;
             Class<? extends RPCResponse> responseClass = null;
-            Type[] types = serverAdapterClass.getGenericInterfaces();
-            for (Type type : types) {
-                if(type instanceof ParameterizedType) {
-                    ParameterizedType pType = (ParameterizedType) type;
-                    if(pType.getRawType().equals(RPCServerAdapter.class)) {
-                        Type[] params = pType.getActualTypeArguments();
-                        if(params != null && params.length == 2) {
-                            requestClass = (Class<? extends RPCRequest>) params[0];
-                            responseClass = (Class<? extends RPCResponse>) params[1];
-                        }
+            switch (requestType) {
+                case "smsg":
+                    try {
+                        requestClass = (Class<? extends RPCRequest>) Class.forName("com.dobybros.chat.rpc.reqres.balancer.ServerMessageRequest");
+                        responseClass = (Class<? extends RPCResponse>) Class.forName("com.dobybros.chat.rpc.reqres.balancer.ServerMessageResponse");
+                    } catch (Throwable e) {
+                        e.printStackTrace();
                     }
-                }
+                    break;
+                case "uol":
+                    try {
+                        requestClass = (Class<? extends RPCRequest>) Class.forName("com.dobybros.chat.rpc.reqres.balancer.UserOnlineRequest");
+                        responseClass = (Class<? extends RPCResponse>) Class.forName("com.dobybros.chat.rpc.reqres.balancer.UserOnlineResponse");
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                    break;
             }
-
             if(requestClass != null && responseClass != null) {
                 entity = new RPCEntity();
                 entity.requestClass = requestClass;
@@ -153,6 +161,38 @@ public class RMIServerHandler {
         }
         return entity;
     }
+//    RPCEntity getRPCEntityForServer(String requestType, Class<RPCServerAdapter> serverAdapterClass) throws CoreException {
+//        RPCEntity entity = typeEntityMap.get(requestType);
+//        if(entity == null) {
+//            Class<? extends RPCRequest> requestClass = null;
+//            Class<? extends RPCResponse> responseClass = null;
+//            Type[] types = serverAdapterClass.getGenericInterfaces();
+//            for (Type type : types) {
+//                if(type instanceof ParameterizedType) {
+//                    ParameterizedType pType = (ParameterizedType) type;
+//                    if(pType.getRawType().equals(RPCServerAdapter.class)) {
+//                        Type[] params = pType.getActualTypeArguments();
+//                        if(params != null && params.length == 2) {
+//                            requestClass = (Class<? extends RPCRequest>) params[0];
+//                            responseClass = (Class<? extends RPCResponse>) params[1];
+//                        }
+//                    }
+//                }
+//            }
+//
+//            if(requestClass != null && responseClass != null) {
+//                entity = new RPCEntity();
+//                entity.requestClass = requestClass;
+//                entity.responseClass = responseClass;
+//            } else {
+//                throw new CoreException(CoreErrorCodes.ERROR_RPC_ILLEGAL, "RequestClass " + requestClass + " and ResponseClass " + responseClass + " is not prepared for requestType " + requestType);
+//            }
+//            RPCEntity previousEntity = typeEntityMap.putIfAbsent(requestType, entity);
+//            if(previousEntity != null)
+//                entity = previousEntity;
+//        }
+//        return entity;
+//    }
     public String getRmiId() {
         return rmiId;
     }

@@ -16,6 +16,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import script.groovy.object.MethodInvocation;
 import script.groovy.runtime.MethodInterceptor;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CacheMethodInterceptor implements MethodInterceptor {
@@ -44,7 +45,13 @@ public class CacheMethodInterceptor implements MethodInterceptor {
                     cacheObj.setKey((String) key);
                     Object result = cacheStorageAdapter.getCacheData(cacheObj);
                     if (result != null) {
-                        return result;
+                        if(rpcMethodInvocation.getAsync()){
+                            CompletableFuture completableFuture = new CompletableFuture();
+                            completableFuture.complete(result);
+                            return completableFuture;
+                        }else {
+                            return result;
+                        }
                     } else {
                         if(!rpcMethodInvocation.getAsync()){
                             result = rpcMethodInvocation.handleSync();
