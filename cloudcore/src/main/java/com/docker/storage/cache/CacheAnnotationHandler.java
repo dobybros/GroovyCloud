@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CacheAnnotationHandler extends ClassAnnotationHandler {
     public static final String TAG = CacheAnnotationHandler.class.getSimpleName();
-
+    public ConcurrentHashMap<String, CacheObj> cacheMethodMap = new ConcurrentHashMap<>();
     private CacheMethodInterceptor cacheMethodInterceptor = new CacheMethodInterceptor();
     //    private ClearCacheMethodInterceptor clearCacheMethodInterceptor = new ClearCacheMethodInterceptor();
     public CacheStorageFactory cacheStorageFactory;
@@ -127,7 +127,8 @@ public class CacheAnnotationHandler extends ClassAnnotationHandler {
             cacheObj.setParamNames(ReflectionUtil.getParamNames(method));
             cacheObj.setMethod(method);
             BaseRuntime baseRuntime = (BaseRuntime)getGroovyRuntime();
-            baseRuntime.getCacheMethodMap().put(methodKey, cacheObj);
+            cacheMethodMap.put(methodKey, cacheObj);
+            baseRuntime.addMethodInterceptors(methodKey, cacheMethodInterceptor);
             LoggerEx.info("SCAN", "Mapping cachePut method key " + methodKey + " for class " + clazz.getName() + " method " + method.getName());
         }
     }

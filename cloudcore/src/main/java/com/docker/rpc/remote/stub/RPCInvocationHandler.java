@@ -27,7 +27,5 @@ MethodMapping methodMapping = serviceStubManager.getMethodMapping(crc);
         }
      */
 
-    public Object handleSync(MethodMapping methodMapping, MethodRequest request) throws CoreException;
-
-    public CompletableFuture<?> handleAsync(MethodMapping methodMapping, MethodRequest request);
+    public Object invoke(MethodMapping methodMapping, MethodRequest methodRequest) throws CoreException;
 }

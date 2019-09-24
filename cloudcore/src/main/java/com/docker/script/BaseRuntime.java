@@ -31,8 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseRuntime extends GroovyRuntime {
@@ -52,7 +51,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 
 	private Properties config;
 	private CacheStorageFactory cacheStorageFactory;
-    public ConcurrentHashMap<String, CacheObj> cacheMethodMap = new ConcurrentHashMap<>();
+    public Map<String, List<MethodInterceptor>> methodInterceptorMap = new ConcurrentHashMap<>();
     public void prepare(String service, Properties properties, String rootPath) {
         LoggerEx.info(TAG, "prepare service: " + service + " properties: " + properties + " rootPath: " + rootPath);
         this.service = service.toLowerCase();
@@ -230,6 +229,24 @@ public abstract class BaseRuntime extends GroovyRuntime {
             return null;
         }
     }
+    public void addMethodInterceptors(String key, MethodInterceptor methodInterceptor) {
+        if (key != null && methodInterceptor != null) {
+            if (methodInterceptorMap == null) {
+                methodInterceptorMap = new HashMap<>();
+            }
+
+            if (!methodInterceptorMap.containsKey(key)) {
+                List methodInterceptors = new ArrayList<MethodInterceptor>();
+                methodInterceptors.add(methodInterceptor);
+                methodInterceptorMap.put(key, methodInterceptors);
+            } else {
+                List<MethodInterceptor> methodInterceptors = methodInterceptorMap.get(key);
+                if (methodInterceptors != null) {
+                    methodInterceptors.add(methodInterceptor);
+                }
+            }
+        }
+    }
 
     public MongoDBHandler getMongoDBHandler() {
         return mongoDBHandler;
@@ -307,11 +324,11 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		this.cacheStorageFactory = cacheStorageFactory;
 	}
 
-    public ConcurrentHashMap<String, CacheObj> getCacheMethodMap() {
-        return cacheMethodMap;
+    public Map<String, List<MethodInterceptor>> getMethodInterceptorMap() {
+        return methodInterceptorMap;
     }
 
-    public void setCacheMethodMap(ConcurrentHashMap<String, CacheObj> cacheMethodMap) {
-        this.cacheMethodMap = cacheMethodMap;
+    public void setMethodInterceptorMap(Map<String, List<MethodInterceptor>> methodInterceptorMap) {
+        this.methodInterceptorMap = methodInterceptorMap;
     }
 }

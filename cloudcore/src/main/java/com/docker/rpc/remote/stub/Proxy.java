@@ -5,10 +5,7 @@ import chat.errors.CoreException;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
 import com.docker.rpc.remote.MethodMapping;
-import script.groovy.runtime.GroovyRuntime;
 import script.groovy.servlets.Tracker;
-
-import java.util.concurrent.CompletableFuture;
 
 public class Proxy {
     private static final String TAG = Proxy.class.getSimpleName();
@@ -35,12 +32,7 @@ public class Proxy {
         request.setServiceStubManager(serviceStubManager);
         request.setFromService(serviceStubManager.getFromService());
         MethodMapping methodMapping = serviceStubManager.getMethodMapping(crc);
-
-        if (methodMapping.getAsync()) {
-           return invocationHandler.handleAsync(methodMapping, request);
-        } else {
-           return invocationHandler.handleSync(methodMapping, request);
-        }
+        return invocationHandler.invoke(methodMapping, request);
     }
 
     public static Object getReturnObject(MethodRequest request, MethodResponse response) throws CoreException {

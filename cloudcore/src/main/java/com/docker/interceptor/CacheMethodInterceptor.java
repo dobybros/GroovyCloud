@@ -3,6 +3,7 @@ package com.docker.interceptor;
 import chat.errors.CoreException;
 import chat.utils.ReflectionUtil;
 import com.docker.data.CacheObj;
+import com.docker.rpc.method.RPCMethodInvocation;
 import com.docker.storage.cache.CacheAnnotationHandler;
 import com.docker.storage.cache.CacheStorageAdapter;
 import com.docker.storage.cache.CacheStorageFactory;
@@ -14,6 +15,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import script.groovy.object.MethodInvocation;
 import script.groovy.runtime.MethodInterceptor;
+
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CacheMethodInterceptor implements MethodInterceptor {
@@ -26,24 +28,27 @@ public class CacheMethodInterceptor implements MethodInterceptor {
 
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws CoreException {
-        String methodKey = ReflectionUtil.getMethodKey(methodInvocation.target.getClass(), methodInvocation.method);
+        RPCMethodInvocation rpcMethodInvocation = (RPCMethodInvocation) methodInvocation;
+        String methodKey = ReflectionUtil.getMethodKey(rpcMethodInvocation.clazz, rpcMethodInvocation.method);
         if (cacheMethodMap != null && !cacheMethodMap.isEmpty()) {
             CacheObj cacheObj = cacheMethodMap.get(methodKey);
             if (cacheObj != null) {
                 CacheStorageAdapter cacheStorageAdapter = cacheStorageFactory.getCacheStorageAdapter(cacheObj.getCacheMethod());
                 if (cacheStorageAdapter == null && cacheObj.isEmpty()) {
-                    return methodInvocation.proceed();
+                    return rpcMethodInvocation.proceed();
                 }
-                Object key = parseSpel(cacheObj.getParamNames(), methodInvocation.arguments, cacheObj.getSpelKey());
+                Object key = parseSpel(cacheObj.getParamNames(), rpcMethodInvocation.arguments, cacheObj.getSpelKey());
                 if (key == null) {
-                    return methodInvocation.proceed();
+                    return rpcMethodInvocation.proceed();
                 } else {
                     cacheObj.setKey((String) key);
                     Object result = cacheStorageAdapter.getCacheData(cacheObj);
                     if (result != null) {
                         return result;
                     } else {
-                        result = methodInvocation.invokeMethod();
+                        if(!rpcMethodInvocation.getAsync()){
+                            result = rpcMethodInvocation.handleSync();
+                        }
                         if (result != null) {
                             cacheObj.setValue(result);
                             cacheStorageAdapter.addCacheData(cacheObj);
@@ -53,7 +58,7 @@ public class CacheMethodInterceptor implements MethodInterceptor {
                 }
             }
         }
-        return methodInvocation.proceed();
+        return rpcMethodInvocation.proceed();
     }
 
 
@@ -79,7 +84,7 @@ public class CacheMethodInterceptor implements MethodInterceptor {
 
     public void setCacheAnnotationHandler(CacheAnnotationHandler cacheAnnotationHandler) {
         this.cacheAnnotationHandler = cacheAnnotationHandler;
-//        this.cacheMethodMap = cacheAnnotationHandler.cacheMethodMap;
+        this.cacheMethodMap = cacheAnnotationHandler.cacheMethodMap;
         this.cacheStorageFactory = cacheAnnotationHandler.cacheStorageFactory;
     }
 }

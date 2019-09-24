@@ -44,10 +44,10 @@ public class GroovyObjectEx<T> {
         String methodKey = method;//ReflectionUtil.getMethodKey(getGroovyClass(),method);
         if (methodInterceptorMap != null && methodKey != null) {
             List<MethodInterceptor> methodInterceptors = methodInterceptorMap.get(methodKey);
-            if(methodInterceptors != null && !methodInterceptors.isEmpty()){
-                MethodInvocation invocation = new MethodInvocation(getObject(), method, parameters, methodInterceptors);
+            if (methodInterceptors != null && !methodInterceptors.isEmpty()) {
+                MethodInvocation invocation = new MethodInvocation(getObject(), getObject().getClass(), method, parameters, methodInterceptors);
                 return invocation.proceed();
-            }else{
+            } else {
                 return invokeMethod(method, parameters);
             }
         } else {

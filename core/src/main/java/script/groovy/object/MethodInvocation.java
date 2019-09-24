@@ -12,17 +12,18 @@ import java.util.List;
 
 public class MethodInvocation {
     public final Object target;
+    public final Class<?> clazz;
     public final String method;
     public final Object[] arguments;
     public final List<MethodInterceptor> methodInterceptors;
-    private int currentInterceptorIndex = -1;
+    protected int currentInterceptorIndex = -1;
 
-    protected MethodInvocation(@Nullable Object target, String method, @Nullable Object[] arguments, List<MethodInterceptor> methodInterceptors) {
-
+    public MethodInvocation(@Nullable Object target, @Nullable Class<?> clazz, String method, @Nullable Object[] arguments, List<MethodInterceptor> methodInterceptors) {
         this.target = target;
         this.method = method;
         this.arguments = arguments;
         this.methodInterceptors = methodInterceptors;
+        this.clazz = clazz;
 
     }
 
@@ -32,7 +33,7 @@ public class MethodInvocation {
             return this.invokeMethod();
         } else {
             MethodInterceptor interceptor = this.methodInterceptors.get(++this.currentInterceptorIndex);
-            if(interceptor != null) {
+            if (interceptor != null) {
                 return interceptor.invoke(this);
             }
         }
