@@ -6,7 +6,7 @@ import script.groovy.runtime.GroovyRuntime;
 
 public abstract class CacheStorageAdapter {
 
-    private GroovyRuntime groovyRuntime;
+//    private GroovyRuntime groovyRuntime;
 
     public enum CACHEMETHOD{
         REDIS,MEMCACHE,EHCACHE
@@ -20,12 +20,12 @@ public abstract class CacheStorageAdapter {
 
     public abstract Object getCacheData(CacheObj cacheObj) throws CoreException;
 
-    public GroovyRuntime getGroovyRuntime() {
-        return groovyRuntime;
-    }
-
-    public void setGroovyRuntime(GroovyRuntime groovyRuntime) {
-        this.groovyRuntime = groovyRuntime;
-    }
+//    public GroovyRuntime getGroovyRuntime() {
+//        return groovyRuntime;
+//    }
+//
+//    public void setGroovyRuntime(GroovyRuntime groovyRuntime) {
+//        this.groovyRuntime = groovyRuntime;
+//    }
 
 }

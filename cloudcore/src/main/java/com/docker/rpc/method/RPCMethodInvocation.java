@@ -18,8 +18,8 @@ public class RPCMethodInvocation extends MethodInvocation {
     private RemoteServerHandler remoteServerHandler;
     private Boolean isAsync;
 
-    public RPCMethodInvocation(MethodRequest methodRequest, MethodMapping methodMapping, List<MethodInterceptor> methodInterceptors, RemoteServerHandler remoteServerHandler) {
-        super(null, methodMapping.getMethod().getDeclaringClass(), methodMapping.getMethod().getName(), methodRequest.getArgs(), methodInterceptors);
+    public RPCMethodInvocation(MethodRequest methodRequest, MethodMapping methodMapping, List<MethodInterceptor> methodInterceptors, RemoteServerHandler remoteServerHandler, String methodKey) {
+        super(null, methodMapping.getMethod().getDeclaringClass(), methodMapping.getMethod().getName(), methodRequest.getArgs(), methodInterceptors, methodKey);
         this.methodRequest = methodRequest;
         this.methodMapping = methodMapping;
         this.isAsync = methodMapping.getAsync();
@@ -29,11 +29,7 @@ public class RPCMethodInvocation extends MethodInvocation {
     @Override
     public Object proceed() throws CoreException {
         if (this.methodInterceptors == null || this.currentInterceptorIndex == this.methodInterceptors.size() - 1) {
-            if (this.isAsync) {
-                return this.handleAsync();
-            } else {
-                return this.handleSync();
-            }
+            return invoke();
         } else {
             MethodInterceptor interceptor = this.methodInterceptors.get(++this.currentInterceptorIndex);
             if (interceptor != null) {
@@ -41,6 +37,14 @@ public class RPCMethodInvocation extends MethodInvocation {
             }
         }
         return null;
+    }
+
+    public Object invoke() throws CoreException {
+        if (this.isAsync) {
+            return this.handleAsync();
+        } else {
+            return this.handleSync();
+        }
     }
 
 

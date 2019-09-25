@@ -2,8 +2,7 @@ package com.docker.script;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
-
-import com.docker.data.CacheObj;
+import com.docker.rpc.remote.stub.ServerCacheManager;
 import com.docker.script.i18n.I18nHandler;
 import com.docker.script.i18n.MessageProperties;
 import com.docker.script.servlet.GroovyServletManagerEx;
@@ -50,7 +49,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
     private Integer serviceVersion;
 
 	private Properties config;
-	private CacheStorageFactory cacheStorageFactory;
+//	private CacheStorageFactory cacheStorageFactory;
     public Map<String, List<MethodInterceptor>> methodInterceptorMap = new ConcurrentHashMap<>();
     public void prepare(String service, Properties properties, String rootPath) {
         LoggerEx.info(TAG, "prepare service: " + service + " properties: " + properties + " rootPath: " + rootPath);
@@ -129,10 +128,12 @@ public abstract class BaseRuntime extends GroovyRuntime {
             GroovyServletDispatcher.removeGroovyServletManagerEx(this.service);
         }
 
-		cacheStorageFactory = new CacheStorageFactory();
+//		cacheStorageFactory = new CacheStorageFactory();
+        ServerCacheManager serverCacheManager = ServerCacheManager.getInstance();
+        CacheStorageFactory cacheStorageFactory = serverCacheManager.getCacheStorageFactory();
 		RedisCacheStorageHandler redisCacheStorageHandler = new RedisCacheStorageHandler();
 		redisCacheStorageHandler.setRedisHandler(getRedisHandler());
-		redisCacheStorageHandler.setGroovyRuntime(this);
+//		redisCacheStorageHandler.setGroovyRuntime(this);
 		cacheStorageFactory.registerCacheStorageAdapter(redisCacheStorageHandler);
 
 		addClassAnnotationHandler(new GroovyTimerTaskHandler());
@@ -140,7 +141,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		addClassAnnotationHandler(new ServerLifeCircleHandler());
 		addClassAnnotationHandler(new JsonFilterFactory());
 		addClassAnnotationHandler(new RequestPermissionHandler());
-		addClassAnnotationHandler(new CacheAnnotationHandler(cacheStorageFactory));
+		addClassAnnotationHandler(new CacheAnnotationHandler());
 
 	}
 
@@ -229,7 +230,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
             return null;
         }
     }
-    public void addMethodInterceptors(String key, MethodInterceptor methodInterceptor) {
+    public void addMethodInterceptor(String key, MethodInterceptor methodInterceptor) {
         if (key != null && methodInterceptor != null) {
             if (methodInterceptorMap == null) {
                 methodInterceptorMap = new HashMap<>();
@@ -316,13 +317,6 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		this.serviceVersion = serviceVersion;
 	}
 
-	public CacheStorageFactory getCacheStorageFactory() {
-		return cacheStorageFactory;
-	}
-
-	public void setCacheStorageFactory(CacheStorageFactory cacheStorageFactory) {
-		this.cacheStorageFactory = cacheStorageFactory;
-	}
 
     public Map<String, List<MethodInterceptor>> getMethodInterceptorMap() {
         return methodInterceptorMap;

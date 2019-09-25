@@ -15,6 +15,7 @@ import java.util.Map;
 
 public class RPCInvocationHandlerImpl implements RPCInvocationHandler {
     private RemoteServerHandler remoteServerHandler;
+
     protected RPCInvocationHandlerImpl(RemoteServerHandler remoteServerHandler) {
         this.remoteServerHandler = remoteServerHandler;
     }
@@ -23,12 +24,12 @@ public class RPCInvocationHandlerImpl implements RPCInvocationHandler {
     public Object invoke(MethodMapping methodMapping, MethodRequest methodRequest) throws CoreException {
         BaseRuntime baseRuntime = (BaseRuntime) GroovyRuntime.getCurrentGroovyRuntime(methodMapping.getMethod().getDeclaringClass().getClassLoader());
         Map<String, List<MethodInterceptor>> methodInterceptorMap = baseRuntime.getMethodInterceptorMap();
-        String methodKey = ReflectionUtil.getMethodKey(methodMapping.getMethod().getDeclaringClass(), methodMapping.getMethod().getName());
+        String methodKey = String.valueOf(methodRequest.getCrc());
         List<MethodInterceptor> methodInterceptors = null;
         if (methodInterceptorMap != null) {
             methodInterceptors = methodInterceptorMap.get(methodKey);
         }
-        MethodInvocation methodInvocation = new RPCMethodInvocation(methodRequest, methodMapping, methodInterceptors, remoteServerHandler);
+        MethodInvocation methodInvocation = new RPCMethodInvocation(methodRequest, methodMapping, methodInterceptors, remoteServerHandler, methodKey);
         return methodInvocation.proceed();
     }
 }

@@ -45,7 +45,7 @@ public class GroovyObjectEx<T> {
         if (methodInterceptorMap != null && methodKey != null) {
             List<MethodInterceptor> methodInterceptors = methodInterceptorMap.get(methodKey);
             if (methodInterceptors != null && !methodInterceptors.isEmpty()) {
-                MethodInvocation invocation = new MethodInvocation(getObject(), getObject().getClass(), method, parameters, methodInterceptors);
+                MethodInvocation invocation = new MethodInvocation(getObject(), getObject().getClass(), method, parameters, methodInterceptors, methodKey);
                 return invocation.proceed();
             } else {
                 return invokeMethod(method, parameters);

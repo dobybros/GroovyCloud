@@ -5,20 +5,26 @@ import chat.errors.CoreException;
 import chat.logs.AnalyticsLogger;
 import chat.logs.LoggerEx;
 import chat.main.ServerStart;
+import chat.utils.ReflectionUtil;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
 import com.alibaba.fastjson.JSON;
+import com.docker.data.CacheObj;
 import com.docker.errors.CoreErrorCodes;
 import com.docker.rpc.*;
 import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.stub.ServerCacheManager;
 import com.docker.rpc.remote.stub.ServiceStubManager;
+import com.docker.script.BaseRuntime;
 import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.server.OnlineServer;
+import com.docker.storage.cache.CacheStorageAdapter;
+import com.docker.storage.cache.CacheStorageFactory;
 import com.docker.utils.SpringContextUtil;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import script.groovy.object.GroovyObjectEx;
+import script.groovy.runtime.GroovyRuntime;
 import script.groovy.servlets.Tracker;
 import script.groovy.servlets.grayreleased.GrayReleased;
 import script.memodb.ObjectId;
@@ -30,13 +36,14 @@ import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.BiConsumer;
 
 public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
     private RMIServerImplWrapper serverWrapper;
-
+    private ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
     public RMIServerImpl(Integer port, RMIServerImplWrapper serverWrapper) throws RemoteException {
         super(port);
         this.serverWrapper = serverWrapper;
@@ -145,6 +152,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                     asyncCallbackRequest.setEncode(encode);
                     asyncCallbackRequest.setType(asyncCallbackRequest.getType());
                     asyncCallbackRequest.setCallbackFutureId(callbackFutureId);
+                    MethodMapping methodMapping = null;
                     MethodRequest request = new MethodRequest();
                     Object returnObj = null;
                     Throwable throwable = null;
@@ -164,7 +172,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                             Tracker tracker = new Tracker(currentTrackId, parentTrackId);
                             Tracker.trackerThreadLocal.set(tracker);
                         }
-                        MethodMapping methodMapping = serverWrapper.serverMethodInvocation.getMethodMapping(request);
+                        methodMapping = serverWrapper.serverMethodInvocation.getMethodMapping(request);
                         builder.append("$$async methodrequest:: " + methodMapping.getMethod().getDeclaringClass().getSimpleName() + "#" + methodMapping.getMethod().getName() + " $$service:: " + request.getService() + " $$parenttrackid:: " + parentTrackId + " $$currenttrackid:: " + currentTrackId + " $$args:: " + request.getArgsTmpStr());
                         returnObj = serverWrapper.serverMethodInvocation.oncallAsync(request, callbackFutureId);
                         asyncCallbackRequest.setCrc((request).getCrc());
@@ -206,10 +214,28 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                             handlePersistent(asyncCallbackRequest, request);
                         } else {
                             if (returnObj != null && returnObj instanceof CompletableFuture) {
+//                                String methodName = methodMapping.getMethod().getName();
+//                                Class<?> clazz = methodMapping.getMethod().getDeclaringClass();
                                 CompletableFuture completeFuture = (CompletableFuture) returnObj;
                                 completeFuture.whenCompleteAsync((result, e) -> {
                                     if (result != null) {
                                         asyncCallbackRequest.setDataObject(result);
+//                                        ServerCacheManager serverCacheManager = ServerCacheManager.getInstance();
+//                                        CacheStorageFactory cacheStorageFactory = serverCacheManager.getCacheStorageFactory();
+//                                        Map<String, CacheObj> cacheObjMap = serverCacheManager.getCacheMethodMap();
+//                                        String methodKey = ReflectionUtil.getMethodKey(request.getService(),clazz, methodName);
+//                                        CacheObj cacheObj = cacheObjMap.get(methodKey);
+//                                        CacheStorageAdapter cacheStorageAdapter = cacheStorageFactory.getCacheStorageAdapter(cacheObj.getCacheMethod());
+//                                        Object key = ReflectionUtil.parseSpel(cacheObj.getParamNames(),request.getArgs(),cacheObj.getSpelKey());
+//                                        if(key != null) {
+//                                            cacheObj.setKey((String) key);
+//                                            cacheObj.setValue(result);
+//                                            try{
+//                                                cacheStorageAdapter.addCacheData(cacheObj);
+//                                            }catch (CoreException coreException){
+//                                                LoggerEx.error(TAG, "Add cache data failed on async call class is " + clazz.getSimpleName() + ",method is " + methodName + ", result is " + result + ",reason is " + coreException.getMessage());
+//                                            }
+//                                        }
                                     }
                                     if (e != null) {
                                         Throwable throwable1 = (Throwable) e;

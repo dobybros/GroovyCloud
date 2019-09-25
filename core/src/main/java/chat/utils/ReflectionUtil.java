@@ -2,6 +2,11 @@ package chat.utils;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -70,6 +75,7 @@ public class ReflectionUtil {
     }
 
     private static final Map<Class<?>, Class<?>> primitiveWrapperTypeMap = new HashMap(8);
+    private static ExpressionParser parser;
 
     static {
         primitiveWrapperTypeMap.put(Boolean.class, Boolean.TYPE);
@@ -80,6 +86,7 @@ public class ReflectionUtil {
         primitiveWrapperTypeMap.put(Integer.class, Integer.TYPE);
         primitiveWrapperTypeMap.put(Long.class, Long.TYPE);
         primitiveWrapperTypeMap.put(Short.class, Short.TYPE);
+        parser = new SpelExpressionParser();
     }
 
     public static boolean canBeInitiated(Class<?> clazz) {
@@ -473,11 +480,11 @@ public class ReflectionUtil {
         return value;
     }
 
-    public static String getMethodKey(Class<?> clazz, String methodName) {
-        if (clazz == null || methodName == null) {
+    public static String getMethodKey(String service, Class<?> clazz, String methodName) {
+        if (service == null || clazz == null || methodName == null) {
             return "";
         }
-        return clazz.getSimpleName() + "#" + methodName;
+        return service + "#" + clazz.getSimpleName() + "#" + methodName;
     }
 
     public static String[] getParamNames(Method method) {
@@ -490,5 +497,21 @@ public class ReflectionUtil {
             }
         }
         return paramNameList.toArray(new String[]{});
+    }
+
+    public static Object parseSpel(String[] paramNames, Object[] arguments, String spel) {
+        EvaluationContext context = new StandardEvaluationContext();
+        if (paramNames != null) {
+            for (int len = 0; len < paramNames.length; len++) {
+                context.setVariable(paramNames[len], arguments[len]);
+            }
+        }
+        try {
+            Expression expression = parser.parseExpression(spel);
+            return expression.getValue(context);
+        } catch (Exception e) {
+//            return defaultResult;
+        }
+        return null;
     }
 }

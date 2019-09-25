@@ -11,6 +11,7 @@ import script.groovy.runtime.MethodInterceptor;
 import java.util.List;
 
 public class MethodInvocation {
+    public final String methodKey;
     public final Object target;
     public final Class<?> clazz;
     public final String method;
@@ -18,7 +19,8 @@ public class MethodInvocation {
     public final List<MethodInterceptor> methodInterceptors;
     protected int currentInterceptorIndex = -1;
 
-    public MethodInvocation(@Nullable Object target, @Nullable Class<?> clazz, String method, @Nullable Object[] arguments, List<MethodInterceptor> methodInterceptors) {
+    public MethodInvocation(@Nullable Object target, @Nullable Class<?> clazz, String method, @Nullable Object[] arguments, List<MethodInterceptor> methodInterceptors,String methodKey) {
+        this.methodKey = methodKey;
         this.target = target;
         this.method = method;
         this.arguments = arguments;
