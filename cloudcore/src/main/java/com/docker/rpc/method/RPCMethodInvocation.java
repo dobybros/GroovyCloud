@@ -27,18 +27,6 @@ public class RPCMethodInvocation extends MethodInvocation {
     }
 
     @Override
-    public Object proceed() throws CoreException {
-        if (this.methodInterceptors == null || this.currentInterceptorIndex == this.methodInterceptors.size() - 1) {
-            return invoke();
-        } else {
-            MethodInterceptor interceptor = this.methodInterceptors.get(++this.currentInterceptorIndex);
-            if (interceptor != null) {
-                return interceptor.invoke(this);
-            }
-        }
-        return null;
-    }
-
     public Object invoke() throws CoreException {
         if (this.isAsync) {
             return this.handleAsync();

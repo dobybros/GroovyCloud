@@ -1,7 +1,6 @@
 package com.docker.rpc.remote.stub;
 
 import chat.errors.CoreException;
-import chat.utils.ReflectionUtil;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.method.RPCMethodInvocation;
 import com.docker.rpc.remote.MethodMapping;
@@ -27,7 +26,6 @@ public class RPCInvocationHandlerImpl implements RPCInvocationHandler {
         List<MethodInterceptor> methodInterceptors = null;
         if (baseRuntime != null) {
             Map<String, List<MethodInterceptor>> methodInterceptorMap = baseRuntime.getMethodInterceptorMap();
-            methodInterceptors = null;
             if (methodInterceptorMap != null) {
                 methodInterceptors = methodInterceptorMap.get(methodKey);
             }

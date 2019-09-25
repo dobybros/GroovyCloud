@@ -3,8 +3,6 @@ package script.groovy.object;
 
 import chat.errors.CoreException;
 import groovy.lang.GroovyObject;
-import org.springframework.aop.framework.AopProxyUtils;
-import org.springframework.core.BridgeMethodResolver;
 import org.springframework.lang.Nullable;
 import script.groovy.runtime.MethodInterceptor;
 
@@ -31,8 +29,8 @@ public class MethodInvocation {
 
     @Nullable
     public Object proceed() throws CoreException {
-        if (this.currentInterceptorIndex == this.methodInterceptors.size() - 1) {
-            return this.invokeMethod();
+        if (this.methodInterceptors == null || this.currentInterceptorIndex == this.methodInterceptors.size() - 1) {
+            return invoke();
         } else {
             MethodInterceptor interceptor = this.methodInterceptors.get(++this.currentInterceptorIndex);
             if (interceptor != null) {
@@ -40,6 +38,10 @@ public class MethodInvocation {
             }
         }
         return null;
+    }
+
+    public Object invoke() throws CoreException {
+        return this.invokeMethod();
     }
 
     public Object invokeMethod() throws CoreException {
