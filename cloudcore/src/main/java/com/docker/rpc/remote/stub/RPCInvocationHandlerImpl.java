@@ -23,11 +23,14 @@ public class RPCInvocationHandlerImpl implements RPCInvocationHandler {
     @Override
     public Object invoke(MethodMapping methodMapping, MethodRequest methodRequest) throws CoreException {
         BaseRuntime baseRuntime = (BaseRuntime) GroovyRuntime.getCurrentGroovyRuntime(methodMapping.getMethod().getDeclaringClass().getClassLoader());
-        Map<String, List<MethodInterceptor>> methodInterceptorMap = baseRuntime.getMethodInterceptorMap();
         String methodKey = String.valueOf(methodRequest.getCrc());
         List<MethodInterceptor> methodInterceptors = null;
-        if (methodInterceptorMap != null) {
-            methodInterceptors = methodInterceptorMap.get(methodKey);
+        if (baseRuntime != null) {
+            Map<String, List<MethodInterceptor>> methodInterceptorMap = baseRuntime.getMethodInterceptorMap();
+            methodInterceptors = null;
+            if (methodInterceptorMap != null) {
+                methodInterceptors = methodInterceptorMap.get(methodKey);
+            }
         }
         MethodInvocation methodInvocation = new RPCMethodInvocation(methodRequest, methodMapping, methodInterceptors, remoteServerHandler, methodKey);
         return methodInvocation.proceed();
