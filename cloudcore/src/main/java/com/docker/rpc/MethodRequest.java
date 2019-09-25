@@ -7,6 +7,7 @@ import chat.utils.DataInputStreamEx;
 import chat.utils.DataOutputStreamEx;
 import chat.utils.GZipUtils;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.skeleton.ServiceSkeletonAnnotationHandler;
 import com.docker.rpc.remote.stub.ServerCacheManager;
@@ -52,6 +53,8 @@ public class MethodRequest extends RPCRequest {
     private String argsTmpStr; //Only use for logging
 
     private ServiceStubManager serviceStubManager;
+
+    private JSONObject extra = new JSONObject();
 
 	public MethodRequest() {
 		super(RPCTYPE);
@@ -340,5 +343,9 @@ public class MethodRequest extends RPCRequest {
         this.serviceStubManager = serviceStubManager;
         if(this.serviceStubManager.getFromService() != null)
             fromService = this.serviceStubManager.getFromService();
+    }
+
+    public JSONObject getExtra() {
+        return extra;
     }
 }

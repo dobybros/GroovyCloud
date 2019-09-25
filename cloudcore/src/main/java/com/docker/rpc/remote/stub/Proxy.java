@@ -32,7 +32,10 @@ public class Proxy {
         request.setServiceStubManager(serviceStubManager);
         request.setFromService(serviceStubManager.getFromService());
         MethodMapping methodMapping = serviceStubManager.getMethodMapping(crc);
-        return invocationHandler.invoke(methodMapping, request);
+        if(methodMapping != null){
+            return invocationHandler.invoke(methodMapping, request);
+        }
+        return null;
     }
 
     public static Object getReturnObject(MethodRequest request, MethodResponse response) throws CoreException {

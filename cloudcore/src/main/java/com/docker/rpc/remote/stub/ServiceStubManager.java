@@ -11,6 +11,7 @@ import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.remote.MethodMapping;
 import script.groovy.servlets.Tracker;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -61,6 +62,14 @@ public class ServiceStubManager {
 //            }
 //        }
         if(!classScanedMap.containsKey(clazz)) {
+            try {
+                Field field = clazz.getField("SERVICE");
+                field.get(clazz);
+            } catch (Throwable t) {
+                t.printStackTrace();
+                LoggerEx.error(TAG, "The service has no field: SERVICE, please check!!!" + "class: " + clazz.getSimpleName());
+                return;
+            }
             classScanedMap.put(clazz, true);
         } else {
             return;

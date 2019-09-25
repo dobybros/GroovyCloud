@@ -20,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class CacheMethodInterceptor implements MethodInterceptor {
     public static final String TAG = CacheMethodInterceptor.class.getSimpleName();
+    public static final String CACHEKEY = "cacheKey";
 
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws CoreException {
@@ -39,7 +40,7 @@ public class CacheMethodInterceptor implements MethodInterceptor {
                 if (key == null) {
                     return rpcMethodInvocation.proceed();
                 } else {
-                    cacheObj.setKey((String) key);
+                    cacheObj.setKey(key.toString());
                     Object result = cacheStorageAdapter.getCacheData(cacheObj);
                     if (result != null) {
                         if (rpcMethodInvocation.getAsync()) {
@@ -57,6 +58,7 @@ public class CacheMethodInterceptor implements MethodInterceptor {
                                 cacheStorageAdapter.addCacheData(cacheObj);
                             }
                         }else{
+                            rpcMethodInvocation.getMethodRequest().getExtra().put(CACHEKEY, key);
                             result = rpcMethodInvocation.handleAsync();
                         }
 

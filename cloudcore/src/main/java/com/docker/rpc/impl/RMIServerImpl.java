@@ -44,6 +44,7 @@ import java.util.function.BiConsumer;
 public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
     private RMIServerImplWrapper serverWrapper;
     private ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
+
     public RMIServerImpl(Integer port, RMIServerImplWrapper serverWrapper) throws RemoteException {
         super(port);
         this.serverWrapper = serverWrapper;
@@ -165,7 +166,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                         request.setType(type);
                         request.setData(data);
                         request.resurrect();
-                        String parentTrackId = ((MethodRequest)request).getTrackId();
+                        String parentTrackId = ((MethodRequest) request).getTrackId();
                         String currentTrackId = null;
                         if (parentTrackId != null) {
                             currentTrackId = ObjectId.get().toString();
@@ -180,7 +181,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                     } catch (Throwable t) {
                         t.printStackTrace();
                         String message = null;
-                        if(t instanceof InvokerInvocationException) {
+                        if (t instanceof InvokerInvocationException) {
                             t = t.getCause();
                         }
                         if (t instanceof CoreException) {
@@ -198,9 +199,9 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                         builder.append(" $$sdockerip:: " + ip);
                         if (throwable != null) {
                             Exception exception = null;
-                            if(throwable instanceof InvokerInvocationException) {
+                            if (throwable instanceof InvokerInvocationException) {
                                 Throwable t = throwable.getCause();
-                                if(t != null)
+                                if (t != null)
                                     throwable = t;
                             }
                             if (throwable instanceof CoreException) {
@@ -220,27 +221,11 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                                 completeFuture.whenCompleteAsync((result, e) -> {
                                     if (result != null) {
                                         asyncCallbackRequest.setDataObject(result);
-//                                        ServerCacheManager serverCacheManager = ServerCacheManager.getInstance();
-//                                        CacheStorageFactory cacheStorageFactory = serverCacheManager.getCacheStorageFactory();
-//                                        Map<String, CacheObj> cacheObjMap = serverCacheManager.getCacheMethodMap();
-//                                        String methodKey = ReflectionUtil.getMethodKey(request.getService(),clazz, methodName);
-//                                        CacheObj cacheObj = cacheObjMap.get(methodKey);
-//                                        CacheStorageAdapter cacheStorageAdapter = cacheStorageFactory.getCacheStorageAdapter(cacheObj.getCacheMethod());
-//                                        Object key = ReflectionUtil.parseSpel(cacheObj.getParamNames(),request.getArgs(),cacheObj.getSpelKey());
-//                                        if(key != null) {
-//                                            cacheObj.setKey((String) key);
-//                                            cacheObj.setValue(result);
-//                                            try{
-//                                                cacheStorageAdapter.addCacheData(cacheObj);
-//                                            }catch (CoreException coreException){
-//                                                LoggerEx.error(TAG, "Add cache data failed on async call class is " + clazz.getSimpleName() + ",method is " + methodName + ", result is " + result + ",reason is " + coreException.getMessage());
-//                                            }
-//                                        }
                                     }
                                     if (e != null) {
                                         Throwable throwable1 = (Throwable) e;
                                         Throwable cause = throwable1.getCause();
-                                        if(cause != null) {
+                                        if (cause != null) {
                                             throwable1 = cause;
                                         }
                                         throwable1.printStackTrace();
@@ -251,10 +236,10 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                                         }
                                         asyncCallbackRequest.setException((CoreException) throwable1);
                                     }
-                                    if(asyncCallbackRequest.getException() != null){
+                                    if (asyncCallbackRequest.getException() != null) {
                                         builder.append(" $$returnobj:: " + JSON.toJSONString(asyncCallbackRequest.getException()));
                                         AnalyticsLogger.error(TAG, builder.toString());
-                                    }else {
+                                    } else {
                                         builder.append(" $$returnobj:: " + JSON.toJSONString(asyncCallbackRequest.getDataObject()));
                                         AnalyticsLogger.info(TAG, builder.toString());
                                     }
@@ -273,11 +258,28 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                     asyncCallbackRequest.setEncode(encode);
                     asyncCallbackRequest.setType(type);
                     asyncCallbackRequest.resurrect();
-                    CompletableFuture completableFuture = ServerCacheManager.getInstance().getCompletableFuture(asyncCallbackRequest.getCallbackFutureId());
-                    if (asyncCallbackRequest.getException() != null) {
-                        completableFuture.completeExceptionally(asyncCallbackRequest.getException());
-                    } else {
-                        completableFuture.complete(asyncCallbackRequest.getDataObject());
+                    if(asyncCallbackRequest.getCallbackFutureId() != null){
+                        CompletableFuture completableFuture = ServerCacheManager.getInstance().getCompletableFuture(asyncCallbackRequest.getCallbackFutureId());
+                        if (asyncCallbackRequest.getException() != null) {
+                            completableFuture.completeExceptionally(asyncCallbackRequest.getException());
+                        } else {
+                            ServerCacheManager serverCacheManager = ServerCacheManager.getInstance();
+                            CacheStorageFactory cacheStorageFactory = serverCacheManager.getCacheStorageFactory();
+                            Map<String, CacheObj> cacheObjMap = serverCacheManager.getCacheMethodMap();
+                            CacheObj cacheObj = cacheObjMap.get(String.valueOf(asyncCallbackRequest.getCrc()));
+                            CacheStorageAdapter cacheStorageAdapter = cacheStorageFactory.getCacheStorageAdapter(cacheObj.getCacheMethod());
+                            String key = serverCacheManager.getCacheId(asyncCallbackRequest.getCallbackFutureId());
+                            if (key != null) {
+                                cacheObj.setKey(key);
+                                cacheObj.setValue(asyncCallbackRequest.getDataObject());
+                                try {
+                                    cacheStorageAdapter.addCacheData(cacheObj);
+                                } catch (CoreException coreException) {
+                                    LoggerEx.error(TAG, "Add cache data failed on async call class is service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(asyncCallbackRequest.getCrc()) + ",reason is " + coreException.getMessage());
+                                }
+                            }
+                            completableFuture.complete(asyncCallbackRequest.getDataObject());
+                        }
                     }
                 } catch (Throwable t) {
                     if (asyncCallbackRequest != null && asyncCallbackRequest.getCallbackFutureId() != null) {
@@ -331,7 +333,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
     }
 
     private RPCClientAdapter getClientAdapter(RPCRequest request) {
-        if(((MethodRequest) request).getSourceIp() != null && ((MethodRequest) request).getSourcePort() != null && ((MethodRequest) request).getFromServerName() != null){
+        if (((MethodRequest) request).getSourceIp() != null && ((MethodRequest) request).getSourcePort() != null && ((MethodRequest) request).getFromServerName() != null) {
             ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
             MyBaseRuntime baseRuntime = (MyBaseRuntime) scriptManager.getBaseRuntime(((MethodRequest) request).getFromService());
             ServiceStubManager serviceStubManager = baseRuntime.getServiceStubManager();
@@ -344,14 +346,14 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                     }
                 }
             }
-        }else {
-            LoggerEx.warn(TAG, "The request cant callback async, sourceIp: " + ((MethodRequest) request).getSourceIp() +", sourcePort: " + ((MethodRequest) request).getSourcePort() + ",fromServerName: " + ((MethodRequest) request).getFromServerName());
+        } else {
+            LoggerEx.warn(TAG, "The request cant callback async, sourceIp: " + ((MethodRequest) request).getSourceIp() + ", sourcePort: " + ((MethodRequest) request).getSourcePort() + ",fromServerName: " + ((MethodRequest) request).getFromServerName());
         }
         return null;
     }
 
     private void callClientAdapterAsync(RPCClientAdapter clientAdapter, AsyncCallbackRequest asyncCallbackRequest, RPCRequest request) {
-        if(clientAdapter != null){
+        if (clientAdapter != null) {
             try {
                 clientAdapter.callAsync(asyncCallbackRequest);
             } catch (CoreException c) {
