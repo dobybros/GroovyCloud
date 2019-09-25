@@ -7,11 +7,6 @@ import com.docker.rpc.method.RPCMethodInvocation;
 import com.docker.rpc.remote.stub.ServerCacheManager;
 import com.docker.storage.cache.CacheStorageAdapter;
 import com.docker.storage.cache.CacheStorageFactory;
-import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 import script.groovy.object.MethodInvocation;
 import script.groovy.runtime.MethodInterceptor;
 
