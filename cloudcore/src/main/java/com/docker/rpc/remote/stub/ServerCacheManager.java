@@ -24,6 +24,7 @@ public class ServerCacheManager {
     private Map<String, Long> futureCrcMap = new ConcurrentHashMap<>();
     private CacheStorageFactory cacheStorageFactory = new CacheStorageFactory();
     private Map<String, CacheObj> cacheMethodMap = new ConcurrentHashMap<>();
+    private Map<String, String> futureIdCacheMap = new ConcurrentHashMap<>();
 
     public static synchronized ServerCacheManager getInstance() {
         if (instance == null) {
@@ -33,11 +34,14 @@ public class ServerCacheManager {
     }
 
 
-    public CompletableFuture pushToCallbackFutureMap(String id, Long crc) {
+    public CompletableFuture pushToCallbackFutureMap(String id, Long crc, String cacheId) {
         CompletableFuture<?> future = new CompletableFuture<>();
         callbackFutureMap.put(id, future);
         if (crc != null) {
             futureCrcMap.put(id, crc);
+            if(cacheId != null){
+                futureIdCacheMap.put(id, cacheId);
+            }
         }
         TimerTaskEx timerTaskEx = new TimerTaskEx() {
             @Override
@@ -48,6 +52,7 @@ public class ServerCacheManager {
                     callbackFutureMap.remove(id);
                     futureCrcMap.remove(id);
                     callbackFutureTimerMap.remove(id);
+                    futureIdCacheMap.remove(id);
                 }
             }
         };
@@ -93,5 +98,9 @@ public class ServerCacheManager {
 
     public CacheStorageFactory getCacheStorageFactory() {
         return cacheStorageFactory;
+    }
+
+    public String getCacheId(String futureId) {
+        return futureIdCacheMap.remove(futureId);
     }
 }
