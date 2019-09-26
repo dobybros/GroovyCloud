@@ -1,4 +1,4 @@
-package com.docker.rpc;
+package com.docker.rpc.async;
 
 import java.util.Map;
 

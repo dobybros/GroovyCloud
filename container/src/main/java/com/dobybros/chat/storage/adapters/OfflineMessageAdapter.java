@@ -17,7 +17,7 @@ import java.util.List;
  *
  */
 public interface OfflineMessageAdapter extends StorageAdapter {
-
+	public static final String SERVICE ="imofflinemessage";
 
 	public void saveOfflineMessage(OfflineMessage message) throws CoreException;
 

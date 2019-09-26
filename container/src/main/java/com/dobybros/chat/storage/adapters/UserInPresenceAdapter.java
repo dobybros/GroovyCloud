@@ -17,7 +17,7 @@ import java.util.Collection;
  *
  */
 public interface UserInPresenceAdapter extends StorageAdapter {
-
+	public static final String SERVICE ="imuserinpresence";
 	/**
 	 * 根据用户Id获取lanServer
 	 * 
