@@ -4,7 +4,7 @@ import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
 import com.docker.data.CacheObj;
-import com.docker.rpc.AsyncCallbackHandler;
+import com.docker.rpc.async.AsyncCallbackHandler;
 import com.docker.rpc.method.RPCMethodInvocation;
 import com.docker.script.BaseRuntime;
 import com.docker.storage.cache.handlers.CacheStorageAdapter;
