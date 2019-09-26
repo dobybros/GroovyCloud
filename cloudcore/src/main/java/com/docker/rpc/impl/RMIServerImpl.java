@@ -8,7 +8,6 @@ import chat.main.ServerStart;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
 import com.alibaba.fastjson.JSON;
-import com.docker.data.CacheObj;
 import com.docker.errors.CoreErrorCodes;
 import com.docker.rpc.*;
 import com.docker.rpc.async.AsyncCallbackRequest;
@@ -18,8 +17,6 @@ import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.server.OnlineServer;
-import com.docker.storage.cache.CacheStorageAdapter;
-import com.docker.storage.cache.CacheStorageFactory;
 import com.docker.utils.SpringContextUtil;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import script.groovy.object.GroovyObjectEx;
@@ -32,7 +29,6 @@ import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
@@ -257,7 +253,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                         if (asyncCallbackRequest.getException() != null) {
                             completableFuture.completeExceptionally(asyncCallbackRequest.getException());
                         } else {
-                            ServerCacheManager serverCacheManager = ServerCacheManager.getInstance();
+                            /*ServerCacheManager serverCacheManager = ServerCacheManager.getInstance();
                             CacheStorageFactory cacheStorageFactory = serverCacheManager.getCacheStorageFactory();
                             Map<String, CacheObj> cacheObjMap = serverCacheManager.getCacheMethodMap();
                             CacheObj cacheObj = cacheObjMap.get(String.valueOf(asyncCallbackRequest.getCrc()));
@@ -271,7 +267,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                                 } catch (CoreException coreException) {
                                     LoggerEx.error(TAG, "Add cache data failed on async call class is service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(asyncCallbackRequest.getCrc()) + ",reason is " + coreException.getMessage());
                                 }
-                            }
+                            }*/
                             completableFuture.complete(asyncCallbackRequest.getDataObject());
                         }
                     }

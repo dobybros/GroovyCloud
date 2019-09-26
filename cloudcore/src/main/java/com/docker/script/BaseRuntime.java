@@ -2,14 +2,14 @@ package com.docker.script;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
-import com.docker.rpc.remote.stub.ServerCacheManager;
 import com.docker.script.i18n.I18nHandler;
 import com.docker.script.i18n.MessageProperties;
 import com.docker.script.servlet.GroovyServletManagerEx;
 import com.docker.script.servlet.WebServiceAnnotationHandler;
 import com.docker.storage.cache.CacheAnnotationHandler;
 import com.docker.storage.cache.CacheStorageFactory;
-import com.docker.storage.cache.RedisCacheStorageHandler;
+import com.docker.storage.cache.CacheStorageMethod;
+import com.docker.storage.cache.handlers.RedisCacheStorageHandler;
 import com.docker.storage.kafka.KafkaConfCenter;
 import com.docker.storage.kafka.KafkaProducerHandler;
 import com.docker.storage.redis.RedisHandler;
@@ -49,8 +49,6 @@ public abstract class BaseRuntime extends GroovyRuntime {
     private Integer serviceVersion;
 
 	private Properties config;
-//	private CacheStorageFactory cacheStorageFactory;
-    public Map<String, List<MethodInterceptor>> methodInterceptorMap = new ConcurrentHashMap<>();
     public void prepare(String service, Properties properties, String rootPath) {
         LoggerEx.info(TAG, "prepare service: " + service + " properties: " + properties + " rootPath: " + rootPath);
         this.service = service.toLowerCase();
@@ -83,8 +81,9 @@ public abstract class BaseRuntime extends GroovyRuntime {
 
             String redisHost = properties.getProperty("db.redis.uri");
             if (redisHost != null) {
-                redisHandler = new RedisHandler(redisHost);
-                redisHandler.connect();
+                CacheStorageFactory cacheStorageFactory = CacheStorageFactory.getInstance();
+                RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler)cacheStorageFactory.getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS,redisHost);
+                redisHandler = cacheStorageAdapter.getRedisHandler();
             }
             String produce = properties.getProperty("db.kafka.produce");
             kafkaConfCenter = new KafkaConfCenter();
@@ -128,13 +127,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
             GroovyServletDispatcher.removeGroovyServletManagerEx(this.service);
         }
 
-//		cacheStorageFactory = new CacheStorageFactory();
-        ServerCacheManager serverCacheManager = ServerCacheManager.getInstance();
-        CacheStorageFactory cacheStorageFactory = serverCacheManager.getCacheStorageFactory();
-		RedisCacheStorageHandler redisCacheStorageHandler = new RedisCacheStorageHandler();
-		redisCacheStorageHandler.setRedisHandler(getRedisHandler());
-//		redisCacheStorageHandler.setGroovyRuntime(this);
-		cacheStorageFactory.registerCacheStorageAdapter(redisCacheStorageHandler);
+
 
 		addClassAnnotationHandler(new GroovyTimerTaskHandler());
 		addClassAnnotationHandler(new GroovyRedeployMainHandler());
@@ -230,24 +223,6 @@ public abstract class BaseRuntime extends GroovyRuntime {
             return null;
         }
     }
-    public void addMethodInterceptor(String key, MethodInterceptor methodInterceptor) {
-        if (key != null && methodInterceptor != null) {
-            if (methodInterceptorMap == null) {
-                methodInterceptorMap = new HashMap<>();
-            }
-
-            if (!methodInterceptorMap.containsKey(key)) {
-                List methodInterceptors = new ArrayList<MethodInterceptor>();
-                methodInterceptors.add(methodInterceptor);
-                methodInterceptorMap.put(key, methodInterceptors);
-            } else {
-                List<MethodInterceptor> methodInterceptors = methodInterceptorMap.get(key);
-                if (methodInterceptors != null) {
-                    methodInterceptors.add(methodInterceptor);
-                }
-            }
-        }
-    }
 
     public MongoDBHandler getMongoDBHandler() {
         return mongoDBHandler;
@@ -297,6 +272,20 @@ public abstract class BaseRuntime extends GroovyRuntime {
         return config;
     }
 
+    public String getCacheHost(String cacheMethod) {
+        if (StringUtils.isBlank(cacheMethod)) {
+            cacheMethod = CacheStorageMethod.METHOD_REDIS;
+        }
+        if (CacheStorageMethod.METHOD_REDIS.equals(cacheMethod)) {
+            Object cacheRedisUri = getConfig().get("cache.redis.uri");
+            if (cacheRedisUri == null) {
+                return null;
+            }
+            return (String) cacheRedisUri;
+        }
+        return null;
+    }
+
     public void setConfig(Properties config) {
         this.config = config;
     }
@@ -317,12 +306,4 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		this.serviceVersion = serviceVersion;
 	}
 
-
-    public Map<String, List<MethodInterceptor>> getMethodInterceptorMap() {
-        return methodInterceptorMap;
-    }
-
-    public void setMethodInterceptorMap(Map<String, List<MethodInterceptor>> methodInterceptorMap) {
-        this.methodInterceptorMap = methodInterceptorMap;
-    }
 }

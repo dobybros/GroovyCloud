@@ -1,16 +1,13 @@
 package com.docker.storage.cache;
 
-import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
 import com.docker.annotations.CachePut;
 import com.docker.annotations.CacheClass;
 import com.docker.data.CacheObj;
-import com.docker.interceptor.CacheMethodInterceptor;
-import com.docker.rpc.remote.stub.ServerCacheManager;
+import com.docker.rpc.remote.stub.RPCInterceptorFactory;
 import com.docker.script.BaseRuntime;
 import org.apache.commons.lang.StringUtils;
-import scala.annotation.meta.field;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.GroovyBeanFactory;
@@ -22,11 +19,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CacheAnnotationHandler extends ClassAnnotationHandler {
     public static final String TAG = CacheAnnotationHandler.class.getSimpleName();
     private CacheMethodInterceptor cacheMethodInterceptor = new CacheMethodInterceptor();
-
+    protected Map<String, CacheObj> cacheMethodMap = new ConcurrentHashMap<>();
 
     @Override
     public Class<? extends Annotation> handleAnnotationClass(GroovyRuntime groovyRuntime) {
@@ -37,6 +35,11 @@ public class CacheAnnotationHandler extends ClassAnnotationHandler {
     public void handlerShutdown() {
 
     }
+
+    public CacheAnnotationHandler() {
+        this.cacheMethodInterceptor.setCacheAnnotationHandler(this);
+    }
+
 
     @Override
     public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, MyGroovyClassLoader classLoader) {
@@ -76,18 +79,19 @@ public class CacheAnnotationHandler extends ClassAnnotationHandler {
         Method[] methods = ReflectionUtil.getMethods(clazz);
         if (methods != null) {
             for (Method method : methods) {
-                handleCacheAnnotation(serviceName, clazz, method, cacheGroovyObj);
+                handleCacheAnnotation(serviceName, clazz, method);
 //                handleClearCacheAnnotation(clazz, method, cacheGroovyObj);
             }
         }
     }
 
 
-    private void handleCacheAnnotation(String serviceName, Class<?> clazz, Method method, GroovyObjectEx cacheGroovyObj) {
+    private void handleCacheAnnotation(String serviceName, Class<?> clazz, Method method) {
         CachePut cachePut = method.getAnnotation(CachePut.class);
         if (cachePut != null) {
             BaseRuntime baseRuntime = (BaseRuntime) getGroovyRuntime();
-            String methodKey = String.valueOf(ReflectionUtil.getCrc(clazz, method.getName(),serviceName));
+            RPCInterceptorFactory rpcInterceptorFactory = RPCInterceptorFactory.getInstance();
+            String methodKey = String.valueOf(ReflectionUtil.getCrc(clazz, method.getName(), serviceName));
             CacheObj cacheObj = new CacheObj();
             Long expired = cachePut.expired();
             cacheObj.setExpired(expired);
@@ -100,11 +104,17 @@ public class CacheAnnotationHandler extends ClassAnnotationHandler {
             }
             cacheObj.setParamNames(ReflectionUtil.getParamNames(method));
             cacheObj.setMethod(method);
-            ServerCacheManager.getInstance().addCacheMethodMap(methodKey, cacheObj);
-            baseRuntime.addMethodInterceptor(methodKey, cacheMethodInterceptor);
+            cacheMethodMap.put(methodKey, cacheObj);
+            rpcInterceptorFactory.addMethodInterceptor(baseRuntime.getServiceName() + "_v" + baseRuntime.getServiceVersion(), methodKey, cacheMethodInterceptor);
             LoggerEx.info("SCAN", "Mapping cachePut method key " + methodKey + " for class " + clazz.getName() + " method " + method.getName());
         }
     }
 
+    public Map<String, CacheObj> getCacheMethodMap() {
+        return cacheMethodMap;
+    }
 
+    public void setCacheMethodMap(Map<String, CacheObj> cacheMethodMap) {
+        this.cacheMethodMap = cacheMethodMap;
+    }
 }
