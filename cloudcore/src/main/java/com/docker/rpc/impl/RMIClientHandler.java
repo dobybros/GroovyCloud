@@ -5,7 +5,7 @@ import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.AverageCounter;
 import chat.utils.IPHolder;
-import com.docker.interceptor.CacheMethodInterceptor;
+import com.docker.storage.cache.CacheMethodInterceptor;
 import com.docker.rpc.*;
 import com.docker.rpc.remote.stub.ServerCacheManager;
 import org.apache.commons.lang.StringUtils;
@@ -332,7 +332,7 @@ public class RMIClientHandler extends RPCClientAdapter {
             if (request instanceof MethodRequest) {
                 handleRequest(request);
                 String callbackFutureId = ObjectId.get().toString();
-                future = ServerCacheManager.getInstance().pushToCallbackFutureMap(callbackFutureId, ((MethodRequest) request).getCrc(), (String) ((MethodRequest) request).getExtra().get(CacheMethodInterceptor.CACHEKEY));
+                future = ServerCacheManager.getInstance().pushToCallbackFutureMap(callbackFutureId, ((MethodRequest) request).getCrc(), (String) ((MethodRequest) request).getExtra(CacheMethodInterceptor.CACHEKEY));
                 server.callAsync(request.getData(), request.getType(), request.getEncode(), callbackFutureId);
 
             } else if (request instanceof AsyncCallbackRequest) {

@@ -1,7 +1,6 @@
 package script.groovy.runtime;
 
-import groovy.lang.GroovyClassLoader;
-import org.codehaus.groovy.runtime.NullObject;
+
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 import java.lang.annotation.Annotation;

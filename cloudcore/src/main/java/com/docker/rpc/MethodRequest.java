@@ -21,7 +21,9 @@ import org.apache.commons.io.IOUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MethodRequest extends RPCRequest {
 	public static final String RPCTYPE = "mthd";
@@ -54,7 +56,7 @@ public class MethodRequest extends RPCRequest {
 
     private ServiceStubManager serviceStubManager;
 
-    private JSONObject extra = new JSONObject();
+    private Map<String, Object> extra;
 
 	public MethodRequest() {
 		super(RPCTYPE);
@@ -345,7 +347,24 @@ public class MethodRequest extends RPCRequest {
             fromService = this.serviceStubManager.getFromService();
     }
 
-    public JSONObject getExtra() {
-        return extra;
+    public MethodRequest putExtra(String key, Object value) {
+        if(extra == null)
+            extra = new HashMap<>();
+        extra.put(key, value);
+        return this;
+    }
+
+    public MethodRequest removeExtra(String key) {
+	    if(extra == null)
+	        return this;
+	    extra.remove(key);
+	    return this;
+    }
+
+    public Object getExtra(String key) {
+	    if(extra != null) {
+	        return extra.get(key);
+        }
+	    return null;
     }
 }

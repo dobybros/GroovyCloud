@@ -5,30 +5,22 @@ import chat.errors.CoreException;
 import chat.logs.AnalyticsLogger;
 import chat.logs.LoggerEx;
 import chat.main.ServerStart;
-import chat.utils.ReflectionUtil;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
 import com.alibaba.fastjson.JSON;
-import com.docker.data.CacheObj;
 import com.docker.errors.CoreErrorCodes;
 import com.docker.rpc.*;
 import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.stub.ServerCacheManager;
 import com.docker.rpc.remote.stub.ServiceStubManager;
-import com.docker.script.BaseRuntime;
 import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.server.OnlineServer;
-import com.docker.storage.cache.CacheStorageAdapter;
-import com.docker.storage.cache.CacheStorageFactory;
 import com.docker.utils.SpringContextUtil;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import script.groovy.object.GroovyObjectEx;
-import script.groovy.runtime.GroovyRuntime;
 import script.groovy.servlets.Tracker;
-import script.groovy.servlets.grayreleased.GrayReleased;
 import script.memodb.ObjectId;
-import sun.rmi.server.UnicastServerRef;
 
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.rmi.ssl.SslRMIServerSocketFactory;
@@ -36,10 +28,7 @@ import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.function.BiConsumer;
 
 public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
     private RMIServerImplWrapper serverWrapper;
@@ -263,7 +252,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                         if (asyncCallbackRequest.getException() != null) {
                             completableFuture.completeExceptionally(asyncCallbackRequest.getException());
                         } else {
-                            ServerCacheManager serverCacheManager = ServerCacheManager.getInstance();
+                            /*ServerCacheManager serverCacheManager = ServerCacheManager.getInstance();
                             CacheStorageFactory cacheStorageFactory = serverCacheManager.getCacheStorageFactory();
                             Map<String, CacheObj> cacheObjMap = serverCacheManager.getCacheMethodMap();
                             CacheObj cacheObj = cacheObjMap.get(String.valueOf(asyncCallbackRequest.getCrc()));
@@ -277,7 +266,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                                 } catch (CoreException coreException) {
                                     LoggerEx.error(TAG, "Add cache data failed on async call class is service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(asyncCallbackRequest.getCrc()) + ",reason is " + coreException.getMessage());
                                 }
-                            }
+                            }*/
                             completableFuture.complete(asyncCallbackRequest.getDataObject());
                         }
                     }

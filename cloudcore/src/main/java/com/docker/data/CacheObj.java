@@ -7,9 +7,7 @@ public class CacheObj {
     private Method method;
     private Long expired;
     private String prefix;
-    private Object value;
     private String spelKey;
-    private String key;
     private String[] paramNames;
 
     public Method getMethod() {
@@ -44,28 +42,12 @@ public class CacheObj {
         this.prefix = prefix;
     }
 
-    public String getKey() {
-        return key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
     public String getSpelKey() {
         return spelKey;
     }
 
     public void setSpelKey(String spelKey) {
         this.spelKey = spelKey;
-    }
-
-    public Object getValue() {
-        return value;
-    }
-
-    public void setValue(Object value) {
-        this.value = value;
     }
 
     public String[] getParamNames() {
@@ -77,7 +59,7 @@ public class CacheObj {
     }
 
     public Boolean isEmpty() {
-        if (spelKey != null && !spelKey.isEmpty() && expired != null && prefix != null && value != null) {
+        if (spelKey != null && !spelKey.isEmpty() && expired != null && prefix != null) {
             return false;
         }
         return true;
