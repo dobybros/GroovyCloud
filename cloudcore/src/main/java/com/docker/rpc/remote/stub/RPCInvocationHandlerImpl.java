@@ -21,10 +21,12 @@ public class RPCInvocationHandlerImpl implements RPCInvocationHandler {
     public Object invoke(MethodMapping methodMapping, MethodRequest methodRequest) throws CoreException {
         String methodKey = String.valueOf(methodRequest.getCrc());
         List<MethodInterceptor> methodInterceptors = null;
-        RPCInterceptorFactory rpcInterceptorFactory = RPCInterceptorFactory.getInstance();
-        Map<String, List<MethodInterceptor>> methodInterceptorMap = rpcInterceptorFactory.getAllMethodInterceptorMap().get(methodRequest.getFromService());
-        if (methodInterceptorMap != null) {
-            methodInterceptors = methodInterceptorMap.get(methodKey);
+        if(methodRequest.getFromService() != null){
+            RPCInterceptorFactory rpcInterceptorFactory = RPCInterceptorFactory.getInstance();
+            Map<String, List<MethodInterceptor>> methodInterceptorMap = rpcInterceptorFactory.getAllMethodInterceptorMap().get(methodRequest.getFromService());
+            if (methodInterceptorMap != null) {
+                methodInterceptors = methodInterceptorMap.get(methodKey);
+            }
         }
         MethodInvocation methodInvocation = new RPCMethodInvocation(methodRequest, methodMapping, methodInterceptors, remoteServerHandler, methodKey);
         return methodInvocation.proceed();

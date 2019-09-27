@@ -9,6 +9,7 @@ import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.remote.MethodMapping;
+import scala.annotation.meta.field;
 import script.groovy.servlets.Tracker;
 
 import java.lang.reflect.Field;
@@ -67,8 +68,14 @@ public class ServiceStubManager {
                 field.get(clazz);
             } catch (Throwable t) {
                 t.printStackTrace();
-                LoggerEx.error(TAG, "The service has no field: SERVICE, please check!!!" + "class: " + clazz.getSimpleName());
-                return;
+                try {
+                    Field field = clazz.getField("service");
+                    field.get(clazz);
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                    LoggerEx.error(TAG, "The service has no field: SERVICE, please check!!!" + "class: " + clazz.getSimpleName());
+                    return;
+                }
             }
             classScanedMap.put(clazz, true);
         } else {
