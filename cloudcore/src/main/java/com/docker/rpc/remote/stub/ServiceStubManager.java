@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ServiceStubManager {
     private static final String TAG = ServiceStubManager.class.getSimpleName();
-    private ConcurrentHashMap<Class<?>, Boolean> classScanedMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Boolean> classScanedMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Long, MethodMapping> methodMap = new ConcurrentHashMap<>();
     private String clientTrustJksPath;
     private String serverJksPath;
@@ -62,7 +62,7 @@ public class ServiceStubManager {
 //                service = paths[paths.length - 2];
 //            }
 //        }
-        if(!classScanedMap.containsKey(clazz)) {
+        if(!classScanedMap.containsKey(clazz.getName() + "_" + service)) {
             try {
                 Field field = clazz.getField("SERVICE");
                 field.get(clazz);
@@ -77,7 +77,7 @@ public class ServiceStubManager {
                     return;
                 }
             }
-            classScanedMap.put(clazz, true);
+            classScanedMap.put(clazz.getName() + "_" + service, true);
         } else {
             return;
         }
