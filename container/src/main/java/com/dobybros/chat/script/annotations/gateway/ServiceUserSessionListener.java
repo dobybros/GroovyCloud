@@ -61,6 +61,11 @@ public abstract class ServiceUserSessionListener {
         GatewayMSGServers.getInstance().sendOutgoingData(message, excludeTerminal, terminal);
     }
 
+    public void closeChannel(Integer terminal, int code) throws CoreException {
+        GatewayMSGServers.getInstance().closeUserChannel(userId, service, terminal, code);
+
+    }
+
     public void pingReceived(Integer terminal) {
     }
 
