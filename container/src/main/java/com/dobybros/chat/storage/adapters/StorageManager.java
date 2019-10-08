@@ -114,8 +114,8 @@ public class StorageManager {
                             host = dblan.getProtocol() + "://" + dblan.getDomain() + ":" + dblan.getPort();
                         }
                         manager = new ServiceStubManager(host, null);
-                        manager.setBeanFactory(beanFactory);
                         beanFactory.autowireBean(manager);
+                        manager.setBeanFactory(beanFactory);
                         if (!lanId.equals(currentLanId)) {
                             manager.setUsePublicDomain(true);
                         }
