@@ -3,6 +3,8 @@ package com.docker.storage.cache.handlers;
 import chat.errors.CoreException;
 import com.docker.storage.cache.CacheStorageMethod;
 
+import java.lang.reflect.Type;
+
 public abstract class CacheStorageAdapter {
 
     public enum CACHEMETHOD {
@@ -16,5 +18,6 @@ public abstract class CacheStorageAdapter {
     public abstract void deleteCacheData(String key) throws CoreException;
 
     public abstract <T> T getCacheData(String key, Class<T> clazz) throws CoreException;
+    public abstract <T> T getCacheData(String key, Type type) throws CoreException;
 
 }

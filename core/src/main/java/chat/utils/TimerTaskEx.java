@@ -1,31 +1,41 @@
 package chat.utils;
 
-import chat.scheduled.QuartzHandler;
+import chat.errors.CoreException;
+import chat.logs.LoggerEx;
+import chat.main.ServerStart;
+import chat.scheduled.QuartzFactory;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.quartz.*;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 public class TimerTaskEx extends TimerTask implements Job{
+	private final String TAG = TimerTaskEx.class.getSimpleName();
 	private String id;
 	private Long delay;
 	private Long period;
 	private String cron;
-	private ThreadPoolExecutor threadPoolExecutor;
+	private Long scheduleTime;
+	public TimerTaskEx(){
+	}
 	@Override
 	public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
 		TimerTaskEx task = (TimerTaskEx) jobExecutionContext.getMergedJobDataMap().get("TimerTaskEx");
 		if(task != null){
-			task.threadPoolExecutor.execute(task);
+			ServerStart.getInstance().getTimerThreadPoolExecutor().execute(task);
 		}
 	}
 
 	public void cancel(){
 		if(this.id != null){
-			QuartzHandler.getInstance().removeJob(this.id);
-		}
-		if(this.threadPoolExecutor != null){
-			this.threadPoolExecutor.shutdownNow();
+			try {
+				QuartzFactory.getInstance().removeJob(this.id);
+			} catch (CoreException e) {
+				e.printStackTrace();
+				LoggerEx.error(TAG, "Remove timetask filed, taskId: " + this.id + ",e: " + ExceptionUtils.getFullStackTrace(e));
+			}
 		}
 	}
 
@@ -61,11 +71,11 @@ public class TimerTaskEx extends TimerTask implements Job{
 		this.cron = cron;
 	}
 
-	public ThreadPoolExecutor getThreadPoolExecutor() {
-		return threadPoolExecutor;
+	public Long getScheduleTime() {
+		return scheduleTime;
 	}
 
-	public void setThreadPoolExecutor(ThreadPoolExecutor threadPoolExecutor) {
-		this.threadPoolExecutor = threadPoolExecutor;
+	public void setScheduleTime(Long scheduleTime) {
+		this.scheduleTime = scheduleTime;
 	}
 }

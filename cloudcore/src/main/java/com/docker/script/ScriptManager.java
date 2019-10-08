@@ -7,49 +7,51 @@ import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
 import com.docker.data.Service;
 import com.docker.data.ServiceVersion;
+import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.server.OnlineServer;
-import com.docker.storage.adapters.DockerStatusService;
 import com.docker.storage.adapters.ServersService;
-import com.docker.storage.adapters.ServiceVersionService;
+import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
+import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.FileHeader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.Document;
-import script.file.FileAdapter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.file.FileAdapter.FileEntity;
 import script.file.FileAdapter.PathEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.RuntimeBootListener;
 import script.utils.ShutdownListener;
 
-import javax.annotation.Resource;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.zip.CRC32;
 
 
 public class ScriptManager implements ShutdownListener {
     private static final String TAG = ScriptManager.class.getSimpleName();
-
-    //	@Resource
-    private FileAdapter fileAdapter;
+    @Autowired
+    private AutowireCapableBeanFactory beanFactory;
+    @Autowired
+    private GridFSFileHandler fileAdapter;
+    @Autowired
+    private ServersService serversService;
+    @Autowired
+    private DockerStatusServiceImpl dockerStatusService;
+    @Autowired
+    private ServiceVersionServiceImpl serviceVersionService;
     //是否允许热更
     private Boolean hotDeployment;
     //加载时，当某个包发生错误是否强制退出进程(开发环境不退出，线上退出)
     private Boolean killProcess;
-    @Resource
-    private ServersService serversService;
     private String serverType;
-    private DockerStatusService dockerStatusService;
-    private ServiceVersionService serviceVersionService;
-    //    private RMIServerImplWrapper rpcServer;
-//    private RMIServerImplWrapper rpcServerSsl;
     private String remotePath;
     private String localPath;
     private ConcurrentHashMap<String, BaseRuntime> scriptRuntimeMap = new ConcurrentHashMap<>();
@@ -156,7 +158,7 @@ public class ScriptManager implements ShutdownListener {
                                     LoggerEx.error(TAG, "Runtime " + runtime + " service " + service + " closed because of deployment");
                                 } catch (Throwable t) {
                                     t.printStackTrace();
-                                    LoggerEx.error(TAG, "close runtime " + runtime + " service " + service + " failed, " + t.getMessage());
+                                    LoggerEx.error(TAG, "close runtime " + runtime + " service " + service + " failed, " + ExceptionUtils.getFullStackTrace(t));
                                 } finally {
                                     runtime = null;
                                 }
@@ -169,6 +171,7 @@ public class ScriptManager implements ShutdownListener {
                                 } else {
                                     runtime = new MyBaseRuntime();
                                 }
+                                beanFactory.autowireBean(runtime);
                                 RuntimeBootListener bootListener = null;
                                 if (runtimeBootClass != null) { //script.groovy.runtime.GroovyBooter
                                     Class<?> bootClass = Class.forName(runtimeBootClass);
@@ -236,7 +239,7 @@ public class ScriptManager implements ShutdownListener {
                                             LoggerEx.info(TAG, "serversService is null, will not read config from database for service " + serviceName);
                                         }
                                     } catch (Throwable t) {
-                                        LoggerEx.error(TAG, "Read server " + serviceName + " config failed, " + t.getMessage());
+                                        LoggerEx.error(TAG, "Read server " + serviceName + " config failed, " + ExceptionUtils.getFullStackTrace(t));
                                     }
                                     //触发serviceVersions
                                     runtime.prepare(service, properties, localScriptPath);
@@ -271,7 +274,7 @@ public class ScriptManager implements ShutdownListener {
                                     }
                                     theService.setType(Service.FIELD_SERVER_TYPE_NORMAL);
                                 } catch (Throwable t) {
-                                    LoggerEx.error(TAG, "Redeploy service " + service + " failed, " + t.getMessage());
+                                    LoggerEx.error(TAG, "Redeploy service " + service + " failed, " + ExceptionUtils.getFullStackTrace(t));
                                     theService.setType(Service.FIELD_SERVER_TYPE_DEPLOY_FAILED);
                                     throw t;
                                 } finally {
@@ -331,7 +334,7 @@ public class ScriptManager implements ShutdownListener {
                                     }
                                 } catch (CoreException e) {
                                     e.printStackTrace();
-                                    LoggerEx.error(TAG, "Delete service " + key + " from docker " + OnlineServer.getInstance().getServer() + " failed, " + e.getMessage());
+                                    LoggerEx.error(TAG, "Delete service " + key + " from docker " + OnlineServer.getInstance().getServer() + " failed, " + ExceptionUtils.getFullStackTrace(e));
                                 }
                             }
                         }
@@ -497,7 +500,7 @@ public class ScriptManager implements ShutdownListener {
                     LoggerEx.info(TAG, "Service " + key + " has been removed, because of shutdown");
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    LoggerEx.info(TAG, "Service " + key + " remove failed, " + t.getMessage());
+                    LoggerEx.info(TAG, "Service " + key + " remove failed, " + ExceptionUtils.getFullStackTrace(t));
                 }
             }
         }
@@ -519,14 +522,6 @@ public class ScriptManager implements ShutdownListener {
         this.localPath = localPath;
     }
 
-    public DockerStatusService getDockerStatusService() {
-        return dockerStatusService;
-    }
-
-    public void setDockerStatusService(DockerStatusService dockerStatusService) {
-        this.dockerStatusService = dockerStatusService;
-    }
-
     public Class<?> getBaseRuntimeClass() {
         return baseRuntimeClass;
     }
@@ -541,14 +536,6 @@ public class ScriptManager implements ShutdownListener {
 
     public void setRuntimeBootClass(String runtimeBootClass) {
         this.runtimeBootClass = runtimeBootClass;
-    }
-
-    public FileAdapter getFileAdapter() {
-        return fileAdapter;
-    }
-
-    public void setFileAdapter(FileAdapter fileAdapter) {
-        this.fileAdapter = fileAdapter;
     }
 
     public ServersService getServersService() {
@@ -573,14 +560,6 @@ public class ScriptManager implements ShutdownListener {
 
     public void setServerType(String serverType) {
         this.serverType = serverType;
-    }
-
-    public ServiceVersionService getServiceVersionService() {
-        return serviceVersionService;
-    }
-
-    public void setServiceVersionService(ServiceVersionService serviceVersionService) {
-        this.serviceVersionService = serviceVersionService;
     }
 
     public Boolean getKillProcess() {

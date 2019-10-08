@@ -94,19 +94,6 @@ public class RPCMessageSendingTask extends Task {
 		} 
 		return serverQueue;
 	}
-
-	//	private class BalancerDataCacheCallListener implements CallListener {
-//		@Override
-//		public void called(String serverName, RPCRequest request, RPCResponse response) {
-//		}
-//		@Override
-//		public void callFailed(String serverName, RPCRequest request, CoreException e) {
-//			BalancerDataCacheObject cacheObj = balancerDataCache.remove(serverName);
-//			if(cacheObj != null)
-//				cacheObj.targetIds.clear();
-//			LoggerEx.info(TAG, "Call request " + request + " failed " + e.getMessage() + " on server " + serverName + " cacheObj has been removed, " + cacheObj);
-//		}
-//	}
 	
 	@Override
 	public void execute() {

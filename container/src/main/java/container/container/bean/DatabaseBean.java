@@ -1,15 +1,11 @@
 package container.container.bean;
 
-import com.dobybros.file.adapters.GridFSFileHandler;
-import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
-import com.docker.storage.adapters.impl.LansServiceImpl;
-import com.docker.storage.adapters.impl.SDockersServiceImpl;
-import com.docker.storage.adapters.impl.ServersServiceImpl;
+import com.docker.file.adapters.GridFSFileHandler;
+import com.docker.storage.adapters.impl.*;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 
 /**
  * @Auther: lick
@@ -86,5 +82,9 @@ public class DatabaseBean{
     @Bean
     public GridFSFileHandler fileAdapter(){
         return instance.getFileAdapter();
+    }
+    @Bean
+    public ServiceVersionServiceImpl serviceVersionService(){
+        return instance.getServiceVersionService();
     }
 }

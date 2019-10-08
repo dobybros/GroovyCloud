@@ -24,6 +24,7 @@ import chat.utils.HashTree;
 import connectors.mongodb.annotations.handlers.MongoDBHandler;
 import connectors.mongodb.annotations.handlers.MongoDBHandler.CollectionHolder;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.*;
 import org.bson.assertions.Assertions;
 import org.bson.codecs.*;
@@ -293,7 +294,7 @@ public class DataObjectCodec implements CollectibleCodec<DataObject> {
 			return dataObj;
 		} catch (InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
-			LoggerEx.error(TAG, "convert document " + document + " to DataObject " + documentClass + " failed, " + e.getMessage());
+			LoggerEx.error(TAG, "convert document " + document + " to DataObject " + documentClass + " failed, " + ExceptionUtils.getFullStackTrace(e));
 		}
     	return null;
     }

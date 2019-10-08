@@ -7,16 +7,13 @@ import com.dobybros.chat.tasks.RPCMessageSendingTask;
 import com.dobybros.chat.utils.AutoReloadProperties;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.onlineserver.OnlineServerWithStatus;
+import com.docker.rpc.remote.stub.RemoteServersManager;
 import com.docker.script.ScriptManager;
-import com.docker.tasks.Task;
 import com.docker.utils.SpringContextUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import script.filter.JsonFilterFactory;
 import script.groovy.servlets.RequestPermissionHandler;
-
-import java.util.ArrayList;
-import java.util.List;
 
 //import com.dobybros.chat.log.LogIndexQueue;
 
@@ -94,5 +91,9 @@ public class CommonBean {
     @Bean
     public OnlineServerWithStatus onlineServer() {
         return instance.getOnlineServer();
+    }
+    @Bean
+    public RemoteServersManager remoteServersManager(){
+        return instance.getRemoteServersManager();
     }
 }

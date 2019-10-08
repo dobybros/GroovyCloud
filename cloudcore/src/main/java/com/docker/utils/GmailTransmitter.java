@@ -10,6 +10,7 @@ import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Message;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -34,7 +35,7 @@ public class GmailTransmitter {
             HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         } catch (Throwable e) {
             e.printStackTrace();
-            LoggerEx.info(TAG, "Get GoogleNetHttpTransport error: " + e.getMessage());
+            LoggerEx.info(TAG, "Get GoogleNetHttpTransport error: " + ExceptionUtils.getFullStackTrace(e));
         }
     }
 

@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import org.apache.commons.lang.exception.ExceptionUtils;
+
 @WebServlet(urlPatterns = "/",asyncSupported = true)
 public class GroovyServletDispatcher extends HttpServlet {
 	/**
@@ -73,7 +75,7 @@ public class GroovyServletDispatcher extends HttpServlet {
 		} catch (Throwable e) {
 			e.printStackTrace();
 			try {
-				response.sendError(500, e.getMessage());
+				response.sendError(500, ExceptionUtils.getFullStackTrace(e));
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}

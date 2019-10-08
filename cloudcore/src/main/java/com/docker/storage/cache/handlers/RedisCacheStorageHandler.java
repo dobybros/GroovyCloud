@@ -3,6 +3,8 @@ package com.docker.storage.cache.handlers;
 import chat.errors.CoreException;
 import com.docker.storage.redis.RedisHandler;
 
+import java.lang.reflect.Type;
+
 public class RedisCacheStorageHandler extends CacheStorageAdapter {
 
     public static RedisCacheStorageHandler instance;
@@ -30,6 +32,14 @@ public class RedisCacheStorageHandler extends CacheStorageAdapter {
     public <T> T getCacheData(String key, Class<T> clazz) throws CoreException {
         if (key != null && clazz != null) {
             return redisHandler.getObject(key, clazz);
+        }
+        return null;
+    }
+
+    @Override
+    public <T> T getCacheData(String key, Type type) throws CoreException {
+        if(key != null && type != null){
+            return redisHandler.getObject(key, type);
         }
         return null;
     }

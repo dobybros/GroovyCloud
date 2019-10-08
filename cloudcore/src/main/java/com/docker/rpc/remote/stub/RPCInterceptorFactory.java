@@ -8,15 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RPCInterceptorFactory {
-    public static RPCInterceptorFactory instance;
     private Map<String, Map<String, List<MethodInterceptor>>> allMethodInterceptorMap = new ConcurrentHashMap<>();
-
-    public static synchronized RPCInterceptorFactory getInstance() {
-        if (instance == null) {
-            instance = new RPCInterceptorFactory();
-        }
-        return instance;
-    }
 
     public void addMethodInterceptor(String serviceName, String key, MethodInterceptor methodInterceptor) {
         if (serviceName != null && key != null && methodInterceptor != null) {

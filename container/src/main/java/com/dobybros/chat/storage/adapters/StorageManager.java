@@ -4,11 +4,11 @@ import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.dobybros.chat.props.GlobalLansProperties;
 import com.docker.data.Lan;
-import com.docker.rpc.remote.stub.RefreshServers;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.server.OnlineServer;
 import com.docker.storage.adapters.LansService;
 import com.docker.utils.SpringContextUtil;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
@@ -24,6 +24,7 @@ public class StorageManager {
 	private static StorageManager instance;
 	private OnlineServer onlineServer = (OnlineServer) SpringContextUtil.getBean("onlineServer");
     private LansService lansService = (LansService) SpringContextUtil.getBean("lansService");
+    private AutowireCapableBeanFactory beanFactory = SpringContextUtil.getApplicationContext().getAutowireCapableBeanFactory();
 //	private RMIServerImpl rpcServer = (RMIServerImpl) SpringContextUtil.getBean("rpcServer");
 
     private ConcurrentHashMap<String, ServiceStubManager> stubManagerForLanIdMap = new ConcurrentHashMap<>();
@@ -67,7 +68,6 @@ public class StorageManager {
 	}
 	@SuppressWarnings("unchecked")
 	public <T extends StorageAdapter> T getStorageAdapter(Class<T> adapterClass, String lanId) {
-
         String currentLanId = OnlineServer.getInstance().getLanId();
         String className = adapterClass.getName();
         String serviceName = sdockerProperties.getProperty("service." + className);
@@ -88,13 +88,7 @@ public class StorageManager {
                 synchronized (stubManagerForLanIdMap) {
                     manager = stubManagerForLanIdMap.get(lanId);
                     if(manager == null) {
-                        manager = new ServiceStubManager();
-                        if (!lanId.equals(currentLanId)) {
-                            manager.setUsePublicDomain(true);
-                            manager.setClientTrustJksPath(onlineServer.getRpcSslClientTrustJksPath());
-                            manager.setServerJksPath(onlineServer.getRpcSslServerJksPath());
-                            manager.setJksPwd(onlineServer.getRpcSslJksPwd());
-                        }
+                        String host = null;
                         Lan dblan = null;
                         try {
                             dblan = lansService.getLan(lanId);
@@ -107,7 +101,7 @@ public class StorageManager {
                             if (lanMap != null) {
                                 GlobalLansProperties.Lan lan = lanMap.get(lanId);
                                 if (lan != null) {
-                                    manager.setHost(lan.getHost());
+                                    host = lan.getHost();
                                 } else {
                                     LoggerEx.warn(TAG, "lan not exist for lanId: " + lanId);
                                     return null;
@@ -117,10 +111,14 @@ public class StorageManager {
                                 return null;
                             }
                         } else {
-                            manager.setHost(dblan.getProtocol() + "://" + dblan.getDomain() + ":" + dblan.getPort());
+                            host = dblan.getProtocol() + "://" + dblan.getDomain() + ":" + dblan.getPort();
                         }
-                        manager.init();
-//                        manager.setFromService("gws");
+                        manager = new ServiceStubManager(host, null);
+                        manager.setBeanFactory(beanFactory);
+                        beanFactory.autowireBean(manager);
+                        if (!lanId.equals(currentLanId)) {
+                            manager.setUsePublicDomain(true);
+                        }
                         stubManagerForLanIdMap.putIfAbsent(lanId, manager);
                         manager = stubManagerForLanIdMap.get(lanId);
                     }

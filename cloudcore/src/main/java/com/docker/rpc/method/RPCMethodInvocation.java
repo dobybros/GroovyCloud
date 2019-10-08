@@ -3,6 +3,7 @@ package com.docker.rpc.method;
 import chat.errors.CoreException;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
+import com.docker.rpc.async.AsyncRpcFuture;
 import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.stub.Proxy;
 import com.docker.rpc.remote.stub.RemoteServerHandler;

@@ -6,10 +6,12 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.docker.errors.CoreErrorCodes;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisMovedDataException;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -324,7 +326,7 @@ public class RedisHandler {
             try {
                 return JSON.parseObject(value, clazz);
             } catch (Throwable t) {
-                LoggerEx.warn(TAG, "Value " + value + " is not  json format, return null for key " + key + " field " + field + ", error " + t.getMessage());
+                LoggerEx.warn(TAG, "Value " + value + " is not  json format, return null for key " + key + " field " + field + ", error " + ExceptionUtils.getFullStackTrace(t));
                 return null;
             }
         }
@@ -337,7 +339,7 @@ public class RedisHandler {
             try {
                 return JSON.parseObject(value);
             } catch (Throwable t) {
-                LoggerEx.warn(TAG, "Value " + value + " is not  json format, return null for key " + key + " field " + field + ", error " + t.getMessage());
+                LoggerEx.warn(TAG, "Value " + value + " is not  json format, return null for key " + key + " field " + field + ", error " + ExceptionUtils.getFullStackTrace(t));
                 return null;
             }
         }
@@ -524,33 +526,30 @@ public class RedisHandler {
         String json = doJedisExecute(jedis -> {
             return jedis.get(key);
         });
-/*
-        ShardedJedis jedis = null;
-        try {
-            jedis = pool.getResource();
-            json = jedis.get(key);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            // LoggerEx.error(TAG, "redis保存异常 " + e.getMessage());
-            throw new CoreException(CoreErrorCodes.ERROR_REDIS, "get " + key
-                    + " " + clazz + " failed, " + e.getMessage());
-        } finally {
-            if (jedis != null)
-                jedis.close();
-        }
-
-*/
         if (json != null) {
             try {
                 return JSON.parseObject(json, clazz);
             } catch (Throwable t) {
-                LoggerEx.warn(TAG, "Value " + json + " is not  json format, return null for key " + key + " class " + clazz + ", error " + t.getMessage());
+                LoggerEx.warn(TAG, "Value " + json + " is not  json format, return null for key " + key + " class " + clazz + ", error " + ExceptionUtils.getFullStackTrace(t));
                 return null;
             }
         }
         return null;
     }
-
+    public <T> T getObject(String key, Type type) throws CoreException {
+        String json = doJedisExecute(jedis -> {
+            return jedis.get(key);
+        });
+        if (json != null) {
+            try {
+                return JSON.parseObject(json, type);
+            } catch (Throwable t) {
+                LoggerEx.warn(TAG, "Value " + json + " is not  json format, return null for key " + key + " type " + type + ", error " + ExceptionUtils.getFullStackTrace(t));
+                return null;
+            }
+        }
+        return null;
+    }
     public Long delObject(String prefix, String key) throws CoreException {
         return del(prefix + "_" + key);
     }

@@ -3,6 +3,7 @@ package com.docker.script.callers;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.docker.script.BaseRuntime;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import script.groovy.runtime.GroovyRuntime;
 
 import java.lang.reflect.InvocationTargetException;
@@ -17,16 +18,16 @@ public class CallerUtils {
                 baseRuntime.executeBeanMethod(caller, methodName);
             } catch (CoreException e) {
                 e.printStackTrace();
-                LoggerEx.error(TAG, "executeBeanMethod(CoreException) " + caller + " failed, " + e.getMessage() + " e " + e.getClass());
+                LoggerEx.error(TAG, "executeBeanMethod(CoreException) " + caller + " failed, " + ExceptionUtils.getFullStackTrace(e) + " e " + e.getClass());
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
-                LoggerEx.error(TAG, "executeBeanMethod(InvocationTargetException) " + caller + " failed, " + e.getMessage() + " e " + e.getClass());
+                LoggerEx.error(TAG, "executeBeanMethod(InvocationTargetException) " + caller + " failed, " + ExceptionUtils.getFullStackTrace(e) + " e " + e.getClass());
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
-                LoggerEx.error(TAG, "executeBeanMethod(IllegalAccessException) " + caller + " failed, " + e.getMessage() + " e " + e.getClass());
+                LoggerEx.error(TAG, "executeBeanMethod(IllegalAccessException) " + caller + " failed, " + ExceptionUtils.getFullStackTrace(e) + " e " + e.getClass());
             } catch (Throwable t) {
                 t.printStackTrace();
-                LoggerEx.error(TAG, "executeBeanMethod(Throwable) " + caller + " failed, " + t.getMessage() + " t " + t.getClass());
+                LoggerEx.error(TAG, "executeBeanMethod(Throwable) " + caller + " failed, " + ExceptionUtils.getFullStackTrace(t) + " t " + t.getClass());
             }
         }
     }

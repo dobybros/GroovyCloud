@@ -10,6 +10,7 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import script.file.FileAdapter;
 
 import java.io.File;
@@ -167,7 +168,7 @@ public class GridFSFileHandler extends FileAdapter {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new IOException("read file failed, " + e.getMessage(), e);
+			throw new IOException("read file failed, " + ExceptionUtils.getFullStackTrace(e), e);
 		}
 		return true;
 	}
@@ -183,7 +184,7 @@ public class GridFSFileHandler extends FileAdapter {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new IOException("read file failed, " + e.getMessage(), e);
+			throw new IOException("read file failed, " + ExceptionUtils.getFullStackTrace(e), e);
 		}
 		return true;
 	}

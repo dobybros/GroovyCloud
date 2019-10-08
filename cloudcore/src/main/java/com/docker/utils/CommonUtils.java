@@ -3,6 +3,7 @@ package com.docker.utils;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
@@ -28,7 +29,7 @@ public class CommonUtils {
 			props  = PropertiesLoaderUtils.loadProperties(resource);
 			return props;
 		} catch (IOException e) {
-			throw new CoreException(e.getMessage());
+			throw new CoreException(ExceptionUtils.getFullStackTrace(e));
 		}
 	}
 	

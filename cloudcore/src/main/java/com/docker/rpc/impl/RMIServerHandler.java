@@ -10,6 +10,7 @@ import com.docker.rpc.RPCServerAdapter;
 import com.docker.server.OnlineServer;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.rmi.ssl.SslRMIServerSocketFactory;
@@ -86,7 +87,7 @@ public class RMIServerHandler {
             LoggerEx.info(TAG, "RMI server IP : " + ipHolder.getIp() + " port : " + rmiPort + " started!" + " System host name : " + System.getProperty("java.rmi.server.hostname") + ", System port : " + ipHolder.getIp());
         } catch(Throwable t) {
             t.printStackTrace();
-            LoggerEx.fatal(TAG, "RMIClientHandler server start failed. Server will be shutdown... " + t.getMessage());
+            LoggerEx.fatal(TAG, "RMIClientHandler server start failed. Server will be shutdown... " + ExceptionUtils.getFullStackTrace(t));
             OnlineServer.shutdownNow();
             System.exit(0);
         } finally {
@@ -120,7 +121,7 @@ public class RMIServerHandler {
             LoggerEx.info(TAG, "RMI port " + rmiPort + " server " + serverName + " server is destroyed!");
         } catch (Throwable e) {
             e.printStackTrace();
-            LoggerEx.error(TAG, "RMI port " + rmiPort + " server " + serverName + " server destroy failed, " + e.getMessage());
+            LoggerEx.error(TAG, "RMI port " + rmiPort + " server " + serverName + " server destroy failed, " + ExceptionUtils.getFullStackTrace(e));
         }
     }
     RPCEntity getRPCEntityForServer(String requestType, Class<RPCServerAdapter> serverAdapterClass) throws CoreException {

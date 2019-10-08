@@ -12,6 +12,7 @@ import com.docker.storage.adapters.DockerStatusService;
 import com.docker.storage.adapters.SDockersService;
 import com.docker.tasks.Task;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.Document;
 import org.springframework.core.io.ClassPathResource;
 
@@ -135,7 +136,7 @@ public class OnlineServer {
                 pro.load(resource.getInputStream());
             } catch (IOException e) {
                 e.printStackTrace();
-                LoggerEx.error(TAG, "Prepare lan.properties is failed, " + e.getMessage());
+                LoggerEx.error(TAG, "Prepare lan.properties is failed, " + ExceptionUtils.getFullStackTrace(e));
             }
             lanId = pro.getProperty("lan.id");
             if (StringUtils.isBlank(lanId)) {
@@ -186,7 +187,7 @@ public class OnlineServer {
                 dockerStatusService.addDockerStatus(dockerStatus);
             }
 
-            ThreadPoolExecutor threadPool = ServerStart.getInstance().getCoreThreadPoolExecutor();
+            ThreadPoolExecutor threadPool = ServerStart.getInstance().getGatewayThreadPoolExecutor();
             if (tasks != null) {
                 for (Task task : tasks) {
                     task.setOnlineServer(this);
@@ -205,14 +206,14 @@ public class OnlineServer {
 //			}
         } catch (Throwable e) {
             e.printStackTrace();
-            LoggerEx.error(TAG, "Start online server " + server + " failed, " + e.getMessage());
+            LoggerEx.error(TAG, "Start online server " + server + " failed, " + ExceptionUtils.getFullStackTrace(e));
             if (dockerStatusService != null) {
                 try {
                     dockerStatusService.deleteDockerStatus(server);
-                    LoggerEx.info(TAG, "Deleted OnlineServer " + server + " because of error " + e.getMessage());
+                    LoggerEx.info(TAG, "Deleted OnlineServer " + server + " because of error " + ExceptionUtils.getFullStackTrace(e));
                 } catch (CoreException e1) {
                     e.printStackTrace();
-                    LoggerEx.info(TAG, "Remove online server " + server + " failed, " + e1.getMessage());
+                    LoggerEx.info(TAG, "Remove online server " + server + " failed, " + ExceptionUtils.getFullStackTrace(e1));
                 }
             }
             OnlineServer.shutdownNow();
@@ -229,7 +230,7 @@ public class OnlineServer {
         try {
             config.load(configResource.getInputStream());
         } catch (IOException e) {
-            LoggerEx.error(TAG, "Prepare config.properties failed, can't do anything. " + e.getMessage());
+            LoggerEx.error(TAG, "Prepare config.properties failed, can't do anything. " + ExceptionUtils.getFullStackTrace(e));
         }
 
         if (sdockersService != null) {
@@ -261,7 +262,7 @@ public class OnlineServer {
                 startHandler.serverWillShutdown(this);
             } catch (Exception e) {
                 e.printStackTrace();
-                LoggerEx.fatal(TAG, "StartHandler " + startHandler + " shutdown failed, " + e.getMessage());
+                LoggerEx.fatal(TAG, "StartHandler " + startHandler + " shutdown failed, " + ExceptionUtils.getFullStackTrace(e));
             }
         }
         if (dockerStatusService != null) {
@@ -270,7 +271,7 @@ public class OnlineServer {
                 LoggerEx.info(TAG, "Deleted OnlineServer " + server);
             } catch (CoreException e) {
                 e.printStackTrace();
-                LoggerEx.fatal(TAG, "Remove online server " + server + " failed, " + e.getMessage());
+                LoggerEx.fatal(TAG, "Remove online server " + server + " failed, " + ExceptionUtils.getFullStackTrace(e));
             }
         }
         if (tasks != null) {
@@ -282,7 +283,7 @@ public class OnlineServer {
                     LoggerEx.info(TAG, "Task " + task + " has been shutdown");
                 } catch (Exception e) {
                     e.printStackTrace();
-                    LoggerEx.fatal(TAG, "Task " + task + " shutdown failed, " + e.getMessage());
+                    LoggerEx.fatal(TAG, "Task " + task + " shutdown failed, " + ExceptionUtils.getFullStackTrace(e));
                 }
             }
         }

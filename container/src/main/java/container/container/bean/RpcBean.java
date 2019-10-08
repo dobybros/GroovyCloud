@@ -3,6 +3,7 @@ package container.container.bean;
 import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.impl.RMIServerHandler;
+import com.docker.rpc.remote.stub.RPCInterceptorFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -75,5 +76,9 @@ public class RpcBean{
     @Bean
     public RMIServerHandler dockerRpcServerAdapterSsl(){
         return instance.getDockerRpcServerAdapterSsl();
+    }
+    @Bean
+    public RPCInterceptorFactory rpcInterceptorFactory(){
+        return instance.getRPCInterceptorFactory();
     }
 }

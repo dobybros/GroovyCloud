@@ -8,6 +8,7 @@ import com.docker.storage.adapters.LansService;
 import com.docker.storage.mongodb.daos.LansDAO;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.Document;
 
 import javax.annotation.Resource;
@@ -26,7 +27,7 @@ public class LansServiceImpl implements LansService {
             return lan;
         } catch (DBException e) {
             e.printStackTrace();
-            throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_QUERY_FAILED, "Query lan " + lanId + " failed, " + e.getMessage());
+            throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_QUERY_FAILED, "Query lan " + lanId + " failed, " + ExceptionUtils.getFullStackTrace(e));
         }
     }
 

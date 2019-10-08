@@ -7,25 +7,27 @@ import chat.utils.DataInputStreamEx;
 import chat.utils.DataOutputStreamEx;
 import chat.utils.GZipUtils;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.docker.rpc.async.AsyncRpcFuture;
 import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.skeleton.ServiceSkeletonAnnotationHandler;
-import com.docker.rpc.remote.stub.ServerCacheManager;
+import com.docker.rpc.remote.stub.RpcCacheManager;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.BaseRuntime;
 import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MethodRequest extends RPCRequest {
+    @Autowired
+    RpcCacheManager rpcCacheManager;
 	public static final String RPCTYPE = "mthd";
     private static final String TAG = MethodRequest.class.getSimpleName();
     private byte version = 1;
@@ -56,8 +58,7 @@ public class MethodRequest extends RPCRequest {
 
     private ServiceStubManager serviceStubManager;
 
-    private Map<String, Object> extra;
-
+    private String callbackFutureId;
 	public MethodRequest() {
 		super(RPCTYPE);
 	}
@@ -86,20 +87,20 @@ public class MethodRequest extends RPCRequest {
                         sourceIp = dis.readUTF();
                         sourcePort = dis.readInt();
                         if(crc == null || crc == 0 || crc == -1)
-                            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_CRC_ILLEGAL, "CRC is illegal for MethodRequest,service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_CRC_ILLEGAL, "CRC is illegal for MethodRequest,crc: " + crc);
 
                         if(service == null)
-                            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_SERVICE_NULL, "Service is null for service_class_method " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_SERVICE_NULL, "Service is null for service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
                         ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
                         BaseRuntime baseRuntime = scriptManager.getBaseRuntime(service);
                         if(baseRuntime == null)
-                            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_SERVICE_NOTFOUND, "Service " + service + " not found for service_class_method " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_SERVICE_NOTFOUND, "Service " + service + " not found for service_class_method " + rpcCacheManager.getMethodByCrc(crc));
                         ServiceSkeletonAnnotationHandler serviceSkeletonAnnotationHandler = (ServiceSkeletonAnnotationHandler) baseRuntime.getClassAnnotationHandler(ServiceSkeletonAnnotationHandler.class);
                         if(serviceSkeletonAnnotationHandler == null)
-                            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_SKELETON_NULL, "Skeleton handler is not for service " + service + " on method service_class_method " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_SKELETON_NULL, "Skeleton handler is not for service " + service + " on method service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
                         MethodMapping methodMapping = serviceSkeletonAnnotationHandler.getMethodMapping(crc);
                         if(methodMapping == null)
-                            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_METHODNOTFOUND, "Method doesn't be found by service_class_method " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_METHODNOTFOUND, "Method doesn't be found by service_class_method " + rpcCacheManager.getMethodByCrc(crc));
 
                         argCount = dis.readInt();
                         if(argCount > 0) {
@@ -109,12 +110,12 @@ public class MethodRequest extends RPCRequest {
                             Class<?>[] parameterTypes = methodMapping.getParameterTypes();
                             if(parameterTypes != null && parameterTypes.length > 0) {
                                 if(parameterTypes.length > argCount) {
-                                    LoggerEx.debug(TAG, "Parameter types not equal actual is " + parameterTypes.length + " but expected " + argCount + ". Cut off,service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                                    LoggerEx.debug(TAG, "Parameter types not equal actual is " + parameterTypes.length + " but expected " + argCount + ". Cut off,service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
                                     Class<?>[] newParameterTypes = new Class<?>[argCount];
                                     System.arraycopy(parameterTypes, 0, newParameterTypes, 0, argCount);
                                     parameterTypes = newParameterTypes;
                                 } else if(parameterTypes.length < argCount){
-                                    LoggerEx.debug(TAG, "Parameter types not equal actual is " + parameterTypes.length + " but expected " + argCount + ". Fill with Object.class,service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                                    LoggerEx.debug(TAG, "Parameter types not equal actual is " + parameterTypes.length + " but expected " + argCount + ". Fill with Object.class,service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
                                     Class<?>[] newParameterTypes = new Class<?>[argCount];
                                     for(int i = parameterTypes.length; i < argCount; i++) {
                                         newParameterTypes[i] = Object.class;
@@ -133,7 +134,7 @@ public class MethodRequest extends RPCRequest {
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
-                                    LoggerEx.error(TAG, "Parse bytes failed, " + e.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                                    LoggerEx.error(TAG, "Parse bytes failed, " + ExceptionUtils.getFullStackTrace(e) + ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
                                 }
                             }
                         }
@@ -148,14 +149,14 @@ public class MethodRequest extends RPCRequest {
 						if(e instanceof CoreException) {
 						    throw (CoreException)e;
                         }
-						throw new CoreException(ChatErrorCodes.ERROR_RPC_DECODE_FAILED, "PB parse data failed, " + e.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+						throw new CoreException(ChatErrorCodes.ERROR_RPC_DECODE_FAILED, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(e)+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
 					} finally {
 					    IOUtils.closeQuietly(bais);
 					    IOUtils.closeQuietly(dis.original());
                     }
                     break;
 					default:
-						throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NOTFOUND, "Encoder type doesn't be found for resurrect,service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+						throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NOTFOUND, "Encoder type doesn't be found for resurrect,service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
 				}
 			}
 		}
@@ -165,7 +166,7 @@ public class MethodRequest extends RPCRequest {
 	public void persistent() throws CoreException {
 		Byte encode = getEncode();
 		if(encode == null)
-			throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NULL, "Encoder is null for persistent,service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+			throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NULL, "Encoder is null for persistent,service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
 		switch(encode) {
 		case ENCODE_JAVABINARY:
             ByteArrayOutputStream baos = null;
@@ -186,7 +187,7 @@ public class MethodRequest extends RPCRequest {
                     ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
                     MyBaseRuntime baseRuntime = (MyBaseRuntime) scriptManager.getBaseRuntime(fromService);
                     if(baseRuntime == null)
-                        throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_SERVICE_NOTFOUND, "Service " + service + " not found for service_class_method " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                        throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_SERVICE_NOTFOUND, "Service " + service + " not found for service_class_method " + rpcCacheManager.getMethodByCrc(crc));
 
                     serviceStubManager = baseRuntime.getServiceStubManager();
                 }
@@ -220,7 +221,7 @@ public class MethodRequest extends RPCRequest {
                         dis.write(data);
                     } catch (IOException e) {
                         e.printStackTrace();
-                        LoggerEx.error(TAG, "Generate " + json + " to bytes failed, " + e.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                        LoggerEx.error(TAG, "Generate " + json + " to bytes failed, " + ExceptionUtils.getFullStackTrace(e)+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
                     }
                 }
                 dis.writeUTF(trackId);
@@ -238,14 +239,14 @@ public class MethodRequest extends RPCRequest {
                 setType(RPCTYPE);
             } catch(Throwable t) {
 		        t.printStackTrace();
-                throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + t.getMessage()+ ",service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+                throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(t)+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
             } finally {
                 IOUtils.closeQuietly(baos);
                 IOUtils.closeQuietly(dis.original());
             }
             break;
 			default:
-				throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NOTFOUND, "Encoder type doesn't be found for persistent,service_class_method: " + ServerCacheManager.getInstance().getCrcMethodMap().get(crc));
+				throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NOTFOUND, "Encoder type doesn't be found for persistent,service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
 		}
 	}
 
@@ -347,24 +348,11 @@ public class MethodRequest extends RPCRequest {
             fromService = this.serviceStubManager.getFromService();
     }
 
-    public MethodRequest putExtra(String key, Object value) {
-        if(extra == null)
-            extra = new HashMap<>();
-        extra.put(key, value);
-        return this;
+    public String getCallbackFutureId() {
+        return callbackFutureId;
     }
 
-    public MethodRequest removeExtra(String key) {
-	    if(extra == null)
-	        return this;
-	    extra.remove(key);
-	    return this;
-    }
-
-    public Object getExtra(String key) {
-	    if(extra != null) {
-	        return extra.get(key);
-        }
-	    return null;
+    public void setCallbackFutureId(String callbackFutureId) {
+        this.callbackFutureId = callbackFutureId;
     }
 }

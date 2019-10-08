@@ -2,6 +2,7 @@ package com.docker.tasks;
 
 import chat.logs.LoggerEx;
 import com.docker.server.OnlineServer;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 public abstract class Task implements Runnable{
 	public static final int STATUS_INACTIVE = 0;
@@ -39,7 +40,7 @@ public abstract class Task implements Runnable{
 			execute();
 		} catch (Throwable t) {
 			t.printStackTrace();
-			LoggerEx.error(TAG, "Task " + this.getClass().getSimpleName() + " execute failed, " + t.getMessage());
+			LoggerEx.error(TAG, "Task " + this.getClass().getSimpleName() + " execute failed, " + ExceptionUtils.getFullStackTrace(t));
 		}
 		status = STATUS_INACTIVE;
 	}

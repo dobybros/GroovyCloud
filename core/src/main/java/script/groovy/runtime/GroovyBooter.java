@@ -17,6 +17,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import script.groovy.runtime.classloader.ClassHolder;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
@@ -68,7 +69,7 @@ public class GroovyBooter implements RuntimeBootListener {
         try {
             beforeDeploy();
         } catch (Throwable t) {
-            LoggerEx.warn(TAG, "beforeDeploy failed, " + t.getMessage());
+            LoggerEx.warn(TAG, "beforeDeploy failed, " + ExceptionUtils.getFullStackTrace(t));
         }
         MyGroovyClassLoader newClassLoader = null;
         MyGroovyClassLoader oldClassLoader = classLoader;
@@ -164,13 +165,13 @@ public class GroovyBooter implements RuntimeBootListener {
         } catch (Throwable t) {
             t.printStackTrace();
             LoggerEx.fatal(TAG,
-                    "Redeploy occur unknown error, " + t.getMessage()
+                    "Redeploy occur unknown error, " + ExceptionUtils.getFullStackTrace(t)
                             + " redeploy aborted!!!");
             if (t instanceof CoreException)
                 throw (CoreException) t;
             else
                 throw new CoreException(ChatErrorCodes.ERROR_GROOVY_UNKNOWN,
-                        "Groovy unknown error " + t.getMessage());
+                        "Groovy unknown error " + ExceptionUtils.getFullStackTrace(t));
         } finally {
             IOUtils.closeQuietly(baos);
             if (deploySuccessfully) {
@@ -196,7 +197,7 @@ public class GroovyBooter implements RuntimeBootListener {
                             } catch (Throwable e) {
                                 e.printStackTrace();
                                 LoggerEx.error(TAG, oldClassLoader + " close failed, "
-                                        + e.getMessage());
+                                        + ExceptionUtils.getFullStackTrace(e));
                             }
                         }
                     }, TimeUnit.SECONDS.toMillis(60)); //release old class loader after 60 seconds.
@@ -254,7 +255,7 @@ public class GroovyBooter implements RuntimeBootListener {
             } catch (Exception e) {
                 e.printStackTrace();
                 LoggerEx.error(TAG, classLoader + " close failed, "
-                        + e.getMessage());
+                        + ExceptionUtils.getFullStackTrace(e));
             }
         }
     }

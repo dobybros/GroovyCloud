@@ -1,6 +1,5 @@
 package container.container.bean;
 
-import chat.scheduled.QuartzHandler;
 import chat.utils.IPHolder;
 import com.dobybros.chat.handlers.ConsumeOfflineMessageHandler;
 import com.dobybros.chat.props.GlobalLansProperties;
@@ -8,21 +7,25 @@ import com.dobybros.chat.services.impl.ConsumeQueueService;
 import com.dobybros.chat.tasks.OfflineMessageSavingTask;
 import com.dobybros.chat.tasks.RPCMessageSendingTask;
 import com.dobybros.chat.utils.AutoReloadProperties;
-import com.dobybros.file.adapters.GridFSFileHandler;
 import com.dobybros.gateway.channels.tcp.UpStreamHandler;
 import com.dobybros.gateway.channels.tcp.codec.HailProtocalCodecFactory;
 import com.dobybros.gateway.channels.websocket.codec.WebSocketCodecFactory;
 import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.dobybros.http.MyHttpParameters;
+import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.onlineserver.OnlineServerWithStatus;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.rpc.impl.RMIServerImplWrapper;
+import com.docker.rpc.remote.stub.RPCInterceptorFactory;
+import com.docker.rpc.remote.stub.RemoteServersManager;
+import com.docker.rpc.remote.stub.RpcCacheManager;
 import com.docker.script.ScriptManager;
 import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
 import com.docker.storage.adapters.impl.ServersServiceImpl;
 import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
+import com.docker.storage.cache.CacheStorageFactory;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import com.docker.tasks.Task;
@@ -39,8 +42,6 @@ import org.apache.mina.filter.ssl.KeyStoreFactory;
 import org.apache.mina.filter.ssl.SslContextFactory;
 import org.apache.mina.filter.ssl.SslFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
-import org.quartz.SchedulerFactory;
-import org.quartz.impl.StdSchedulerFactory;
 import script.filter.JsonFilterFactory;
 import script.groovy.servlets.RequestPermissionHandler;
 
@@ -121,22 +122,23 @@ public class BeanApp extends ConfigApp{
     private RMIServerHandler dockerRpcServerAdapterSsl;
     private ServersServiceImpl serversService;
     private ServiceVersionServiceImpl serviceVersionService;
-    private SchedulerFactory schedulerFactory;
-    private QuartzHandler quartzHandler;
-
-//    public synchronized QuartzHandler getQuartzHandler() {
-//        if(quartzHandler == null){
-//            quartzHandler = new QuartzHandler();
-//            quartzHandler.setSchedulerFactory(getSchedulerFactory());
-//        }
-//        return quartzHandler;
-//    }
-    public synchronized SchedulerFactory getSchedulerFactory(){
-        if(schedulerFactory == null){
-            schedulerFactory = new StdSchedulerFactory();
+    private RemoteServersManager remoteServersManager;
+    private RpcCacheManager rpcCacheManager;
+    private RPCInterceptorFactory rpcInterceptorFactory;
+    private CacheStorageFactory cacheStorageFactory;
+    public synchronized CacheStorageFactory getCacheStorageFactory(){
+        if(cacheStorageFactory == null){
+            cacheStorageFactory = new CacheStorageFactory();
         }
-        return schedulerFactory;
+        return cacheStorageFactory;
     }
+    public synchronized RPCInterceptorFactory getRPCInterceptorFactory(){
+        if(rpcInterceptorFactory == null){
+            rpcInterceptorFactory = new RPCInterceptorFactory();
+        }
+        return rpcInterceptorFactory;
+    }
+
     public synchronized ServiceVersionServiceImpl getServiceVersionService() {
         if(serviceVersionService == null){
             serviceVersionService = new ServiceVersionServiceImpl();
@@ -322,12 +324,12 @@ public class BeanApp extends ConfigApp{
             scriptManager.setRemotePath(instance.getRemotePath());
             scriptManager.setBaseRuntimeClass(com.dobybros.chat.script.annotations.gateway.GatewayGroovyRuntime.class);
             scriptManager.setRuntimeBootClass(instance.getRuntimeBootClass());
-            scriptManager.setDockerStatusService(instance.getDockerStatusService());
-            scriptManager.setFileAdapter(instance.getFileAdapter());
+//            scriptManager.setDockerStatusService(instance.getDockerStatusService());
+//            scriptManager.setFileAdapter(instance.getFileAdapter());
             scriptManager.setHotDeployment(Boolean.valueOf(instance.getHotDeployment()));
             scriptManager.setKillProcess(Boolean.valueOf(instance.getKillProcess()));
             scriptManager.setServerType(instance.getServerType());
-            scriptManager.setServiceVersionService(instance.getServiceVersionService());
+//            scriptManager.setServiceVersionService(instance.getServiceVersionService());
         }
         return scriptManager;
     }
@@ -714,6 +716,18 @@ public class BeanApp extends ConfigApp{
             tcpFilterChainBuilder.setFilters(map);
         }
         return tcpFilterChainBuilder;
+    }
+    public synchronized RemoteServersManager getRemoteServersManager(){
+        if(remoteServersManager == null){
+            remoteServersManager = new RemoteServersManager();
+        }
+        return remoteServersManager;
+    }
+    public synchronized RpcCacheManager getRpcCacheManager(){
+        if(rpcCacheManager == null){
+            rpcCacheManager = new RpcCacheManager();
+        }
+        return rpcCacheManager;
     }
     public synchronized static BeanApp getInstance(){
         if(instance == null){

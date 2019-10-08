@@ -3,6 +3,7 @@ package com.docker.storage.redis;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.alibaba.fastjson.JSON;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.core.io.ClassPathResource;
 import redis.clients.jedis.JedisPoolConfig;
 
@@ -41,7 +42,7 @@ public class JedisManager {
 		} catch (IOException e) {
 			e.printStackTrace();
 			LoggerEx.error(TAG,
-					"Prepare redis.properties is failed, " + e.getMessage());
+					"Prepare redis.properties is failed, " + ExceptionUtils.getFullStackTrace(e));
 		}
 
 		String hosts = pro.getProperty("redis.pool");
@@ -395,7 +396,7 @@ public class JedisManager {
 			try {
 				return JSON.parseObject(value, clazz);
 			} catch(Throwable t) {
-				LoggerEx.warn(TAG, "Value " + value + " is not  json format, return null for key " + key + " field " + field + ", error " + t.getMessage());
+				LoggerEx.warn(TAG, "Value " + value + " is not  json format, return null for key " + key + " field " + field + ", error " + ExceptionUtils.getFullStackTrace(t));
 				return null;
 			}
 		}

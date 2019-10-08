@@ -19,6 +19,7 @@ import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.script.BaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.utils.SpringContextUtil;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -34,7 +35,7 @@ class MessageSendingSingleThreadQueueWrapper extends SingleThreadQueue<SpreadMes
 		
 		public MessageSendingSingleThreadQueueWrapper(final String server, String ip,
 													  Integer port, RPCClientAdapterMap rpcClientAdapterMap, final ConcurrentHashMap<String, MessageSendingSingleThreadQueueWrapper> serverQueueMap, OfflineMessageSavingTask offlineMessageSavingTask) {
-			super("Message sending queue on Server " + server, new ConcurrentLinkedQueue<SpreadMessage>(), ServerStart.getInstance().getCoreThreadPoolExecutor());
+			super("Message sending queue on Server " + server, new ConcurrentLinkedQueue<SpreadMessage>(), ServerStart.getInstance().getGatewayThreadPoolExecutor());
 			
 			RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(ip, port, server, new RPCClientAdapter.ClientAdapterStatusListener(){
 				@Override
@@ -139,7 +140,7 @@ class MessageSendingSingleThreadQueueWrapper extends SingleThreadQueue<SpreadMes
 				} catch (CoreException e) {
 					e.printStackTrace();
 					//TODO need handle error case, otherwise the message will be lost permanently. 
-					LoggerEx.warn(TAG, "Send message " + message + " to specified server " + MessageSendingSingleThreadQueueWrapper.this.server + " failed, " + e.getMessage());
+					LoggerEx.warn(TAG, "Send message " + message + " to specified server " + MessageSendingSingleThreadQueueWrapper.this.server + " failed, " + ExceptionUtils.getFullStackTrace(e));
 				}
 //				if(message.getFromOfflineMessageId() != null || message.isInternal() || !message.isNeedOffline()) {
 //					LoggerEx.info(TAG, "Message will not be saved as OfflineMessage, because fromOfflineMessageId " + message.getFromOfflineMessageId() + " isInternal " + message.isInternal() + " for message " + message + " or need offline is " + message.isNeedOffline());

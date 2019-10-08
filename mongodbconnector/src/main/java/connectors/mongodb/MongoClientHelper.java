@@ -8,6 +8,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -81,7 +82,7 @@ public class MongoClientHelper {
 						LoggerEx.info(TAG, "Connected hosts " + hosts + " db " + dbName);
 					} catch (Throwable t) {
 						t.printStackTrace();
-						LoggerEx.fatal(TAG, "Build mongo uri for hosts " + hosts + " failed, " + t.getMessage());
+						LoggerEx.fatal(TAG, "Build mongo uri for hosts " + hosts + " failed, " + ExceptionUtils.getFullStackTrace(t));
 					}
 				}
 			}
@@ -110,7 +111,7 @@ public class MongoClientHelper {
 				connect(databaseName);
 			} catch (CoreException e) {
 				e.printStackTrace();
-				LoggerEx.error(TAG, "connect database " + databaseName + " failed, " + e.getMessage());
+				LoggerEx.error(TAG, "connect database " + databaseName + " failed, " + ExceptionUtils.getFullStackTrace(e));
 			}
 		}
 		client = clientMap.get(databaseName);
