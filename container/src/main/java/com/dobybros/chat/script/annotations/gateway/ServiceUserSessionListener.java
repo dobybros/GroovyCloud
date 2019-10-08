@@ -3,6 +3,7 @@ package com.dobybros.chat.script.annotations.gateway;
 import chat.errors.CoreException;
 import com.alibaba.fastjson.JSONObject;
 import com.dobybros.chat.binary.data.Data;
+import com.dobybros.chat.channels.Channel;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.open.data.MsgResult;
 import com.dobybros.gateway.open.GatewayMSGServers;
@@ -18,6 +19,8 @@ public abstract class ServiceUserSessionListener {
     private String userId;
 
     private String service;
+
+    private GatewayMSGServers gatewayMSGServers = GatewayMSGServers.getInstance();
 
     public void sessionCreated() {
     }
@@ -54,16 +57,27 @@ public abstract class ServiceUserSessionListener {
     }
 
     public void sendMessage(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {
-        GatewayMSGServers.getInstance().sendMessage(message, excludeTerminal, terminal);
+        gatewayMSGServers.sendMessage(message, excludeTerminal, terminal);
     }
 
     public void sendData(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {
-        GatewayMSGServers.getInstance().sendOutgoingData(message, excludeTerminal, terminal);
+        gatewayMSGServers.sendOutgoingData(message, excludeTerminal, terminal);
     }
 
     public void closeChannel(Integer terminal, int code) throws CoreException {
-        GatewayMSGServers.getInstance().closeUserChannel(userId, service, terminal, code);
+        gatewayMSGServers.closeUserChannel(userId, service, terminal, code);
+    }
 
+    public void closeSession() throws CoreException {
+        gatewayMSGServers.closeUserSession(userId, service, Channel.ChannelListener.CLOSE_SHUTDOWN );
+    }
+
+    public boolean isSessionAlive() throws CoreException {
+        return gatewayMSGServers.isUserSessionAlive(userId, service);
+    }
+
+    public boolean isChannelAlive(Integer terminal) throws CoreException {
+        return gatewayMSGServers.isChannelAlive(userId, service, terminal);
     }
 
     public void pingReceived(Integer terminal) {

@@ -3,7 +3,7 @@ package com.docker.rpc.impl;
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
-import chat.utils.AverageCounter;
+//import chat.utils.AverageCounter;
 import chat.utils.IPHolder;
 import com.docker.storage.cache.CacheMethodInterceptor;
 import com.docker.rpc.*;
@@ -47,7 +47,7 @@ public class RMIClientHandler extends RPCClientAdapter {
 
     //Client
     private String serverHost;
-    private AverageCounter averageCounter;
+//    private AverageCounter averageCounter;
 
     private Long touch;
     private Long idleCheckPeriod = TimeUnit.SECONDS.toMillis(10);
@@ -71,7 +71,7 @@ public class RMIClientHandler extends RPCClientAdapter {
         builder.append("rmiPort: " + rmiPort + " ");
         builder.append("server: " + server + " ");
         builder.append("isStarted: " + isStarted + " ");
-        builder.append("averageCounter: " + averageCounter + " ");
+//        builder.append("averageCounter: " + averageCounter + " ");
         return builder.toString();
     }
 
@@ -213,7 +213,7 @@ public class RMIClientHandler extends RPCClientAdapter {
 
     @Override
     public synchronized void clientStart() {
-        averageCounter = new AverageCounter();
+//        averageCounter = new AverageCounter();
         if (enableSsl && !rmiId.endsWith(RMIID_SSL_SUFFIX))
             rmiId = rmiId + RMIID_SSL_SUFFIX;
         for (ClientAdapterStatusListener statusListener : statusListeners) {
@@ -340,8 +340,8 @@ public class RMIClientHandler extends RPCClientAdapter {
                 server.callAsync(request.getData(), request.getType(), request.getEncode(), null);
             }
             long time = System.currentTimeMillis();
-            if (averageCounter != null)
-                averageCounter.add((int) (System.currentTimeMillis() - time));
+//            if (averageCounter != null)
+//                averageCounter.add((int) (System.currentTimeMillis() - time));
 
             return future;
 
@@ -408,10 +408,10 @@ public class RMIClientHandler extends RPCClientAdapter {
             throw new CoreException(ChatErrorCodes.ERROR_RPC_DISCONNECTED, "RPC (" + serverHost + ":" + rmiPort + ") is disconnected for " + request.getType() + ": " + request.toString());
         try {
             handleRequest(request);
-            long time = System.currentTimeMillis();
+//            long time = System.currentTimeMillis();
             byte[] data = server.call(request.getData(), request.getType(), request.getEncode());
-            if (averageCounter != null)
-                averageCounter.add((int) (System.currentTimeMillis() - time));
+//            if (averageCounter != null)
+//                averageCounter.add((int) (System.currentTimeMillis() - time));
             if (data == null) {
                 LoggerEx.error(TAG, "Server call return null for reuqest " + request.getType());
                 return null;
@@ -615,8 +615,8 @@ public class RMIClientHandler extends RPCClientAdapter {
 
     @Override
     public Integer getAverageLatency() {
-        if (averageCounter != null)
-            return averageCounter.getAverage();
+//        if (averageCounter != null)
+//            return averageCounter.getAverage();
         return null;
     }
 

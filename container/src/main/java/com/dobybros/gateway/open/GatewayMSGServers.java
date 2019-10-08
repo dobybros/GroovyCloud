@@ -5,6 +5,8 @@ import chat.logs.LoggerEx;
 import com.dobybros.chat.channels.Channel;
 import com.dobybros.chat.open.MSGServers;
 import com.dobybros.chat.open.data.Message;
+import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionListener;
+import com.dobybros.chat.script.annotations.handler.ServiceUserSessionAnnotationHandler;
 import com.dobybros.gateway.channels.data.OutgoingData;
 import com.dobybros.gateway.channels.data.OutgoingMessage;
 import com.dobybros.gateway.errors.GatewayErrorCodes;
@@ -13,6 +15,7 @@ import com.dobybros.gateway.onlineusers.OnlineUser;
 import com.dobybros.gateway.onlineusers.OnlineUserManager;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.StringUtils;
+import script.groovy.runtime.GroovyRuntime;
 
 import java.util.Collection;
 
@@ -59,6 +62,29 @@ public final class GatewayMSGServers extends MSGServers {
 //			LoggerEx.error(TAG, "MSGServers need to be initialized first");
         }
         return (GatewayMSGServers) instance;
+    }
+
+    public boolean isUserSessionAlive(String userId, String service) throws CoreException {
+        OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
+        if(onlineUser != null) {
+            OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(service);
+            if(serviceUser != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isChannelAlive(String userId, String service, Integer terminal) throws CoreException {
+        if(terminal == null) return false;
+        OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
+        if(onlineUser != null) {
+            OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(service);
+            if(serviceUser != null) {
+                return serviceUser.getChannel(terminal) != null;
+            }
+        }
+        return false;
     }
 
     public void closeUserSession(String userId, String service, int close) throws CoreException {
@@ -170,5 +196,14 @@ public final class GatewayMSGServers extends MSGServers {
         }
 
 //        onlineUserManager.sendEvent(message, onlineUser);
+    }
+
+    public ServiceUserSessionListener getServiceUserSession(GroovyRuntime runtime, String userId, String service) {
+        ServiceUserSessionAnnotationHandler handler = (ServiceUserSessionAnnotationHandler) runtime.getClassAnnotationHandler(ServiceUserSessionAnnotationHandler.class);
+        if (handler != null) {
+            ServiceUserSessionListener listener = handler.getAnnotatedListener(userId, service);
+            return listener;
+        }
+        return null;
     }
 }
