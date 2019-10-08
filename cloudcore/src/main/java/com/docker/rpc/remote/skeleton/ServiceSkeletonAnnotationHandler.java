@@ -4,27 +4,20 @@ import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.AnalyticsLogger;
 import chat.logs.LoggerEx;
-import chat.main.ServerStart;
 import chat.utils.ReflectionUtil;
-import chat.utils.TimerEx;
-import chat.utils.TimerTaskEx;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.util.TypeUtils;
 import com.docker.data.ServiceAnnotation;
-import com.docker.rpc.*;
+import com.docker.rpc.MethodRequest;
+import com.docker.rpc.MethodResponse;
 import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.RemoteService;
-import com.docker.rpc.remote.stub.ServerCacheManager;
-import com.docker.rpc.remote.stub.ServiceStubManager;
-import com.docker.script.BaseRuntime;
+import com.docker.rpc.remote.stub.RpcCacheManager;
 import com.docker.script.ClassAnnotationHandlerEx;
-import com.docker.script.MyBaseRuntime;
-import com.docker.script.ScriptManager;
 import com.docker.server.OnlineServer;
-import com.docker.utils.SpringContextUtil;
-import com.google.common.collect.Lists;
-import io.netty.util.concurrent.CompleteFuture;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
@@ -33,16 +26,17 @@ import script.groovy.servlets.Tracker;
 import script.memodb.ObjectId;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 
 public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
+    @Autowired
+    private AutowireCapableBeanFactory beanFactory;
+    @Autowired
+    RpcCacheManager rpcCacheManager;
     private static final String TAG = ServiceSkeletonAnnotationHandler.class.getSimpleName();
     private ConcurrentHashMap<Long, SkelectonMethodMapping> methodMap = new ConcurrentHashMap<>();
 
@@ -164,7 +158,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
             } catch (Throwable t) {
                 error = true;
                 builder.append(" $$error" +
-                        ":: " + t.getClass() + " $$errormsg:: " + t.getMessage());
+                        ":: " + t.getClass() + " $$errormsg:: " + ExceptionUtils.getFullStackTrace(t));
                 if (t instanceof InvokerInvocationException) {
                     Throwable theT = ((InvokerInvocationException) t).getCause();
                     if (theT != null) {
@@ -174,7 +168,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 if (t instanceof CoreException) {
                     exception = (CoreException) t;
                 } else {
-                    exception = new CoreException(ChatErrorCodes.ERROR_METHODMAPPING_INVOKE_UNKNOWNERROR, t.getMessage());
+                    exception = new CoreException(ChatErrorCodes.ERROR_METHODMAPPING_INVOKE_UNKNOWNERROR, ExceptionUtils.getFullStackTrace(t));
                 }
             } finally {
                 String ip = OnlineServer.getInstance().getIp();
@@ -184,7 +178,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 builder.append(" $$sdockerip:: " + ip);
             }
             MethodResponse response = new MethodResponse(returnObj, exception);
-//            response.setService(service);
+            beanFactory.autowireBean(response);
             response.setRequest(request);
             response.setEncode(MethodResponse.ENCODE_JAVABINARY);
             response.setCrc(crc);
@@ -220,21 +214,6 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
     public void scanClass(Class<?> clazz, GroovyObjectEx<RemoteService> serverAdapter, ConcurrentHashMap<Long, SkelectonMethodMapping> methodMap) {
         if (clazz == null)
             return;
-//        Object obj = cachedInstanceMap.get(clazz);
-//        if(obj == null) {
-//            try {
-//                obj = clazz.newInstance();
-//                cachedInstanceMap.putIfAbsent(clazz, obj);
-//            } catch (InstantiationException e) {
-//                e.printStackTrace();
-//            } catch (IllegalAccessException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        if(!ReflectionUtil.canBeInitiated(clazz)) {
-//            LoggerEx.fatal(TAG, "Class " + clazz + " couldn't be initialized without parameters, it will cause the rpc call failed!");
-//            return;
-//        }
 
         Method[] methods = ReflectionUtil.getMethods(clazz);
         if (methods != null) {
@@ -269,7 +248,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 returnType = ReflectionUtil.getInitiatableClass(returnType);
                 mm.setReturnClass(returnType);
                 methodMap.put(value, mm);
-                ServerCacheManager.getInstance().getCrcMethodMap().put(value, service + "_" + clazz.getSimpleName() + "_" + method.getName());
+                rpcCacheManager.putCrcMethodMap(value, service + "_" + clazz.getSimpleName() + "_" + method.getName());
                 //TODO DTS
                 Annotation[] annotations = method.getDeclaredAnnotations();
                 for (Annotation annotation : annotations) {
@@ -288,10 +267,10 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                                 innerAnnotations = (Annotation[]) annotationMethodContainer.invoke(annotation);
                             } catch (IllegalAccessException e) {
                                 e.printStackTrace();
-                                LoggerEx.warn(TAG, "(IllegalAccessException)Try to get annotations for key values in class " + annotationMethodContainer.getDeclaringClass() + " method " + annotationMethodContainer.getName() + " failed, " + e.getMessage());
+                                LoggerEx.warn(TAG, "(IllegalAccessException)Try to get annotations for key values in class " + annotationMethodContainer.getDeclaringClass() + " method " + annotationMethodContainer.getName() + " failed, " + ExceptionUtils.getFullStackTrace(e));
                             } catch (InvocationTargetException e) {
                                 e.printStackTrace();
-                                LoggerEx.warn(TAG, "(InvocationTargetException)Try to get annotations for key values in class " + annotationMethodContainer.getDeclaringClass() + " method " + annotationMethodContainer.getName() + " failed, " + e.getMessage());
+                                LoggerEx.warn(TAG, "(InvocationTargetException)Try to get annotations for key values in class " + annotationMethodContainer.getDeclaringClass() + " method " + annotationMethodContainer.getName() + " failed, " + ExceptionUtils.getFullStackTrace(e));
                             }
                             if (innerAnnotations != null) {
                                 for (Annotation innerAnnotation : innerAnnotations) {
@@ -325,10 +304,10 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 annotationValue = innerAnnotationMethod.invoke(annotation);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
-                LoggerEx.warn(TAG, "(IllegalAccessException)Try to get annotation value for key " + annotationKey + " in class " + method.getDeclaringClass() + " method " + method.getName() + " failed, " + e.getMessage());
+                LoggerEx.warn(TAG, "(IllegalAccessException)Try to get annotation value for key " + annotationKey + " in class " + method.getDeclaringClass() + " method " + method.getName() + " failed, " + ExceptionUtils.getFullStackTrace(e));
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
-                LoggerEx.warn(TAG, "(InvocationTargetException)Try to get annotation value for key " + annotationKey + " in class " + method.getDeclaringClass() + " method " + method.getName() + " failed, " + e.getMessage());
+                LoggerEx.warn(TAG, "(InvocationTargetException)Try to get annotation value for key " + annotationKey + " in class " + method.getDeclaringClass() + " method " + method.getName() + " failed, " + ExceptionUtils.getFullStackTrace(e));
             }
             if (annotationValue != null)
                 if (annotationValue.getClass().isArray()) {
@@ -345,7 +324,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                         annotationParams.put(annotationKey, annotationValue);
                     }catch (Throwable t){
                         t.printStackTrace();
-                        LoggerEx.error(TAG, t.getMessage());
+                        LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(t));
                     }
                 }else if(annotationValue instanceof String){
                     annotationParams.put(annotationKey, getGroovyRuntime().processAnnotationString((String) annotationValue));

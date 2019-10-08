@@ -22,6 +22,7 @@ import chat.utils.ClassFieldsHolder.FieldEx;
 import chat.utils.ClassFieldsHolder.FieldIdentifier;
 import connectors.mongodb.annotations.handlers.MongoDBHandler;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.*;
 import org.bson.assertions.Assertions;
 import org.bson.codecs.*;
@@ -249,7 +250,7 @@ public class BaseObjectCodec implements Codec<BaseObject> {
 			return dataObj;
 		} catch (InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
-			LoggerEx.error(TAG, "convert document " + document + " to DataObject " + documentClass + " failed, " + e.getMessage());
+			LoggerEx.error(TAG, "convert document " + document + " to DataObject " + documentClass + " failed, " + ExceptionUtils.getFullStackTrace(e));
 		}
     	return null;
     }

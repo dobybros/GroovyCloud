@@ -3,6 +3,7 @@ package com.dobybros.chat.tasks;
 import chat.logs.LoggerEx;
 import com.dobybros.chat.utils.CommonUtils;
 import com.docker.tasks.Task;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import script.file.FileAdapter;
 import script.file.FileAdapter.PathEx;
 
@@ -86,7 +87,7 @@ public class CleanUpTask extends Task {
 				}
 			}catch(Throwable t) {
 				t.printStackTrace();
-				LoggerEx.error(TAG, "Task sending failed, " + t.getMessage());
+				LoggerEx.error(TAG, "Task sending failed, " + ExceptionUtils.getFullStackTrace(t));
 				if(task != null) {
 					task.retry--;
 					if(task.retry >= 0) 

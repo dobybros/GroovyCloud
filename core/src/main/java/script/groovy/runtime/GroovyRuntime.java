@@ -14,6 +14,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.ScriptRuntime;
 import script.groovy.object.GroovyObjectEx;
 import chat.errors.CoreException;
@@ -22,6 +25,8 @@ import script.groovy.runtime.classloader.ClassHolder;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 public class GroovyRuntime extends ScriptRuntime {
+    @Autowired
+    private AutowireCapableBeanFactory autowireCapableBeanFactory;
     private static final String TAG = GroovyRuntime.class.getSimpleName();
     private ArrayList<ClassAnnotationHandler> annotationHandlers = new ArrayList<>();
     private ConcurrentHashMap<Object, ClassAnnotationHandler> annotationHandlerMap = new ConcurrentHashMap<>();
@@ -103,6 +108,7 @@ public class GroovyRuntime extends ScriptRuntime {
     }
 
     public boolean addClassAnnotationHandler(ClassAnnotationHandler handler) {
+        autowireCapableBeanFactory.autowireBean(handler);
         if (handler != null && !annotationHandlers.contains(handler)) {
             boolean bool = annotationHandlers.add(handler);
             annotationHandlerMap.put(handler.getKey(), handler);
@@ -129,7 +135,7 @@ public class GroovyRuntime extends ScriptRuntime {
                 LoggerEx.info(TAG, "oldLibClassLoader " + oldLibClassLoader + " has been closed.");
             } catch (IOException e) {
                 e.printStackTrace();
-                LoggerEx.error(TAG, "oldLibClassLoader close failed, " + e.getMessage());
+                LoggerEx.error(TAG, "oldLibClassLoader close failed, " + ExceptionUtils.getFullStackTrace(e));
             }
         }
     }
@@ -153,7 +159,7 @@ public class GroovyRuntime extends ScriptRuntime {
                     LoggerEx.info(TAG, "Loaded jar " + jar.getAbsolutePath());
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
-                    LoggerEx.warn(TAG, "MalformedURL " + path + " while load jars, error " + e.getMessage());
+                    LoggerEx.warn(TAG, "MalformedURL " + path + " while load jars, error " + ExceptionUtils.getFullStackTrace(e));
                 }
             }
             if (!urls.isEmpty()) {
@@ -250,6 +256,7 @@ public class GroovyRuntime extends ScriptRuntime {
                     }
                 }
             });
+            handlerThread.setName(GroovyRuntime.class.getSimpleName());
             handlerThread.start();
             try {
                 handlerThread.join();
@@ -287,7 +294,7 @@ public class GroovyRuntime extends ScriptRuntime {
             } catch (Throwable e) {
                 e.printStackTrace();
                 LoggerEx.error(TAG, "Initialize customized groovyObjectClass "
-                        + groovyObjectClass + " failed, " + e.getMessage());
+                        + groovyObjectClass + " failed, " + ExceptionUtils.getFullStackTrace(e));
                 return null;
             }
         } else {
@@ -316,7 +323,7 @@ public class GroovyRuntime extends ScriptRuntime {
             } catch (Throwable e) {
                 e.printStackTrace();
                 LoggerEx.error(TAG, "Initialize customized groovyObjectClass "
-                        + groovyObjectClass + " failed, " + e.getMessage());
+                        + groovyObjectClass + " failed, " + ExceptionUtils.getFullStackTrace(e));
                 return null;
             }
         } else {
@@ -331,27 +338,10 @@ public class GroovyRuntime extends ScriptRuntime {
         } catch (Throwable e) {
             e.printStackTrace();
             LoggerEx.error(TAG, "New proxy instance "
-                    + groovyObjectClass + " failed, " + e.getMessage());
+                    + groovyObjectClass + " failed, " + ExceptionUtils.getFullStackTrace(e));
         }
         return obj;
     }
-
-//    public Object getProxyObject(GroovyObjectEx<?> groovyObject) {
-//        Object obj = null;
-//        try {
-//            GroovyBeanFactory factory = beanFactory;
-//            Class<?> proxyClass = factory.getProxyClass(groovyObject.getGroovyClass().getName());
-//            if(proxyClass != null) {
-//                Constructor<?> constructor = proxyClass.getConstructor(GroovyObjectEx.class);
-//                obj = constructor.newInstance(groovyObject);
-//            }
-//        } catch (Throwable  e) {
-//            e.printStackTrace();
-//            LoggerEx.error(TAG, "New proxy instance(getProxyObject) "
-//                    + groovyObject.getGroovyPath() + " failed, " + e.getMessage());
-//        }
-//        return obj;
-//    }
 
     @Override
     public void close() {
@@ -363,7 +353,7 @@ public class GroovyRuntime extends ScriptRuntime {
                 t.printStackTrace();
                 LoggerEx.fatal(TAG,
                         "Handle annotated classes shutdown failed "
-                                + " the handler " + annotationHandler + " error " + t.getMessage());
+                                + " the handler " + annotationHandler + " error " + ExceptionUtils.getFullStackTrace(t));
             }
         }
         runtimeBootListener.close();

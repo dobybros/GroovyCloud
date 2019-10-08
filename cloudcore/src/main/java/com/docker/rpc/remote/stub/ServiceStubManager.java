@@ -1,15 +1,15 @@
 package com.docker.rpc.remote.stub;
 
-import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
-import com.alibaba.fastjson.JSON;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.remote.MethodMapping;
-import scala.annotation.meta.field;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.servlets.Tracker;
 
 import java.lang.reflect.Field;
@@ -20,31 +20,38 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServiceStubManager {
+    @Autowired
+    RpcCacheManager rpcCacheManager;
+    @Autowired
+    RemoteServersManager remoteServersManager;
     private static final String TAG = ServiceStubManager.class.getSimpleName();
     private ConcurrentHashMap<String, Boolean> classScanedMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Long, MethodMapping> methodMap = new ConcurrentHashMap<>();
-    private String clientTrustJksPath;
-    private String serverJksPath;
-    private String jksPwd;
     private String host;
-    private boolean inited = false;
     private Class<?> serviceStubProxyClass;
+    //sure is ssl
     private Boolean usePublicDomain = false;
-    private RPCClientAdapterMap clientAdapterMap;
-    private RemoteServersDiscovery remoteServersDiscovery;
-
+    private boolean inited = false;
     /**
      *
      */
     private String fromService;
 
-    public ServiceStubManager() {
+    public ServiceStubManager(String host, String fromService) {
+        if (fromService != null) {
+            this.fromService = fromService;
+        }
+        if (host == null) {
+            throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
+        }
+        if (!host.startsWith("http")) {
+            host = "http://" + host;
+        }
+        this.host = host;
     }
-
-    public ServiceStubManager(String fromService) {
-        this.fromService = fromService;
+    public void init(){
+        remoteServersManager.addRemoteHost(this.host);
     }
-
     public void clearCache() {
         methodMap.clear();
     }
@@ -62,7 +69,7 @@ public class ServiceStubManager {
 //                service = paths[paths.length - 2];
 //            }
 //        }
-        if(!classScanedMap.containsKey(clazz.getName() + "_" + service)) {
+        if (!classScanedMap.containsKey(clazz.getName() + "_" + service)) {
             try {
                 Field field = clazz.getField("SERVICE");
                 field.get(clazz);
@@ -113,14 +120,14 @@ public class ServiceStubManager {
                 returnType = ReflectionUtil.getInitiatableClass(returnType);
                 mm.setReturnClass(returnType);
                 mm.setGenericReturnClass(method.getGenericReturnType());
-                if(method.getGenericReturnType() instanceof ParameterizedType){
+                if (method.getGenericReturnType() instanceof ParameterizedType) {
                     Type[] tArgs = ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments();
                     mm.setGenericReturnActualTypeArguments(tArgs);
                 }
 
-                if(method.getGenericReturnType().getTypeName().contains(CompletableFuture.class.getTypeName())){
+                if (method.getGenericReturnType().getTypeName().contains(CompletableFuture.class.getTypeName())) {
                     mm.setAsync(true);
-                }else {
+                } else {
                     mm.setAsync(false);
                 }
                 methodMap.put(value, mm);
@@ -128,27 +135,6 @@ public class ServiceStubManager {
                 LoggerEx.info("SCAN", "Mapping crc " + value + " for class " + clazz.getName() + " method " + method.getName() + " for service " + service);
             }
         }
-    }
-
-    public synchronized void init() {
-        if (inited)
-            return;
-        if (host == null) {
-            throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
-        }
-        if (!host.startsWith("http")) {
-            host = "http://" + host;
-        }
-        RefreshServers.getInstance().addRemoteHost(host);
-        this.clientAdapterMap = new RPCClientAdapterMap();
-        if (clientTrustJksPath != null && serverJksPath != null && jksPwd != null) {
-            this.clientAdapterMap.setEnableSsl(true);
-            this.clientAdapterMap.setRpcSslClientTrustJksPath(clientTrustJksPath);
-            this.clientAdapterMap.setRpcSslJksPwd(jksPwd);
-            this.clientAdapterMap.setRpcSslServerJksPath(serverJksPath);
-        }
-        this.remoteServersDiscovery = new RemoteServersDiscovery(host);
-        inited = true;
     }
 
     private MethodRequest getMethodRequest(String service, String className, String method, Object[] args) {
@@ -166,13 +152,13 @@ public class ServiceStubManager {
     }
 
     public CompletableFuture<?> callAsync(String service, String className, String method, Object... args) throws CoreException {
-        CompletableFuture<?> future = new RemoteServerHandler(service, this).callAsync(getMethodRequest(service, className, method, args));
+        CompletableFuture<?> future = getRemoteServerHandler(service).callAsync(getMethodRequest(service, className, method, args));
         return future;
     }
 
     public Object call(String service, String className, String method, Object... args) throws CoreException {
         MethodRequest request = getMethodRequest(service, className, method, args);
-        MethodResponse response = new RemoteServerHandler(service, this).call(request);
+        MethodResponse response = getRemoteServerHandler(service).call(request);
         return Proxy.getReturnObject(request, response);
     }
 
@@ -184,8 +170,6 @@ public class ServiceStubManager {
     public <T> T getService(String service, Class<T> adapterClass, Integer version) {
         if (host == null)
             throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
-//        if(!inited)
-//            throw new NullPointerException("ServiceSubManager hasn't been initialized yet, please call init method first.");
         if (service == null)
             throw new NullPointerException("Service can not be nulll");
         T adapterService = null;
@@ -193,54 +177,35 @@ public class ServiceStubManager {
         scanClass(adapterClass, service);
         if (serviceStubProxyClass != null) {
             try {
-                Method getProxyMethod = serviceStubProxyClass.getMethod("getProxy", RemoteServerHandler.class, Class.class, ServiceStubManager.class);
+                Method getProxyMethod = serviceStubProxyClass.getMethod("getProxy", Class.class, ServiceStubManager.class, AutowireCapableBeanFactory.class, RemoteServerHandler.class, RpcCacheManager.class);
                 if (getProxyMethod != null) {
+
                     //远程service
-                    adapterService = (T) getProxyMethod.invoke(null, new RemoteServerHandler(service, this), adapterClass, this);
+                    adapterService = (T) getProxyMethod.invoke(null, adapterClass, this, this.beanFactory, getRemoteServerHandler(service), rpcCacheManager);
                 } else {
                     LoggerEx.error(TAG, "getProxy method doesn't be found for " + adapterClass + " in service " + service);
                 }
             } catch (Throwable t) {
                 t.printStackTrace();
-                LoggerEx.error(TAG, "Generate proxy object for " + adapterClass + " in service " + service + " failed, " + t.getMessage());
+                LoggerEx.error(TAG, "Generate proxy object for " + adapterClass + " in service " + service + " failed, " + ExceptionUtils.getFullStackTrace(t));
             }
 
         } else {
             try {
-                RemoteProxy proxy = new RemoteProxy(new RemoteServerHandler(service, this), this);
+                RemoteProxy proxy = new RemoteProxy(this.beanFactory, this, getRemoteServerHandler(service));
                 adapterService = (T) proxy.getProxy(adapterClass);
             } catch (Throwable e) {
                 e.printStackTrace();
-                LoggerEx.warn(TAG, "Initiate moduleClass " + adapterClass + " failed, " + e.getMessage());
+                LoggerEx.warn(TAG, "Initiate moduleClass " + adapterClass + " failed, " + ExceptionUtils.getFullStackTrace(e));
             }
         }
         return adapterService;
     }
-
-    public String getClientTrustJksPath() {
-        return clientTrustJksPath;
+    private RemoteServerHandler getRemoteServerHandler(String service){
+        RemoteServerHandler remoteServerHandler = new RemoteServerHandler(service, this);
+        beanFactory.autowireBean(remoteServerHandler);
+        return remoteServerHandler;
     }
-
-    public void setClientTrustJksPath(String clientTrustJksPath) {
-        this.clientTrustJksPath = clientTrustJksPath;
-    }
-
-    public String getServerJksPath() {
-        return serverJksPath;
-    }
-
-    public void setServerJksPath(String serverJksPath) {
-        this.serverJksPath = serverJksPath;
-    }
-
-    public String getJksPwd() {
-        return jksPwd;
-    }
-
-    public void setJksPwd(String jksPwd) {
-        this.jksPwd = jksPwd;
-    }
-
     public String getHost() {
         return host;
     }
@@ -273,19 +238,10 @@ public class ServiceStubManager {
         this.usePublicDomain = usePublicDomain;
     }
 
-    public RPCClientAdapterMap getClientAdapterMap() {
-        return clientAdapterMap;
-    }
+    private AutowireCapableBeanFactory beanFactory;
 
-    public void setClientAdapterMap(RPCClientAdapterMap clientAdapterMap) {
-        this.clientAdapterMap = clientAdapterMap;
-    }
-
-    public RemoteServersDiscovery getRemoteServersDiscovery() {
-        return remoteServersDiscovery;
-    }
-
-    public void setRemoteServersDiscovery(RemoteServersDiscovery remoteServersDiscovery) {
-        this.remoteServersDiscovery = remoteServersDiscovery;
+    public void setBeanFactory(AutowireCapableBeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
+        init();
     }
 }

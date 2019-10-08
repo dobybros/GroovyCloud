@@ -1,18 +1,18 @@
 package chat.utils;
 
-import java.util.TimerTask;
-import java.util.concurrent.*;
-
+import chat.errors.CoreException;
 import chat.logs.LoggerEx;
-import chat.main.ServerStart;
-import chat.scheduled.QuartzHandler;
+import chat.scheduled.QuartzFactory;
+import chat.thread.CloudThreadFactory;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 
-import javax.annotation.Resource;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class TimerEx {
     private static final String TAG = TimerEx.class.getSimpleName();
-
     public static void schedule(TimerTaskEx task, Long delay) {
         try {
             if (delay != null) {
@@ -21,13 +21,10 @@ public class TimerEx {
             if (task.getId() == null) {
                 task.setId(ObjectId.get().toString());
             }
-            if(task.getThreadPoolExecutor() == null){
-                task.setThreadPoolExecutor((ThreadPoolExecutor) Executors.newFixedThreadPool(1));
-            }
-            QuartzHandler.getInstance().addJob(task);
+            QuartzFactory.getInstance().addJob(task);
         } catch (Throwable e) {
             e.printStackTrace();
-            LoggerEx.error(TAG, "Schedule TimerTask " + task + " failed, " + e.getMessage());
+            LoggerEx.error(TAG, "Schedule TimerTask " + task + " failed, " + ExceptionUtils.getFullStackTrace(e));
         }
     }
 
@@ -42,13 +39,10 @@ public class TimerEx {
             if (task.getId() == null) {
                 task.setId(ObjectId.get().toString());
             }
-            if(task.getThreadPoolExecutor() == null){
-                task.setThreadPoolExecutor((ThreadPoolExecutor) Executors.newFixedThreadPool(1));
-            }
-            QuartzHandler.getInstance().addJob(task);
+            QuartzFactory.getInstance().addJob(task);
         } catch (Throwable e) {
             e.printStackTrace();
-            LoggerEx.error(TAG, "Schedule Period TimerTask " + task + " failed, " + e.getMessage());
+            LoggerEx.error(TAG, "Schedule Period TimerTask " + task + " failed, " + ExceptionUtils.getFullStackTrace(e));
         }
     }
     public static void schedule(TimerTaskEx task, String cron) {
@@ -59,73 +53,39 @@ public class TimerEx {
             if (task.getId() == null) {
                 task.setId(ObjectId.get().toString());
             }
-            if(task.getThreadPoolExecutor() == null){
-                task.setThreadPoolExecutor((ThreadPoolExecutor) Executors.newFixedThreadPool(1));
-            }
-            QuartzHandler.getInstance().addCronJob(task);
+            QuartzFactory.getInstance().addCronJob(task);
         } catch (Throwable e) {
             e.printStackTrace();
-            LoggerEx.error(TAG, "Schedule TimerTask " + task + " failed, " + e.getMessage());
+            LoggerEx.error(TAG, "Schedule TimerTask " + task + " failed, " + ExceptionUtils.getFullStackTrace(e));
+        }
+    }
+    //传参数即可
+    public static void schedule(TimerTaskEx task){
+        if(task.getId() != null){
+            if(task.getCron() != null){
+                schedule(task, task.getCron());
+            }else {
+                if(task.getScheduleTime() != null){
+                    try {
+                        QuartzFactory.getInstance().addJobByScheduletime(task);
+                    } catch (CoreException e) {
+                        e.printStackTrace();
+                        LoggerEx.error(TAG, "Schedule TimerTask " + task + " failed, " + ExceptionUtils.getFullStackTrace(e));
+                    }
+                }else {
+                    schedule(task, task.getDelay(), task.getPeriod());
+                }
+            }
         }
     }
     public static void cancel(TimerTaskEx task) {
         try {
             if(task.getId() != null){
-                QuartzHandler.getInstance().removeJob(task.getId());
+                QuartzFactory.getInstance().removeJob(task.getId());
             }
         }catch (Throwable e){
             e.printStackTrace();
-            LoggerEx.error(TAG, "Remove timetask filed, taskId: " + task.getId());
+            LoggerEx.error(TAG, "Remove timetask filed, taskId: " + task.getId() + ",e: " + ExceptionUtils.getFullStackTrace(e));
         }
     }
-
-
-//	public static void main(String args[]) {
-//		System.out.println("start");
-////		TimerEx.schedule(new TimerTaskEx() {
-////			@Override
-////			public void execute() {
-////				System.out.println("done");
-////			}
-////		}, -1234);
-////		TimerEx.schedule(new TimerTaskEx() {
-////			@Override
-////			public void execute() {
-////				System.out.println("done1");
-////			}
-////		}, 2000);
-//		TimerTaskEx timerTask = new TimerTaskEx() {
-//			@Override
-//			public void execute() {
-//				try {
-//					System.out.println("将要执行");
-//					Thread.sleep(2000L);
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
-//				System.out.println("执行结果:123");
-//			}
-//		};
-//		TimerEx.schedule(timerTask, 2000, 1);
-////		TimerEx.schedule(new TimerTaskEx() {
-////			@Override
-////			public void execute() {
-////				System.out.println("negetive");
-////			}
-////		}, -123);
-//
-//		new Thread(new Runnable() {
-//			@Override
-//			public void run() {
-//				try {
-//					Thread.sleep(2100L);
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
-//				boolean bool = timerTask.cancel();
-//				System.out.println("canceled " + bool);
-//			}
-//		}).start();
-//	}
-
 }

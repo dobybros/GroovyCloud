@@ -2,6 +2,7 @@ package com.docker.tasks;
 
 import chat.logs.LoggerEx;
 import com.docker.utils.CommonUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import script.file.FileAdapter;
 import script.file.FileAdapter.PathEx;
 
@@ -85,13 +86,13 @@ public class CleanUpTask extends Task {
 				}
 			}catch(Throwable t) {
 				t.printStackTrace();
-				LoggerEx.error(TAG, "Task sending failed, " + t.getMessage());
+				LoggerEx.error(TAG, "Task sending failed, " + ExceptionUtils.getFullStackTrace(t));
 				if(task != null) {
 					task.retry--;
 					if(task.retry >= 0) 
 						queue.add(task);
 					else 
-						LoggerEx.fatal(TAG, "Delete resource failed " + t.getMessage() + " after retry " + CleanUp.RETRY_MAX + " times");
+						LoggerEx.fatal(TAG, "Delete resource failed " + ExceptionUtils.getFullStackTrace(t) + " after retry " + CleanUp.RETRY_MAX + " times");
 				}
 			}
 		}

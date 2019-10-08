@@ -1,5 +1,6 @@
 package chat.main;
 
+import chat.thread.CloudThreadFactory;
 import org.apache.tomcat.util.threads.TaskQueue;
 import org.eclipse.jetty.util.thread.ThreadPool;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,19 @@ import java.util.concurrent.TimeUnit;
 public class ServerStart {
 	private static String coreSize;
 	private static String maximumPoolSize;
+	private static String gatewayCoreSize;
+	private static String gatewayMaximumPoolSize;
+	private static String timerCoreSize;
+	private static String timerMaximumPoolSize;
+	private static String asyncCoreSize;
+	private static String asyncMaximumPoolSize;
 	private static String keepAliveTime;
 	private static String queueCapacity;
 	private ThreadPoolExecutor threadPoolExecutor;
 	private ThreadPoolExecutor coreThreadPoolExecutor;
+	private ThreadPoolExecutor timerThreadPoolExecutor;
+	private ThreadPoolExecutor asyncThreadPoolExecutor;
+	private ThreadPoolExecutor gatewayThreadPoolExecutor;
 
 	private static volatile ServerStart instance;
 	public static ServerStart getInstance(){
@@ -36,6 +46,12 @@ public class ServerStart {
 						properties.load(configResource.getInputStream());
 						coreSize = properties.getProperty("thread.coreSize");
 						maximumPoolSize = properties.getProperty("thread.maximumPoolSize");
+						gatewayCoreSize = properties.getProperty("thread.gateway.coreSize");
+						gatewayMaximumPoolSize = properties.getProperty("thread.gateway.maximumPoolSize");
+						timerCoreSize = properties.getProperty("thread.timer.coreSize");
+						timerMaximumPoolSize = properties.getProperty("thread.timer.maximumPoolSize");
+						asyncCoreSize = properties.getProperty("thread.async.coreSize");
+						asyncMaximumPoolSize = properties.getProperty("thread.async.maximumPoolSize");
 						keepAliveTime = properties.getProperty("thread.keepAliveTime");
 						queueCapacity = properties.getProperty("thread.queueCapacity");
 					}catch (IOException e){
@@ -61,25 +77,41 @@ public class ServerStart {
 	//业务使用
 	public ThreadPoolExecutor getThreadPool() {
 		if(threadPoolExecutor == null){
-			threadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)));
+			threadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)), new CloudThreadFactory());
 		}
 		return threadPoolExecutor;
 	}
-	//底层使用
-	public ThreadPoolExecutor getCoreThreadPoolExecutor(){
-		if(coreThreadPoolExecutor == null){
-			coreThreadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)));
+
+	//gateway专用
+	public ThreadPoolExecutor getGatewayThreadPoolExecutor(){
+		if(gatewayThreadPoolExecutor == null){
+			gatewayThreadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(gatewayCoreSize), Integer.valueOf(gatewayMaximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)), new CloudThreadFactory("Gateway"));
 		}
-		return coreThreadPoolExecutor;
+		return gatewayThreadPoolExecutor;
 	}
-//	public String threadPoolStatus() {
-//		StringBuffer buffer = new StringBuffer("Web ThreadPool");
-//		buffer.append(" threadPool: " + threadPoolExecutor);
-//		return buffer.toString();
-//	}
-//	public String coretThreadPoolStatus() {
-//		StringBuffer buffer = new StringBuffer("Web ThreadPool");
-//		buffer.append(" threadPool: " + coreThreadPoolExecutor);
-//		return buffer.toString();
-//	}
+	//定时器专用
+	public ThreadPoolExecutor getTimerThreadPoolExecutor(){
+		if(timerThreadPoolExecutor == null){
+			timerThreadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(timerCoreSize), Integer.valueOf(timerMaximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)), new CloudThreadFactory("Timer"));
+		}
+		return timerThreadPoolExecutor;
+	}
+	//异步专用
+	public ThreadPoolExecutor getAsyncThreadPoolExecutor(){
+		if(asyncThreadPoolExecutor == null){
+			asyncThreadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(asyncCoreSize), Integer.valueOf(asyncMaximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)), new CloudThreadFactory("Async"));
+		}
+		return asyncThreadPoolExecutor;
+	}
+
+	/**普通的线程池：
+	 * 1、如果线程池的当前大小还没有达到基本大小(poolSize < corePoolSize)，那么就新增加一个线程处理新提交的任务；
+	 *
+	 * 2、如果当前大小已经达到了基本大小，就将新提交的任务提交到阻塞队列排队，等候处理workQueue.offer(command)；
+	 *
+	 * 3、如果队列容量已达上限，并且当前大小poolSize没有达到maximumPoolSize，那么就新增线程来处理任务；
+	 *
+	 * 4、如果队列已满，并且当前线程数目也已经达到上限，那么意味着线程池的处理能力已经达到了极限，此时需要拒绝新增加的任务。至于如何拒绝处理新增的任务，取决于线程池的饱和策略RejectedExecutionHandler。
+	 * tomcat的taskqueue:会先把线程池起到maximumPoolSize,再往队列中放
+	 */
 }

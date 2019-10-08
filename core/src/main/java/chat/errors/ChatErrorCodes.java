@@ -94,4 +94,6 @@ public interface ChatErrorCodes {
 	public static final int ERROR_DISCOVERY_NOTFOUND= CODE_CORE + 206;
 	public static final int ERROR_ASYNC_ERROR= CODE_CORE + 207;
 	public static final int ERROR_ASYNC_TIMEOUT= CODE_CORE + 208;
+	public static final int ERROR_QUARTZ_ADDFAILED =  CODE_CORE + 209;
+	public static final int ERROR_QUARTZ_CANCELEDFAILED= CODE_CORE + 210;
 }

@@ -7,6 +7,18 @@ import java.util.Map;
  * Description：
  */
 public abstract class AsyncCallbackHandler {
-    public Map map;
+    //handler with params want
+    protected Map map;
+    //async return result
+    protected Object result;
+
+    public AsyncCallbackHandler(Map map){
+        this.map = map;
+    }
+
     public abstract void handle();
+
+    public void setResult(Object result) {
+        this.result = result;
+    }
 }

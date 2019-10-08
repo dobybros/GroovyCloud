@@ -3,20 +3,39 @@ package com.docker.storage.cache;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
+import com.alibaba.fastjson.JSON;
 import com.docker.data.CacheObj;
 import com.docker.rpc.async.AsyncCallbackHandler;
+import com.docker.rpc.async.AsyncRpcFuture;
 import com.docker.rpc.method.RPCMethodInvocation;
+import com.docker.rpc.remote.MethodMapping;
+import com.docker.rpc.remote.stub.RpcCacheManager;
 import com.docker.script.BaseRuntime;
 import com.docker.storage.cache.handlers.CacheStorageAdapter;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.object.MethodInvocation;
 import script.groovy.runtime.MethodInterceptor;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class CacheMethodInterceptor implements MethodInterceptor {
+    @Autowired
+    RpcCacheManager rpcCacheManager;
+    @Autowired
+    CacheStorageFactory cacheStorageFactory;
     public static final String TAG = CacheMethodInterceptor.class.getSimpleName();
-    private CacheStorageFactory cacheStorageFactory = CacheStorageFactory.getInstance();
+    public static final String CACHE_METHODMAP = "cacheMethodMap";
+    public static final String CRC = "crc";
+    public static final String CACHE_KEY = "key";
+    public static final String CACHE_HOST = "host";
+    public static final String CACHE_EXPIRD = "expird";
     public static final String CACHEKEY = "cacheKey";
     private Map<String, CacheObj> cacheMethodMap;
     private CacheAnnotationHandler cacheAnnotationHandler;
@@ -24,13 +43,15 @@ public class CacheMethodInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws CoreException {
         RPCMethodInvocation rpcMethodInvocation = (RPCMethodInvocation) methodInvocation;
+
         String methodKey = rpcMethodInvocation.methodKey;
         //获取当前的baseRuntime
         BaseRuntime baseRuntime = (BaseRuntime) cacheAnnotationHandler.getGroovyRuntime();
         if (cacheMethodMap != null && !cacheMethodMap.isEmpty()) {
             CacheObj cacheObj = cacheMethodMap.get(methodKey);
             if (cacheObj != null) {
-                CacheStorageAdapter cacheStorageAdapter = cacheStorageFactory.getCacheStorageAdapter(cacheObj.getCacheMethod(), baseRuntime.getCacheHost(cacheObj.getCacheMethod()));
+                String cacheHost = baseRuntime.getCacheHost(cacheObj.getCacheMethod());
+                CacheStorageAdapter cacheStorageAdapter = cacheStorageFactory.getCacheStorageAdapter(cacheObj.getCacheMethod(), cacheHost);
                 if (cacheStorageAdapter == null || cacheObj.isEmpty()) {
                     return rpcMethodInvocation.proceed();
                 }
@@ -38,30 +59,55 @@ public class CacheMethodInterceptor implements MethodInterceptor {
                 if (key == null) {
                     return rpcMethodInvocation.proceed();
                 } else {
-                    Object result = cacheStorageAdapter.getCacheData(cacheObj.getPrefix() + "_" + key, rpcMethodInvocation.getMethodMapping().getReturnClass());
-                    if (result != null) {
-                        if (rpcMethodInvocation.getAsync()) {
-                            CompletableFuture completableFuture = new CompletableFuture();
-                            completableFuture.complete(result);
-                            return completableFuture;
-                        } else {
-                            return result;
+                    MethodMapping methodMapping = rpcMethodInvocation.getMethodMapping();
+                    Type returnType = null;
+                    if(methodMapping.getGenericReturnClass().getTypeName().contains(CompletableFuture.class.getTypeName())){
+                        if(methodMapping.getGenericReturnActualTypeArguments() != null && methodMapping.getGenericReturnActualTypeArguments().length > 0){
+                            returnType = methodMapping.getGenericReturnActualTypeArguments()[0];
                         }
-                    } else {
-                        if (!rpcMethodInvocation.getAsync()) {
-                            result = rpcMethodInvocation.handleSync();
-                            if (result != null) {
-                                try {
-                                    cacheStorageAdapter.addCacheData(cacheObj.getPrefix() + "_" + key, result, cacheObj.getExpired());
-                                } catch (CoreException e) {
-                                    LoggerEx.error(TAG, "Add cache data failed,key is " + cacheObj.getPrefix() + "_" + key + ",value is " + result + ",reason is " + e.getMessage());
+                    }else {
+                        returnType = methodMapping.getGenericReturnClass();
+                    }
+                    if(returnType != null && !returnType.getTypeName().equals(void.class.getSimpleName())){
+                        Object result = cacheStorageAdapter.getCacheData(cacheObj.getPrefix() + "_" + key, returnType);
+                        if (result != null) {
+                            if (rpcMethodInvocation.getAsync()) {
+                                AsyncRpcFuture asyncRpcFuture = rpcCacheManager.getAsyncRpcFuture(((RPCMethodInvocation) methodInvocation).getRemoteServerHandler().getCallbackFutureId());
+                                if(asyncRpcFuture != null && asyncRpcFuture.getFuture() != null){
+                                    List<String> list = new ArrayList<>();
+                                    list.add(CacheAsyncCallbackHandler.class.getSimpleName());
+                                    asyncRpcFuture.handleAsyncHandler(result, list);
+                                    CompletableFuture completableFuture = asyncRpcFuture.getFuture();
+                                    completableFuture.complete(result);
+                                    return completableFuture;
                                 }
+                            } else {
+                                return result;
                             }
                         } else {
-                            rpcMethodInvocation.getMethodRequest().putExtra(CACHEKEY, key);
-                            result = rpcMethodInvocation.handleAsync();
+                            if (!rpcMethodInvocation.getAsync()) {
+                                result = rpcMethodInvocation.handleSync();
+                                if (result != null) {
+                                    try {
+                                        cacheStorageAdapter.addCacheData(cacheObj.getPrefix() + "_" + key, result, cacheObj.getExpired());
+                                    } catch (CoreException e) {
+                                        LoggerEx.error(TAG, "Add cache data failed,key is " + cacheObj.getPrefix() + "_" + key + ",value is " + result + ",reason is " + e.getMessage());
+                                    }
+                                }
+                            } else {
+                                Map<String, Object> map = new HashMap<>();
+                                map.put(CACHE_METHODMAP, cacheMethodMap);
+                                map.put(CRC, String.valueOf(rpcMethodInvocation.getMethodRequest().getCrc()));
+                                map.put(CACHE_HOST, cacheHost);
+                                map.put(CACHE_KEY, cacheObj.getPrefix() + "_" + key);
+                                map.put(CACHE_EXPIRD, cacheObj.getExpired());
+                                CacheAsyncCallbackHandler cacheAsyncCallbackHandler = new CacheAsyncCallbackHandler(map);
+
+                                rpcCacheManager.getAsyncRpcFuture(((RPCMethodInvocation) methodInvocation).getRemoteServerHandler().getCallbackFutureId()).addHandler(cacheAsyncCallbackHandler);
+                                result = rpcMethodInvocation.handleAsync();
+                            }
+                            return result;
                         }
-                        return result;
                     }
                 }
             }
@@ -70,14 +116,28 @@ public class CacheMethodInterceptor implements MethodInterceptor {
     }
 
 
-    public static class CacheAsyncCallbackHandler extends AsyncCallbackHandler {
+    private class CacheAsyncCallbackHandler extends AsyncCallbackHandler {
+
+        public CacheAsyncCallbackHandler(Map map){
+            super(map);
+        }
         @Override
         public void handle() {
-
+            Map<String, CacheObj> cacheObjMap = (Map<String, CacheObj>)map.get(CACHE_METHODMAP);
+            CacheObj cacheObj = cacheObjMap.get(map.get(CRC));
+            CacheStorageAdapter cacheStorageAdapter = cacheStorageFactory.getCacheStorageAdapter(cacheObj.getCacheMethod(), (String)map.get(CACHE_HOST));
+            String key = (String)map.get(CACHE_KEY);
+            if (key != null && result != null && cacheStorageAdapter != null) {
+                try {
+                    cacheStorageAdapter.addCacheData(key,result,(Long) map.get(CACHE_EXPIRD));
+                } catch (CoreException coreException) {
+                    LoggerEx.error(TAG, "Add cache data failed on async call class is service_class_method:reason is " + coreException.getMessage());
+                }
+            }
         }
     }
 
-    public void setCacheAnnotationHandler(CacheAnnotationHandler cacheAnnotationHandler){
+    public void setCacheAnnotationHandler(CacheAnnotationHandler cacheAnnotationHandler) {
         this.cacheAnnotationHandler = cacheAnnotationHandler;
         this.cacheMethodMap = cacheAnnotationHandler.getCacheMethodMap();
 

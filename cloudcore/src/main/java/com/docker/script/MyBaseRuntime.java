@@ -16,6 +16,9 @@ import com.docker.storage.adapters.LansService;
 import groovy.lang.GroovyObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.FieldInjectionListener;
@@ -23,7 +26,6 @@ import script.groovy.runtime.GroovyRuntime;
 import script.groovy.runtime.classloader.ClassHolder;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
-import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -39,9 +41,10 @@ public class MyBaseRuntime extends BaseRuntime {
 	private ServiceStubManager serviceStubManager;
 	private ConcurrentHashMap<String, ServiceStubManager> stubManagerForLanIdMap = new ConcurrentHashMap<>();
 
-	@Resource
+	@Autowired
 	LansService lansService;
-
+    @Autowired
+    private AutowireCapableBeanFactory beanFactory;
 
     private List<GroovyObjectEx<ServiceNotFoundListener>> serviceNotFoundListeners;
 
@@ -50,8 +53,6 @@ public class MyBaseRuntime extends BaseRuntime {
     public void resetServiceStubManager(Class<?> proxyClass) {
         if (serviceStubManager != null) {
             serviceStubManager.setServiceStubProxyClass(proxyClass);
-//			serviceStubManager.clearCache();
-//			serviceStubManager.init();
         }
     }
 
@@ -59,8 +60,6 @@ public class MyBaseRuntime extends BaseRuntime {
         Collection<ServiceStubManager> managers = stubManagerForLanIdMap.values();
         for (ServiceStubManager manager : managers) {
             manager.setServiceStubProxyClass(proxyClass);
-//			manager.clearCache();
-//			manager.init();
         }
     }
 
@@ -76,13 +75,7 @@ public class MyBaseRuntime extends BaseRuntime {
             synchronized (stubManagerForLanIdMap) {
                 manager = stubManagerForLanIdMap.get(lanId);
                 if (manager == null) {
-                    manager = new ServiceStubManager(serviceStubManager.getFromService());
-                    manager.setUsePublicDomain(true);
-                    OnlineServer onlineServer = OnlineServer.getInstance();
-                    manager.setClientTrustJksPath(onlineServer.getRpcSslClientTrustJksPath());
-                    manager.setJksPwd(onlineServer.getRpcSslJksPwd());
-                    manager.setServerJksPath(onlineServer.getRpcSslServerJksPath());
-                    manager.setServiceStubProxyClass(serviceStubManager.getServiceStubProxyClass());
+
 
                     if (lansService == null)
                         return null;
@@ -91,14 +84,18 @@ public class MyBaseRuntime extends BaseRuntime {
                         lan = lansService.getLan(lanId);
                     } catch (CoreException e) {
                         e.printStackTrace();
-                        LoggerEx.error(TAG, "Read lan " + lanId + " information failed, " + e.getMessage());
+                        LoggerEx.error(TAG, "Read lan " + lanId + " information failed, " + ExceptionUtils.getFullStackTrace(e));
                     }
                     if (lan == null)
                         throw new NullPointerException("Lan is null for lanId " + lanId);
                     if (lan.getDomain() == null || lan.getPort() == null || lan.getProtocol() == null)
                         throw new NullPointerException("Lan " + lan + " is illegal for lanId " + lanId + " domain " + lan.getDomain() + " port " + lan.getPort() + " protocol " + lan.getProtocol());
-                    manager.setHost(lan.getProtocol() + "://" + lan.getDomain() + ":" + lan.getPort());
-                    manager.init();
+                    String host = lan.getProtocol() + "://" + lan.getDomain() + ":" + lan.getPort();
+                    manager = new ServiceStubManager(host, serviceStubManager.getFromService());
+                    beanFactory.autowireBean(manager);
+                    manager.setUsePublicDomain(true);
+                    manager.setBeanFactory(beanFactory);
+                    manager.setServiceStubProxyClass(serviceStubManager.getServiceStubProxyClass());
                     stubManagerForLanIdMap.putIfAbsent(lanId, manager);
                 }
             }
@@ -111,6 +108,7 @@ public class MyBaseRuntime extends BaseRuntime {
         super.prepare(service, properties, localScriptPath);
         fieldInjection(this);
         ServiceSkeletonAnnotationHandler serviceSkeletonAnnotationHandler = new ServiceSkeletonAnnotationHandler();
+        beanFactory.autowireBean(serviceSkeletonAnnotationHandler);
         serviceSkeletonAnnotationHandler.setService(getServiceName());
         serviceSkeletonAnnotationHandler.setServiceVersion(getServiceVersion());
         serviceSkeletonAnnotationHandler.addExtraAnnotation(PeriodicTask.class);
@@ -168,9 +166,9 @@ public class MyBaseRuntime extends BaseRuntime {
 
         remoteServiceHost = properties.getProperty("remote.service.host");
         if (remoteServiceHost != null) {
-            serviceStubManager = new ServiceStubManager(service);
-            serviceStubManager.setHost(remoteServiceHost);
-            serviceStubManager.init();
+            serviceStubManager = new ServiceStubManager(remoteServiceHost, service);
+            beanFactory.autowireBean(serviceStubManager);
+            serviceStubManager.setBeanFactory(beanFactory);
         }
         String libs = properties.getProperty("libs");
         if (libs != null) {
@@ -199,20 +197,23 @@ public class MyBaseRuntime extends BaseRuntime {
                             "@script.groovy.annotation.RedeployMain\n" +
                             "class ServiceStubProxy extends com.docker.rpc.remote.stub.Proxy implements GroovyInterceptable{\n" +
                             "    private Class<?> remoteServiceStub;\n" +
+                            "    private com.docker.rpc.remote.stub.RpcCacheManager rpcCacheManager;\n" +
                             "    ServiceStubProxy() {\n" +
-                            "        super(null, null);\n" +
+
+                            "        super(null, null, null);\n" +
                             "    }\n" +
-                            "    ServiceStubProxy(com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler, Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager) {\n" +
-                            "        super(remoteServerHandler, serviceStubManager)\n" +
+                            "    ServiceStubProxy(Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager, org.springframework.beans.factory.config.AutowireCapableBeanFactory beanFactory, com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler, com.docker.rpc.remote.stub.RpcCacheManager rpcCacheManager) {\n" +
+                            "        super(beanFactory, serviceStubManager, remoteServerHandler)\n" +
                             "        this.remoteServiceStub = remoteServiceStub;\n" +
+                            "        this.rpcCacheManager = rpcCacheManager;\n" +
                             "    }\n" +
                             "    def methodMissing(String methodName,methodArgs) {\n" +
-                            "        Long crc = chat.utils.ReflectionUtil.getCrc(remoteServiceStub, methodName, remoteServerHandler.getService());\n" +
-                            "        com.docker.rpc.remote.stub.ServerCacheManager.getInstance().getCrcMethodMap().put(crc, remoteServerHandler.getService() + '_' + remoteServiceStub.getSimpleName() + '_' + methodName);\n" +
+                            "        Long crc = chat.utils.ReflectionUtil.getCrc(remoteServiceStub, methodName, remoteServerHandler.getToService());\n" +
+                            "        this.rpcCacheManager.putCrcMethodMap(crc, remoteServerHandler.getToService() + '_' + remoteServiceStub.getSimpleName() + '_' + methodName);\n" +
                             "        return invoke(crc, methodArgs);\n" +
                             "    }\n" +
-                            "    public static def getProxy(com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler, Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager) {\n" +
-                            "        ServiceStubProxy proxy = new ServiceStubProxy(remoteServerHandler, remoteServiceStub, serviceStubManager)\n" +
+                            "    public static def getProxy(Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager, org.springframework.beans.factory.config.AutowireCapableBeanFactory beanFactory, com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler, com.docker.rpc.remote.stub.RpcCacheManager rpcCacheManager) {\n" +
+                            "        ServiceStubProxy proxy = new ServiceStubProxy(remoteServiceStub, serviceStubManager, beanFactory, remoteServerHandler, rpcCacheManager)\n" +
                             "        def theProxy = proxy.asType(proxy.remoteServiceStub)\n" +
                             "        return theProxy\n" +
                             "    }\n" +
@@ -226,7 +227,7 @@ public class MyBaseRuntime extends BaseRuntime {
                 FileUtils.writeStringToFile(new File(path + "/script/groovy/runtime/ServiceStubProxy.groovy"), code, "utf8");
             } catch (IOException e) {
                 e.printStackTrace();
-                LoggerEx.error(TAG, "write ServiceStubProxy.groovy file on " + (path + "/script/groovy/runtime/ServiceStubProxy.groovy") + " in service " + getService() + " failed, " + e.getMessage());
+                LoggerEx.error(TAG, "write ServiceStubProxy.groovy file on " + (path + "/script/groovy/runtime/ServiceStubProxy.groovy") + " in service " + getService() + " failed, " + ExceptionUtils.getFullStackTrace(e));
             }
         }
     }
@@ -334,7 +335,7 @@ public class MyBaseRuntime extends BaseRuntime {
                         return listener.getObject().getRuntimeWhenNotFound(service);
                     } catch (Throwable t) {
                         t.printStackTrace();
-                        LoggerEx.error(TAG, "Handle getRuntime service " + service + " failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "Handle getRuntime service " + service + " failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                 }
             }
@@ -353,7 +354,7 @@ public class MyBaseRuntime extends BaseRuntime {
             try {
                 GroovyObjectEx.fillGroovyObject((GroovyObject) obj, this);
             } catch (IllegalAccessException e) {
-                LoggerEx.error(TAG, "fillGroovyObject " + obj + " failed, " + e.getMessage());
+                LoggerEx.error(TAG, "fillGroovyObject " + obj + " failed, " + ExceptionUtils.getFullStackTrace(e));
                 e.printStackTrace();
             }
         }

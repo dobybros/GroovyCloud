@@ -231,7 +231,7 @@ public class RequestHolder {
 //                                asyncContext.addListener(new MyAsyncListener(request.getRequestURI()));
                                 asyncContext.setTimeout(90000L);
                                 response = (HttpServletResponse) asyncContext.getResponse();
-                                ServerStart.getInstance().getCoreThreadPoolExecutor().execute(()->{
+                                ServerStart.getInstance().getAsyncThreadPoolExecutor().execute(()->{
                                     GrayReleased.grayReleasedThreadLocal.set(grayReleased);
                                     theInterceptor.invokeInternal(this);
                                 });

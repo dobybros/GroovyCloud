@@ -13,5 +13,4 @@ public @interface TimerTask {
 	public long period() default 0;
 	public String key();
 	public String cron() default "";
-	public int countThreads() default 1;
 }

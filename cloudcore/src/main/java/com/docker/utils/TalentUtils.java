@@ -3,6 +3,7 @@ package com.docker.utils;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
@@ -52,7 +53,7 @@ public class TalentUtils {
 			props  = PropertiesLoaderUtils.loadProperties(resource);
 			return props;
 		} catch (IOException e) {
-			throw new CoreException(e.getMessage());
+			throw new CoreException(ExceptionUtils.getFullStackTrace(e));
 		}
 	}
 	
@@ -388,7 +389,7 @@ public class TalentUtils {
                     bundle = getBundle(locale);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    LoggerEx.error(TAG, e.getMessage());
+                    LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(e));
                     bundle = getBundle(Locale.ENGLISH);
                 }
             } else {

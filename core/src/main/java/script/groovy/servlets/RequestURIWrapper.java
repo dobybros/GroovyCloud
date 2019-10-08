@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.object.GroovyObjectEx.GroovyObjectListener;
 import script.groovy.servlet.annotation.PathVariable;
@@ -181,7 +182,7 @@ public class RequestURIWrapper implements GroovyObjectListener{
 								} catch (NoSuchFieldException
 										| SecurityException | IllegalArgumentException | IllegalAccessException e) {
 									e.printStackTrace();
-									LoggerEx.error(TAG, "Get annotationClass for method " + method + " failed, " + e.getMessage());
+									LoggerEx.error(TAG, "Get annotationClass for method " + method + " failed, " + ExceptionUtils.getFullStackTrace(e));
 								}
 							}
 						} else {

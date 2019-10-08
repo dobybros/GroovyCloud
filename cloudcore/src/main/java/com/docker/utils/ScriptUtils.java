@@ -3,6 +3,7 @@ package com.docker.utils;
 import chat.logs.LoggerEx;
 import com.docker.script.MyBaseRuntime;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,21 +21,23 @@ public class ScriptUtils {
                             "@script.groovy.annotation.RedeployMain\n" +
                             "class ServiceStubProxy extends com.docker.rpc.remote.stub.Proxy implements GroovyInterceptable{\n" +
                             "    private Class<?> remoteServiceStub;\n" +
+                            "    private com.docker.rpc.remote.stub.RpcCacheManager rpcCacheManager;\n" +
                             "    ServiceStubProxy() {\n" +
 
-                            "        super(null, null);\n" +
+                            "        super(null, null, null);\n" +
                             "    }\n" +
-                            "    ServiceStubProxy(com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler, Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager) {\n" +
-                            "        super(remoteServerHandler, serviceStubManager)\n" +
+                            "    ServiceStubProxy(Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager, org.springframework.beans.factory.config.AutowireCapableBeanFactory beanFactory, com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler, com.docker.rpc.remote.stub.RpcCacheManager rpcCacheManager) {\n" +
+                            "        super(beanFactory, serviceStubManager, remoteServerHandler)\n" +
                             "        this.remoteServiceStub = remoteServiceStub;\n" +
+                            "        this.rpcCacheManager = rpcCacheManager;\n" +
                             "    }\n" +
                             "    def methodMissing(String methodName,methodArgs) {\n" +
-                            "        Long crc = chat.utils.ReflectionUtil.getCrc(remoteServiceStub, methodName, remoteServerHandler.getService());\n" +
-                            "        com.docker.rpc.remote.stub.ServerCacheManager.getInstance().getCrcMethodMap().put(crc, remoteServerHandler.getService() + '_' + remoteServiceStub.getSimpleName() + '_' + methodName);\n" +
+                            "        Long crc = chat.utils.ReflectionUtil.getCrc(remoteServiceStub, methodName, remoteServerHandler.getToService());\n" +
+                            "        this.rpcCacheManager.putCrcMethodMap(crc, remoteServerHandler.getToService() + '_' + remoteServiceStub.getSimpleName() + '_' + methodName);\n" +
                             "        return invoke(crc, methodArgs);\n" +
                             "    }\n" +
-                            "    public static def getProxy(com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler, Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager) {\n" +
-                            "        ServiceStubProxy proxy = new ServiceStubProxy(remoteServerHandler, remoteServiceStub, serviceStubManager)\n" +
+                            "    public static def getProxy(Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager, org.springframework.beans.factory.config.AutowireCapableBeanFactory beanFactory, com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler, com.docker.rpc.remote.stub.RpcCacheManager rpcCacheManager) {\n" +
+                            "        ServiceStubProxy proxy = new ServiceStubProxy(remoteServiceStub, serviceStubManager, beanFactory, remoteServerHandler, rpcCacheManager)\n" +
                             "        def theProxy = proxy.asType(proxy.remoteServiceStub)\n" +
                             "        return theProxy\n" +
                             "    }\n" +
@@ -48,7 +51,7 @@ public class ScriptUtils {
                 FileUtils.writeStringToFile(new File(path + "/script/groovy/runtime/ServiceStubProxy.groovy"), code, "utf8");
             } catch (IOException e) {
                 e.printStackTrace();
-                LoggerEx.error(TAG, "write ServiceStubProxy.groovy file on " + (path + "/script/groovy/runtime/ServiceStubProxy.groovy") + " failed, " + e.getMessage());
+                LoggerEx.error(TAG, "write ServiceStubProxy.groovy file on " + (path + "/script/groovy/runtime/ServiceStubProxy.groovy") + " failed, " + ExceptionUtils.getFullStackTrace(e));
             }
         }
     }

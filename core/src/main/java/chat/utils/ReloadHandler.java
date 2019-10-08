@@ -5,6 +5,7 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import chat.logs.LoggerEx;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 
 public abstract class ReloadHandler {
@@ -22,7 +23,7 @@ public abstract class ReloadHandler {
 			load();
 		} catch (Throwable e) {
 			e.printStackTrace();
-			LoggerEx.error(TAG, "Load in period " + period + " failed, " + e.getMessage());
+			LoggerEx.error(TAG, "Load in period " + period + " failed, " + ExceptionUtils.getFullStackTrace(e));
 		}
 		TimerEx.schedule(new TimerTaskEx() {
 			@Override
@@ -31,7 +32,7 @@ public abstract class ReloadHandler {
 					load();
 				} catch (Throwable e) {
 					e.printStackTrace();
-					LoggerEx.error(TAG, "Load in period " + period + " failed, " + e.getMessage());
+					LoggerEx.error(TAG, "Load in period " + period + " failed, " + ExceptionUtils.getFullStackTrace(e));
 				}
 			}
 		}, period, period);

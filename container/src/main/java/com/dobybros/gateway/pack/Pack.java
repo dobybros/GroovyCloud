@@ -2,6 +2,7 @@ package com.dobybros.gateway.pack;
 
 import chat.logs.LoggerEx;
 import com.dobybros.chat.binary.data.Data;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.mina.core.buffer.IoBuffer;
 
 public abstract class Pack {
@@ -51,7 +52,7 @@ public abstract class Pack {
 				data.persistent();
 			} catch (Throwable t) {
 				t.printStackTrace();
-				LoggerEx.error(TAG, "Persistent data failed, " + t.getMessage() + " data " + data);
+				LoggerEx.error(TAG, "Persistent data failed, " + ExceptionUtils.getFullStackTrace(t) + " data " + data);
 			}
 		}
 		if(data.getData() == null) {

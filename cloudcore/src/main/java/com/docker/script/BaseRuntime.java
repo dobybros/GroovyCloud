@@ -20,6 +20,8 @@ import connectors.mongodb.annotations.handlers.MongoDBHandler;
 import connectors.mongodb.annotations.handlers.MongoDatabaseAnnotationHolder;
 import connectors.mongodb.annotations.handlers.MongoDocumentAnnotationHolder;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import script.filter.JsonFilterFactory;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.*;
@@ -34,6 +36,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseRuntime extends GroovyRuntime {
+    @Autowired
+    CacheStorageFactory cacheStorageFactory;
     public static final String TAG = BaseRuntime.class.getSimpleName();
     private ConcurrentHashMap<String, Object> memoryCache = new ConcurrentHashMap<>();
 
@@ -81,7 +85,6 @@ public abstract class BaseRuntime extends GroovyRuntime {
 
             String redisHost = properties.getProperty("db.redis.uri");
             if (redisHost != null) {
-                CacheStorageFactory cacheStorageFactory = CacheStorageFactory.getInstance();
                 RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler)cacheStorageFactory.getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS,redisHost);
                 redisHandler = cacheStorageAdapter.getRedisHandler();
             }
@@ -134,7 +137,8 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		addClassAnnotationHandler(new ServerLifeCircleHandler());
 		addClassAnnotationHandler(new JsonFilterFactory());
 		addClassAnnotationHandler(new RequestPermissionHandler());
-		addClassAnnotationHandler(new CacheAnnotationHandler());
+        CacheAnnotationHandler cacheAnnotationHandler = new CacheAnnotationHandler();
+		addClassAnnotationHandler(cacheAnnotationHandler);
 
 	}
 
@@ -219,7 +223,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
             return groovyObjectEx.getObject();
         } catch (CoreException e) {
             e.printStackTrace();
-            LoggerEx.error(TAG, "getBean failed for class " + beanClass + " error " + e.getMessage());
+            LoggerEx.error(TAG, "getBean failed for class " + beanClass + " error " + ExceptionUtils.getFullStackTrace(e));
             return null;
         }
     }

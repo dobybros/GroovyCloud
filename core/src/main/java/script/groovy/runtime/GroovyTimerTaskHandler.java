@@ -52,11 +52,9 @@ public class GroovyTimerTaskHandler extends ClassAnnotationHandler {
                     String key = getGroovyRuntime().processAnnotationString(timerTask.key());
                     long period = timerTask.period();
                     String cron = getGroovyRuntime().processAnnotationString(timerTask.cron());
-                    int countThreads = timerTask.countThreads();
                     GroovyObjectEx<?> groovyObj = ((GroovyBeanFactory) getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
                     MyTimerTask task = new MyTimerTask(key, groovyObj);
                     task.setId(key);
-                    task.setThreadPoolExecutor((ThreadPoolExecutor) Executors.newFixedThreadPool(countThreads));
                     if (!StringUtils.isEmpty(cron)) {
                         task.setCron(cron);
                     } else if (period > 10) {

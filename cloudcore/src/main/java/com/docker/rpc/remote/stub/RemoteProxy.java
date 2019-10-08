@@ -4,6 +4,7 @@ import chat.utils.ReflectionUtil;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 
 import java.lang.reflect.Method;
 
@@ -12,8 +13,8 @@ public class RemoteProxy extends Proxy implements MethodInterceptor {
 
     Enhancer enhancer = new Enhancer();
 
-    public RemoteProxy(RemoteServerHandler remoteServerHandler, ServiceStubManager serviceStubManager) {
-        super(remoteServerHandler, serviceStubManager);
+    public RemoteProxy(AutowireCapableBeanFactory beanFactory, ServiceStubManager serviceStubManager, RemoteServerHandler remoteServerHandler) {
+        super(beanFactory, serviceStubManager, remoteServerHandler);
     }
 
 
@@ -32,7 +33,7 @@ public class RemoteProxy extends Proxy implements MethodInterceptor {
         if(method.getDeclaringClass().equals(Object.class)) {
             return proxy.invokeSuper(obj, args);
         }
-        Long crc = ReflectionUtil.getCrc(method, remoteServerHandler.getService());
+        Long crc = ReflectionUtil.getCrc(method, remoteServerHandler.getToService());
         return invoke(crc, args);
     }
 }

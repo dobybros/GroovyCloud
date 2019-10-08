@@ -6,6 +6,8 @@ import com.docker.errors.CoreErrorCodes;
 import com.docker.rpc.*;
 import com.docker.rpc.annotations.RPCServerHandler;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.GroovyBeanFactory;
@@ -19,6 +21,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RMIServerImplWrapper extends ClassAnnotationHandler {
+	@Autowired
+	private AutowireCapableBeanFactory beanFactory;
 	RMIServerHandler rmiServerHandler;
 	//Server
 	Map<String, GroovyObjectEx<RPCServerAdapter>> serverAdapterMap;
@@ -37,6 +41,7 @@ public class RMIServerImplWrapper extends ClassAnnotationHandler {
 				} else {
 					server = new RMIServerImpl(port + 1, this);
 				}
+				beanFactory.autowireBean(server);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}

@@ -33,7 +33,7 @@ public abstract class RPCClientAdapter {
 
 	public abstract RPCResponse call(RPCRequest request) throws CoreException;
 
-	public abstract CompletableFuture<?> callAsync(RPCRequest request) throws CoreException;
+	public abstract void callAsync(RPCRequest request) throws CoreException;
 
 	public abstract void touch();
 

@@ -3,6 +3,7 @@ package com.dobybros.chat.utils;
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import com.jcraft.jsch.*;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.*;
 import java.util.List;
@@ -68,7 +69,7 @@ public class SSHChannel {
 				Thread.sleep(3000);
 			}
 		} catch(InterruptedException | IOException | JSchException e) {
-			throw new CoreException(e.getMessage());
+			throw new CoreException(ExceptionUtils.getFullStackTrace(e));
 		} finally {
 			if (channel != null)
 				channel.disconnect();
@@ -112,13 +113,13 @@ public class SSHChannel {
 				reconnect();
 				exec(command);
 			}
-			throw new CoreException(ChatErrorCodes.ERROR_SSH_EXEC_FAILED, new String[]{command}, e.getMessage());
+			throw new CoreException(ChatErrorCodes.ERROR_SSH_EXEC_FAILED, new String[]{command}, ExceptionUtils.getFullStackTrace(e));
 		} finally {
 			try {
 				if (reader != null)
 					reader.close();
 			} catch (IOException e) {
-				throw new CoreException(e.getMessage());
+				throw new CoreException(ExceptionUtils.getFullStackTrace(e));
 			}
 			if (channel != null)
 				channel.disconnect();

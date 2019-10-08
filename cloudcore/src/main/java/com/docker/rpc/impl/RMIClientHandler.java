@@ -4,15 +4,15 @@ import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.AverageCounter;
-import chat.utils.IPHolder;
-import com.docker.storage.cache.CacheMethodInterceptor;
 import com.docker.rpc.*;
 import com.docker.rpc.async.AsyncCallbackRequest;
-import com.docker.rpc.remote.stub.ServerCacheManager;
+import com.docker.storage.cache.CacheMethodInterceptor;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.memodb.ObjectId;
 
-import javax.annotation.Resource;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -27,16 +27,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class RMIClientHandler extends RPCClientAdapter {
+    @Autowired
+    private AutowireCapableBeanFactory beanFactory;
     public static final String RMIID_SSL_SUFFIX = "_SSL";
     // public static final String RMI_ID = "RMIINTERFACE";
     public static final int RMI_PORT = 2222;
 
     private String rmiId;
     private Integer rmiPort = RMI_PORT;
-
-    @Resource
-    private IPHolder ipHolder;
-
     //both
     private Registry registry;
     private RMIServer server;
@@ -92,7 +90,7 @@ public class RMIClientHandler extends RPCClientAdapter {
                     try {
                         statusListener.connected(rmiId);
                     } catch (Throwable t) {
-                        LoggerEx.error(TAG, "statusListener " + statusListener + " connected failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "statusListener " + statusListener + " connected failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                 }
             } else {
@@ -100,7 +98,7 @@ public class RMIClientHandler extends RPCClientAdapter {
                     try {
                         statusListener.disconnected(rmiId);
                     } catch (Throwable t) {
-                        LoggerEx.error(TAG, "statusListener " + statusListener + " disconnected failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "statusListener " + statusListener + " disconnected failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                 }
             }
@@ -116,7 +114,7 @@ public class RMIClientHandler extends RPCClientAdapter {
                                 break;
                             }
                         } catch (Throwable t) {
-                            LoggerEx.info(TAG, "Handle server expire failed, " + t.getMessage() + " the expireListener " + expireListener + " will be ignored...");
+                            LoggerEx.info(TAG, "Handle server expire failed, " + ExceptionUtils.getFullStackTrace(t) + " the expireListener " + expireListener + " will be ignored...");
                         }
                     }
                 }
@@ -126,13 +124,13 @@ public class RMIClientHandler extends RPCClientAdapter {
                             try {
                                 server.alive();
                             } catch (Throwable ce) {
-                                LoggerEx.info(TAG, "Check server alive failed, " + ce.getMessage() + " need reconnect..." + ", server : " + server.toString() + ", serverHost : " + serverHost);
+                                LoggerEx.info(TAG, "Check server alive failed, " + ExceptionUtils.getFullStackTrace(ce) + " need reconnect..." + ", server : " + server.toString() + ", serverHost : " + serverHost);
                                 connected.compareAndSet(true, false);
                                 for (ClientAdapterStatusListener statusListener : statusListeners) {
                                     try {
                                         statusListener.disconnected(rmiId);
                                     } catch (Throwable t) {
-                                        LoggerEx.error(TAG, "statusListener " + statusListener + " disconnected failed, " + t.getMessage());
+                                        LoggerEx.error(TAG, "statusListener " + statusListener + " disconnected failed, " + ExceptionUtils.getFullStackTrace(t));
                                     }
                                 }
                                 continue;
@@ -158,29 +156,22 @@ public class RMIClientHandler extends RPCClientAdapter {
                             try {
                                 statusListener.connected(rmiId);
                             } catch (Throwable t) {
-                                LoggerEx.error(TAG, "statusListener " + statusListener + " connected failed, " + t.getMessage());
+                                LoggerEx.error(TAG, "statusListener " + statusListener + " connected failed, " + ExceptionUtils.getFullStackTrace(t));
                             }
                         }
                         LoggerEx.info(TAG, "RMI " + serverHost + " port " + rmiPort + " server " + rmiId + " connected!");
                     } catch (Throwable t) {
                         t.printStackTrace();
                         if (t instanceof NotBoundException) {
-                            LoggerEx.error(TAG, "RMI " + serverHost + " port " + rmiPort + " server " + rmiId + " not bound any more, " + t.getMessage());
+                            LoggerEx.error(TAG, "RMI " + serverHost + " port " + rmiPort + " server " + rmiId + " not bound any more, " + ExceptionUtils.getFullStackTrace(t));
                         } else {
-                            LoggerEx.error(TAG, "RMI " + serverHost + " port " + rmiPort + " server " + rmiId + " connect failed, " + t.getMessage());
+                            LoggerEx.error(TAG, "RMI " + serverHost + " port " + rmiPort + " server " + rmiId + " connect failed, " + ExceptionUtils.getFullStackTrace(t));
                         }
                         try {
                             Thread.sleep(5000L);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-//                for(ClientAdapterStatusListener statusListener : statusListeners) {
-//                   try {
-//                      statusListener.disconnected(serverName);
-//                   } catch (Throwable t1) {
-//                      LoggerEx.error(TAG, "statusListener " + statusListener + " disconnected failed, " + t1.getMessage());
-//                   }
-//                }
                     }
                 }
             }
@@ -191,8 +182,6 @@ public class RMIClientHandler extends RPCClientAdapter {
                     boolean bool = UnicastRemoteObject.unexportObject(server, true);
                     LoggerEx.info(TAG, "RMI " + serverHost + " port " + rmiPort + " server " + rmiId + " is destroyed, unexport " + server + " result " + bool);
                 } catch (Throwable e) {
-//             e.printStackTrace();
-//                    LoggerEx.info(TAG, "RMI " + serverHost +  " port " + rmiPort + " server " + rmiId + " is destroyed, NoSuchObject " + server + " error " + e.getMessage());
                 }
             }
             LoggerEx.info(TAG, "RMI " + serverHost + " port " + rmiPort + " server " + rmiId + " monitor stopped...");
@@ -200,7 +189,7 @@ public class RMIClientHandler extends RPCClientAdapter {
                 try {
                     statusListener.terminated(rmiId);
                 } catch (Throwable t) {
-                    LoggerEx.error(TAG, "statusListener " + statusListener + " terminated failed, " + t.getMessage());
+                    LoggerEx.error(TAG, "statusListener " + statusListener + " terminated failed, " + ExceptionUtils.getFullStackTrace(t));
                 }
             }
             statusListeners.clear();
@@ -220,7 +209,7 @@ public class RMIClientHandler extends RPCClientAdapter {
             try {
                 statusListener.started(rmiId);
             } catch (Throwable t) {
-                LoggerEx.error(TAG, "statusListener " + statusListener + " started failed, " + t.getMessage());
+                LoggerEx.error(TAG, "statusListener " + statusListener + " started failed, " + ExceptionUtils.getFullStackTrace(t));
             }
         }
         boolean startConnected = false;
@@ -242,11 +231,8 @@ public class RMIClientHandler extends RPCClientAdapter {
             startConnected = true;
         } catch (Throwable t) {
             t.printStackTrace();
-            LoggerEx.error(TAG, "RMI clientStart failed, " + t.getMessage());
+            LoggerEx.error(TAG, "RMI clientStart failed, " + ExceptionUtils.getFullStackTrace(t));
             startConnected = false;
-//       if(t instanceof CoreException)
-//          throw (CoreException)t;
-//       throw new CoreException(ChatErrorCodes.ERROR_UNKNOWN, "Initialize RMIClientHandler " + serverHost + " | " + rmiPort + " faield, " + t.getMessage());
         } finally {
             touch();
             clientMonitorThread = new ClientMonitorThread(startConnected);
@@ -294,28 +280,28 @@ public class RMIClientHandler extends RPCClientAdapter {
             LoggerEx.info(TAG, "RMI " + serverHost + " port " + rmiPort + " rmiId " + rmiId + " server is destroyed!");
         } catch (Throwable e) {
             e.printStackTrace();
-            LoggerEx.error(TAG, "RMI " + serverHost + " port " + rmiPort + " rmiId " + rmiId + " server destroy failed, " + e.getMessage());
+            LoggerEx.error(TAG, "RMI " + serverHost + " port " + rmiPort + " rmiId " + rmiId + " server destroy failed, " + ExceptionUtils.getFullStackTrace(e));
         }
     }
 
     @Override
-    public CompletableFuture<?> callAsync(RPCRequest request) throws CoreException {
+    public void callAsync(RPCRequest request) throws CoreException {
+        beanFactory.autowireBean(request);
         try {
-            CompletableFuture future = callPrivateAsync(request);
+            callPrivateAsync(request);
             for (ClientAdapterStatusListener statusListener : statusListeners) {
                 try {
                     statusListener.called(rmiId, request, null);
                 } catch (Throwable t) {
-                    LoggerEx.error(TAG, "CallListener(called) occured error " + t.getMessage() + " for request " + request + " and response " + null);
+                    LoggerEx.error(TAG, "CallListener(called) occured error " + ExceptionUtils.getFullStackTrace(t) + " for request " + request + " and response " + null);
                 }
             }
-            return future;
         } catch (CoreException e) {
             for (ClientAdapterStatusListener statusListener : statusListeners) {
                 try {
                     statusListener.callFailed(rmiId, request, e);
                 } catch (Throwable t) {
-                    LoggerEx.error(TAG, "CallListener(callFailed) occured error " + t.getMessage() + " for request " + request);
+                    LoggerEx.error(TAG, "CallListener(callFailed) occured error " + ExceptionUtils.getFullStackTrace(t) + " for request " + request);
                     if (t instanceof CoreException)
                         throw t;
                 }
@@ -324,17 +310,15 @@ public class RMIClientHandler extends RPCClientAdapter {
         }
     }
 
-    private CompletableFuture<?> callPrivateAsync(RPCRequest request) throws CoreException {
+    private void callPrivateAsync(RPCRequest request) throws CoreException {
         touch();
         if (!clientMonitorThread.connected.get())
             throw new CoreException(ChatErrorCodes.ERROR_RPC_DISCONNECTED, "RPC (" + serverHost + ":" + rmiPort + ") is disconnected for " + request.getType() + ": " + request.toString());
         try {
-            CompletableFuture future = null;
+
             if (request instanceof MethodRequest) {
                 handleRequest(request);
-                String callbackFutureId = ObjectId.get().toString();
-                future = ServerCacheManager.getInstance().pushToCallbackFutureMap(callbackFutureId, ((MethodRequest) request).getCrc(), (String) ((MethodRequest) request).getExtra(CacheMethodInterceptor.CACHEKEY));
-                server.callAsync(request.getData(), request.getType(), request.getEncode(), callbackFutureId);
+                server.callAsync(request.getData(), request.getType(), request.getEncode(), ((MethodRequest) request).getCallbackFutureId());
 
             } else if (request instanceof AsyncCallbackRequest) {
                 server.callAsync(request.getData(), request.getType(), request.getEncode(), null);
@@ -342,23 +326,20 @@ public class RMIClientHandler extends RPCClientAdapter {
             long time = System.currentTimeMillis();
             if (averageCounter != null)
                 averageCounter.add((int) (System.currentTimeMillis() - time));
-
-            return future;
-
         } catch (ConnectException | ConnectIOException ce) {
             if (clientMonitorThread.connected.compareAndSet(true, false)) {
                 for (ClientAdapterStatusListener statusListener : statusListeners) {
                     try {
                         statusListener.disconnected(rmiId);
                     } catch (Throwable t) {
-                        LoggerEx.error(TAG, "statusListener " + statusListener + " disconnected failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "statusListener " + statusListener + " disconnected failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                 }
                 synchronized (clientMonitorThread.connected) {
                     clientMonitorThread.connected.notify();
                 }
             }
-            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_CONNECT_FAILED, "RMI call failed, " + ce.getMessage() + " start reconnecting...");
+            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_CONNECT_FAILED, "RMI call failed, " + ExceptionUtils.getFullStackTrace(ce) + " start reconnecting...");
         } catch (Throwable t) {
             if (t instanceof ServerException) {
                 Throwable remoteException = t.getCause();
@@ -372,19 +353,20 @@ public class RMIClientHandler extends RPCClientAdapter {
             if (t instanceof CoreException)
                 throw (CoreException) t;
             t.printStackTrace();
-            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_FAILED, "RMI call failed, " + t.getMessage());
+            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_FAILED, "RMI call failed, " + ExceptionUtils.getFullStackTrace(t));
         }
     }
 
     @Override
     public RPCResponse call(RPCRequest request) throws CoreException {
+        beanFactory.autowireBean(request);
         try {
             RPCResponse response = callPrivate(request);
             for (ClientAdapterStatusListener statusListener : statusListeners) {
                 try {
                     statusListener.called(rmiId, request, response);
                 } catch (Throwable t) {
-                    LoggerEx.error(TAG, "CallListener(called) occured error " + t.getMessage() + " for request " + request + " and response " + response);
+                    LoggerEx.error(TAG, "CallListener(called) occured error " + ExceptionUtils.getFullStackTrace(t) + " for request " + request + " and response " + response);
                 }
             }
             return response;
@@ -393,7 +375,7 @@ public class RMIClientHandler extends RPCClientAdapter {
                 try {
                     statusListener.callFailed(rmiId, request, e);
                 } catch (Throwable t) {
-                    LoggerEx.error(TAG, "CallListener(callFailed) occured error " + t.getMessage() + " for request " + request);
+                    LoggerEx.error(TAG, "CallListener(callFailed) occured error " + ExceptionUtils.getFullStackTrace(t) + " for request " + request);
                     if (t instanceof CoreException)
                         throw t;
                 }
@@ -424,14 +406,14 @@ public class RMIClientHandler extends RPCClientAdapter {
                     try {
                         statusListener.disconnected(rmiId);
                     } catch (Throwable t) {
-                        LoggerEx.error(TAG, "statusListener " + statusListener + " disconnected failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "statusListener " + statusListener + " disconnected failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                 }
                 synchronized (clientMonitorThread.connected) {
                     clientMonitorThread.connected.notify();
                 }
             }
-            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_CONNECT_FAILED, "RMI call failed, " + ce.getMessage() + " start reconnecting...");
+            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_CONNECT_FAILED, "RMI call failed, " + ExceptionUtils.getFullStackTrace(ce) + " start reconnecting...");
         } catch (Throwable t) {
             if (t instanceof ServerException) {
                 Throwable remoteException = t.getCause();
@@ -445,7 +427,7 @@ public class RMIClientHandler extends RPCClientAdapter {
             if (t instanceof CoreException)
                 throw (CoreException) t;
             t.printStackTrace();
-            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_FAILED, "RMI call failed, " + t.getMessage());
+            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_FAILED, "RMI call failed, " + ExceptionUtils.getFullStackTrace(t));
         }
     }
 
@@ -465,7 +447,7 @@ public class RMIClientHandler extends RPCClientAdapter {
                 responseClass = (Class<? extends RPCResponse>) Class.forName(responseClassString);
             } catch (ClassNotFoundException | ClassCastException e) {
                 e.printStackTrace();
-                throw new CoreException(ChatErrorCodes.ERROR_RPC_TYPE_REQUEST_NOMAPPING, "RPC type " + requestType + " don't have correct class name " + responseClassString + ". " + e.getMessage());
+                throw new CoreException(ChatErrorCodes.ERROR_RPC_TYPE_REQUEST_NOMAPPING, "RPC type " + requestType + " don't have correct class name " + responseClassString + ". " + ExceptionUtils.getFullStackTrace(e));
             }
             if (requestClass != null && responseClass != null) {
                 entity = new RPCEntity();
@@ -493,7 +475,7 @@ public class RMIClientHandler extends RPCClientAdapter {
                 if (request.getData() == null)
                     throw new CoreException(ChatErrorCodes.ERROR_RPC_REQUESTDATA_NULL, "RPCRequest data is still null");
             } catch (Throwable t) {
-                throw new CoreException(ChatErrorCodes.ERROR_RPC_PERSISTENT_FAILED, "Persistent RPCRequest " + request.getType() + " failed " + t.getMessage());
+                throw new CoreException(ChatErrorCodes.ERROR_RPC_PERSISTENT_FAILED, "Persistent RPCRequest " + request.getType() + " failed " + ExceptionUtils.getFullStackTrace(t));
             }
         }
     }
@@ -509,7 +491,7 @@ public class RMIClientHandler extends RPCClientAdapter {
         try {
             response.resurrect();
         } catch (Throwable t) {
-            throw new CoreException(ChatErrorCodes.ERROR_RPC_RESURRECT_FAILED, "RPCResponse " + requestType + " resurrect failed, " + t.getMessage());
+            throw new CoreException(ChatErrorCodes.ERROR_RPC_RESURRECT_FAILED, "RPCResponse " + requestType + " resurrect failed, " + ExceptionUtils.getFullStackTrace(t));
         }
         return response;
     }

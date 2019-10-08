@@ -14,21 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CacheStorageFactory {
     public static final String TAG = CacheStorageFactory.class.getSimpleName();
     public static final String CLASS_EXTENSION = "CacheStorageHandler";
-    public static CacheStorageFactory instance;
     private Map<String, Map<String, CacheStorageAdapter>> cacheAdapterMap;
     private Map<String, CacheStorageAdapter> localCacheAdapterMap;
-
-    public static synchronized CacheStorageFactory getInstance() {
-        if (instance == null) {
-            synchronized (CacheStorageFactory.class) {
-                if (instance == null) {
-                    instance = new CacheStorageFactory();
-                }
-            }
-        }
-        return instance;
-    }
-
 
     public CacheStorageAdapter getCacheStorageAdapter(String cacheMethod, String host) {
         if (StringUtils.isBlank(cacheMethod)) {
@@ -103,20 +90,5 @@ public class CacheStorageFactory {
 
         return null;
     }
-
-
-//    public void registerCacheStorageAdapter(CacheStorageAdapter cacheStorageAdapter) {
-//        if (cacheStorageAdapter != null) {
-//            String className = cacheStorageAdapter.getClass().getSimpleName();
-//            if (cacheAdapterMap == null) {
-//                cacheAdapterMap = new HashMap<>();
-//            }
-//            cacheAdapterMap.putIfAbsent(className, cacheStorageAdapter);
-//        }
-//    }
-
-//    public CacheStorageAdapter getCacheStorageAdapter(String cacheMethod){
-//
-//    }
 
 }
