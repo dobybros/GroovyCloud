@@ -2,6 +2,7 @@ package com.docker.utils;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import com.docker.errors.CoreErrorCodes;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.types.ObjectId;
@@ -29,7 +30,7 @@ public class CommonUtils {
 			props  = PropertiesLoaderUtils.loadProperties(resource);
 			return props;
 		} catch (IOException e) {
-			throw new CoreException(ExceptionUtils.getFullStackTrace(e));
+			throw new CoreException(CoreErrorCodes.ERROR_LOADPROPERTIES_FAILED, "load properties " + (PROPERTY_PATH + "/" + fileName) + " failed, " + e.getMessage());
 		}
 	}
 	

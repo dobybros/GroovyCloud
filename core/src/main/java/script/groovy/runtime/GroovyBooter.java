@@ -169,9 +169,11 @@ public class GroovyBooter implements RuntimeBootListener {
                             + " redeploy aborted!!!");
             if (t instanceof CoreException)
                 throw (CoreException) t;
-            else
+            else {
+                LoggerEx.error(TAG, "Groovy unknown error " + ExceptionUtils.getFullStackTrace(t));
                 throw new CoreException(ChatErrorCodes.ERROR_GROOVY_UNKNOWN,
-                        "Groovy unknown error " + ExceptionUtils.getFullStackTrace(t));
+                        "Groovy unknown error " + t.getMessage());
+            }
         } finally {
             IOUtils.closeQuietly(baos);
             if (deploySuccessfully) {

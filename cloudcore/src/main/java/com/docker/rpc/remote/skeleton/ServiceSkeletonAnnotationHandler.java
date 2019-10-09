@@ -168,8 +168,9 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 if (t instanceof CoreException) {
                     exception = (CoreException) t;
                 } else {
-                    exception = new CoreException(ChatErrorCodes.ERROR_METHODMAPPING_INVOKE_UNKNOWNERROR, ExceptionUtils.getFullStackTrace(t));
+                    exception = new CoreException(ChatErrorCodes.ERROR_METHODMAPPING_INVOKE_UNKNOWNERROR, t.getMessage());
                 }
+                LoggerEx.error(TAG, "invoke MethodRequest " + request.toString() + " error, " + ExceptionUtils.getFullStackTrace(t));
             } finally {
                 String ip = OnlineServer.getInstance().getIp();
                 Tracker.trackerThreadLocal.remove();

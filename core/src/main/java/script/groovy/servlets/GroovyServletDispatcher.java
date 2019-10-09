@@ -74,8 +74,9 @@ public class GroovyServletDispatcher extends HttpServlet {
 			}
 		} catch (Throwable e) {
 			e.printStackTrace();
+			LoggerEx.error(TAG, "Request url " + request.getRequestURL().toString() + " occur error " + ExceptionUtils.getFullStackTrace(e));
 			try {
-				response.sendError(500, ExceptionUtils.getFullStackTrace(e));
+				response.sendError(500, e.getMessage());
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}

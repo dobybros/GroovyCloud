@@ -2,6 +2,7 @@ package com.docker.storage.adapters.impl;
 
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
+import chat.logs.LoggerEx;
 import com.docker.data.Lan;
 import com.docker.storage.DBException;
 import com.docker.storage.adapters.LansService;
@@ -16,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LansServiceImpl implements LansService {
+    private static final String TAG = LansServiceImpl.class.getSimpleName();
+
     @Resource
     private LansDAO lansDAO;
 
@@ -27,7 +30,8 @@ public class LansServiceImpl implements LansService {
             return lan;
         } catch (DBException e) {
             e.printStackTrace();
-            throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_QUERY_FAILED, "Query lan " + lanId + " failed, " + ExceptionUtils.getFullStackTrace(e));
+            LoggerEx.error(TAG, "Query lan " + lanId + " failed, " + ExceptionUtils.getFullStackTrace(e));
+            throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_QUERY_FAILED, "Query lan " + lanId + " failed, " + e.getMessage());
         }
     }
 
@@ -47,6 +51,7 @@ public class LansServiceImpl implements LansService {
             return lans;
         } catch (DBException e) {
             e.printStackTrace();
+            LoggerEx.error(TAG, "Query lans failed, " + ExceptionUtils.getFullStackTrace(e));
             throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_QUERY_FAILED, "Query lans failed, " + e.getMessage());
         }
     }

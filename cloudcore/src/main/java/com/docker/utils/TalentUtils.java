@@ -53,7 +53,8 @@ public class TalentUtils {
 			props  = PropertiesLoaderUtils.loadProperties(resource);
 			return props;
 		} catch (IOException e) {
-			throw new CoreException(ExceptionUtils.getFullStackTrace(e));
+			LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(e));
+			throw new CoreException(e.getMessage());
 		}
 	}
 	

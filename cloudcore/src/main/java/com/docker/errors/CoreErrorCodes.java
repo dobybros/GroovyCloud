@@ -17,6 +17,7 @@ public interface CoreErrorCodes {
 	public static final int ERROR_KAFKA_CONFCENT_ILLEGAL = CODE_CORE + 345;
 	public static final int ERROR_RPC_TYPE_NOSERVERADAPTER = CODE_CORE +346;
 	public static final int ERROR_RPC_TYPE_NOMAPPING = CODE_CORE + 347;
+	public static final int ERROR_LOADPROPERTIES_FAILED = CODE_CORE + 348;
 
 
 	public static final int ERROR_LOCK = 8000;

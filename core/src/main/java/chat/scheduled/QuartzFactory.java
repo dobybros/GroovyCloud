@@ -68,7 +68,7 @@ public class QuartzFactory {
             }
         } catch (Throwable e) {
             LoggerEx.error(TAG, "Add quartz job failed, type: " + task.getId() + ",e: " + ExceptionUtils.getFullStackTrace(e));
-            throw new CoreException(ChatErrorCodes.ERROR_QUARTZ_ADDFAILED, "Add quartz job failed, type: " + task.getId() + ",e: " + ExceptionUtils.getFullStackTrace(e));
+            throw new CoreException(ChatErrorCodes.ERROR_QUARTZ_ADDFAILED, "Add quartz job failed, type: " + task.getId() + ",e: " + e.getMessage());
         }
     }
 
@@ -123,7 +123,7 @@ public class QuartzFactory {
             }
         } catch (Throwable e) {
             LoggerEx.error(TAG, "Add quartz job failed, type: " + task.getId() + ",e: " + ExceptionUtils.getFullStackTrace(e));
-            throw new CoreException(ChatErrorCodes.ERROR_QUARTZ_ADDFAILED, "Add quartz job failed, type: " + task.getId() + ",e: " + ExceptionUtils.getFullStackTrace(e));
+            throw new CoreException(ChatErrorCodes.ERROR_QUARTZ_ADDFAILED, "Add quartz job failed, type: " + task.getId() + ",e: " + e.getMessage());
         }
     }
 
@@ -164,7 +164,7 @@ public class QuartzFactory {
             sched.deleteJob(JobKey.jobKey(id, id));// 删除任务
         } catch (Throwable e) {
             LoggerEx.error(TAG, "Delete quarz job failed, type: " + id + ",e: " + ExceptionUtils.getFullStackTrace(e));
-            throw new CoreException(ChatErrorCodes.ERROR_QUARTZ_CANCELEDFAILED, "Delete quarz job failed, type: " + id + ",e: " + ExceptionUtils.getFullStackTrace(e));
+            throw new CoreException(ChatErrorCodes.ERROR_QUARTZ_CANCELEDFAILED, "Delete quarz job failed, type: " + id + ",e: " + e.getMessage());
         }
     }
 
@@ -176,7 +176,7 @@ public class QuartzFactory {
             }
         } catch (Throwable e) {
             LoggerEx.error(TAG, "Delete all quarz job failed,e: " + ExceptionUtils.getFullStackTrace(e));
-            throw new CoreException(ChatErrorCodes.ERROR_QUARTZ_CANCELEDFAILED, "Delete all quarz job failed,e: " + ExceptionUtils.getFullStackTrace(e));
+            throw new CoreException(ChatErrorCodes.ERROR_QUARTZ_CANCELEDFAILED, "Delete all quarz job failed,e: " + e.getMessage());
         }
     }
 

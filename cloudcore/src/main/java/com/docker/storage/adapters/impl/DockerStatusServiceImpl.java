@@ -36,7 +36,8 @@ public class DockerStatusServiceImpl implements DockerStatusService {
 				throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_NOT_FOUND, "OnlineServer " + server + " doesn't be found while delete " + server);
 		} catch (DBException e) {
 			e.printStackTrace();
-			throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_DELETE_FAILED, "Delete online server failed, " + ExceptionUtils.getFullStackTrace(e));
+			LoggerEx.error(TAG, "Delete online server failed, " + ExceptionUtils.getFullStackTrace(e));
+			throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_DELETE_FAILED, "Delete online server failed, " + e.getMessage());
 		}
 	}
 	@Override
@@ -45,7 +46,8 @@ public class DockerStatusServiceImpl implements DockerStatusService {
 			DeleteResult result = dockerStatusDAO.delete(new Document().append(DockerStatus.FIELD_DOCKERSTATUS_SERVERTYPE, serverType));
 		} catch (DBException e) {
 			e.printStackTrace();
-			throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_DELETE_FAILED, "Delete online server failed, " + ExceptionUtils.getFullStackTrace(e));
+			LoggerEx.error(TAG, "Delete online server failed, " + ExceptionUtils.getFullStackTrace(e));
+			throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_DELETE_FAILED, "Delete online server failed, " + e.getMessage());
 		}
 	}
 

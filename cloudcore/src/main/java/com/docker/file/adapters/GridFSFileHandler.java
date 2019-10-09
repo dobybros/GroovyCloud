@@ -1,5 +1,6 @@
 package com.docker.file.adapters;
 
+import chat.logs.LoggerEx;
 import chat.utils.MD5InputStream;
 import com.docker.storage.DBException;
 import com.docker.storage.mongodb.MongoHelper;
@@ -29,6 +30,7 @@ import java.util.List;
  *
  */
 public class GridFSFileHandler extends FileAdapter {
+	private static final String TAG = GridFSFileHandler.class.getSimpleName();
 	private MongoHelper resourceHelper;
 	private GridFS gridFs;
 	private String bucketName;
@@ -168,7 +170,8 @@ public class GridFSFileHandler extends FileAdapter {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new IOException("read file failed, " + ExceptionUtils.getFullStackTrace(e), e);
+			LoggerEx.error(TAG, "read file failed, " + ExceptionUtils.getFullStackTrace(e));
+			throw new IOException("read file failed, " + e.getMessage(), e);
 		}
 		return true;
 	}
@@ -184,7 +187,8 @@ public class GridFSFileHandler extends FileAdapter {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new IOException("read file failed, " + ExceptionUtils.getFullStackTrace(e), e);
+			LoggerEx.error(TAG, "read file failed, " + ExceptionUtils.getFullStackTrace(e));
+			throw new IOException("read file failed, " + e.getMessage(), e);
 		}
 		return true;
 	}

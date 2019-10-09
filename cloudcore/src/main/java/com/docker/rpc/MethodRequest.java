@@ -59,6 +59,13 @@ public class MethodRequest extends RPCRequest {
     private ServiceStubManager serviceStubManager;
 
     private String callbackFutureId;
+
+    @Override
+    public String toString() {
+        return "MethodRequest crc: " + crc + " service: " + service + " fromServerName: " + fromServerName + " argsSize: " + (args != null ? args.length : 0)
+                + " trackId: " + trackId + " sourceIp: " + sourceIp + " sourcePort: " + sourcePort + " fromService: " + fromService;
+    }
+
 	public MethodRequest() {
 		super(RPCTYPE);
 	}
@@ -149,7 +156,8 @@ public class MethodRequest extends RPCRequest {
 						if(e instanceof CoreException) {
 						    throw (CoreException)e;
                         }
-						throw new CoreException(ChatErrorCodes.ERROR_RPC_DECODE_FAILED, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(e)+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
+                        LoggerEx.error(TAG, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(e)+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
+						throw new CoreException(ChatErrorCodes.ERROR_RPC_DECODE_FAILED, "PB parse data failed, " + e.getMessage() + ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
 					} finally {
 					    IOUtils.closeQuietly(bais);
 					    IOUtils.closeQuietly(dis.original());
@@ -239,7 +247,8 @@ public class MethodRequest extends RPCRequest {
                 setType(RPCTYPE);
             } catch(Throwable t) {
 		        t.printStackTrace();
-                throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(t)+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
+		        LoggerEx.error(TAG, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(t)+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
+                throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + t.getMessage() + ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
             } finally {
                 IOUtils.closeQuietly(baos);
                 IOUtils.closeQuietly(dis.original());

@@ -65,7 +65,8 @@ public abstract class ServiceUserSessionListener {
     }
 
     public void closeChannel(Integer terminal, int code) throws CoreException {
-        gatewayMSGServers.closeUserChannel(userId, service, terminal, code);
+        if(terminal != null)
+            gatewayMSGServers.closeUserChannel(userId, service, terminal, code);
     }
 
     public void closeSession() throws CoreException {

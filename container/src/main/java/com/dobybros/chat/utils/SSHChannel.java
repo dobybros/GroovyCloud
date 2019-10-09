@@ -2,6 +2,7 @@ package com.dobybros.chat.utils;
 
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
+import chat.logs.LoggerEx;
 import com.jcraft.jsch.*;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class SSHChannel {
+	private static final String TAG = SSHChannel.class.getSimpleName();
 	private String ip;
 	private int port;
 	private JSch jsch;
@@ -45,6 +47,8 @@ public class SSHChannel {
 			isConnected = true;
 			retryCount = MAX_RETRY;
 		} catch (JSchException e) {
+			LoggerEx.error(TAG, "connect " + ip + " by " + username + " failed : "
+					+ ExceptionUtils.getFullStackTrace(e));
 			throw new CoreException(ChatErrorCodes.ERROR_SSH_CONNECT_FAILED,new String[]{ip, username},
 					"connect " + ip + " by " + username + " failed : "
 							+ e.getMessage());
@@ -69,7 +73,8 @@ public class SSHChannel {
 				Thread.sleep(3000);
 			}
 		} catch(InterruptedException | IOException | JSchException e) {
-			throw new CoreException(ExceptionUtils.getFullStackTrace(e));
+			LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(e));
+			throw new CoreException(e.getMessage());
 		} finally {
 			if (channel != null)
 				channel.disconnect();
@@ -113,13 +118,15 @@ public class SSHChannel {
 				reconnect();
 				exec(command);
 			}
-			throw new CoreException(ChatErrorCodes.ERROR_SSH_EXEC_FAILED, new String[]{command}, ExceptionUtils.getFullStackTrace(e));
+			LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(e));
+			throw new CoreException(ChatErrorCodes.ERROR_SSH_EXEC_FAILED, new String[]{command}, e.getMessage());
 		} finally {
 			try {
 				if (reader != null)
 					reader.close();
 			} catch (IOException e) {
-				throw new CoreException(ExceptionUtils.getFullStackTrace(e));
+				LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(e));
+				throw new CoreException(e.getMessage());
 			}
 			if (channel != null)
 				channel.disconnect();

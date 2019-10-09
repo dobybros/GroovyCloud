@@ -84,7 +84,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
             throws RemoteException {
         if (serverWrapper.rmiServerHandler == null)
             throw new RemoteException("RPC handler is null");
-
+        RPCResponse response = null;
         try {
             RPCRequest request = null;
             RPCServerAdapter serverAdapter = null;
@@ -98,17 +98,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                 request.setType(type);
                 request.setData(data);
                 request.resurrect();
-                RPCResponse response = serverWrapper.serverMethodInvocation.onCall((MethodRequest) request);
-                if (response != null) {
-                    byte[] responseData = response.getData();
-                    if (responseData == null) {
-                        if (response.getEncode() == null)
-                            response.setEncode(RPCBase.ENCODE_PB);
-                        response.persistent();
-                    }
-                    return response.getData();
-                }
-                return null;
+                response = serverWrapper.serverMethodInvocation.onCall((MethodRequest) request);
             } else {
                 GroovyObjectEx<RPCServerAdapter> adapter = serverWrapper.serverAdapterMap.get(type);
                 if (adapter == null)
@@ -122,24 +112,25 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                 request.setType(type);
                 request.setData(data);
                 request.resurrect();
-                RPCResponse response = serverAdapter.onCall(request);
-                if (response != null) {
-                    byte[] responseData = response.getData();
-                    if (responseData == null) {
-                        if (response.getEncode() == null)
-                            response.setEncode(RPCBase.ENCODE_PB);
-                        response.persistent();
-                    }
-                    return response.getData();
+                response = serverAdapter.onCall(request);
+            }
+            if (response != null) {
+                byte[] responseData = response.getData();
+                if (responseData == null) {
+                    if (response.getEncode() == null)
+                        response.setEncode(RPCBase.ENCODE_PB);
+                    response.persistent();
                 }
+                return response.getData();
             }
             return null;
         } catch (Throwable t) {
+            LoggerEx.error(TAG, "RPC call type " + type + " occur error on server side, " + ExceptionUtils.getFullStackTrace(t));
             String message = null;
             if (t instanceof CoreException) {
-                message = ((CoreException) t).getCode() + "|" + ExceptionUtils.getFullStackTrace(t);
+                message = ((CoreException) t).getCode() + "|" + t.getMessage();
             } else {
-                message = ExceptionUtils.getFullStackTrace(t);
+                message = t.getMessage();
             }
             throw new RemoteException(message, t);
         }
@@ -189,12 +180,12 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                             t = t.getCause();
                         }
                         if (t instanceof CoreException) {
-                            message = ((CoreException) t).getCode() + "|" + ExceptionUtils.getFullStackTrace(t);
+                            message = ((CoreException) t).getCode() + "|" + t.getMessage();
                         } else {
-                            message = ExceptionUtils.getFullStackTrace(t);
+                            message = t.getMessage();
                         }
                         throwable = t;
-                        LoggerEx.error(TAG, "Async call remote failed, service_class_method: "  + rpcCacheManager.getMethodByCrc(rpcCacheManager.getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()) == null ? null : rpcCacheManager.getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()).getCrc()) + ", err: " + message);
+                        LoggerEx.error(TAG, "Async call remote failed, service_class_method: "  + rpcCacheManager.getMethodByCrc(rpcCacheManager.getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()) == null ? null : rpcCacheManager.getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()).getCrc()) + ", err: " + message + " stack: " + ExceptionUtils.getFullStackTrace(t));
                     } finally {
                         String ip = OnlineServer.getInstance().getIp();
                         Tracker.trackerThreadLocal.remove();
@@ -211,7 +202,8 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                             if (throwable instanceof CoreException) {
                                 exception = (CoreException) throwable;
                             } else {
-                                exception = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + ExceptionUtils.getFullStackTrace(throwable));
+                                LoggerEx.error(TAG, "Async callback err,err: " + ExceptionUtils.getFullStackTrace(throwable));
+                                exception = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + throwable.getMessage());
                             }
                             asyncCallbackRequest.setException((CoreException) exception);
                             builder.append(" $$returnobj:: " + JSON.toJSONString(exception));
@@ -236,7 +228,8 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                                         if (throwable1 instanceof CoreException) {
                                             throwable1 = (CoreException) throwable1;
                                         } else {
-                                            throwable1 = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + ExceptionUtils.getFullStackTrace(throwable1));
+                                            LoggerEx.error(TAG, "Async callback err,err: " + ExceptionUtils.getFullStackTrace(throwable1));
+                                            throwable1 = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + throwable1.getMessage());
                                         }
                                         asyncCallbackRequest.setException((CoreException) throwable1);
                                     }
@@ -286,10 +279,11 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                     } else {
                         String message = null;
                         if (t instanceof CoreException) {
-                            message = ((CoreException) t).getCode() + "|" + ExceptionUtils.getFullStackTrace(t);
+                            message = ((CoreException) t).getCode() + "|" + t.getMessage();
                         } else {
-                            message = ExceptionUtils.getFullStackTrace(t);
+                            message = t.getMessage();
                         }
+                        LoggerEx.error(TAG, "AsyncCallbackRequest occur error, " + ExceptionUtils.getFullStackTrace(t));
                         throw new RemoteException(message, t);
                     }
                 }

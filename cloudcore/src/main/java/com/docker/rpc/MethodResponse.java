@@ -122,7 +122,8 @@ public class MethodResponse extends RPCResponse {
                             }
                         } catch (Throwable e) {
                             e.printStackTrace();
-                            throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(e)+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
+                            LoggerEx.error(TAG, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(e)+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
+                            throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + e.getMessage()+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
                         }finally {
                             IOUtils.closeQuietly(bais);
                             IOUtils.closeQuietly(dis.original());
@@ -175,7 +176,7 @@ public class MethodResponse extends RPCResponse {
                     if (exception != null) {
                         JSONObject json = new JSONObject();
                         json.put("code", exception.getCode());
-                        json.put("message", ExceptionUtils.getFullStackTrace(exception));
+                        json.put("message", exception.getMessage());
                         String errorStr = json.toJSONString();//JSON.toJSONString(exception);
                         try {
                             exceptionBytes = GZipUtils.compress(errorStr.getBytes("utf8"));
@@ -197,7 +198,8 @@ public class MethodResponse extends RPCResponse {
                     setType(MethodRequest.RPCTYPE);
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(t)+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
+                    LoggerEx.error(TAG, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(t)+ ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
+                    throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + t.getMessage() + ",service_class_method: " + rpcCacheManager.getMethodByCrc(crc));
                 } finally {
                     IOUtils.closeQuietly(baos);
                     IOUtils.closeQuietly(dis.original());

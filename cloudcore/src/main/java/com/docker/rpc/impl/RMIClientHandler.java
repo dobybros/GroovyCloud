@@ -341,7 +341,8 @@ public class RMIClientHandler extends RPCClientAdapter {
                     clientMonitorThread.connected.notify();
                 }
             }
-            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_CONNECT_FAILED, "RMI call failed, " + ExceptionUtils.getFullStackTrace(ce) + " start reconnecting...");
+            LoggerEx.error(TAG, "RMI call failed, " + ExceptionUtils.getFullStackTrace(ce) + " start reconnecting...");
+            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_CONNECT_FAILED, "RMI call failed, " + ce.getMessage() + " start reconnecting...");
         } catch (Throwable t) {
             if (t instanceof ServerException) {
                 Throwable remoteException = t.getCause();
@@ -355,7 +356,8 @@ public class RMIClientHandler extends RPCClientAdapter {
             if (t instanceof CoreException)
                 throw (CoreException) t;
             t.printStackTrace();
-            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_FAILED, "RMI call failed, " + ExceptionUtils.getFullStackTrace(t));
+            LoggerEx.error(TAG, "RMI call failed, " + ExceptionUtils.getFullStackTrace(t));
+            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_FAILED, "RMI call failed, " + t.getMessage());
         }
     }
 
@@ -415,7 +417,8 @@ public class RMIClientHandler extends RPCClientAdapter {
                     clientMonitorThread.connected.notify();
                 }
             }
-            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_CONNECT_FAILED, "RMI call failed, " + ExceptionUtils.getFullStackTrace(ce) + " start reconnecting...");
+            LoggerEx.error(TAG, "RMI call failed, " + ExceptionUtils.getFullStackTrace(ce) + " start reconnecting...");
+            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_CONNECT_FAILED, "RMI call failed, " + ce.getMessage() + " start reconnecting...");
         } catch (Throwable t) {
             if (t instanceof ServerException) {
                 Throwable remoteException = t.getCause();
@@ -429,7 +432,8 @@ public class RMIClientHandler extends RPCClientAdapter {
             if (t instanceof CoreException)
                 throw (CoreException) t;
             t.printStackTrace();
-            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_FAILED, "RMI call failed, " + ExceptionUtils.getFullStackTrace(t));
+            LoggerEx.error(TAG, "RMI call failed, " + ExceptionUtils.getFullStackTrace(t));
+            throw new CoreException(ChatErrorCodes.ERROR_RMICALL_FAILED, "RMI call failed, " + t.getMessage());
         }
     }
 
@@ -449,7 +453,8 @@ public class RMIClientHandler extends RPCClientAdapter {
                 responseClass = (Class<? extends RPCResponse>) Class.forName(responseClassString);
             } catch (ClassNotFoundException | ClassCastException e) {
                 e.printStackTrace();
-                throw new CoreException(ChatErrorCodes.ERROR_RPC_TYPE_REQUEST_NOMAPPING, "RPC type " + requestType + " don't have correct class name " + responseClassString + ". " + ExceptionUtils.getFullStackTrace(e));
+                LoggerEx.error(TAG, "RPC type " + requestType + " don't have correct class name " + responseClassString + ". " + ExceptionUtils.getFullStackTrace(e));
+                throw new CoreException(ChatErrorCodes.ERROR_RPC_TYPE_REQUEST_NOMAPPING, "RPC type " + requestType + " don't have correct class name " + responseClassString + ". " + e.getMessage());
             }
             if (requestClass != null && responseClass != null) {
                 entity = new RPCEntity();
@@ -477,7 +482,8 @@ public class RMIClientHandler extends RPCClientAdapter {
                 if (request.getData() == null)
                     throw new CoreException(ChatErrorCodes.ERROR_RPC_REQUESTDATA_NULL, "RPCRequest data is still null");
             } catch (Throwable t) {
-                throw new CoreException(ChatErrorCodes.ERROR_RPC_PERSISTENT_FAILED, "Persistent RPCRequest " + request.getType() + " failed " + ExceptionUtils.getFullStackTrace(t));
+                LoggerEx.error(TAG, "Persistent RPCRequest " + request.getType() + " failed " + ExceptionUtils.getFullStackTrace(t));
+                throw new CoreException(ChatErrorCodes.ERROR_RPC_PERSISTENT_FAILED, "Persistent RPCRequest " + request.getType() + " failed " + t.getMessage());
             }
         }
     }
@@ -493,7 +499,8 @@ public class RMIClientHandler extends RPCClientAdapter {
         try {
             response.resurrect();
         } catch (Throwable t) {
-            throw new CoreException(ChatErrorCodes.ERROR_RPC_RESURRECT_FAILED, "RPCResponse " + requestType + " resurrect failed, " + ExceptionUtils.getFullStackTrace(t));
+            LoggerEx.error(TAG, "RPCResponse " + requestType + " resurrect failed, " + ExceptionUtils.getFullStackTrace(t));
+            throw new CoreException(ChatErrorCodes.ERROR_RPC_RESURRECT_FAILED, "RPCResponse " + requestType + " resurrect failed, " + t.getMessage());
         }
         return response;
     }
