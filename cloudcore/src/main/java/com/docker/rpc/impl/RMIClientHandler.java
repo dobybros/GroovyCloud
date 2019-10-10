@@ -29,8 +29,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class RMIClientHandler extends RPCClientAdapter {
-    @Autowired
-    private AutowireCapableBeanFactory beanFactory;
     public static final String RMIID_SSL_SUFFIX = "_SSL";
     // public static final String RMI_ID = "RMIINTERFACE";
     public static final int RMI_PORT = 2222;
