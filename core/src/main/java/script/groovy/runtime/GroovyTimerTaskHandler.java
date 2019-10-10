@@ -92,7 +92,6 @@ public class GroovyTimerTaskHandler extends ClassAnnotationHandler {
             }
         }
     }
-
     public class MyTimerTask extends TimerTaskEx {
         private GroovyObjectEx<?> groovyObj;
         private String key;

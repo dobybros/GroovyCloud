@@ -5,9 +5,7 @@ package chat.utils;
  * Description：
  */
 public abstract class TimerTask implements Runnable{
-    public void execute(){
-
-    };
+    public abstract void execute();
 
     @Override
     public void run() {

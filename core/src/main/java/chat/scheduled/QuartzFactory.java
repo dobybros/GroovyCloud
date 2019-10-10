@@ -3,6 +3,7 @@ package chat.scheduled;
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import chat.utils.QuartzJob;
 import chat.utils.TimerTaskEx;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.quartz.*;
@@ -23,7 +24,7 @@ public class QuartzFactory {
         try {
             Scheduler sched = schedulerFactory.getScheduler();
             // 任务名，任务组，任务执行类
-            JobDetail jobDetail = JobBuilder.newJob(TimerTaskEx.class).withIdentity(task.getId(), task.getId()).build();
+            JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class).withIdentity(task.getId(), task.getId()).build();
             JobDataMap jobDataMap = jobDetail.getJobDataMap();
             jobDataMap.put("TimerTaskEx", task);
             Trigger trigger = null;
@@ -76,7 +77,7 @@ public class QuartzFactory {
         try {
             Scheduler sched = schedulerFactory.getScheduler();
             // 任务名，任务组，任务执行类
-            JobDetail jobDetail = JobBuilder.newJob(TimerTaskEx.class).withIdentity(task.getId(), task.getId()).build();
+            JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class).withIdentity(task.getId(), task.getId()).build();
             JobDataMap jobDataMap = jobDetail.getJobDataMap();
             jobDataMap.put("TimerTaskEx", task);
             Trigger trigger = null;
@@ -131,7 +132,7 @@ public class QuartzFactory {
         try {
             Scheduler sched = schedulerFactory.getScheduler();
             // 任务名，任务组，任务执行类
-            JobDetail jobDetail = JobBuilder.newJob(TimerTaskEx.class).withIdentity(task.getId(), task.getId()).build();
+            JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class).withIdentity(task.getId(), task.getId()).build();
             JobDataMap jobDataMap = jobDetail.getJobDataMap();
             jobDataMap.put("TimerTaskEx", task);
             //作业的触发器

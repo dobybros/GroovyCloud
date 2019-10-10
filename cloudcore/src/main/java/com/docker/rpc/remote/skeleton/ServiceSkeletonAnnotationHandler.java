@@ -179,7 +179,6 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 builder.append(" $$sdockerip:: " + ip);
             }
             MethodResponse response = new MethodResponse(returnObj, exception);
-            beanFactory.autowireBean(response);
             response.setRequest(request);
             response.setEncode(MethodResponse.ENCODE_JAVABINARY);
             response.setCrc(crc);

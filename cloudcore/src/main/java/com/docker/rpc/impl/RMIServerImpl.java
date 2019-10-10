@@ -39,8 +39,6 @@ import java.util.concurrent.CompletableFuture;
 
 public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
     @Autowired
-    private AutowireCapableBeanFactory beanFactory;
-    @Autowired
     RPCClientAdapterMap rpcClientAdapterMap;
     @Autowired
     RPCClientAdapterMap rpcClientAdapterMapSsl;
@@ -144,7 +142,6 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
             case MethodRequest.RPCTYPE:
                 ServerStart.getInstance().getAsyncThreadPoolExecutor().execute(() -> {
                     AsyncCallbackRequest asyncCallbackRequest = new AsyncCallbackRequest();
-                    beanFactory.autowireBean(asyncCallbackRequest);
                     asyncCallbackRequest.setEncode(encode);
                     asyncCallbackRequest.setType(asyncCallbackRequest.getType());
                     asyncCallbackRequest.setCallbackFutureId(callbackFutureId);
@@ -251,7 +248,6 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                 AsyncCallbackRequest asyncCallbackRequest = null;
                 try {
                     asyncCallbackRequest = new AsyncCallbackRequest();
-                    beanFactory.autowireBean(asyncCallbackRequest);
                     asyncCallbackRequest.setData(data);
                     asyncCallbackRequest.setEncode(encode);
                     asyncCallbackRequest.setType(type);

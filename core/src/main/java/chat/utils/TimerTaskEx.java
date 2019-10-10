@@ -2,16 +2,9 @@ package chat.utils;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
-import chat.main.ServerStart;
 import chat.scheduled.QuartzFactory;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.quartz.*;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-@PersistJobDataAfterExecution
-@DisallowConcurrentExecution
-public class TimerTaskEx extends TimerTask implements Job{
+public abstract class TimerTaskEx extends TimerTask{
 	private final String TAG = TimerTaskEx.class.getSimpleName();
 	private String id;
 	private Long delay;
@@ -20,13 +13,9 @@ public class TimerTaskEx extends TimerTask implements Job{
 	private Long scheduleTime;
 	public TimerTaskEx(){
 	}
+
 	@Override
-	public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-		TimerTaskEx task = (TimerTaskEx) jobExecutionContext.getMergedJobDataMap().get("TimerTaskEx");
-		if(task != null){
-			ServerStart.getInstance().getTimerThreadPoolExecutor().execute(task);
-		}
-	}
+	public abstract void execute();
 
 	public void cancel(){
 		if(this.id != null){

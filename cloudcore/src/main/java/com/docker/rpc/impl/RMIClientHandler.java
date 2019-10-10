@@ -288,7 +288,6 @@ public class RMIClientHandler extends RPCClientAdapter {
 
     @Override
     public void callAsync(RPCRequest request) throws CoreException {
-        beanFactory.autowireBean(request);
         try {
             callPrivateAsync(request);
             for (ClientAdapterStatusListener statusListener : statusListeners) {
@@ -363,7 +362,6 @@ public class RMIClientHandler extends RPCClientAdapter {
 
     @Override
     public RPCResponse call(RPCRequest request) throws CoreException {
-        beanFactory.autowireBean(request);
         try {
             RPCResponse response = callPrivate(request);
             for (ClientAdapterStatusListener statusListener : statusListeners) {
