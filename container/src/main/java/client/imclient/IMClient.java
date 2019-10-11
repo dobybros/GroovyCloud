@@ -43,6 +43,8 @@ public class IMClient {
         if(msgId == null) {
             msgId = "MSG_" + msgCounter.getAndIncrement();
         }
+        if(resultListener != null)
+        resultMap.put(msgId, resultListener);
 //        resultMap.put(msgId, resultListener);
 //        return future;
     }
