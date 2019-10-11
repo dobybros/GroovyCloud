@@ -2,18 +2,10 @@ package chat.main;
 
 import chat.thread.CloudThreadFactory;
 import org.apache.tomcat.util.threads.TaskQueue;
-import org.eclipse.jetty.util.thread.ThreadPool;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -64,6 +56,37 @@ public class ServerStart {
 						}
 					}
 					instance = new ServerStart();
+					if(coreSize == null){
+						coreSize = "30";
+					}
+					if(maximumPoolSize == null){
+						maximumPoolSize = "300";
+					}
+					if(timerCoreSize == null){
+						timerCoreSize = "20";
+					}
+					if(timerMaximumPoolSize == null){
+						timerMaximumPoolSize = "100";
+					}
+					if(gatewayCoreSize == null){
+						gatewayCoreSize = "10";
+					}
+					if(gatewayMaximumPoolSize == null){
+						gatewayMaximumPoolSize = "100";
+					}
+
+					if(asyncCoreSize == null){
+						asyncCoreSize = "5";
+					}
+					if(asyncMaximumPoolSize == null){
+						asyncMaximumPoolSize = "100";
+					}
+					if(keepAliveTime == null){
+						keepAliveTime = "30";
+					}
+					if(queueCapacity == null){
+						queueCapacity = "20000";
+					}
 				}
 			}
 		}

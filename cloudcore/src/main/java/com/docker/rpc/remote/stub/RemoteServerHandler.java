@@ -54,6 +54,9 @@ public class RemoteServerHandler {
             thisRpcClientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMapSsl");
         } else {
             thisRpcClientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMap");
+            if(thisRpcClientAdapterMap == null){
+                thisRpcClientAdapterMap = new RPCClientAdapterMap();
+            }
         }
         List<RemoteServers.Server> newSortedServers = new ArrayList<>();
         Collection<RemoteServers.Server> theServers = this.remoteServers.getServers().values();
