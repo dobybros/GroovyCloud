@@ -5,10 +5,8 @@ import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
-import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.remote.MethodMapping;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.servlets.Tracker;
 
@@ -20,10 +18,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServiceStubManager {
-    @Autowired
-    RpcCacheManager rpcCacheManager;
-    @Autowired
-    RemoteServersManager remoteServersManager;
     private static final String TAG = ServiceStubManager.class.getSimpleName();
     private ConcurrentHashMap<String, Boolean> classScanedMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Long, MethodMapping> methodMap = new ConcurrentHashMap<>();
@@ -36,21 +30,23 @@ public class ServiceStubManager {
      *
      */
     private String fromService;
+    public ServiceStubManager(){
 
+    }
     public ServiceStubManager(String host, String fromService) {
         if (fromService != null) {
             this.fromService = fromService;
         }
-        if (host == null) {
-            throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
-        }
-        if (!host.startsWith("http")) {
-            host = "http://" + host;
-        }
         this.host = host;
     }
     public void init(){
-        remoteServersManager.addRemoteHost(this.host);
+        if (this.host == null) {
+            throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
+        }
+        if (!this.host.startsWith("http")) {
+            this.host = "http://" + this.host;
+        }
+        RemoteServersManager.getInstance().addRemoteHost(this.host);
     }
     public void clearCache() {
         methodMap.clear();
@@ -177,11 +173,11 @@ public class ServiceStubManager {
         scanClass(adapterClass, service);
         if (serviceStubProxyClass != null) {
             try {
-                Method getProxyMethod = serviceStubProxyClass.getMethod("getProxy", Class.class, ServiceStubManager.class, AutowireCapableBeanFactory.class, RemoteServerHandler.class, RpcCacheManager.class);
+                Method getProxyMethod = serviceStubProxyClass.getMethod("getProxy", Class.class, ServiceStubManager.class, RemoteServerHandler.class);
                 if (getProxyMethod != null) {
 
                     //远程service
-                    adapterService = (T) getProxyMethod.invoke(null, adapterClass, this, this.beanFactory, getRemoteServerHandler(service), rpcCacheManager);
+                    adapterService = (T) getProxyMethod.invoke(null, adapterClass, this, getRemoteServerHandler(service));
                 } else {
                     LoggerEx.error(TAG, "getProxy method doesn't be found for " + adapterClass + " in service " + service);
                 }
@@ -192,7 +188,7 @@ public class ServiceStubManager {
 
         } else {
             try {
-                RemoteProxy proxy = new RemoteProxy(this.beanFactory, this, getRemoteServerHandler(service));
+                RemoteProxy proxy = new RemoteProxy(this, getRemoteServerHandler(service));
                 adapterService = (T) proxy.getProxy(adapterClass);
             } catch (Throwable e) {
                 e.printStackTrace();
@@ -203,7 +199,6 @@ public class ServiceStubManager {
     }
     private RemoteServerHandler getRemoteServerHandler(String service){
         RemoteServerHandler remoteServerHandler = new RemoteServerHandler(service, this);
-        beanFactory.autowireBean(remoteServerHandler);
         return remoteServerHandler;
     }
     public String getHost() {
@@ -238,10 +233,4 @@ public class ServiceStubManager {
         this.usePublicDomain = usePublicDomain;
     }
 
-    private AutowireCapableBeanFactory beanFactory;
-
-    public void setBeanFactory(AutowireCapableBeanFactory beanFactory) {
-        this.beanFactory = beanFactory;
-        init();
-    }
 }

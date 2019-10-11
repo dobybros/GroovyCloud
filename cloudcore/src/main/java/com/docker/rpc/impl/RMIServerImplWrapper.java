@@ -21,8 +21,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RMIServerImplWrapper extends ClassAnnotationHandler {
-	@Autowired
-	private AutowireCapableBeanFactory beanFactory;
 	RMIServerHandler rmiServerHandler;
 	//Server
 	Map<String, GroovyObjectEx<RPCServerAdapter>> serverAdapterMap;
@@ -41,7 +39,6 @@ public class RMIServerImplWrapper extends ClassAnnotationHandler {
 				} else {
 					server = new RMIServerImpl(port + 1, this);
 				}
-				beanFactory.autowireBean(server);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}

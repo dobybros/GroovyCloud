@@ -5,24 +5,17 @@ import chat.errors.CoreException;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
 import com.docker.rpc.remote.MethodMapping;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.servlets.Tracker;
 
 public class Proxy {
-    private static final String TAG = Proxy.class.getSimpleName();
-    private AutowireCapableBeanFactory beanFactory;
     private ServiceStubManager serviceStubManager;
     private RPCInvocationHandler invocationHandler;
     protected RemoteServerHandler remoteServerHandler;
-    public Proxy(AutowireCapableBeanFactory beanFactory, ServiceStubManager serviceStubManager, RemoteServerHandler remoteServerHandler) {
-        this.beanFactory = beanFactory;
+
+    public Proxy(ServiceStubManager serviceStubManager, RemoteServerHandler remoteServerHandler) {
         this.serviceStubManager = serviceStubManager;
         this.remoteServerHandler = remoteServerHandler;
-        if(this.beanFactory != null){
-            invocationHandler = new RPCInvocationHandlerImpl(this.remoteServerHandler);
-            this.beanFactory.autowireBean(invocationHandler);
-        }
+        invocationHandler = new RPCInvocationHandlerImpl(this.remoteServerHandler);
     }
 
     //远程service调用

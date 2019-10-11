@@ -3,7 +3,6 @@ package com.docker.storage.cache;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
-import com.alibaba.fastjson.JSON;
 import com.docker.data.CacheObj;
 import com.docker.rpc.async.AsyncCallbackHandler;
 import com.docker.rpc.async.AsyncRpcFuture;
@@ -12,9 +11,6 @@ import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.stub.RpcCacheManager;
 import com.docker.script.BaseRuntime;
 import com.docker.storage.cache.handlers.CacheStorageAdapter;
-import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.object.MethodInvocation;
 import script.groovy.runtime.MethodInterceptor;
 
@@ -26,10 +22,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class CacheMethodInterceptor implements MethodInterceptor {
-    @Autowired
-    RpcCacheManager rpcCacheManager;
-    @Autowired
-    CacheStorageFactory cacheStorageFactory;
     public static final String TAG = CacheMethodInterceptor.class.getSimpleName();
     public static final String CACHE_METHODMAP = "cacheMethodMap";
     public static final String CRC = "crc";
@@ -51,7 +43,7 @@ public class CacheMethodInterceptor implements MethodInterceptor {
             CacheObj cacheObj = cacheMethodMap.get(methodKey);
             if (cacheObj != null) {
                 String cacheHost = baseRuntime.getCacheHost(cacheObj.getCacheMethod());
-                CacheStorageAdapter cacheStorageAdapter = cacheStorageFactory.getCacheStorageAdapter(cacheObj.getCacheMethod(), cacheHost);
+                CacheStorageAdapter cacheStorageAdapter = CacheStorageFactory.getInstance().getCacheStorageAdapter(cacheObj.getCacheMethod(), cacheHost);
                 if (cacheStorageAdapter == null || cacheObj.isEmpty()) {
                     return rpcMethodInvocation.proceed();
                 }
@@ -72,7 +64,7 @@ public class CacheMethodInterceptor implements MethodInterceptor {
                         Object result = cacheStorageAdapter.getCacheData(cacheObj.getPrefix() + "_" + key, returnType);
                         if (result != null) {
                             if (rpcMethodInvocation.getAsync()) {
-                                AsyncRpcFuture asyncRpcFuture = rpcCacheManager.getAsyncRpcFuture(((RPCMethodInvocation) methodInvocation).getRemoteServerHandler().getCallbackFutureId());
+                                AsyncRpcFuture asyncRpcFuture = RpcCacheManager.getInstance().getAsyncRpcFuture(((RPCMethodInvocation) methodInvocation).getRemoteServerHandler().getCallbackFutureId());
                                 if(asyncRpcFuture != null && asyncRpcFuture.getFuture() != null){
                                     List<String> list = new ArrayList<>();
                                     list.add(CacheAsyncCallbackHandler.class.getSimpleName());
@@ -103,7 +95,7 @@ public class CacheMethodInterceptor implements MethodInterceptor {
                                 map.put(CACHE_EXPIRD, cacheObj.getExpired());
                                 CacheAsyncCallbackHandler cacheAsyncCallbackHandler = new CacheAsyncCallbackHandler(map);
 
-                                rpcCacheManager.getAsyncRpcFuture(((RPCMethodInvocation) methodInvocation).getRemoteServerHandler().getCallbackFutureId()).addHandler(cacheAsyncCallbackHandler);
+                                RpcCacheManager.getInstance().getAsyncRpcFuture(((RPCMethodInvocation) methodInvocation).getRemoteServerHandler().getCallbackFutureId()).addHandler(cacheAsyncCallbackHandler);
                                 result = rpcMethodInvocation.handleAsync();
                             }
                             return result;
@@ -125,7 +117,7 @@ public class CacheMethodInterceptor implements MethodInterceptor {
         public void handle() {
             Map<String, CacheObj> cacheObjMap = (Map<String, CacheObj>)map.get(CACHE_METHODMAP);
             CacheObj cacheObj = cacheObjMap.get(map.get(CRC));
-            CacheStorageAdapter cacheStorageAdapter = cacheStorageFactory.getCacheStorageAdapter(cacheObj.getCacheMethod(), (String)map.get(CACHE_HOST));
+            CacheStorageAdapter cacheStorageAdapter = CacheStorageFactory.getInstance().getCacheStorageAdapter(cacheObj.getCacheMethod(), (String)map.get(CACHE_HOST));
             String key = (String)map.get(CACHE_KEY);
             if (key != null && result != null && cacheStorageAdapter != null) {
                 try {

@@ -8,7 +8,6 @@ import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.server.OnlineServer;
 import com.docker.storage.adapters.LansService;
 import com.docker.utils.SpringContextUtil;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
@@ -24,7 +23,6 @@ public class StorageManager {
 	private static StorageManager instance;
 	private OnlineServer onlineServer = (OnlineServer) SpringContextUtil.getBean("onlineServer");
     private LansService lansService = (LansService) SpringContextUtil.getBean("lansService");
-    private AutowireCapableBeanFactory beanFactory = SpringContextUtil.getApplicationContext().getAutowireCapableBeanFactory();
 //	private RMIServerImpl rpcServer = (RMIServerImpl) SpringContextUtil.getBean("rpcServer");
 
     private ConcurrentHashMap<String, ServiceStubManager> stubManagerForLanIdMap = new ConcurrentHashMap<>();
@@ -114,8 +112,7 @@ public class StorageManager {
                             host = dblan.getProtocol() + "://" + dblan.getDomain() + ":" + dblan.getPort();
                         }
                         manager = new ServiceStubManager(host, null);
-                        beanFactory.autowireBean(manager);
-                        manager.setBeanFactory(beanFactory);
+                        manager.init();
                         if (!lanId.equals(currentLanId)) {
                             manager.setUsePublicDomain(true);
                         }

@@ -35,8 +35,6 @@ public class RPCMessageSendingTask extends Task {
 //	private BalancerDataCacheCallListener callListener;
 	private LinkedBlockingQueue<Message> messageQueue;
 
-	private static RPCMessageSendingTask instance;
-	
 	private ConcurrentHashMap<String, MessageSendingSingleThreadQueueWrapper> serverQueueMap = new ConcurrentHashMap<>();
 	
 	@Resource
@@ -55,14 +53,6 @@ public class RPCMessageSendingTask extends Task {
 	private ScriptManager scriptManager;
 	
 	private boolean isStarted = true;
-	
-	public RPCMessageSendingTask() {
-		instance = this;
-	}
-	
-	public static RPCMessageSendingTask getInstance() {
-		return instance;
-	}
 	
 	public MessageSendingSingleThreadQueueWrapper getServerQueue(String server, String ip, Integer port) {
 		return getServerQueue(server, ip, port, null);

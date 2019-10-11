@@ -8,9 +8,9 @@ import com.docker.rpc.MethodResponse;
 import com.docker.rpc.RPCClientAdapter;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.server.OnlineServer;
+import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -22,14 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * Description：
  */
 public class RemoteServerHandler {
-    @Autowired
-    RemoteServersManager remoteServersManager;
-    @Autowired
-    RPCClientAdapterMap rpcClientAdapterMap;
-    @Autowired
-    RPCClientAdapterMap rpcClientAdapterMapSsl;
-    @Autowired
-    RpcCacheManager rpcCacheManager;
     private Random random = new Random();
     private long touch;
     private RemoteServers remoteServers;
@@ -59,9 +51,9 @@ public class RemoteServerHandler {
 
     private void available() {
         if (this.serviceStubManager.getUsePublicDomain()) {
-            thisRpcClientAdapterMap = rpcClientAdapterMapSsl;
+            thisRpcClientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMapSsl");
         } else {
-            thisRpcClientAdapterMap = rpcClientAdapterMap;
+            thisRpcClientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMap");
         }
         List<RemoteServers.Server> newSortedServers = new ArrayList<>();
         Collection<RemoteServers.Server> theServers = this.remoteServers.getServers().values();
@@ -152,7 +144,7 @@ public class RemoteServerHandler {
                     RPCClientAdapter clientAdapter = thisRpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     clientAdapter.callAsync(request);
                     LoggerEx.info(TAG, "Successfully callAsync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount);
-                    return rpcCacheManager.getAsyncRpcFuture(callbackFutureId).getFuture();
+                    return RpcCacheManager.getInstance().getAsyncRpcFuture(callbackFutureId).getFuture();
                 } else {
                     LoggerEx.info(TAG, "No ip " + ip + " or port " + port + ", fail to callSync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount);
                 }
@@ -241,7 +233,7 @@ public class RemoteServerHandler {
     }
 
     private void setSortedServers(MethodRequest request) throws CoreException {
-        ConcurrentHashMap<String, RemoteServers.Server> servers = (ConcurrentHashMap<String, RemoteServers.Server>) remoteServersManager.getServers(toService, this.serviceStubManager.getHost());
+        ConcurrentHashMap<String, RemoteServers.Server> servers = (ConcurrentHashMap<String, RemoteServers.Server>) RemoteServersManager.getInstance().getServers(toService, this.serviceStubManager.getHost());
         if (servers != null && servers.size() > 0) {
             this.remoteServers.setServers(servers);
             //TODO Calculate everytime will slow down performance too.

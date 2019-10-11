@@ -2,14 +2,12 @@ package com.docker.storage.cache;
 
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
-import com.docker.annotations.CachePut;
 import com.docker.annotations.CacheClass;
+import com.docker.annotations.CachePut;
 import com.docker.data.CacheObj;
 import com.docker.rpc.remote.stub.RPCInterceptorFactory;
 import com.docker.script.BaseRuntime;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.GroovyBeanFactory;
@@ -24,10 +22,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CacheAnnotationHandler extends ClassAnnotationHandler {
-    @Autowired
-    private AutowireCapableBeanFactory beanFactory;
-    @Autowired
-    RPCInterceptorFactory rpcInterceptorFactory;
     public static final String TAG = CacheAnnotationHandler.class.getSimpleName();
     private CacheMethodInterceptor cacheMethodInterceptor = new CacheMethodInterceptor();
     protected Map<String, CacheObj> cacheMethodMap = new ConcurrentHashMap<>();
@@ -110,8 +104,7 @@ public class CacheAnnotationHandler extends ClassAnnotationHandler {
             cacheObj.setParamNames(ReflectionUtil.getParamNames(method));
             cacheObj.setMethod(method);
             cacheMethodMap.put(methodKey, cacheObj);
-            beanFactory.autowireBean(cacheMethodInterceptor);
-            rpcInterceptorFactory.addMethodInterceptor(baseRuntime.getServiceName() + "_v" + baseRuntime.getServiceVersion(), methodKey, cacheMethodInterceptor);
+            RPCInterceptorFactory.getInstance().addMethodInterceptor(baseRuntime.getServiceName() + "_v" + baseRuntime.getServiceVersion(), methodKey, cacheMethodInterceptor);
             LoggerEx.info("SCAN", "Mapping cachePut method key " + methodKey + " for class " + clazz.getName() + " method " + method.getName());
         }
     }

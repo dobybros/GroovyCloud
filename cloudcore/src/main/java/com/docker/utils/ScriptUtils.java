@@ -21,23 +21,21 @@ public class ScriptUtils {
                             "@script.groovy.annotation.RedeployMain\n" +
                             "class ServiceStubProxy extends com.docker.rpc.remote.stub.Proxy implements GroovyInterceptable{\n" +
                             "    private Class<?> remoteServiceStub;\n" +
-                            "    private com.docker.rpc.remote.stub.RpcCacheManager rpcCacheManager;\n" +
                             "    ServiceStubProxy() {\n" +
 
-                            "        super(null, null, null);\n" +
+                            "        super(null, null);\n" +
                             "    }\n" +
-                            "    ServiceStubProxy(Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager, org.springframework.beans.factory.config.AutowireCapableBeanFactory beanFactory, com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler, com.docker.rpc.remote.stub.RpcCacheManager rpcCacheManager) {\n" +
-                            "        super(beanFactory, serviceStubManager, remoteServerHandler)\n" +
+                            "    ServiceStubProxy(Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager, com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler) {\n" +
+                            "        super(serviceStubManager, remoteServerHandler)\n" +
                             "        this.remoteServiceStub = remoteServiceStub;\n" +
-                            "        this.rpcCacheManager = rpcCacheManager;\n" +
                             "    }\n" +
                             "    def methodMissing(String methodName,methodArgs) {\n" +
                             "        Long crc = chat.utils.ReflectionUtil.getCrc(remoteServiceStub, methodName, remoteServerHandler.getToService());\n" +
-                            "        this.rpcCacheManager.putCrcMethodMap(crc, remoteServerHandler.getToService() + '_' + remoteServiceStub.getSimpleName() + '_' + methodName);\n" +
+                            "        com.docker.rpc.remote.stub.RpcCacheManager.getInstance().putCrcMethodMap(crc, remoteServerHandler.getToService() + '_' + remoteServiceStub.getSimpleName() + '_' + methodName);\n" +
                             "        return invoke(crc, methodArgs);\n" +
                             "    }\n" +
-                            "    public static def getProxy(Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager, org.springframework.beans.factory.config.AutowireCapableBeanFactory beanFactory, com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler, com.docker.rpc.remote.stub.RpcCacheManager rpcCacheManager) {\n" +
-                            "        ServiceStubProxy proxy = new ServiceStubProxy(remoteServiceStub, serviceStubManager, beanFactory, remoteServerHandler, rpcCacheManager)\n" +
+                            "    public static def getProxy(Class<?> remoteServiceStub, com.docker.rpc.remote.stub.ServiceStubManager serviceStubManager, com.docker.rpc.remote.stub.RemoteServerHandler remoteServerHandler) {\n" +
+                            "        ServiceStubProxy proxy = new ServiceStubProxy(remoteServiceStub, serviceStubManager, remoteServerHandler)\n" +
                             "        def theProxy = proxy.asType(proxy.remoteServiceStub)\n" +
                             "        return theProxy\n" +
                             "    }\n" +

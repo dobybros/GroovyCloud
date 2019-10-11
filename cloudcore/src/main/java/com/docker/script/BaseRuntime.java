@@ -36,8 +36,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseRuntime extends GroovyRuntime {
-    @Autowired
-    CacheStorageFactory cacheStorageFactory;
     public static final String TAG = BaseRuntime.class.getSimpleName();
     private ConcurrentHashMap<String, Object> memoryCache = new ConcurrentHashMap<>();
 
@@ -85,7 +83,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 
             String redisHost = properties.getProperty("db.redis.uri");
             if (redisHost != null) {
-                RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler)cacheStorageFactory.getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS,redisHost);
+                RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler)CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS,redisHost);
                 redisHandler = cacheStorageAdapter.getRedisHandler();
             }
             String produce = properties.getProperty("db.kafka.produce");

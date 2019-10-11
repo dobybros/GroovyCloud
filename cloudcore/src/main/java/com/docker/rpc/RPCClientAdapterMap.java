@@ -3,8 +3,6 @@ package com.docker.rpc;
 import chat.logs.LoggerEx;
 import com.docker.rpc.impl.ExpireListener;
 import com.docker.rpc.impl.RMIClientHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -20,8 +18,6 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class RPCClientAdapterMap {
-	@Autowired
-	private AutowireCapableBeanFactory beanFactory;
 	private static final String TAG = RPCClientAdapterMap.class.getSimpleName();
 	
 	private ConcurrentHashMap<String, RPCClientAdapter> clientAdapterMap = new ConcurrentHashMap<String, RPCClientAdapter>();
@@ -60,7 +56,6 @@ public class RPCClientAdapterMap {
 			if(ip == null) 
 				return null; 
 			RMIClientHandler rmiClient = new RMIClientHandler();
-			beanFactory.autowireBean(rmiClient);
 			rmiClient.setRmiPort(rmiPort);
 			rmiClient.setServerHost(ip);
 			rmiClient.setRmiId(serverName);

@@ -1,8 +1,19 @@
 package script.groovy.runtime;
 
 
+import chat.errors.CoreException;
+import chat.logs.LoggerEx;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import script.ScriptRuntime;
+import script.groovy.object.GroovyObjectEx;
+import script.groovy.runtime.classloader.ClassHolder;
+import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
@@ -11,22 +22,7 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import script.ScriptRuntime;
-import script.groovy.object.GroovyObjectEx;
-import chat.errors.CoreException;
-import chat.logs.LoggerEx;
-import script.groovy.runtime.classloader.ClassHolder;
-import script.groovy.runtime.classloader.MyGroovyClassLoader;
-
 public class GroovyRuntime extends ScriptRuntime {
-    @Autowired
-    private AutowireCapableBeanFactory autowireCapableBeanFactory;
     private static final String TAG = GroovyRuntime.class.getSimpleName();
     private ArrayList<ClassAnnotationHandler> annotationHandlers = new ArrayList<>();
     private ConcurrentHashMap<Object, ClassAnnotationHandler> annotationHandlerMap = new ConcurrentHashMap<>();
@@ -108,7 +104,6 @@ public class GroovyRuntime extends ScriptRuntime {
     }
 
     public boolean addClassAnnotationHandler(ClassAnnotationHandler handler) {
-        autowireCapableBeanFactory.autowireBean(handler);
         if (handler != null && !annotationHandlers.contains(handler)) {
             boolean bool = annotationHandlers.add(handler);
             annotationHandlerMap.put(handler.getKey(), handler);

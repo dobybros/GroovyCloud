@@ -33,10 +33,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
-    @Autowired
-    private AutowireCapableBeanFactory beanFactory;
-    @Autowired
-    RpcCacheManager rpcCacheManager;
     private static final String TAG = ServiceSkeletonAnnotationHandler.class.getSimpleName();
     private ConcurrentHashMap<Long, SkelectonMethodMapping> methodMap = new ConcurrentHashMap<>();
 
@@ -248,7 +244,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 returnType = ReflectionUtil.getInitiatableClass(returnType);
                 mm.setReturnClass(returnType);
                 methodMap.put(value, mm);
-                rpcCacheManager.putCrcMethodMap(value, service + "_" + clazz.getSimpleName() + "_" + method.getName());
+                RpcCacheManager.getInstance().putCrcMethodMap(value, service + "_" + clazz.getSimpleName() + "_" + method.getName());
                 //TODO DTS
                 Annotation[] annotations = method.getDeclaredAnnotations();
                 for (Annotation annotation : annotations) {

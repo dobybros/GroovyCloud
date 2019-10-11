@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Description：
  */
 public class RemoteServersManager {
+    private static RemoteServersManager instance;
     private final String TAG = RemoteServersManager.class.getSimpleName();
     private List<String> remoteHostList = new ArrayList<String>();
     private Map<String, Map<String, Map<String, Map<String, RemoteServers.Server>>>> remoteServersMap = new ConcurrentHashMap<String, Map<String, Map<String, Map<String, RemoteServers.Server>>>>();
@@ -110,5 +111,11 @@ public class RemoteServersManager {
             LoggerEx.error(TAG, "theServersFinalMap is empty, please check");
         }
         return null;
+    }
+    public synchronized static RemoteServersManager getInstance() {
+        if(instance == null){
+            instance = new RemoteServersManager();
+        }
+        return instance;
     }
 }

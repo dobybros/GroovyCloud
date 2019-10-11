@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Description：Used for this rpc service globally
  */
 public class RpcCacheManager {
+    private static RpcCacheManager instance;
     private Map<String, AsyncRpcFuture> asyncCallbackHandlerMap = new ConcurrentHashMap<>();
     private Map<Long, String> crcMethodMap = new ConcurrentHashMap<>();
 
@@ -59,5 +60,12 @@ public class RpcCacheManager {
             return crcMethodMap.get(crc);
         }
         return null;
+    }
+
+    public synchronized static RpcCacheManager getInstance() {
+        if(instance == null){
+            instance = new RpcCacheManager();
+        }
+        return instance;
     }
 }

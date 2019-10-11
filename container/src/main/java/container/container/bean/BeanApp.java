@@ -122,22 +122,6 @@ public class BeanApp extends ConfigApp{
     private RMIServerHandler dockerRpcServerAdapterSsl;
     private ServersServiceImpl serversService;
     private ServiceVersionServiceImpl serviceVersionService;
-    private RemoteServersManager remoteServersManager;
-    private RpcCacheManager rpcCacheManager;
-    private RPCInterceptorFactory rpcInterceptorFactory;
-    private CacheStorageFactory cacheStorageFactory;
-    public synchronized CacheStorageFactory getCacheStorageFactory(){
-        if(cacheStorageFactory == null){
-            cacheStorageFactory = new CacheStorageFactory();
-        }
-        return cacheStorageFactory;
-    }
-    public synchronized RPCInterceptorFactory getRPCInterceptorFactory(){
-        if(rpcInterceptorFactory == null){
-            rpcInterceptorFactory = new RPCInterceptorFactory();
-        }
-        return rpcInterceptorFactory;
-    }
 
     public synchronized ServiceVersionServiceImpl getServiceVersionService() {
         if(serviceVersionService == null){
@@ -716,18 +700,6 @@ public class BeanApp extends ConfigApp{
             tcpFilterChainBuilder.setFilters(map);
         }
         return tcpFilterChainBuilder;
-    }
-    public synchronized RemoteServersManager getRemoteServersManager(){
-        if(remoteServersManager == null){
-            remoteServersManager = new RemoteServersManager();
-        }
-        return remoteServersManager;
-    }
-    public synchronized RpcCacheManager getRpcCacheManager(){
-        if(rpcCacheManager == null){
-            rpcCacheManager = new RpcCacheManager();
-        }
-        return rpcCacheManager;
     }
     public synchronized static BeanApp getInstance(){
         if(instance == null){

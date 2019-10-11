@@ -10,7 +10,6 @@ import chat.utils.TimerTaskEx;
 import com.alibaba.fastjson.JSON;
 import com.docker.errors.CoreErrorCodes;
 import com.docker.rpc.*;
-import com.docker.rpc.async.AsyncCallbackHandler;
 import com.docker.rpc.async.AsyncCallbackRequest;
 import com.docker.rpc.async.AsyncRpcFuture;
 import com.docker.rpc.remote.MethodMapping;
@@ -22,8 +21,6 @@ import com.docker.server.OnlineServer;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.servlets.Tracker;
 import script.memodb.ObjectId;
@@ -34,16 +31,9 @@ import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
-    @Autowired
-    RPCClientAdapterMap rpcClientAdapterMap;
-    @Autowired
-    RPCClientAdapterMap rpcClientAdapterMapSsl;
-    @Autowired
-    RpcCacheManager rpcCacheManager;
     private RMIServerImplWrapper serverWrapper;
 
     public RMIServerImpl(Integer port, RMIServerImplWrapper serverWrapper) throws RemoteException {
@@ -182,7 +172,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                             message = t.getMessage();
                         }
                         throwable = t;
-                        LoggerEx.error(TAG, "Async call remote failed, service_class_method: "  + rpcCacheManager.getMethodByCrc(rpcCacheManager.getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()) == null ? null : rpcCacheManager.getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()).getCrc()) + ", err: " + message + " stack: " + ExceptionUtils.getFullStackTrace(t));
+                        LoggerEx.error(TAG, "Async call remote failed, service_class_method: "  + RpcCacheManager.getInstance().getMethodByCrc(RpcCacheManager.getInstance().getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()) == null ? null : RpcCacheManager.getInstance().getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()).getCrc()) + ", err: " + message + " stack: " + ExceptionUtils.getFullStackTrace(t));
                     } finally {
                         String ip = OnlineServer.getInstance().getIp();
                         Tracker.trackerThreadLocal.remove();
@@ -253,7 +243,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                     asyncCallbackRequest.setType(type);
                     asyncCallbackRequest.resurrect();
                     if (asyncCallbackRequest.getCallbackFutureId() != null) {
-                        AsyncRpcFuture asyncRpcFuture = rpcCacheManager.handlerAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId());
+                        AsyncRpcFuture asyncRpcFuture = RpcCacheManager.getInstance().handlerAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId());
                         if(asyncRpcFuture != null){
                             CompletableFuture completableFuture = asyncRpcFuture.getFuture();
                             if (asyncCallbackRequest.getException() != null) {
@@ -268,7 +258,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                     if (asyncCallbackRequest != null && asyncCallbackRequest.getCallbackFutureId() != null) {
                         CompletableFuture completableFuture = new CompletableFuture();
                         if (completableFuture == null) {
-                            LoggerEx.error(TAG, "Async callback timeout, service_class_method: " + rpcCacheManager.getMethodByCrc(rpcCacheManager.getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()) == null ? null : rpcCacheManager.getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()).getCrc()));
+                            LoggerEx.error(TAG, "Async callback timeout, service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(RpcCacheManager.getInstance().getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()) == null ? null : RpcCacheManager.getInstance().getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()).getCrc()));
                         } else {
                             completableFuture.completeExceptionally(t);
                         }
@@ -323,9 +313,9 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
             if (serviceStubManager != null) {
                 RPCClientAdapterMap clientAdapterMap = null;
                 if (serviceStubManager.getUsePublicDomain()) {
-                    clientAdapterMap = rpcClientAdapterMapSsl;
+                    clientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMapSsl");
                 } else {
-                    clientAdapterMap = rpcClientAdapterMap;
+                    clientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMap");
                 }
                 RPCClientAdapter clientAdapter = clientAdapterMap.registerServer(((MethodRequest) request).getSourceIp(), ((MethodRequest) request).getSourcePort(), ((MethodRequest) request).getFromServerName());
                 if (clientAdapter != null) {
@@ -380,7 +370,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
             asyncCallbackRequest.persistent();
         } catch (CoreException ex) {
             persistentSuccess = false;
-            LoggerEx.error(TAG, "AsyncCallbackRequest persistent error,service_class_method: " + rpcCacheManager.getMethodByCrc(rpcCacheManager.getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()) == null ? null : rpcCacheManager.getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()).getCrc()) + ",err: " + ExceptionUtils.getFullStackTrace(ex));
+            LoggerEx.error(TAG, "AsyncCallbackRequest persistent error,service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(RpcCacheManager.getInstance().getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()) == null ? null : RpcCacheManager.getInstance().getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()).getCrc()) + ",err: " + ExceptionUtils.getFullStackTrace(ex));
             ex.printStackTrace();
         }
         if (persistentSuccess) {

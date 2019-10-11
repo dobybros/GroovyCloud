@@ -16,7 +16,6 @@ import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.io.IOUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -90,7 +89,7 @@ public class AsyncCallbackRequest extends RPCRequest {
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
-                                    LoggerEx.error(TAG, "Parse return bytes failed, " + e.getMessage()+ ",crc: " + crc);
+                                    LoggerEx.error(TAG, "Parse return bytes failed, " + e.getMessage()+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                                 }
                             }
 
@@ -107,19 +106,19 @@ public class AsyncCallbackRequest extends RPCRequest {
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
-                                    LoggerEx.error(TAG, "Parse exception bytes failed, " + e.getMessage()+ ",crc: " + crc);
+                                    LoggerEx.error(TAG, "Parse exception bytes failed, " + e.getMessage()+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                                 }
                             }
                         } catch (Throwable e) {
                             e.printStackTrace();
-                            throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed when callback, " + e.getMessage()+ ",crc: " + crc);
+                            throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed when callback, " + e.getMessage()+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                         }finally {
                             IOUtils.closeQuietly(bais);
                             IOUtils.closeQuietly(dis.original());
                         }
                         break;
                     default:
-                        throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NOTFOUND, "Encoder type doesn't be found for resurrect when callback,crc: " + crc);
+                        throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NOTFOUND, "Encoder type doesn't be found for resurrect when callback,service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                 }
             }
         }
@@ -129,8 +128,8 @@ public class AsyncCallbackRequest extends RPCRequest {
     public void persistent() throws CoreException{
         Byte encode = getEncode();
         if (encode == null) {
-            LoggerEx.error(TAG, "Encoder is null for persistent when callback,crc: " + crc);
-            throw  new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NULL, "Encoder is null for persistent when callback for crc" + crc);
+            LoggerEx.error(TAG, "Encoder is null for persistent when callback,service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+            throw  new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NULL, "Encoder is null for persistent when callback for service_class_method" + RpcCacheManager.getInstance().getMethodByCrc(crc));
         }
         switch (encode) {
             case ENCODE_JAVABINARY:
@@ -150,7 +149,7 @@ public class AsyncCallbackRequest extends RPCRequest {
                             returnBytes = GZipUtils.compress(returnStr.getBytes("utf8"));
                         } catch (IOException e) {
                             e.printStackTrace();
-                            LoggerEx.error(TAG, "Generate return " + returnStr + " to bytes failed when callback, crc: " + crc+ ",err: " + e.getMessage());
+                            LoggerEx.error(TAG, "Generate return " + returnStr + " to bytes failed when callback, service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc)+ ",err: " + e.getMessage());
                         }
                     }
                     if (returnBytes != null) {
@@ -170,7 +169,7 @@ public class AsyncCallbackRequest extends RPCRequest {
                             exceptionBytes = GZipUtils.compress(errorStr.getBytes("utf8"));
                         } catch (IOException e) {
                             e.printStackTrace();
-                            LoggerEx.error(TAG, "Generate error " + errorStr + " to bytes failed, " + e.getMessage() + ",crc: " + crc);
+                            LoggerEx.error(TAG, "Generate error " + errorStr + " to bytes failed, " + e.getMessage() + ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                         }
                     }
                     if (exceptionBytes != null) {
@@ -188,16 +187,16 @@ public class AsyncCallbackRequest extends RPCRequest {
                     exception = null;
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    LoggerEx.error(TAG, "PB parse data failed when callback, " + t.getMessage()+ ",crc: " + crc);
-                    throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed when call back, " + t.getMessage()+ ",crc: " + crc);
+                    LoggerEx.error(TAG, "PB parse data failed when callback, " + t.getMessage()+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                    throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed when call back, " + t.getMessage()+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                 } finally {
                     IOUtils.closeQuietly(baos);
                     IOUtils.closeQuietly(dis.original());
                 }
                 break;
             default:
-                LoggerEx.error(TAG, "Encoder type doesn't be found for persistent when callback, crc: " + crc);
-                throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NOTFOUND, "Encoder type doesn't be found for persistent when callback,crc: " + crc);
+                LoggerEx.error(TAG, "Encoder type doesn't be found for persistent when callback, service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NOTFOUND, "Encoder type doesn't be found for persistent when callback,service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
         }
     }
 

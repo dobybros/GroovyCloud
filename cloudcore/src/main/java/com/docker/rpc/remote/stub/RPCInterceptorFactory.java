@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RPCInterceptorFactory {
     private Map<String, Map<String, List<MethodInterceptor>>> allMethodInterceptorMap = new ConcurrentHashMap<>();
-
+    private static RPCInterceptorFactory instance;
     public void addMethodInterceptor(String serviceName, String key, MethodInterceptor methodInterceptor) {
         if (serviceName != null && key != null && methodInterceptor != null) {
             if (allMethodInterceptorMap.containsKey(serviceName)) {
@@ -40,5 +40,11 @@ public class RPCInterceptorFactory {
 
     public void setAllMethodInterceptorMap(Map<String, Map<String, List<MethodInterceptor>>> allMethodInterceptorMap) {
         this.allMethodInterceptorMap = allMethodInterceptorMap;
+    }
+    public synchronized static RPCInterceptorFactory getInstance() {
+        if(instance == null){
+            instance = new RPCInterceptorFactory();
+        }
+        return instance;
     }
 }

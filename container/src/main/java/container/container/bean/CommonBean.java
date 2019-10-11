@@ -7,7 +7,6 @@ import com.dobybros.chat.tasks.RPCMessageSendingTask;
 import com.dobybros.chat.utils.AutoReloadProperties;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.onlineserver.OnlineServerWithStatus;
-import com.docker.rpc.remote.stub.RemoteServersManager;
 import com.docker.script.ScriptManager;
 import com.docker.utils.SpringContextUtil;
 import org.springframework.context.annotation.Bean;
@@ -92,8 +91,5 @@ public class CommonBean {
     public OnlineServerWithStatus onlineServer() {
         return instance.getOnlineServer();
     }
-    @Bean
-    public RemoteServersManager remoteServersManager(){
-        return instance.getRemoteServersManager();
-    }
+
 }
