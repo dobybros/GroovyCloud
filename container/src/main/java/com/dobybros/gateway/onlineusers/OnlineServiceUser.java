@@ -551,7 +551,7 @@ public class OnlineServiceUser implements ChannelListener {
 		try {
 			UserInfoAdapter userInfoAdapter = StorageManager.getInstance().getStorageAdapter(UserInfoAdapter.class);
 			ServerInfo serverInfo = userInfoAdapter.getServerInfo(userInfo.getUserId(), userInfo.getService());
-			if(serverInfo != null && serverInfo.getServer() == OnlineServer.getInstance().getServer()) {
+			if(serverInfo != null && serverInfo.getServer().equals(OnlineServer.getInstance().getServer())) {
 				userInfoAdapter.deleteServerInfo(userInfo.getUserId(), userInfo.getService())	;
 			} else {
 				LoggerEx.warn(TAG, "Online Service User " + JSON.toJSONString(userInfo) + " is destroyed but server is not expected, serverInfo " + (serverInfo != null ? JSON.toJSONString(serverInfo) : "null"));
