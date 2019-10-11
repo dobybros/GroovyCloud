@@ -302,6 +302,7 @@ public class DeployServiceUtils {
         String str = "groovy.zip";
         crc.update(str.getBytes());
         long value = crc.getValue();
+        System.out.println("PASSWORD: " + value);
         zip(zipDir.getAbsolutePath(), zipFile.getAbsolutePath().split("1.zip")[0], true, String.valueOf(value));
     }
 
