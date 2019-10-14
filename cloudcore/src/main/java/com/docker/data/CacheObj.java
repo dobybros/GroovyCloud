@@ -59,7 +59,7 @@ public class CacheObj {
     }
 
     public Boolean isEmpty() {
-        if (spelKey != null && !spelKey.isEmpty() && expired != null && prefix != null) {
+        if (spelKey != null && !spelKey.isEmpty() && prefix != null) {
             return false;
         }
         return true;

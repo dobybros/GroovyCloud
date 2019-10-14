@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public class CacheMethodInterceptor implements MethodInterceptor {
-    public static final String TAG = CacheMethodInterceptor.class.getSimpleName();
+public class CachePutMethodInterceptor implements MethodInterceptor {
+    public static final String TAG = CachePutMethodInterceptor.class.getSimpleName();
     public static final String CACHE_METHODMAP = "cacheMethodMap";
     public static final String CRC = "crc";
     public static final String CACHE_KEY = "key";
