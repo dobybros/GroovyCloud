@@ -7,6 +7,7 @@ import com.docker.data.CacheObj;
 import com.docker.rpc.method.RPCMethodInvocation;
 import com.docker.script.BaseRuntime;
 import com.docker.storage.cache.handlers.CacheStorageAdapter;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import script.groovy.object.MethodInvocation;
 import script.groovy.runtime.MethodInterceptor;
 
@@ -37,7 +38,7 @@ public class CacheEvictMethodInterceptor implements MethodInterceptor {
                     try{
                         cacheStorageAdapter.deleteCacheData(cacheObj.getPrefix() + "_" + key);
                     }catch (Throwable throwable){
-                        LoggerEx.error(TAG, "Delete cache failed by key : " + cacheObj.getPrefix() + "_" + key);
+                        LoggerEx.error(TAG, "Delete cache failed by key : " + cacheObj.getPrefix() + "_" + key + ",reason is " + ExceptionUtils.getFullStackTrace(throwable));
                     }
                     return rpcMethodInvocation.proceed();
                 }
