@@ -10,5 +10,5 @@ import java.lang.annotation.*;
 
 public @interface MessageReceived {
 	public Class<? extends Data> dataClass();
-	public byte type();
+	public int type();
 }

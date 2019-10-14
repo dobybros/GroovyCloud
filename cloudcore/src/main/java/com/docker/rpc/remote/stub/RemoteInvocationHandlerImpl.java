@@ -1,8 +1,10 @@
 package com.docker.rpc.remote.stub;
 
 import chat.errors.CoreException;
+import com.docker.data.Lan;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.async.AsyncRpcFuture;
+import com.docker.rpc.method.HttpInvocation;
 import com.docker.rpc.method.RPCMethodInvocation;
 import com.docker.rpc.remote.MethodMapping;
 import script.groovy.object.MethodInvocation;
@@ -11,10 +13,10 @@ import script.groovy.runtime.MethodInterceptor;
 import java.util.List;
 import java.util.Map;
 
-public class RPCInvocationHandlerImpl implements RPCInvocationHandler {
+public class RemoteInvocationHandlerImpl implements RemoteInvocationHandler {
     private RemoteServerHandler remoteServerHandler;
 
-    protected RPCInvocationHandlerImpl(RemoteServerHandler remoteServerHandler) {
+    protected RemoteInvocationHandlerImpl(RemoteServerHandler remoteServerHandler) {
         this.remoteServerHandler = remoteServerHandler;
     }
 
@@ -29,8 +31,16 @@ public class RPCInvocationHandlerImpl implements RPCInvocationHandler {
             }
         }
         handleAsyncWithHandler(methodMapping.getAsync(), methodRequest);
-        MethodInvocation methodInvocation = new RPCMethodInvocation(methodRequest, methodMapping, methodInterceptors, remoteServerHandler, methodKey);
-        return methodInvocation.proceed();
+        MethodInvocation methodInvocation = null;
+        if(methodRequest.getServiceStubManager() != null){
+            if(methodRequest.getServiceStubManager().getLanType() == null || methodRequest.getServiceStubManager().getLanType().equals(Lan.TYPE_RPC)){
+                methodInvocation = new RPCMethodInvocation(methodRequest, methodMapping, methodInterceptors, remoteServerHandler, methodKey);
+            }else {
+                methodInvocation = new HttpInvocation(methodRequest, methodMapping, methodInterceptors, remoteServerHandler, methodKey);
+            }
+            return methodInvocation.proceed();
+        }
+        return null;
     }
 
     private void handleAsyncWithHandler(Boolean isAsync, MethodRequest methodRequest) {

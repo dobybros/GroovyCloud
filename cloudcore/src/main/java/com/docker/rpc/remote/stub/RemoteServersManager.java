@@ -20,8 +20,10 @@ public class RemoteServersManager {
     private static RemoteServersManager instance;
     private final String TAG = RemoteServersManager.class.getSimpleName();
     private List<String> remoteHostList = new ArrayList<String>();
+    private List<String> crossRemoteHostList = new ArrayList<>();
     private Map<String, Map<String, Map<String, Map<String, RemoteServers.Server>>>> remoteServersMap = new ConcurrentHashMap<String, Map<String, Map<String, Map<String, RemoteServers.Server>>>>();
-
+    //跨集群使用
+    private Map<String, String> remoteServersTokenMap = new ConcurrentHashMap<>();
     public void addRemoteHost(final String host) {
         if (!remoteHostList.contains(host)) {
             remoteHostList.add(host);
@@ -62,20 +64,60 @@ public class RemoteServersManager {
             TimerEx.schedule(timerTaskEx, 10000L, 10000L);
         }
     }
-
+    public void addCrossHost(String host){
+        if(!crossRemoteHostList.contains(host)){
+            crossRemoteHostList.add(host);
+            //2小时刷新一次另一个集群的验证token
+            TimerTaskEx taskEx = new TimerTaskEx() {
+                @Override
+                public void execute() {
+                    RemoteTokenResult remoteTokenResult = (RemoteTokenResult)ScriptHttpUtils.get(host + "/rest/discovery/accessToken", RemoteTokenResult.class);
+                    if(remoteTokenResult != null){
+                        String jwtToken = remoteTokenResult.getData();
+                        if(jwtToken != null){
+                            remoteServersTokenMap.put(host, jwtToken);
+                        }
+                    }else {
+                        remoteServersTokenMap.remove(host);
+                        TimerEx.schedule(new TimerTaskEx() {
+                            @Override
+                            public void execute() {
+                                RemoteTokenResult remoteTokenResult = (RemoteTokenResult)ScriptHttpUtils.get(host + "/rest/discovery/accessToken", RemoteTokenResult.class);
+                                if(remoteTokenResult != null){
+                                    String jwtToken = remoteTokenResult.getData();
+                                    if(jwtToken != null){
+                                        remoteServersTokenMap.put(host, jwtToken);
+                                        this.cancel();
+                                        LoggerEx.info(TAG, "RemoteServer host has reset to available, host: " + host);
+                                    }
+                                }
+                            }
+                        }, 60000L, 60000L);
+                    }
+                }
+            };
+            taskEx.execute();
+            TimerEx.schedule(taskEx, 60000L, 7200000L);
+        }
+    }
     public static class ServersResult extends Result<Map<String, Map<String, List<RemoteServers.Server>>>> {
 
     }
+    //用于跨集群刷新otken
+    public static class RemoteTokenResult extends Result<String> {
 
-    Map<String, Map<String, Map<String, RemoteServers.Server>>> getFinalServersMap(String host) {
+    }
+    private Map<String, Map<String, Map<String, RemoteServers.Server>>> getFinalServersMap(String host) {
         if (remoteServersMap.size() > 0) {
             return remoteServersMap.get(host);
         }
         return null;
     }
+
     public Map<String, RemoteServers.Server> getServers(String service, String host) {
         GrayReleased grayReleased = GrayReleased.grayReleasedThreadLocal.get();
         String type = GrayReleased.defaultVersion;
+
         if (grayReleased != null) {
             if (grayReleased.getType() != null) {
                 type = grayReleased.getType();
@@ -111,6 +153,10 @@ public class RemoteServersManager {
             LoggerEx.error(TAG, "theServersFinalMap is empty, please check");
         }
         return null;
+    }
+    public String getRemoteServerToken(String host){
+        String token = remoteServersTokenMap.get(host);
+        return token;
     }
     public synchronized static RemoteServersManager getInstance() {
         if(instance == null){

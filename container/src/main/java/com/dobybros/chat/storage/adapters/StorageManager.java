@@ -16,12 +16,12 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class StorageManager {
-	private static final String TAG = StorageManager.class.getSimpleName();
+    private static final String TAG = StorageManager.class.getSimpleName();
     private GlobalLansProperties globalLansProperties;
-	private Properties storageProperties;
+    private Properties storageProperties;
     private Properties sdockerProperties;
-	private static StorageManager instance;
-	private OnlineServer onlineServer = (OnlineServer) SpringContextUtil.getBean("onlineServer");
+    private static StorageManager instance;
+    private OnlineServer onlineServer = (OnlineServer) SpringContextUtil.getBean("onlineServer");
     private LansService lansService = (LansService) SpringContextUtil.getBean("lansService");
 //	private RMIServerImpl rpcServer = (RMIServerImpl) SpringContextUtil.getBean("rpcServer");
 
@@ -30,26 +30,26 @@ public class StorageManager {
     // 跨区的adapter，比较特殊
     private ConcurrentHashMap<Class, StorageAdapter> acrossAdaptorMap = new ConcurrentHashMap<>();
 
-	public static StorageManager getInstance() {
-		if(instance == null) {
-			synchronized (StorageManager.class) {
-				if(instance == null)
-					instance = new StorageManager();
-			}
-		}
-		return instance;
-	}
-	
-	public StorageManager() {
-		ClassPathResource resource = new ClassPathResource(onlineServer.getConfigPath());
-		storageProperties = new Properties();
-		try {
-			storageProperties.load(resource.getInputStream());
-		} catch (IOException e) {
-			e.printStackTrace();
-			LoggerEx.error(TAG, "Prepare storage.properties is failed, " + e.getMessage());
-		}
-		ClassPathResource sdockerResource = new ClassPathResource("container.properties");
+    public static StorageManager getInstance() {
+        if (instance == null) {
+            synchronized (StorageManager.class) {
+                if (instance == null)
+                    instance = new StorageManager();
+            }
+        }
+        return instance;
+    }
+
+    public StorageManager() {
+        ClassPathResource resource = new ClassPathResource(onlineServer.getConfigPath());
+        storageProperties = new Properties();
+        try {
+            storageProperties.load(resource.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+            LoggerEx.error(TAG, "Prepare storage.properties is failed, " + e.getMessage());
+        }
+        ClassPathResource sdockerResource = new ClassPathResource("container.properties");
         sdockerProperties = new Properties();
         try {
             sdockerProperties.load(sdockerResource.getInputStream());
@@ -60,12 +60,13 @@ public class StorageManager {
 
         globalLansProperties = (GlobalLansProperties) SpringContextUtil.getBean("globalLansProperties");
     }
-	
-	public <T extends StorageAdapter> T getStorageAdapter(Class<T> adapterClass) {
-		return getStorageAdapter(adapterClass, onlineServer != null ? onlineServer.getLanId() : null);
-	}
-	@SuppressWarnings("unchecked")
-	public <T extends StorageAdapter> T getStorageAdapter(Class<T> adapterClass, String lanId) {
+
+    public <T extends StorageAdapter> T getStorageAdapter(Class<T> adapterClass) {
+        return getStorageAdapter(adapterClass, onlineServer != null ? onlineServer.getLanId() : null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends StorageAdapter> T getStorageAdapter(Class<T> adapterClass, String lanId) {
         String currentLanId = OnlineServer.getInstance().getLanId();
         String className = adapterClass.getName();
         String serviceName = sdockerProperties.getProperty("service." + className);
@@ -85,7 +86,8 @@ public class StorageManager {
             if (manager == null) {
                 synchronized (stubManagerForLanIdMap) {
                     manager = stubManagerForLanIdMap.get(lanId);
-                    if(manager == null) {
+                    if (manager == null) {
+                        Integer lanType = Lan.TYPE_http;
                         String host = null;
                         Lan dblan = null;
                         try {
@@ -94,11 +96,14 @@ public class StorageManager {
                             e.printStackTrace();
                             LoggerEx.error(TAG, "Read lan " + lanId + " information failed, " + e.getMessage() + " try to read globallan.properties instead.");
                         }
-                        if(dblan == null || dblan.getDomain() == null || dblan.getPort() == null || dblan.getProtocol() == null) {
+                        if (dblan == null || dblan.getDomain() == null || dblan.getPort() == null || dblan.getProtocol() == null) {
                             Map<String, GlobalLansProperties.Lan> lanMap = globalLansProperties.getLanMap();
                             if (lanMap != null) {
                                 GlobalLansProperties.Lan lan = lanMap.get(lanId);
                                 if (lan != null) {
+                                    if (lan.getType() != null) {
+                                        lanType = lan.getType();
+                                    }
                                     host = lan.getHost();
                                 } else {
                                     LoggerEx.warn(TAG, "lan not exist for lanId: " + lanId);
@@ -109,9 +114,13 @@ public class StorageManager {
                                 return null;
                             }
                         } else {
+                            if (dblan.getType() != null) {
+                                lanType = dblan.getType();
+                            }
                             host = dblan.getProtocol() + "://" + dblan.getDomain() + ":" + dblan.getPort();
                         }
                         manager = new ServiceStubManager(host, null);
+                        manager.setLanType(lanType);
                         manager.init();
                         if (!lanId.equals(currentLanId)) {
                             manager.setUsePublicDomain(true);
@@ -123,9 +132,9 @@ public class StorageManager {
             }
             return manager.getService(serviceName, adapterClass);
         }
-	}
-	
-	Properties getStorageProperties() {
-		return storageProperties;
-	}
+    }
+
+    Properties getStorageProperties() {
+        return storageProperties;
+    }
 }

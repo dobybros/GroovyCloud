@@ -9,13 +9,13 @@ import script.groovy.servlets.Tracker;
 
 public class Proxy {
     private ServiceStubManager serviceStubManager;
-    private RPCInvocationHandler invocationHandler;
+    private RemoteInvocationHandler invocationHandler;
     protected RemoteServerHandler remoteServerHandler;
 
     public Proxy(ServiceStubManager serviceStubManager, RemoteServerHandler remoteServerHandler) {
         this.serviceStubManager = serviceStubManager;
         this.remoteServerHandler = remoteServerHandler;
-        invocationHandler = new RPCInvocationHandlerImpl(this.remoteServerHandler);
+        invocationHandler = new RemoteInvocationHandlerImpl(this.remoteServerHandler);
     }
 
     //远程service调用

@@ -49,7 +49,7 @@ public class UpStreamAnnotationHandler extends ClassAnnotationHandler {
 					MessageReceived messageReceivedAnnotation = groovyClass.getAnnotation(MessageReceived.class);
 					if (messageReceivedAnnotation != null) {
 						Class<? extends Data> dataClass = messageReceivedAnnotation.dataClass();
-						Byte type = messageReceivedAnnotation.type();
+						Byte type = (byte)messageReceivedAnnotation.type();
 						if (dataClass != null && type != null) {
 							GroovyObjectEx<MessageReceivedListener> messageReceivedObj = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 							if (messageReceivedObj != null) {
