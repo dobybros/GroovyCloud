@@ -26,7 +26,6 @@ public class ServiceStubManager {
     private Class<?> serviceStubProxyClass;
     //sure is ssl
     private Boolean usePublicDomain = false;
-    private boolean inited = false;
     private String fromService;
     private Integer lanType;
     public ServiceStubManager(){

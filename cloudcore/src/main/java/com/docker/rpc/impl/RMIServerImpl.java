@@ -313,9 +313,9 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
             if (serviceStubManager != null) {
                 RPCClientAdapterMap clientAdapterMap = null;
                 if (serviceStubManager.getUsePublicDomain()) {
-                    clientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMapSsl");
+                    clientAdapterMap = RPCClientAdapterMapFactory.getInstance().getRpcClientAdapterMapSsl();
                 } else {
-                    clientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMap");
+                    clientAdapterMap = RPCClientAdapterMapFactory.getInstance().getRpcClientAdapterMap();
                 }
                 RPCClientAdapter clientAdapter = clientAdapterMap.registerServer(((MethodRequest) request).getSourceIp(), ((MethodRequest) request).getSourcePort(), ((MethodRequest) request).getFromServerName());
                 if (clientAdapter != null) {

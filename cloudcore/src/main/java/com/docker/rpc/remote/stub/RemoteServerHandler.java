@@ -5,10 +5,7 @@ import chat.errors.CoreException;
 import chat.json.Result;
 import chat.logs.LoggerEx;
 import com.alibaba.fastjson.JSON;
-import com.docker.rpc.MethodRequest;
-import com.docker.rpc.MethodResponse;
-import com.docker.rpc.RPCClientAdapter;
-import com.docker.rpc.RPCClientAdapterMap;
+import com.docker.rpc.*;
 import com.docker.server.OnlineServer;
 import com.docker.utils.ScriptHttpUtils;
 import com.docker.utils.SpringContextUtil;
@@ -54,9 +51,9 @@ public class RemoteServerHandler {
 
     private void available() {
         if (this.serviceStubManager.getUsePublicDomain()) {
-            thisRpcClientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMapSsl");
+            thisRpcClientAdapterMap = RPCClientAdapterMapFactory.getInstance().getRpcClientAdapterMapSsl();
         } else {
-            thisRpcClientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMap");
+            thisRpcClientAdapterMap = RPCClientAdapterMapFactory.getInstance().getRpcClientAdapterMap();
         }
         List<RemoteServers.Server> newSortedServers = new ArrayList<>();
         Collection<RemoteServers.Server> theServers = this.remoteServers.getServers().values();

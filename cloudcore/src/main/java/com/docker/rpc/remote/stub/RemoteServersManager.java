@@ -22,8 +22,8 @@ public class RemoteServersManager {
     private List<String> remoteHostList = new ArrayList<String>();
     private List<String> crossRemoteHostList = new ArrayList<>();
     private Map<String, Map<String, Map<String, Map<String, RemoteServers.Server>>>> remoteServersMap = new ConcurrentHashMap<String, Map<String, Map<String, Map<String, RemoteServers.Server>>>>();
-    //跨集群使用
     private Map<String, String> remoteServersTokenMap = new ConcurrentHashMap<>();
+    private Map<String, TimerTaskEx> timerTaskExMap = new ConcurrentHashMap<>();
     public void addRemoteHost(final String host) {
         if (!remoteHostList.contains(host)) {
             remoteHostList.add(host);
@@ -79,6 +79,7 @@ public class RemoteServersManager {
                         }
                     }else {
                         remoteServersTokenMap.remove(host);
+                        this.cancel();
                         TimerEx.schedule(new TimerTaskEx() {
                             @Override
                             public void execute() {
@@ -88,7 +89,10 @@ public class RemoteServersManager {
                                     if(jwtToken != null){
                                         remoteServersTokenMap.put(host, jwtToken);
                                         this.cancel();
-                                        LoggerEx.info(TAG, "RemoteServer host has reset to available, host: " + host);
+                                        if(timerTaskExMap.get(host) != null){
+                                            TimerEx.schedule(timerTaskExMap.get(host), 60000L, 7200000L);
+                                            LoggerEx.info(TAG, "RemoteServer host has reset to available, host: " + host);
+                                        }
                                     }
                                 }
                             }
@@ -96,6 +100,7 @@ public class RemoteServersManager {
                     }
                 }
             };
+            timerTaskExMap.put(host, taskEx);
             taskEx.execute();
             TimerEx.schedule(taskEx, 60000L, 7200000L);
         }

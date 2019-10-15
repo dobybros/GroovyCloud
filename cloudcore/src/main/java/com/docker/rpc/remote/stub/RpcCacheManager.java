@@ -61,7 +61,6 @@ public class RpcCacheManager {
         }
         return null;
     }
-
     public synchronized static RpcCacheManager getInstance() {
         if(instance == null){
             instance = new RpcCacheManager();
