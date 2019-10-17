@@ -68,7 +68,7 @@ public class GridFSFileHandler extends FileAdapter {
 	public static void main(String[] args) throws IOException, DBException {
 
 		MongoHelper helper = new MongoHelper();
-		helper.setHost("mongodb://localhost:7900");
+		helper.setHost("mongodb://localhost:27017");
 		helper.setDbName("gridfiles");
 //		helper.setUsername("socialshopsim");
 //		helper.setPassword("eDANviLHQtjwmFlywyKu");

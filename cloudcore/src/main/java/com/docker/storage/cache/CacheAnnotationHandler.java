@@ -3,6 +3,7 @@ package com.docker.storage.cache;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
 import com.docker.annotations.CacheClass;
+import com.docker.annotations.CacheEvict;
 import com.docker.annotations.CachePut;
 import com.docker.data.CacheObj;
 import com.docker.rpc.remote.stub.RPCInterceptorFactory;
@@ -23,7 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CacheAnnotationHandler extends ClassAnnotationHandler {
     public static final String TAG = CacheAnnotationHandler.class.getSimpleName();
-    private CacheMethodInterceptor cacheMethodInterceptor = new CacheMethodInterceptor();
+    private CachePutMethodInterceptor cachePutMethodInterceptor = new CachePutMethodInterceptor();
+    private CacheEvictMethodInterceptor cacheEvictMethodInterceptor = new CacheEvictMethodInterceptor();
     protected Map<String, CacheObj> cacheMethodMap = new ConcurrentHashMap<>();
 
     @Override
@@ -37,7 +39,8 @@ public class CacheAnnotationHandler extends ClassAnnotationHandler {
     }
 
     public CacheAnnotationHandler() {
-        this.cacheMethodInterceptor.setCacheAnnotationHandler(this);
+        this.cachePutMethodInterceptor.setCacheAnnotationHandler(this);
+        this.cacheEvictMethodInterceptor.setCacheAnnotationHandler(this);
     }
 
 
@@ -79,14 +82,36 @@ public class CacheAnnotationHandler extends ClassAnnotationHandler {
         Method[] methods = ReflectionUtil.getMethods(clazz);
         if (methods != null) {
             for (Method method : methods) {
-                handleCacheAnnotation(serviceName, clazz, method);
-//                handleClearCacheAnnotation(clazz, method, cacheGroovyObj);
+                handleCachePutAnnotation(serviceName, clazz, method);
+                handleCacheEvictAnnotation(serviceName, clazz, method);
             }
         }
     }
 
+    private void handleCacheEvictAnnotation(String serviceName, Class<?> clazz, Method method) {
+        CacheEvict cacheEvict = method.getAnnotation(CacheEvict.class);
+        if (cacheEvict != null){
+            BaseRuntime baseRuntime = (BaseRuntime) getGroovyRuntime();
+            String methodKey = String.valueOf(ReflectionUtil.getCrc(clazz, method.getName(), serviceName));
+            CacheObj cacheObj = new CacheObj();
+            cacheObj.setCacheMethod(cacheEvict.cacheMethod());
+            if (StringUtils.isNotBlank(cacheEvict.key())) {
+                cacheObj.setSpelKey(cacheEvict.key());
+            }
+            if (StringUtils.isNotBlank(cacheEvict.prefix())) {
+                cacheObj.setPrefix(cacheEvict.prefix());
+            }
+            cacheObj.setParamNames(ReflectionUtil.getParamNames(method));
+            cacheObj.setMethod(method);
+            cacheMethodMap.put(methodKey, cacheObj);
+            RPCInterceptorFactory.getInstance().addMethodInterceptor(baseRuntime.getServiceName() + "_v" + baseRuntime.getServiceVersion(), methodKey, cacheEvictMethodInterceptor);
+            LoggerEx.info("SCAN", "Mapping cacheEvict method key " + methodKey + " for class " + clazz.getName() + " method " + method.getName());
+        }
 
-    private void handleCacheAnnotation(String serviceName, Class<?> clazz, Method method) {
+    }
+
+
+    private void handleCachePutAnnotation(String serviceName, Class<?> clazz, Method method) {
         CachePut cachePut = method.getAnnotation(CachePut.class);
         if (cachePut != null) {
             BaseRuntime baseRuntime = (BaseRuntime) getGroovyRuntime();
@@ -104,7 +129,7 @@ public class CacheAnnotationHandler extends ClassAnnotationHandler {
             cacheObj.setParamNames(ReflectionUtil.getParamNames(method));
             cacheObj.setMethod(method);
             cacheMethodMap.put(methodKey, cacheObj);
-            RPCInterceptorFactory.getInstance().addMethodInterceptor(baseRuntime.getServiceName() + "_v" + baseRuntime.getServiceVersion(), methodKey, cacheMethodInterceptor);
+            RPCInterceptorFactory.getInstance().addMethodInterceptor(baseRuntime.getServiceName() + "_v" + baseRuntime.getServiceVersion(), methodKey, cachePutMethodInterceptor);
             LoggerEx.info("SCAN", "Mapping cachePut method key " + methodKey + " for class " + clazz.getName() + " method " + method.getName());
         }
     }
