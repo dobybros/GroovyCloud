@@ -48,7 +48,7 @@ public class UpStreamHandler extends IoHandlerAdapter {
 			@Override
 			public void execute() {
 				LoggerEx.info(TAG, "Session closed by timeout after tcp session created, " + session);
-				session.close(true);
+//				session.close(true);
 			}
 		};
 		session.setAttribute(ATTRIBUTE_TIMERTASK_IDENTITY, task);

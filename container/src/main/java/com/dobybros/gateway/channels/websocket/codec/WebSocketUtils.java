@@ -34,7 +34,7 @@ class WebSocketUtils {
         String[] headers = WSRequest.split("\r\n");
         String socketKey = "";
         for (int i = 0; i < headers.length; i++) {
-            if (headers[i].contains("Sec-WebSocket-Key")) {
+            if (headers[i].toLowerCase().contains("sec-websocket-key")) {
                 socketKey = (headers[i].split(":")[1]).trim();
                 break;
             }
