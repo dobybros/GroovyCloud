@@ -6,6 +6,7 @@ import chat.json.Result;
 import chat.logs.LoggerEx;
 import com.alibaba.fastjson.JSON;
 import com.docker.rpc.*;
+import com.docker.rpc.remote.MethodMapping;
 import com.docker.server.OnlineServer;
 import com.docker.utils.ScriptHttpUtils;
 import com.docker.utils.SpringContextUtil;
@@ -265,7 +266,12 @@ public class RemoteServerHandler {
                 Result result = ScriptHttpUtils.post(JSON.toJSONString(dataMap), this.serviceStubManager.getHost() + "/rest/discovery/call", headerMap, Result.class);
                 if(result != null){
                     MethodResponse response = new MethodResponse();
-                    response.setReturnObject(result.getData());
+                    MethodMapping methodMapping = request.getServiceStubManager().getMethodMapping(request.getCrc());
+                    if (methodMapping == null || methodMapping.getReturnClass().equals(Object.class)) {
+                        response.setReturnObject(JSON.parse(JSON.toJSONString(result.getData())));
+                    } else {
+                        response.setReturnObject(JSON.parseObject(JSON.toJSONString(result.getData()), methodMapping.getGenericReturnClass()));
+                    }
                     return response;
                 }
             }

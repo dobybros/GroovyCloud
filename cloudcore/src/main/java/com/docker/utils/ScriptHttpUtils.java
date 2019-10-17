@@ -45,8 +45,8 @@ public class ScriptHttpUtils {
                     .setSocketTimeout(5000)
                     // 设置是否允许重定向(默认为true)
                     .setRedirectsEnabled(true).build();
-            post.setConfig(requestConfig);
             post = new HttpPost(url);
+            post.setConfig(requestConfig);
             // 构造消息头
             post.setHeader("Content-type", "application/json; charset=utf-8");
             if(headers != null && !headers.isEmpty()){

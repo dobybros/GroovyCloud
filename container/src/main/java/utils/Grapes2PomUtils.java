@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Grapes2PomUtils {
-    private static final String path = "/home/qiliao/projects/IMServers";
+    private static final String path = "/home/qiliao/projects/TuitionCloud";
     private static final String flag = "\r\n";
 
     public static void main(String[] args) {
