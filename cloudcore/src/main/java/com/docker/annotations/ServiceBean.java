@@ -7,6 +7,6 @@ import java.lang.annotation.*;
 @Documented
 public @interface ServiceBean {
 	public String name();
-	//集群名字，不写为本机集群
+	//集群名字 ，不写为本机集群
 	public String lanId() default "";
 }
