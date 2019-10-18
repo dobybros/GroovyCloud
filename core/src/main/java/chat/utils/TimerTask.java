@@ -12,6 +12,5 @@ public abstract class TimerTask implements Runnable{
     @Override
     public void run() {
         execute();
-        ThreadTaskRecord.getInstance().removeTask(((TimerTaskEx)this).getId());
     }
 }
