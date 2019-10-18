@@ -21,6 +21,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.List;
 
 public class MethodRequest extends RPCRequest {
@@ -110,16 +111,16 @@ public class MethodRequest extends RPCRequest {
                             Integer length = dis.readInt();
                             byte[] argsData = new byte[length];
                             dis.readFully(argsData);
-                            Class<?>[] parameterTypes = methodMapping.getParameterTypes();
+                            Type[] parameterTypes = methodMapping.getParameterTypes();
                             if(parameterTypes != null && parameterTypes.length > 0) {
                                 if(parameterTypes.length > argCount) {
                                     LoggerEx.debug(TAG, "Parameter types not equal actual is " + parameterTypes.length + " but expected " + argCount + ". Cut off,service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
-                                    Class<?>[] newParameterTypes = new Class<?>[argCount];
+                                    Type[] newParameterTypes = new Type[argCount];
                                     System.arraycopy(parameterTypes, 0, newParameterTypes, 0, argCount);
                                     parameterTypes = newParameterTypes;
                                 } else if(parameterTypes.length < argCount){
                                     LoggerEx.debug(TAG, "Parameter types not equal actual is " + parameterTypes.length + " but expected " + argCount + ". Fill with Object.class,service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
-                                    Class<?>[] newParameterTypes = new Class<?>[argCount];
+                                    Type[] newParameterTypes = new Type[argCount];
                                     for(int i = parameterTypes.length; i < argCount; i++) {
                                         newParameterTypes[i] = Object.class;
                                     }
