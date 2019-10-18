@@ -29,6 +29,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -224,6 +225,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                     continue;
                 }
                 Class<?>[] parameterTypes = method.getParameterTypes();
+                Type[] genericParamterTypes = method.getGenericParameterTypes();
                 if (parameterTypes != null) {
                     boolean failed = false;
                     for (int i = 0; i < parameterTypes.length; i++) {
@@ -239,7 +241,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                         continue;
                 }
                 mm.setParameterTypes(parameterTypes);
-
+                mm.setGenericParameterTypes(genericParamterTypes);
                 Class<?> returnType = method.getReturnType();
                 returnType = ReflectionUtil.getInitiatableClass(returnType);
                 mm.setReturnClass(returnType);
