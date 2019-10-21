@@ -27,7 +27,7 @@ public class RemoteServersManager {
     public void addRemoteHost(final String host) {
         if (!remoteHostList.contains(host)) {
             remoteHostList.add(host);
-            TimerTaskEx timerTaskEx = new TimerTaskEx() {
+            TimerTaskEx timerTaskEx = new TimerTaskEx("RefreRemoteServersByHost") {
                 @Override
                 public void execute() {
                     ServersResult result = (ServersResult) ScriptHttpUtils.get(host + "/rest/discovery/serviceservers", ServersResult.class);
@@ -68,7 +68,7 @@ public class RemoteServersManager {
         if(!crossRemoteHostList.contains(host)){
             crossRemoteHostList.add(host);
             //2小时刷新一次另一个集群的验证token
-            TimerTaskEx taskEx = new TimerTaskEx() {
+            TimerTaskEx taskEx = new TimerTaskEx("RefreRemoteTokenWhenCross") {
                 @Override
                 public void execute() {
                     RemoteTokenResult remoteTokenResult = (RemoteTokenResult)ScriptHttpUtils.get(host + "/rest/discovery/accessToken", RemoteTokenResult.class);
@@ -80,7 +80,7 @@ public class RemoteServersManager {
                     }else {
                         remoteServersTokenMap.remove(host);
                         this.cancel();
-                        TimerEx.schedule(new TimerTaskEx() {
+                        TimerEx.schedule(new TimerTaskEx("RefreRemoteTokenWhenCrossFailedRetry") {
                             @Override
                             public void execute() {
                                 RemoteTokenResult remoteTokenResult = (RemoteTokenResult)ScriptHttpUtils.get(host + "/rest/discovery/accessToken", RemoteTokenResult.class);

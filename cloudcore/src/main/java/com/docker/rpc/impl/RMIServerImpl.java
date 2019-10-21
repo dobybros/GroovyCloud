@@ -334,7 +334,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                 clientAdapter.callAsync(asyncCallbackRequest);
             } catch (CoreException c) {
                 //重試
-                TimerEx.schedule(new TimerTaskEx() {
+                TimerEx.schedule(new TimerTaskEx("RetryCallAsync") {
                     int tryTimes = 1;
 
                     @Override

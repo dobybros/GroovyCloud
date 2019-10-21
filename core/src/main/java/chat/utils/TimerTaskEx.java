@@ -11,9 +11,13 @@ public abstract class TimerTaskEx extends TimerTask{
 	private Long period;
 	private String cron;
 	private Long scheduleTime;
+	private String description;
 	public TimerTaskEx(){
+		this.description = "NOID_";
 	}
-
+	public TimerTaskEx(String description){
+		this.description = description + "_";
+	}
 	@Override
 	public abstract void execute();
 
@@ -66,5 +70,13 @@ public abstract class TimerTaskEx extends TimerTask{
 
 	public void setScheduleTime(Long scheduleTime) {
 		this.scheduleTime = scheduleTime;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 }

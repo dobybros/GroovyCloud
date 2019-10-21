@@ -75,7 +75,7 @@ public class ScriptManager implements ShutdownListener {
 //            }
 //        }
         if (hotDeployment) {
-            TimerEx.schedule(new TimerTaskEx() {
+            TimerEx.schedule(new TimerTaskEx(ScriptManager.class.getSimpleName()) {
                 @Override
                 public void execute() {
                     if (!isLoaded) {

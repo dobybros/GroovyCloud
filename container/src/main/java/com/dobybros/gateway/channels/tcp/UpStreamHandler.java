@@ -44,7 +44,7 @@ public class UpStreamHandler extends IoHandlerAdapter {
 //		}  /192.168.3.171:61862
 		session.getConfig().setIdleTime(IdleStatus.READER_IDLE, readIdleTime);
 		session.getConfig().setIdleTime(IdleStatus.WRITER_IDLE, writeIdleTime);
-		TimerTaskEx task = new TimerTaskEx() {
+		TimerTaskEx task = new TimerTaskEx(UpStreamHandler.class.getSimpleName()) {
 			@Override
 			public void execute() {
 				LoggerEx.info(TAG, "Session closed by timeout after tcp session created, " + session);

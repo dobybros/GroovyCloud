@@ -20,6 +20,7 @@ public class ContainerApplication {
 				= new ServletRegistrationBean(new GroovyServletDispatcher());
 		registrationBean.setLoadOnStartup(1);
 		registrationBean.addUrlMappings("/rest/*");
+		registrationBean.addUrlMappings("/states");
 		registrationBean.setName("groovyDispatcherServlet");
 		return registrationBean;
 	}

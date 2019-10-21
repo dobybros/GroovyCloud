@@ -22,6 +22,7 @@ public class QuartzFactory {
 
     public void addJob(TimerTaskEx task) throws CoreException{
         try {
+            this.removeJob(task.getId());
             Scheduler sched = schedulerFactory.getScheduler();
             // 任务名，任务组，任务执行类
             JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class).withIdentity(task.getId(), task.getId()).build();
@@ -75,6 +76,7 @@ public class QuartzFactory {
 
     public void addJobByScheduletime(TimerTaskEx task) throws CoreException{
         try {
+            this.removeJob(task.getId());
             Scheduler sched = schedulerFactory.getScheduler();
             // 任务名，任务组，任务执行类
             JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class).withIdentity(task.getId(), task.getId()).build();
@@ -130,6 +132,7 @@ public class QuartzFactory {
 
     public void addCronJob(TimerTaskEx task) throws CoreException{
         try {
+            this.removeJob(task.getId());
             Scheduler sched = schedulerFactory.getScheduler();
             // 任务名，任务组，任务执行类
             JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class).withIdentity(task.getId(), task.getId()).build();

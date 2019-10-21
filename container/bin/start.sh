@@ -34,7 +34,7 @@ if [ "$1" = "jmx" ]; then
  fi
  JAVA_MEM_OPTS=""
  BITS=`java -version 2>&1 | grep -i 64-bit`
- JAVA_MEM_OPTS=" -server -Dsun.rmi.transport.tcp.maxConnectionThreads=$rmiThreads -Xmx$xmx64 -Xms$xms64 -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=$G1NewSizePercent -XX:G1MaxNewSizePercent=$G1MaxNewSizePercent -XX:MaxGCPauseMillis=$MaxGCPauseMillis -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCDateStamps -Xloggc:gcc.log -Djava.awt.headless=true"
+ JAVA_MEM_OPTS=" -server -Dsun.rmi.transport.tcp.maxConnectionThreads=$rmiThreads -Xmx$xmx64 -Xms$xms64 -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=$G1NewSizePercent -XX:G1MaxNewSizePercent=$G1MaxNewSizePercent -XX:MaxGCPauseMillis=$MaxGCPauseMillis -verbose:gc -Xlog:gc* -Djava.awt.headless=true"
 CONFIG_FILES=" -Xbootclasspath/a:$CONF_DIR"
  nohup java $JAVA_OPTS $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS $CONFIG_FILES -jar $DEPLOY_DIR/$JAR_NAME &>/dev/null 2>&1 &
 
