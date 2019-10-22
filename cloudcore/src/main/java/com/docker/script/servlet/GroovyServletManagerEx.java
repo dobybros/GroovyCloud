@@ -19,6 +19,9 @@ public class GroovyServletManagerEx extends GroovyServletManager {
     private static final String ROOT = "rest/";
     private static final String FORCEPREFIX = "@PREFIX";
     private static final String FORCEPREFIXSLASH = FORCEPREFIX + "/";
+    public static final String BASE_TIMER = "timer";
+    public static final String BASE_MEMORY = "memory";
+    public static final String BASE_MEMORY_BASE = "base";//底层内存
     private String service;
     private Integer serviceVersion;
     public GroovyServletManagerEx(String service, Integer serviceVersion) {

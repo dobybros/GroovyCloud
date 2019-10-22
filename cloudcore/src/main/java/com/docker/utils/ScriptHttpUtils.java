@@ -122,7 +122,7 @@ public class ScriptHttpUtils {
                 throw new CoreException(ChatErrorCodes.ERROR_GET_FAILED, "Connect to server failed, url: " + url);
             }
         } catch (Exception e) {
-            LoggerEx.error(TAG, "Http get failed, the url is unavailable,will retry 60s again,url: " + url + ", err: " + ExceptionUtils.getFullStackTrace(e));
+            LoggerEx.error(TAG, "Http get failed, the url is unavailable,url: " + url + ", err: " + ExceptionUtils.getFullStackTrace(e));
             e.printStackTrace();
         } finally {
             try {

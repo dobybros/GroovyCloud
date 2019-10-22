@@ -120,44 +120,48 @@ public class RemoteServersManager {
     }
 
     public Map<String, RemoteServers.Server> getServers(String service, String host) {
-        GrayReleased grayReleased = GrayReleased.grayReleasedThreadLocal.get();
-        String type = GrayReleased.defaultVersion;
+        try {
+            GrayReleased grayReleased = GrayReleased.grayReleasedThreadLocal.get();
+            String type = GrayReleased.defaultVersion;
 
-        if (grayReleased != null) {
-            if (grayReleased.getType() != null) {
-                type = grayReleased.getType();
+            if (grayReleased != null) {
+                if (grayReleased.getType() != null) {
+                    type = grayReleased.getType();
+                }
             }
-        }
-        Map<String, Map<String, Map<String, RemoteServers.Server>>> theServersFinalMap = getFinalServersMap(host);
-        if (service != null && theServersFinalMap != null && theServersFinalMap.size() > 0) {
-            Map<String, Map<String, RemoteServers.Server>> typeMap = theServersFinalMap.get(type);
-            if ((typeMap == null || typeMap.size() == 0) && !type.equals(GrayReleased.defaultVersion)) {
-                typeMap = theServersFinalMap.get(GrayReleased.defaultVersion);
-                LoggerEx.warn(TAG, "Service version cant find type: " + type + ", Now, find in default!!!");
-            }
-            if (typeMap != null && typeMap.size() > 0) {
-                Map<String, RemoteServers.Server> servers = (Map<String, RemoteServers.Server>) typeMap.get(service);
-                //如果type不为default，查出来的servcers为空，那么就去default里找
-                if (servers == null || servers.isEmpty()) {
-                    if (!type.equals(GrayReleased.defaultVersion)) {
-                        typeMap = theServersFinalMap.get(GrayReleased.defaultVersion);
-                        if (typeMap != null && typeMap.size() > 0) {
-                            servers = (Map<String, RemoteServers.Server>) typeMap.get(service);
+            Map<String, Map<String, Map<String, RemoteServers.Server>>> theServersFinalMap = getFinalServersMap(host);
+            if (service != null && theServersFinalMap != null && theServersFinalMap.size() > 0) {
+                Map<String, Map<String, RemoteServers.Server>> typeMap = theServersFinalMap.get(type);
+                if ((typeMap == null || typeMap.size() == 0) && !type.equals(GrayReleased.defaultVersion)) {
+                    typeMap = theServersFinalMap.get(GrayReleased.defaultVersion);
+                    LoggerEx.warn(TAG, "Service version cant find type: " + type + ", Now, find in default!!!");
+                }
+                if (typeMap != null && typeMap.size() > 0) {
+                    Map<String, RemoteServers.Server> servers = (Map<String, RemoteServers.Server>) typeMap.get(service);
+                    //如果type不为default，查出来的servcers为空，那么就去default里找
+                    if (servers == null || servers.isEmpty()) {
+                        if (!type.equals(GrayReleased.defaultVersion)) {
+                            typeMap = theServersFinalMap.get(GrayReleased.defaultVersion);
+                            if (typeMap != null && typeMap.size() > 0) {
+                                servers = (Map<String, RemoteServers.Server>) typeMap.get(service);
+                            }
                         }
                     }
-                }
-                if(servers != null && !servers.isEmpty()){
-                    return servers;
-                }else {
+                    if(servers != null && !servers.isEmpty()){
+                        return servers;
+                    }else {
+                        LoggerEx.error(TAG, "The service: " + service + " has no server,cant invoke!");
+                    }
+                } else {
                     LoggerEx.error(TAG, "The service: " + service + " has no server,cant invoke!");
                 }
             } else {
-                LoggerEx.error(TAG, "The service: " + service + " has no server,cant invoke!");
+                LoggerEx.error(TAG, "theServersFinalMap is empty, please check");
             }
-        } else {
-            LoggerEx.error(TAG, "theServersFinalMap is empty, please check");
+            return null;
+        }finally {
+            GrayReleased.grayReleasedThreadLocal.remove();
         }
-        return null;
     }
     public String getRemoteServerToken(String host){
         String token = remoteServersTokenMap.get(host);
