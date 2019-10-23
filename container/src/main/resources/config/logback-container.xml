@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 不分级别同步文件日志输出配置 -->
+<configuration>
+    <!-- 日志级别 -->
+    <property name="logLevel" value="INFO"/>
+    <!-- 日志地址 -->
+    <property name="logPath" value="/logs"/>
+    <!-- 最大保存时间 -->
+    <property name="maxHistory" value="10"/>
+    <!-- 异步缓冲队列的深度,该值会影响性能.默认值为256 -->
+    <property name="queueSize" value="512"/>
+
+    <!-- 控制台打印日志的相关配置 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 日志格式 -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 文件保存日志的相关配置，同步 -->
+    <appender name="logFile"  class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/server.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>
+                logs/server.%d{yyyy-MM-dd}.log
+            </FileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <!--<Pattern>
+                %d{yyyy-MM-dd HH:mm:ss} -%msg%n
+            </Pattern>-->
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+        </layout>
+    </appender>
+    <appender name="ANALYTICS-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/analytics.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/analytics.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="analytics" level="INFO" additivity="false">
+        <appender-ref ref="ANALYTICS-FILE"/>
+    </logger>
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="logFile" />
+    </root>
+</configuration>
