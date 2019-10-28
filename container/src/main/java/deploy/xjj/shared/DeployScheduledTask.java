@@ -8,7 +8,7 @@ public class DeployScheduledTask {
         String servicePath = SharedConstants.SHARED_PATH + "/ScheduledTaskService";
         String dockerName = SharedConstants.DOCKER_IM_BJ;
         String serviceName = "scheduledtask";
-//        String gridfsHost = "mongodb://localhost:7900";
+//        String gridfsHost = "mongodb://localhost:27017";
         String gridfsHost = SharedConstants.GRIDFS_HOST;
         String version = "1";
         String prefix = SharedConstants.PREFIX;

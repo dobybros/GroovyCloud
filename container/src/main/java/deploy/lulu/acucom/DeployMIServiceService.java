@@ -1,8 +1,8 @@
 package lulu.acucom;
 
 
-import lulu.im.IMConstants;
-import lulu.tuition.TuitionConstants;
+import deploy.lulu.im.IMConstants;
+import deploy.lulu.tuition.TuitionConstants;
 import utils.DeployServiceUtils;
 
 public class DeployMIServiceService {

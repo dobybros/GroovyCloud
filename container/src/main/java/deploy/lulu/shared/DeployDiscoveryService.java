@@ -1,4 +1,4 @@
-package lulu.shared;
+package deploy.lulu.shared;
 
 
 import utils.DeployServiceUtils;

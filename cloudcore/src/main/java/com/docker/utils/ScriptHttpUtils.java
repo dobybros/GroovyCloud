@@ -54,13 +54,14 @@ public class ScriptHttpUtils {
                     post.setHeader(key.toString(), headers.get(key).toString());
                 }
             }
-            // 构建消息实体
-            StringEntity entity = new StringEntity(data, Charset.forName("UTF-8"));
-            entity.setContentEncoding("UTF-8");
-            // 发送Json格式的数据请求
-            entity.setContentType("application/json");
-            post.setEntity(entity);
-
+            if(data != null){
+                // 构建消息实体
+                StringEntity entity = new StringEntity(data, Charset.forName("UTF-8"));
+                entity.setContentEncoding("UTF-8");
+                // 发送Json格式的数据请求
+                entity.setContentType("application/json");
+                post.setEntity(entity);
+            }
             response = httpClient.execute(post);
             int code = response.getStatusLine().getStatusCode();
             if (code == 200) {

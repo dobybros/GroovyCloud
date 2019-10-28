@@ -1,4 +1,4 @@
-package lulu.im;
+package deploy.lulu.im;
 
 
 import utils.DeployServiceUtils;

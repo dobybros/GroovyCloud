@@ -1,12 +1,12 @@
-package lulu.shared;
+package deploy.lulu.shared;
 
 
-import lulu.tuition.TuitionConstants;
+import deploy.lulu.tuition.TuitionConstants;
 
 public interface SharedConstants {
-    String PATH = "/home/qiliao/projects/SharedServices/";
+    String PATH = "/home/lick/projects/SharedServices/";
     String DOCKERNAME = TuitionConstants.DOCKERNAME;
     String GRIDFSHOST = TuitionConstants.GRIDFSHOST;
     String PREFIX = "scripts";
-    String sharedCore = "/home/qiliao/projects/SharedServices/SharedCore";
+    String sharedCore = PATH + "SharedCore";
 }

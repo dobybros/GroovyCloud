@@ -1,4 +1,4 @@
-package lulu.tuition;
+package deploy.lulu.tuition;
 
 
 import utils.DeployServiceUtils;
@@ -9,8 +9,8 @@ public class DeployTCClassroomService {
         String dockerName = TuitionConstants.DOCKERNAME;
         String serviceName = "tcclassroom";
         String gridfsHost = TuitionConstants.GRIDFSHOST;
-        String version = "1";
+        String version = "2";
         String prefix = TuitionConstants.PREFIX;
-        DeployServiceUtils.main(new String[]{"-x", prefix, "-p", servicePath, "-d", dockerName, "-s", serviceName, "-f", gridfsHost, "-v", version, "-l", "C:\\Users\\lulia\\work\\work_new\\TuitionCloud\\TCCore"});
+        DeployServiceUtils.main(new String[]{"-x", prefix, "-p", servicePath, "-d", dockerName, "-s", serviceName, "-f", gridfsHost, "-v", version, "-l", TuitionConstants.tuitionCore});
     }
 }

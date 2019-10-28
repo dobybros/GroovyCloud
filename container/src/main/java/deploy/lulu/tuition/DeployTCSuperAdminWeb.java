@@ -1,4 +1,4 @@
-package lulu.tuition;
+package deploy.lulu.tuition;
 
 
 import utils.DeployServiceUtils;

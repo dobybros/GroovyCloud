@@ -1,7 +1,7 @@
-package lulu.im;
+package deploy.lulu.im;
 
 
-import lulu.tuition.TuitionConstants;
+import deploy.lulu.tuition.TuitionConstants;
 import utils.DeployServiceUtils;
 
 public class DeployGetwayService {

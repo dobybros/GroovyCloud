@@ -1,6 +1,7 @@
-package lulu.im;
+package deploy.lulu.im;
 
 
+import deploy.lulu.im.IMConstants;
 import utils.DeployServiceUtils;
 
 public class DeployIMAgencyService {

@@ -1,7 +1,7 @@
-package lulu.shared;
+package deploy.lulu.shared;
 
 
-import lulu.tuition.TuitionConstants;
+import deploy.lulu.tuition.TuitionConstants;
 import utils.DeployServiceUtils;
 
 public class DeployResourceWeb {
@@ -9,7 +9,7 @@ public class DeployResourceWeb {
         String servicePath = SharedConstants.PATH + "ResourceWeb";
         String dockerName = SharedConstants.DOCKERNAME;
         String serviceName = "resource";
-//        String gridfsHost = "mongodb://localhost:7900";
+//        String gridfsHost = "mongodb://localhost:27017";
         String gridfsHost = TuitionConstants.GRIDFSHOST;
         String version = "1";
         String prefix = TuitionConstants.PREFIX;

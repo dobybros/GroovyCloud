@@ -1,12 +1,12 @@
-package lulu.im;
+package deploy.lulu.im;
 
 
-import lulu.tuition.TuitionConstants;
+import deploy.lulu.tuition.TuitionConstants;
 
 public interface IMConstants {
-    String PATH = "/home/qiliao/projects/IMServers/";
+    String PATH = "/home/lick/projects/IMServers/";
     String DOCKERNAME = TuitionConstants.DOCKERNAME;
     String GRIDFSHOST = TuitionConstants.GRIDFSHOST;
     String PREFIX = "scripts";
-    String imCore = "/home/qiliao/projects/IMServers/IMCore";
+    String imCore = PATH + "IMCore";
 }
