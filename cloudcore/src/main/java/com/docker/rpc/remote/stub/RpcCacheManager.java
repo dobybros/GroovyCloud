@@ -23,7 +23,7 @@ public class RpcCacheManager {
 
     public AsyncRpcFuture pushToAsyncRpcMap(String callbackFutureId, AsyncRpcFuture asyncFuture){
         asyncCallbackHandlerMap.computeIfAbsent(callbackFutureId, k-> asyncFuture);
-        TimerTaskEx timerTaskEx = new TimerTaskEx() {
+        TimerTaskEx timerTaskEx = new TimerTaskEx("AsyncDeleteFutureWhenTimeout") {
             @Override
             public void execute() {
                 AsyncRpcFuture asyncFuture = asyncCallbackHandlerMap.get(callbackFutureId);
@@ -61,7 +61,6 @@ public class RpcCacheManager {
         }
         return null;
     }
-
     public synchronized static RpcCacheManager getInstance() {
         if(instance == null){
             instance = new RpcCacheManager();

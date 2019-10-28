@@ -2,12 +2,13 @@ package com.docker.rpc.remote.stub;
 
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
+import chat.json.Result;
 import chat.logs.LoggerEx;
-import com.docker.rpc.MethodRequest;
-import com.docker.rpc.MethodResponse;
-import com.docker.rpc.RPCClientAdapter;
-import com.docker.rpc.RPCClientAdapterMap;
+import com.alibaba.fastjson.JSON;
+import com.docker.rpc.*;
+import com.docker.rpc.remote.MethodMapping;
 import com.docker.server.OnlineServer;
+import com.docker.utils.ScriptHttpUtils;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.types.ObjectId;
@@ -51,12 +52,9 @@ public class RemoteServerHandler {
 
     private void available() {
         if (this.serviceStubManager.getUsePublicDomain()) {
-            thisRpcClientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMapSsl");
+            thisRpcClientAdapterMap = RPCClientAdapterMapFactory.getInstance().getRpcClientAdapterMapSsl();
         } else {
-            thisRpcClientAdapterMap = (RPCClientAdapterMap) SpringContextUtil.getBean("rpcClientAdapterMap");
-            if(thisRpcClientAdapterMap == null){
-                thisRpcClientAdapterMap = new RPCClientAdapterMap();
-            }
+            thisRpcClientAdapterMap = RPCClientAdapterMapFactory.getInstance().getRpcClientAdapterMap();
         }
         List<RemoteServers.Server> newSortedServers = new ArrayList<>();
         Collection<RemoteServers.Server> theServers = this.remoteServers.getServers().values();
@@ -247,5 +245,40 @@ public class RemoteServerHandler {
         touch();
         if (this.remoteServers.getSortedServers().isEmpty())
             throw new CoreException(ChatErrorCodes.ERROR_LANSERVERS_NOSERVERS, "No server is found for service " + toService + " fromService " + request.getFromService() + " crc " + request.getCrc());
+    }
+    public MethodResponse callHttp(MethodRequest request) throws CoreException{
+        String token = RemoteServersManager.getInstance().getRemoteServerToken(this.serviceStubManager.getHost());
+        if(token != null){
+            String serviceClassMethod = RpcCacheManager.getInstance().getMethodByCrc(request.getCrc());
+            if(serviceClassMethod == null){
+                LoggerEx.error(TAG, "Cant find crc in RpcCacheManager, crc: " + request.getCrc());
+                throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_CRC_ILLEGAL, "Cant find crc in RpcCacheManager, crc: " + request.getCrc());
+            }
+            String[] serviceClassMethods = serviceClassMethod.split("_");
+            if(serviceClassMethods.length == 3){
+                Map<String, Object> dataMap = new HashMap<String, Object>();
+                dataMap.put("service", serviceClassMethods[0]);
+                dataMap.put("class", serviceClassMethods[1]);
+                dataMap.put("method", serviceClassMethods[2]);
+                dataMap.put("args", request.getArgs());
+                Map<String, Object> headerMap = new HashMap<String, Object>();
+                headerMap.put("crossClusterToken", token);
+                Result result = ScriptHttpUtils.post(JSON.toJSONString(dataMap), this.serviceStubManager.getHost() + "/rest/discovery/call", headerMap, Result.class);
+                if(result != null){
+                    MethodResponse response = new MethodResponse();
+                    MethodMapping methodMapping = request.getServiceStubManager().getMethodMapping(request.getCrc());
+                    if (methodMapping == null || methodMapping.getReturnClass().equals(Object.class)) {
+                        response.setReturnObject(JSON.parse(JSON.toJSONString(result.getData())));
+                    } else {
+                        response.setReturnObject(JSON.parseObject(JSON.toJSONString(result.getData()), methodMapping.getGenericReturnClass()));
+                    }
+                    return response;
+                }
+            }
+        }else {
+            LoggerEx.error(TAG, "Remote server is unavailabe, host: " + this.serviceStubManager.getHost());
+            throw new CoreException(ChatErrorCodes.ERROR_SERVER_CONNECT_FAILED, "Remote server is unavailabe, host: " + this.serviceStubManager.getHost());
+        }
+        return null;
     }
 }

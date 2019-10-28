@@ -33,6 +33,7 @@ public class RemoteProxy extends Proxy implements MethodInterceptor {
             return proxy.invokeSuper(obj, args);
         }
         Long crc = ReflectionUtil.getCrc(method, remoteServerHandler.getToService());
+        RpcCacheManager.getInstance().putCrcMethodMap(crc, remoteServerHandler.getToService() + '_' + method.getDeclaringClass().getSimpleName() + '_' + method.getName());
         return invoke(crc, args);
     }
 }

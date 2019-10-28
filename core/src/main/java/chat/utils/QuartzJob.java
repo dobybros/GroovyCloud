@@ -1,6 +1,7 @@
 package chat.utils;
 
 import chat.main.ServerStart;
+import chat.thread.ThreadTaskRecord;
 import org.quartz.*;
 
 /**
@@ -14,7 +15,7 @@ public class QuartzJob implements Job {
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
         TimerTaskEx task = (TimerTaskEx) jobExecutionContext.getMergedJobDataMap().get("TimerTaskEx");
         if(task != null){
-            ServerStart.getInstance().getTimerThreadPoolExecutor().execute(task);
+            ThreadTaskRecord.getInstance().execute(ServerStart.getInstance().getTimerThreadPoolExecutor(), 1, task, task.getId());
         }
     }
 }

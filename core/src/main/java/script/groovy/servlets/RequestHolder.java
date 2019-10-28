@@ -280,7 +280,7 @@ public class RequestHolder {
         boolean error = false;
         StringBuilder builder = new StringBuilder();
         try {
-            String remoteHost = request.getHeader("X-Real-IP");
+            String remoteHost = request.getHeader("<java.version>11</java.version>-IP");
             builder.append("$$url:: " + request.getRequestURI() + " $$host:: " + (remoteHost != null ? remoteHost : request.getRemoteHost()) + " $$method:: " + request.getMethod() + " $$parenttrackid:: " + parentTrackId + " $$currenttrackid:: " + trackId);
             builder.append(" $$service:: " + groovyServletManager.getService() + " $$serviceversion:: " + groovyServletManager.getServiceVersion());
 //			builder.append(" args:: " + JSON.toJSONString(args));

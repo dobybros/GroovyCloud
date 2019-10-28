@@ -11,7 +11,10 @@ public class Lan extends DataObject {
 	public static final String FIELD_LAN_PORT = "port";
 	public static final String FIELD_LAN_DOMAIN = "domain";
 	public static final String FIELD_LAN_PROTOCOL = "protocol";
-
+	public static final String FIELD_LAN_TYPE = "type";
+	private Integer type;
+	public static final Integer TYPE_RPC = 0;
+	public static final Integer TYPE_http = 1;
 	private String domain;
 
 	private String port;
@@ -40,6 +43,14 @@ public class Lan extends DataObject {
 
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
+	}
+
+	public Integer getType() {
+		return type;
+	}
+
+	public void setType(Integer type) {
+		this.type = type;
 	}
 
 	@Override

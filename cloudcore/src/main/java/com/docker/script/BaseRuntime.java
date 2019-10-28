@@ -135,8 +135,8 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		addClassAnnotationHandler(new ServerLifeCircleHandler());
 		addClassAnnotationHandler(new JsonFilterFactory());
 		addClassAnnotationHandler(new RequestPermissionHandler());
-        CacheAnnotationHandler cacheAnnotationHandler = new CacheAnnotationHandler();
-		addClassAnnotationHandler(cacheAnnotationHandler);
+		addClassAnnotationHandler(new CacheAnnotationHandler());
+		addClassAnnotationHandler(new ServiceMemoryHandler());
 
 	}
 
@@ -252,6 +252,10 @@ public abstract class BaseRuntime extends GroovyRuntime {
 
     public Object put(String key, Object value) {
         return memoryCache.put(key, value);
+    }
+
+    public ConcurrentHashMap<String, Object> getMemoryCache() {
+        return memoryCache;
     }
 
     public Object remove(String key) {

@@ -15,12 +15,14 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import script.file.FileAdapter;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
@@ -140,6 +142,7 @@ public class DeployServiceUtils {
 
         //copy source
         File groovyFile = new File(servicePath + "/src/main/groovy");
+        writeToGrape(servicePath);
         File groovyPropertiesFile = new File(servicePath + "/src/main/groovy/config.properties");
         if (!needMergeProperties && deployPropertiesFile.exists() && deployPropertiesFile.isFile() && groovyPropertiesFile.exists() && groovyPropertiesFile.isFile()) {
             needMergeProperties = true;
@@ -190,7 +193,7 @@ public class DeployServiceUtils {
         doZip(new File(FilenameUtils.separatorsToUnix(root.getAbsolutePath()) + (prefix != null ? "/" + prefix : "") + "/" + serviceName + "/1.zip"), deploy);
 //        clean(deploy, ".zip");
         FileUtils.deleteQuietly(deploy);
-
+        FileUtils.deleteQuietly(new File( servicePath + "/src/main/groovy/config"));
         File[] toRemoveEmptyFolders = root.listFiles();
         for (File findEmptyFolder : toRemoveEmptyFolders) {
             if (getAllEmptyFoldersOfDir(findEmptyFolder)) {
@@ -395,6 +398,104 @@ public class DeployServiceUtils {
                     zipOut.closeEntry();
                 }
             }
+        }
+    }
+    private static List<PomObject> getPomObjects(String projectPath){
+        List list = new ArrayList();
+        try {
+            File pomFile = new File(projectPath + "/pom.xml");
+            String pomContent = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
+            if(pomContent != null){
+                pomContent = pomContent.replaceAll(" ", "");
+                if(pomContent.contains("<!--GroovyGrapesStart!!!CantDelete-->") && pomContent.contains("<!--GroovyGrapesEnd!!!CantDelete-->")){
+                    int startIndex = pomContent.indexOf("<!--GroovyGrapesStart!!!CantDelete-->");
+                    int endIndex = pomContent.indexOf("<!--GroovyGrapesEnd!!!CantDelete-->");
+                    String grapeContent = pomContent.substring(startIndex + "<!--GroovyGrapesStart!!!CantDelete-->".length() + 1, endIndex);
+                    if(grapeContent.contains("<dependency>") && grapeContent.contains("</dependency>")){
+                        String[] everyDependencyCOntents = grapeContent.split("</dependency>");
+                        for (int i = 0; i < everyDependencyCOntents.length; i++) {
+                            if(everyDependencyCOntents[i].contains("<groupId>") && everyDependencyCOntents[i].contains("<artifactId>")){
+                                String dependencyField = everyDependencyCOntents[i].replaceAll("\n", "").replaceAll("\r", "");
+                                int groupIndex = dependencyField.indexOf("<groupId>");
+                                int groupIndexEnd = dependencyField.indexOf("</groupId>");
+                                int artifactIndex = dependencyField.indexOf("<artifactId>");
+                                int artifactIndexEnd = dependencyField.indexOf("</artifactId>");
+                                int versionIndex = dependencyField.indexOf("<version>");
+                                int versionIndexEnd = dependencyField.indexOf("</version>");
+                                PomObject pomObject = new PomObject();
+                                String groupId = dependencyField.substring(groupIndex + "<groupId>".length(), groupIndexEnd);
+                                String artifact = dependencyField.substring(artifactIndex + "<artifactId>".length(), artifactIndexEnd);
+                                String version = dependencyField.substring(versionIndex + "<version>".length(), versionIndexEnd);
+                                pomObject.setGroupId(groupId);
+                                pomObject.setArtifactId(artifact);
+                                pomObject.setVersion(version);
+                                list.add(pomObject);
+                            }
+                        }
+                        return list;
+                    }
+                }
+            }
+        }catch (Throwable t){
+            t.printStackTrace();
+        }
+        return null;
+    }
+    private static void writeToGrape(String projectPath){
+        try {
+            String flag = "\r\n";
+            List<PomObject> list = getPomObjects(projectPath);
+            if(list != null && !list.isEmpty()){
+                String configPath = projectPath + "/src/main/groovy/config/imports.groovy";
+                File configFile = new File(configPath);
+                if(configFile.exists()){
+                    FileUtils.deleteQuietly(configFile);
+                }
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("@Grapes([" + flag);
+                for (int i = 0; i < list.size(); i++) {
+                    PomObject pomObject = list.get(i);
+                    if(i == (list.size() -1 )){
+                        stringBuilder.append("@Grab(group='" + pomObject.getGroupId() + "', module='" + pomObject.getArtifactId() + "', version='" + pomObject.getVersion() + "')" + flag);
+                    }else {
+                        stringBuilder.append("@Grab(group='" + pomObject.getGroupId() + "', module='" + pomObject.getArtifactId() + "', version='" + pomObject.getVersion() + "')," + flag);
+                    }
+                }
+                stringBuilder.append("])" + flag);
+                stringBuilder.append("package config" + flag);
+                FileUtils.writeStringToFile(configFile, stringBuilder.toString(), "utf8");
+            }
+        }catch (Throwable t){
+            t.printStackTrace();
+        }
+    }
+    private static class PomObject{
+        private String groupId;
+        private String artifactId;
+        private String version;
+
+        public String getGroupId() {
+            return groupId;
+        }
+
+        public void setGroupId(String groupId) {
+            this.groupId = groupId;
+        }
+
+        public String getArtifactId() {
+            return artifactId;
+        }
+
+        public void setArtifactId(String artifactId) {
+            this.artifactId = artifactId;
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        public void setVersion(String version) {
+            this.version = version;
         }
     }
 }

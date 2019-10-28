@@ -75,7 +75,7 @@ public class ScriptManager implements ShutdownListener {
 //            }
 //        }
         if (hotDeployment) {
-            TimerEx.schedule(new TimerTaskEx() {
+            TimerEx.schedule(new TimerTaskEx(ScriptManager.class.getSimpleName()) {
                 @Override
                 public void execute() {
                     if (!isLoaded) {
@@ -569,19 +569,8 @@ public class ScriptManager implements ShutdownListener {
     public void setKillProcess(Boolean killProcess) {
         this.killProcess = killProcess;
     }
-    //    public RMIServerImplWrapper getRpcServer() {
-//        return rpcServer;
-//    }
-//
-//    public void setRpcServer(RMIServerImplWrapper rpcServer) {
-//        this.rpcServer = rpcServer;
-//    }
-//
-//    public RMIServerImplWrapper getRpcServerSsl() {
-//        return rpcServerSsl;
-//    }
-//
-//    public void setRpcServerSsl(RMIServerImplWrapper rpcServerSsl) {
-//        this.rpcServerSsl = rpcServerSsl;
-//    }
+
+    public Map<String, Integer> getDefalutServiceVersionMap() {
+        return defalutServiceVersionMap;
+    }
 }

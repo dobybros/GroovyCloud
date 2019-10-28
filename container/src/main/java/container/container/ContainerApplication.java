@@ -1,5 +1,6 @@
 package container.container;
 
+import com.docker.script.GroovyServletScriptDispatcher;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
@@ -22,6 +23,16 @@ public class ContainerApplication {
 		registrationBean.addUrlMappings("/rest/*");
 		registrationBean.setName("groovyDispatcherServlet");
 		return registrationBean;
+	}
+	@Bean
+	public ServletRegistrationBean baseServletRegistrationBean() {
+		//用ServletRegistrationBean包装servlet
+		ServletRegistrationBean baseServletRegistrationBean
+				= new ServletRegistrationBean(new GroovyServletScriptDispatcher());
+		baseServletRegistrationBean.setLoadOnStartup(1);
+		baseServletRegistrationBean.addUrlMappings("/base/*");
+		baseServletRegistrationBean.setName("InternalGroovyServlet");
+		return baseServletRegistrationBean;
 	}
 	public static void main(String[] args) {
 		SpringApplication.run(ContainerApplication.class, args);

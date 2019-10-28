@@ -3,6 +3,7 @@ package com.docker.rpc.remote.stub;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
+import com.docker.data.Lan;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
 import com.docker.rpc.remote.MethodMapping;
@@ -25,11 +26,8 @@ public class ServiceStubManager {
     private Class<?> serviceStubProxyClass;
     //sure is ssl
     private Boolean usePublicDomain = false;
-    private boolean inited = false;
-    /**
-     *
-     */
     private String fromService;
+    private Integer lanType;
     public ServiceStubManager(){
 
     }
@@ -46,7 +44,11 @@ public class ServiceStubManager {
         if (!this.host.startsWith("http")) {
             this.host = "http://" + this.host;
         }
-        RemoteServersManager.getInstance().addRemoteHost(this.host);
+        if(this.lanType == null || this.lanType.equals(Lan.TYPE_RPC)){
+            RemoteServersManager.getInstance().addRemoteHost(this.host);
+        }else {
+            RemoteServersManager.getInstance().addCrossHost(this.host);
+        }
     }
     public void clearCache() {
         methodMap.clear();
@@ -175,7 +177,6 @@ public class ServiceStubManager {
             try {
                 Method getProxyMethod = serviceStubProxyClass.getMethod("getProxy", Class.class, ServiceStubManager.class, RemoteServerHandler.class);
                 if (getProxyMethod != null) {
-
                     //远程service
                     adapterService = (T) getProxyMethod.invoke(null, adapterClass, this, getRemoteServerHandler(service));
                 } else {
@@ -233,4 +234,11 @@ public class ServiceStubManager {
         this.usePublicDomain = usePublicDomain;
     }
 
+    public Integer getLanType() {
+        return lanType;
+    }
+
+    public void setLanType(Integer lanType) {
+        this.lanType = lanType;
+    }
 }

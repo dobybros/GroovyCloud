@@ -178,7 +178,7 @@ public class GroovyBooter implements RuntimeBootListener {
             IOUtils.closeQuietly(baos);
             if (deploySuccessfully) {
                 if (oldClassLoader != null) {
-                    TimerEx.schedule(new TimerTaskEx() {
+                    TimerEx.schedule(new TimerTaskEx(GroovyBooter.class.getSimpleName()) {
                         @Override
                         public void execute() {
                             LoggerEx.info(TAG, "Old class loader " + oldClassLoader + " is releasing");

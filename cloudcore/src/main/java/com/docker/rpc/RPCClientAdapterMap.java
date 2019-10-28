@@ -21,6 +21,7 @@ public class RPCClientAdapterMap {
 	private static final String TAG = RPCClientAdapterMap.class.getSimpleName();
 	
 	private ConcurrentHashMap<String, RPCClientAdapter> clientAdapterMap = new ConcurrentHashMap<String, RPCClientAdapter>();
+	private ConcurrentHashMap<String, RPCClientAdapter> clientAdapterMapSsl = new ConcurrentHashMap<String, RPCClientAdapter>();
 	private long expireTime = TimeUnit.MINUTES.toMillis(5);
 
 	private boolean enableSsl = false;

@@ -15,7 +15,7 @@ public class AverageCounter {
     private Integer average;
     private final long PERIOD = 10000;
     private Queue<Integer> queue = Queues.synchronizedQueue(EvictingQueue.create(10));
-    private TimerTaskEx calculateTask = new TimerTaskEx() {
+    private TimerTaskEx calculateTask = new TimerTaskEx("chat.utils.AverageCounter") {
         @Override
         public void execute() {
             Integer[] values = new Integer[10];

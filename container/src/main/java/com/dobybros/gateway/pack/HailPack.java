@@ -6,10 +6,10 @@ import org.apache.mina.core.buffer.IoBuffer;
 
 public class HailPack extends Pack {
 	
-	public static final byte ENCODE_PB = 5;
-	public static final byte ENCODE_JSON = 1;
-	public static final byte ENCODE_JSON_GZIP = 2;
-	public static final byte ENCODE_CHUNKED = 100;
+	public static final int ENCODE_PB = 5;
+	public static final int ENCODE_JSON = 1;
+	public static final int ENCODE_JSON_GZIP = 2;
+	public static final int ENCODE_CHUNKED = 100;
 
 	private static final String TAG = HailPack.class.getSimpleName();
 	/**
@@ -88,7 +88,7 @@ public class HailPack extends Pack {
 //		buf.put(version);
 //		buf.putShort(encodeVersion);
 //		buf.put(encode);
-		buf.put(type);
+		buf.put((byte) type);
 		buf.putInt(length);
 		if(length > 0)
 			buf.put(content);

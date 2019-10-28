@@ -87,6 +87,11 @@ public class MyBaseRuntime extends BaseRuntime {
                         throw new NullPointerException("Lan " + lan + " is illegal for lanId " + lanId + " domain " + lan.getDomain() + " port " + lan.getPort() + " protocol " + lan.getProtocol());
                     String host = lan.getProtocol() + "://" + lan.getDomain() + ":" + lan.getPort();
                     manager = new ServiceStubManager(host, serviceStubManager.getFromService());
+                    if(lan.getType() == null){
+                        manager.setLanType(Lan.TYPE_http);
+                    }else {
+                        manager.setLanType(lan.getType());
+                    }
                     manager.init();
                     manager.setUsePublicDomain(true);
                     manager.setServiceStubProxyClass(serviceStubManager.getServiceStubProxyClass());

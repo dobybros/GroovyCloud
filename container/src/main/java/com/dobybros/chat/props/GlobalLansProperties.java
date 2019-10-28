@@ -17,11 +17,16 @@ public class GlobalLansProperties extends AutoReloadProperties {
 	public static class Lan {
 		private String lanId;
 
+		public static final Integer TYPE_RPC = 0;
+		public static final Integer TYPE_http = 1;
+		private Integer type;
+
 		private String host;
 
-		public Lan(String lan, String host) {
+		public Lan(String lan, String host, Integer type) {
 			this.lanId = lan;
 			this.host = host;
+			this.type = type;
 		}
 
 		public String getHost() {
@@ -38,6 +43,14 @@ public class GlobalLansProperties extends AutoReloadProperties {
 
 		public void setLanId(String lanId) {
 			this.lanId = lanId;
+		}
+
+		public Integer getType() {
+			return type;
+		}
+
+		public void setType(Integer type) {
+			this.type = type;
 		}
 
 		public String toString() {
@@ -57,8 +70,13 @@ public class GlobalLansProperties extends AutoReloadProperties {
 				for(String lan : lanArray) {
 //					newLanSet.add(lan);
 					String host = getProperty("host." + lan);
+					String typeStr = getProperty("type." + lan);
 					if(StringUtils.isNotBlank(host)) {
-						newLanMap.put(lan, new Lan(lan, host));
+						Integer type = 1;
+						if(typeStr != null){
+							type = Integer.valueOf(typeStr);
+						}
+						newLanMap.put(lan, new Lan(lan, host, type));
 					} else {
 						LoggerEx.error(TAG, "host." + lan + " doesn't be found, please check your gateway.properties");
 					}
