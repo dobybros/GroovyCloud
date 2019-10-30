@@ -23,6 +23,7 @@ import com.docker.rpc.remote.stub.RemoteServersManager;
 import com.docker.rpc.remote.stub.RpcCacheManager;
 import com.docker.script.ScriptManager;
 import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
+import com.docker.storage.adapters.impl.ScheduledTaskServiceImpl;
 import com.docker.storage.adapters.impl.ServersServiceImpl;
 import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
 import com.docker.storage.cache.CacheStorageFactory;
@@ -73,6 +74,7 @@ public class BeanApp extends ConfigApp{
     private MongoHelper dockerStatusHelper;
     private MongoHelper logsHelper;
     private MongoHelper configHelper;
+    private MongoHelper scheduledTaskHelper;
     private DockerStatusDAO dockerStatusDAO;
     private ServersDAO serversDAO;
     private LansDAO lansDAO;
@@ -122,11 +124,26 @@ public class BeanApp extends ConfigApp{
     private RMIServerHandler dockerRpcServerAdapterSsl;
     private ServersServiceImpl serversService;
     private ServiceVersionServiceImpl serviceVersionService;
-
+    private ScheduledTaskServiceImpl scheduledTaskService;
+    private ScheduledTaskDAO scheduledTaskDAO;
+    public synchronized ScheduledTaskServiceImpl getScheduledTaskService(){
+        if(scheduledTaskService == null){
+            scheduledTaskService = new ScheduledTaskServiceImpl();
+            scheduledTaskService.setScheduledTaskDAO(instance.getScheduledTaskDAO());
+        }
+        return scheduledTaskService;
+    }
+    public synchronized ScheduledTaskDAO getScheduledTaskDAO(){
+        if(scheduledTaskDAO == null){
+            scheduledTaskDAO = new ScheduledTaskDAO();
+            scheduledTaskDAO.setMongoHelper(instance.getScheduledTaskHelper());
+        }
+        return scheduledTaskDAO;
+    }
     public synchronized ServiceVersionServiceImpl getServiceVersionService() {
         if(serviceVersionService == null){
             serviceVersionService = new ServiceVersionServiceImpl();
-            serviceVersionService.setServiceVersionDAO(getServiceVersionDAO());
+            serviceVersionService.setServiceVersionDAO(instance.getServiceVersionDAO());
         }
         return serviceVersionService;
     }
@@ -591,6 +608,17 @@ public class BeanApp extends ConfigApp{
             dockerStatusHelper.setPassword(instance.getMongoPassword());
         }
         return dockerStatusHelper;
+    }
+    public synchronized MongoHelper getScheduledTaskHelper() {
+        if(scheduledTaskHelper == null){
+            scheduledTaskHelper = new MongoHelper();
+            scheduledTaskHelper.setHost(instance.getMongoHost());
+            scheduledTaskHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
+            scheduledTaskHelper.setDbName("scheduled");
+            scheduledTaskHelper.setUsername(instance.getMongoUsername());
+            scheduledTaskHelper.setPassword(instance.getMongoPassword());
+        }
+        return scheduledTaskHelper;
     }
 
     public synchronized MongoHelper getLogsHelper() {

@@ -92,8 +92,8 @@ public class MyBaseRuntime extends BaseRuntime {
                     }else {
                         manager.setLanType(lan.getType());
                     }
-                    manager.init();
                     manager.setUsePublicDomain(true);
+                    manager.init();
                     manager.setServiceStubProxyClass(serviceStubManager.getServiceStubProxyClass());
                     stubManagerForLanIdMap.putIfAbsent(lanId, manager);
                 }
