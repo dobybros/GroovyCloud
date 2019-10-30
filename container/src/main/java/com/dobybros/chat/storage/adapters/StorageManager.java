@@ -120,11 +120,11 @@ public class StorageManager {
                             host = dblan.getProtocol() + "://" + dblan.getDomain() + ":" + dblan.getPort();
                         }
                         manager = new ServiceStubManager(host, null);
-                        manager.setLanType(lanType);
-                        manager.init();
                         if (!lanId.equals(currentLanId)) {
                             manager.setUsePublicDomain(true);
+                            manager.setLanType(lanType);
                         }
+                        manager.init();
                         stubManagerForLanIdMap.putIfAbsent(lanId, manager);
                         manager = stubManagerForLanIdMap.get(lanId);
                     }
