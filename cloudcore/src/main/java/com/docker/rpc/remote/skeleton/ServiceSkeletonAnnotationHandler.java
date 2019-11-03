@@ -11,13 +11,12 @@ import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
 import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.RemoteService;
+import com.docker.rpc.remote.RpcServerInterceptor;
 import com.docker.rpc.remote.stub.RpcCacheManager;
 import com.docker.script.ClassAnnotationHandlerEx;
 import com.docker.server.OnlineServer;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
@@ -31,6 +30,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
@@ -110,7 +110,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
 
     public class SkelectonMethodMapping extends MethodMapping {
         private GroovyObjectEx<RemoteService> remoteService;
-
+        private List<RpcServerInterceptor> rpcServerInterceptors;
         public SkelectonMethodMapping(Method method) {
             super(method);
         }
@@ -202,6 +202,14 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
         public void setRemoteService(GroovyObjectEx<RemoteService> remoteService) {
             this.remoteService = remoteService;
         }
+
+        public List<RpcServerInterceptor> getRpcServerInterceptors() {
+            return rpcServerInterceptors;
+        }
+
+        public void setRpcServerInterceptors(List<RpcServerInterceptor> rpcServerInterceptors) {
+            this.rpcServerInterceptors = rpcServerInterceptors;
+        }
     }
 
     public SkelectonMethodMapping getMethodMapping(Long crc) {
@@ -211,7 +219,8 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
     public void scanClass(Class<?> clazz, GroovyObjectEx<RemoteService> serverAdapter, ConcurrentHashMap<Long, SkelectonMethodMapping> methodMap) {
         if (clazz == null)
             return;
-
+        com.docker.rpc.remote.annotations.RemoteService remoteService = clazz.getAnnotation(com.docker.rpc.remote.annotations.RemoteService.class);
+        int concurrentLimit = remoteService.concurrentLimit();
         Method[] methods = ReflectionUtil.getMethods(clazz);
         if (methods != null) {
             for (Method method : methods) {
@@ -245,6 +254,17 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 Class<?> returnType = method.getReturnType();
                 returnType = ReflectionUtil.getInitiatableClass(returnType);
                 mm.setReturnClass(returnType);
+                if (method.getGenericReturnType().getTypeName().contains(CompletableFuture.class.getTypeName())) {
+                    mm.setAsync(true);
+                    if(concurrentLimit != -1){
+                        RpcServerInterceptor concurrentLimitRpcServerInterceptor = new ConcurrentLimitRpcServerInterceptor(concurrentLimit);
+                        List<RpcServerInterceptor> rpcServerInterceptors = new ArrayList<>();
+                        rpcServerInterceptors.add(concurrentLimitRpcServerInterceptor);
+                        mm.setRpcServerInterceptors(rpcServerInterceptors);
+                    }
+                } else {
+                    mm.setAsync(false);
+                }
                 methodMap.put(value, mm);
                 RpcCacheManager.getInstance().putCrcMethodMap(value, service + "_" + clazz.getSimpleName() + "_" + method.getName());
                 //TODO DTS

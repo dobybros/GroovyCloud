@@ -1,12 +1,18 @@
 package com.docker.rpc;
 
+import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.utils.ConcurrentHashSet;
+import com.docker.rpc.async.AsyncRpcFuture;
+import com.docker.rpc.remote.stub.RpcCacheManager;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class RPCClientAdapter {
 	protected ConcurrentHashSet<ClientAdapterStatusListener> statusListeners = new ConcurrentHashSet<>();
+	private List<String> remoteServerFutureList = new ArrayList();
 	
 	public static abstract class ClientAdapterStatusListener {
 
@@ -56,6 +62,26 @@ public abstract class RPCClientAdapter {
 			statusListeners.add(statusListener);
 		}
 	}
-
+	public void addToRemoteServerFutureList(String callbackFutureId) {
+		if(callbackFutureId != null && !remoteServerFutureList.contains(callbackFutureId)){
+			remoteServerFutureList.add(callbackFutureId);
+		}
+	}
+	public void clearRemoteServerFutureList(String host){
+		for (String callbackFutureId : remoteServerFutureList){
+			AsyncRpcFuture asyncRpcFuture = RpcCacheManager.getInstance().getAsyncRpcFuture(callbackFutureId);
+			if(asyncRpcFuture != null){
+				CompletableFuture completableFuture = asyncRpcFuture.getFuture();
+				if(completableFuture != null){
+					completableFuture.completeExceptionally(new CoreException(ChatErrorCodes.ERROR_SERVER_CONNECT_FAILED, "Check server alive failed, server host: " + host));
+				}
+			}
+		}
+	}
+	public void removeFromServerFutureList(String callbackFutureId){
+		if(callbackFutureId != null){
+			remoteServerFutureList.remove(callbackFutureId);
+		}
+	}
 	public abstract Integer getAverageLatency();
 }
