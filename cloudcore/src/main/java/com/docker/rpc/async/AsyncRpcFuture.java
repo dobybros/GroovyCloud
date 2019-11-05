@@ -16,12 +16,16 @@ public class AsyncRpcFuture {
     private Long crc;
     private CompletableFuture<?> future;
     private List<AsyncCallbackHandler> asyncCallbackHandlers;
+    private Integer timeout; //s
     private TimerTaskEx timerTaskEx;
 
-    public AsyncRpcFuture(Long crc) {
+    public AsyncRpcFuture(Long crc, Integer timeout) {
         this.callbackFutureId = ObjectId.get().toString();
         this.asyncCallbackHandlers = new ArrayList<>();
         this.crc = crc;
+        if(timeout == null){
+            this.timeout = 24*60*60;
+        }
         this.future = new CompletableFuture<>();
     }
 
@@ -65,6 +69,14 @@ public class AsyncRpcFuture {
 
     public void setCallbackFutureId(String callbackFutureId) {
         this.callbackFutureId = callbackFutureId;
+    }
+
+    public Integer getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(Integer timeout) {
+        this.timeout = timeout;
     }
 
     public void handleAsyncHandler(Object result, List<String> exceptHandlerClass) {

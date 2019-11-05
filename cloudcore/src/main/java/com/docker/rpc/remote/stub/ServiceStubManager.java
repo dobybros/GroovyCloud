@@ -1,14 +1,13 @@
 package com.docker.rpc.remote.stub;
 
+import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
 import com.docker.data.Lan;
 import com.docker.rpc.MethodRequest;
-import com.docker.rpc.MethodResponse;
 import com.docker.rpc.remote.MethodMapping;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.servlets.Tracker;
 
 import java.lang.reflect.Field;
@@ -150,14 +149,23 @@ public class ServiceStubManager {
     }
 
     public CompletableFuture<?> callAsync(String service, String className, String method, Object... args) throws CoreException {
-        CompletableFuture<?> future = getRemoteServerHandler(service).callAsync(getMethodRequest(service, className, method, args));
-        return future;
+        RemoteInvocationHandler invocationHandler = new RemoteInvocationHandlerImpl(getRemoteServerHandler(service));
+        MethodMapping methodMapping = getMethodMapping(ReflectionUtil.getCrc(className, method, service));
+        if (methodMapping != null) {
+            return (CompletableFuture<?>) invocationHandler.invoke(methodMapping, getMethodRequest(service, className, method, args));
+        }else {
+            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_METHODNOTFOUND, "Method doesn't be found by service_class_method " + service + "_" + className + "_" + method);
+        }
     }
 
     public Object call(String service, String className, String method, Object... args) throws CoreException {
-        MethodRequest request = getMethodRequest(service, className, method, args);
-        MethodResponse response = getRemoteServerHandler(service).call(request);
-        return Proxy.getReturnObject(request, response);
+        RemoteInvocationHandler invocationHandler = new RemoteInvocationHandlerImpl(getRemoteServerHandler(service));
+        MethodMapping methodMapping = getMethodMapping(ReflectionUtil.getCrc(className, method, service));
+        if (methodMapping != null) {
+            return invocationHandler.invoke(methodMapping, getMethodRequest(service, className, method, args));
+        }else {
+            throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_METHODNOTFOUND, "Method doesn't be found by service_class_method " + service + "_" + className + "_" + method);
+        }
     }
 
     public <T> T getService(String service, Class<T> adapterClass) {

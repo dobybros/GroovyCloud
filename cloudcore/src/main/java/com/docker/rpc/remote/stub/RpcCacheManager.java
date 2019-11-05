@@ -4,12 +4,13 @@ import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
-import com.docker.data.CacheObj;
+import com.docker.rpc.RPCClientAdapter;
+import com.docker.rpc.RPCClientAdapterMap;
+import com.docker.rpc.RPCClientAdapterMapFactory;
 import com.docker.rpc.async.AsyncRpcFuture;
-import com.docker.storage.cache.CacheStorageFactory;
+import com.docker.server.OnlineServer;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -23,23 +24,33 @@ public class RpcCacheManager {
 
     public AsyncRpcFuture pushToAsyncRpcMap(String callbackFutureId, AsyncRpcFuture asyncFuture){
         asyncCallbackHandlerMap.computeIfAbsent(callbackFutureId, k-> asyncFuture);
-        TimerTaskEx timerTaskEx = new TimerTaskEx("AsyncDeleteFutureWhenTimeout") {
-            @Override
-            public void execute() {
-                AsyncRpcFuture asyncFuture = asyncCallbackHandlerMap.get(callbackFutureId);
-                if (asyncFuture != null) {
-                    asyncFuture.getFuture().completeExceptionally(new CoreException(ChatErrorCodes.ERROR_ASYNC_TIMEOUT, "Async callback timeout, Now remove the future,service_class_method: " + crcMethodMap.get(asyncFuture.getCrc())));
-                    asyncCallbackHandlerMap.remove(callbackFutureId);
+        if(asyncFuture.getTimeout() != null){
+            TimerTaskEx timerTaskEx = new TimerTaskEx("AsyncDeleteFutureWhenTimeout" + "-" + asyncFuture.getCrc().toString()) {
+                @Override
+                public void execute() {
+                    AsyncRpcFuture asyncFuture = asyncCallbackHandlerMap.get(callbackFutureId);
+                    if (asyncFuture != null) {
+                        asyncFuture.getFuture().completeExceptionally(new CoreException(ChatErrorCodes.ERROR_ASYNC_TIMEOUT, "Async callback timeout, Now remove the future,service_class_method: " + crcMethodMap.get(asyncFuture.getCrc())));
+                        asyncCallbackHandlerMap.remove(callbackFutureId);
+                    }
                 }
-            }
-        };
-        timerTaskEx.setId(callbackFutureId);
-        TimerEx.schedule(timerTaskEx, 65000L);
-        asyncFuture.setTimerTaskEx(timerTaskEx);
+            };
+            timerTaskEx.setId(callbackFutureId);
+            TimerEx.schedule(timerTaskEx, Long.valueOf(asyncFuture.getTimeout() * 1000));
+            asyncFuture.setTimerTaskEx(timerTaskEx);
+        }
         return asyncFuture;
     }
     public AsyncRpcFuture handlerAsyncRpcFuture(String callbackFutureId) {
         AsyncRpcFuture asyncFuture= asyncCallbackHandlerMap.remove(callbackFutureId);
+        String server = OnlineServer.getInstance().getServer();
+        if(server != null){
+            RPCClientAdapterMap rpcClientAdapterMap = RPCClientAdapterMapFactory.getInstance().getRpcClientAdapterMap();
+            RPCClientAdapter rpcClientAdapter = rpcClientAdapterMap.getClientAdapter(server);
+            if(rpcClientAdapter != null){
+                rpcClientAdapter.removeFromServerFutureList(callbackFutureId);
+            }
+        }
         if (asyncFuture != null) {
             TimerTaskEx taskEx = asyncFuture.getTimerTaskEx();
             if (taskEx != null) {

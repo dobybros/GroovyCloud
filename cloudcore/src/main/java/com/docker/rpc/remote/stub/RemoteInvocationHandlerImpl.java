@@ -30,7 +30,7 @@ public class RemoteInvocationHandlerImpl implements RemoteInvocationHandler {
                 methodInterceptors = methodInterceptorMap.get(methodKey);
             }
         }
-        handleAsyncWithHandler(methodMapping.getAsync(), methodRequest);
+        handleAsyncWithHandler(methodMapping, methodRequest);
         MethodInvocation methodInvocation = null;
         if(methodRequest.getServiceStubManager() != null){
             if(methodRequest.getServiceStubManager().getLanType() == null || methodRequest.getServiceStubManager().getLanType().equals(Lan.TYPE_RPC)){
@@ -43,9 +43,9 @@ public class RemoteInvocationHandlerImpl implements RemoteInvocationHandler {
         return null;
     }
 
-    private void handleAsyncWithHandler(Boolean isAsync, MethodRequest methodRequest) {
-        if (isAsync) {
-            AsyncRpcFuture asyncRpcFuture = new AsyncRpcFuture(methodRequest.getCrc());
+    private void handleAsyncWithHandler(MethodMapping methodMapping, MethodRequest methodRequest) {
+        if (methodMapping.getAsync()) {
+            AsyncRpcFuture asyncRpcFuture = new AsyncRpcFuture(methodRequest.getCrc(), null);
             remoteServerHandler.setCallbackFutureId(asyncRpcFuture.getCallbackFutureId());
             RpcCacheManager.getInstance().pushToAsyncRpcMap(asyncRpcFuture.getCallbackFutureId(), asyncRpcFuture);
         }
