@@ -24,6 +24,7 @@ import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -129,10 +130,9 @@ public class GroovyBooter implements RuntimeBootListener {
                         continue;
                     }
                     String key = absolutePath.substring(pathPos + path.length());
-
                     List<String> libPaths = groovyRuntime.getLibPath();
+                    boolean ignore = false;
                     if (libPaths != null) {
-                        boolean ignore = false;
                         for (String libPath : libPaths) {
                             if (key.startsWith(libPath)) {
                                 ignore = true;
@@ -140,10 +140,28 @@ public class GroovyBooter implements RuntimeBootListener {
                                 break;
                             }
                         }
-                        if (ignore)
-                            continue;
+                    } else {
+                        //读取文件信息
+                        String[] libGroovyFiles = null;
+                        try {
+                            String libGroovyFilesStr = FileUtils.readFileToString(new File(path + "coregroovyfiles"), "utf-8");
+                            if (libGroovyFilesStr != null) {
+                                libGroovyFiles = libGroovyFilesStr.split("\r\n");
+                            }
+                        } catch (Throwable throwable) {
+                            LoggerEx.warn(TAG, "Read core groovy path failed, reason is " + ExceptionUtils.getFullStackTrace(throwable));
+                        }
+                        if (libGroovyFiles != null) {
+                            List libGroovyFilesList = Arrays.asList(libGroovyFiles);
+                            if (libGroovyFilesList.contains(key)) {
+                                ignore = true;
+//                            LoggerEx.info(TAG, "Ignore lib classes " + key + " while parsing. hit lib " + libPath);
+//                                break;
+                            }
+                        }
                     }
-
+                    if (ignore)
+                        continue;
                     int pos = key.lastIndexOf(".");
                     if (pos >= 0) {
                         key = key.substring(0, pos);

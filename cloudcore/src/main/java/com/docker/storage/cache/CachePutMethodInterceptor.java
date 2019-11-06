@@ -28,6 +28,7 @@ public class CachePutMethodInterceptor implements MethodInterceptor {
     public static final String CACHE_KEY = "key";
     public static final String CACHE_HOST = "host";
     public static final String CACHE_EXPIRD = "expird";
+    public static final String CACHE_PREFIX = "prefix";
     public static final String CACHEKEY = "cacheKey";
     private Map<String, CacheObj> cacheMethodMap;
     private CacheAnnotationHandler cacheAnnotationHandler;
@@ -53,19 +54,19 @@ public class CachePutMethodInterceptor implements MethodInterceptor {
                 } else {
                     MethodMapping methodMapping = rpcMethodInvocation.getMethodMapping();
                     Type returnType = null;
-                    if(methodMapping.getGenericReturnClass().getTypeName().contains(CompletableFuture.class.getTypeName())){
-                        if(methodMapping.getGenericReturnActualTypeArguments() != null && methodMapping.getGenericReturnActualTypeArguments().length > 0){
+                    if (methodMapping.getGenericReturnClass().getTypeName().contains(CompletableFuture.class.getTypeName())) {
+                        if (methodMapping.getGenericReturnActualTypeArguments() != null && methodMapping.getGenericReturnActualTypeArguments().length > 0) {
                             returnType = methodMapping.getGenericReturnActualTypeArguments()[0];
                         }
-                    }else {
+                    } else {
                         returnType = methodMapping.getGenericReturnClass();
                     }
-                    if(returnType != null && !returnType.getTypeName().equals(void.class.getSimpleName())){
-                        Object result = cacheStorageAdapter.getCacheData(cacheObj.getPrefix() + "_" + key, returnType);
+                    if (returnType != null && !returnType.getTypeName().equals(void.class.getSimpleName())) {
+                        Object result = cacheStorageAdapter.getCacheData(cacheObj.getPrefix(), (String) key, returnType);
                         if (result != null) {
                             if (rpcMethodInvocation.getAsync()) {
                                 AsyncRpcFuture asyncRpcFuture = RpcCacheManager.getInstance().getAsyncRpcFuture(((RPCMethodInvocation) methodInvocation).getRemoteServerHandler().getCallbackFutureId());
-                                if(asyncRpcFuture != null && asyncRpcFuture.getFuture() != null){
+                                if (asyncRpcFuture != null && asyncRpcFuture.getFuture() != null) {
                                     List<String> list = new ArrayList<>();
                                     list.add(CacheAsyncCallbackHandler.class.getSimpleName());
                                     asyncRpcFuture.handleAsyncHandler(result, list);
@@ -81,7 +82,7 @@ public class CachePutMethodInterceptor implements MethodInterceptor {
                                 result = rpcMethodInvocation.handleSync();
                                 if (result != null) {
                                     try {
-                                        cacheStorageAdapter.addCacheData(cacheObj.getPrefix() + "_" + key, result, cacheObj.getExpired());
+                                        cacheStorageAdapter.addCacheData(cacheObj.getPrefix(), (String) key, result, cacheObj.getExpired());
                                     } catch (CoreException e) {
                                         LoggerEx.error(TAG, "Add cache data failed,key is " + cacheObj.getPrefix() + "_" + key + ",value is " + result + ",reason is " + e.getMessage());
                                     }
@@ -91,7 +92,8 @@ public class CachePutMethodInterceptor implements MethodInterceptor {
                                 map.put(CACHE_METHODMAP, cacheMethodMap);
                                 map.put(CRC, String.valueOf(rpcMethodInvocation.getMethodRequest().getCrc()));
                                 map.put(CACHE_HOST, cacheHost);
-                                map.put(CACHE_KEY, cacheObj.getPrefix() + "_" + key);
+                                map.put(CACHE_KEY, key);
+                                map.put(CACHE_PREFIX, cacheObj.getPrefix());
                                 map.put(CACHE_EXPIRD, cacheObj.getExpired());
                                 CacheAsyncCallbackHandler cacheAsyncCallbackHandler = new CacheAsyncCallbackHandler(map);
 
@@ -110,18 +112,20 @@ public class CachePutMethodInterceptor implements MethodInterceptor {
 
     private class CacheAsyncCallbackHandler extends AsyncCallbackHandler {
 
-        public CacheAsyncCallbackHandler(Map map){
+        public CacheAsyncCallbackHandler(Map map) {
             super(map);
         }
+
         @Override
         public void handle() {
-            Map<String, CacheObj> cacheObjMap = (Map<String, CacheObj>)map.get(CACHE_METHODMAP);
+            Map<String, CacheObj> cacheObjMap = (Map<String, CacheObj>) map.get(CACHE_METHODMAP);
             CacheObj cacheObj = cacheObjMap.get(map.get(CRC));
-            CacheStorageAdapter cacheStorageAdapter = CacheStorageFactory.getInstance().getCacheStorageAdapter(cacheObj.getCacheMethod(), (String)map.get(CACHE_HOST));
-            String key = (String)map.get(CACHE_KEY);
+            CacheStorageAdapter cacheStorageAdapter = CacheStorageFactory.getInstance().getCacheStorageAdapter(cacheObj.getCacheMethod(), (String) map.get(CACHE_HOST));
+            String key = (String) map.get(CACHE_KEY);
+            String prefix = (String) map.get(CACHE_PREFIX);
             if (key != null && result != null && cacheStorageAdapter != null) {
                 try {
-                    cacheStorageAdapter.addCacheData(key,result,(Long) map.get(CACHE_EXPIRD));
+                    cacheStorageAdapter.addCacheData(prefix, key, result, (Long) map.get(CACHE_EXPIRD));
                 } catch (CoreException coreException) {
                     LoggerEx.error(TAG, "Add cache data failed on async call class is service_class_method:reason is " + coreException.getMessage());
                 }

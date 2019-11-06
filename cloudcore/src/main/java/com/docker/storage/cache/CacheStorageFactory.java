@@ -8,9 +8,7 @@ import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * 缓存路由 缓存由CacheRouter分发调用
- */
+
 public class CacheStorageFactory {
     public static final String TAG = CacheStorageFactory.class.getSimpleName();
     private static CacheStorageFactory instance;
@@ -78,11 +76,15 @@ public class CacheStorageFactory {
     }
 
     private CacheStorageAdapter createCacheStorage(Class<?> clazz, String host) {
-
         Constructor constructor = null;
         try {
-            constructor = clazz.getConstructor(String.class);
-            return (CacheStorageAdapter) constructor.newInstance(host);
+            if(host != null){
+                constructor = clazz.getConstructor(String.class);
+                return (CacheStorageAdapter) constructor.newInstance(host);
+            }else{
+                constructor = clazz.getConstructor();
+                return (CacheStorageAdapter) constructor.newInstance();
+            }
         } catch (NoSuchMethodException e1) {
             LoggerEx.error(TAG, "No such method by class " + clazz.getSimpleName());
         } catch (Throwable throwable) {

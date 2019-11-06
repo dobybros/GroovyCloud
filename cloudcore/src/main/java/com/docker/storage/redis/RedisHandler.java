@@ -522,6 +522,10 @@ public class RedisHandler {
         return getObject(prefix + "_" + key, clazz);
     }
 
+    public <T> T getObject(String prefix, String key, Type type) throws CoreException {
+        return getObject(prefix + "_" + key, type);
+    }
+
     public <T> T getObject(String key, Class<T> clazz) throws CoreException {
         String json = doJedisExecute(jedis -> {
             return jedis.get(key);

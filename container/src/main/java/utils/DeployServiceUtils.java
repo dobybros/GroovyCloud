@@ -1,5 +1,6 @@
 package utils;
 
+import chat.logs.LoggerEx;
 import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.storage.mongodb.MongoHelper;
 import net.lingala.zip4j.core.ZipFile;
@@ -18,10 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import script.file.FileAdapter;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.zip.CRC32;
@@ -29,6 +27,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class DeployServiceUtils {
+    public static final String TAG = DeployServiceUtils.class.getSimpleName();
     public static void main(String[] args) throws Exception {
         CommandLineParser parser = new PosixParser();
         Options opt = new Options();
@@ -120,25 +119,61 @@ public class DeployServiceUtils {
 
         Boolean needMergeProperties = false;
         File deployPropertiesFile = new File(deploy + "/config.properties");
-        //copy libs
-        if (libPath != null) {
-            String[] libPaths = libPath.split(",");
-            for (String libP : libPaths) {
-                File libGroovyFile = new File(libP + "/src/main/groovy");
-                File libPropertiesFile = new File(libP + "/src/main/groovy/config.properties");
-                if (!needMergeProperties && deployPropertiesFile.exists() && deployPropertiesFile.isFile() && libPropertiesFile.exists() && libPropertiesFile.isFile()) {
-                    needMergeProperties = true;
+        File libGroovyFileNew = new File(deploy, "coregroovyfiles");
+        List<String> libPaths = getLibPaths(servicePath);
+
+        FileOutputStream fos = null;
+        try {
+            //copy libs
+            if (libPaths != null && !libPaths.isEmpty()) {
+                if (libGroovyFileNew.exists() == false) {
+                    libGroovyFileNew.getParentFile().mkdirs();
+                    try {
+                        libGroovyFileNew.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-                if (libGroovyFile.isDirectory() && libGroovyFile.exists()) {
-                    FileUtils.copyDirectory(libGroovyFile, deploy);
+                StringBuilder coreContent = new StringBuilder();
+                fos = new FileOutputStream(libGroovyFileNew);
+                //            String[] libPaths = libPath.split(",");
+                for (String libP : libPaths) {
+                    File libGroovyFile = new File(libP + "/src/main/groovy");
+                    String path = libGroovyFile.getAbsolutePath() + "/";
+                    File libPropertiesFile = new File(libP + "/src/main/groovy/config.properties");
+                    if (!needMergeProperties && deployPropertiesFile.exists() && deployPropertiesFile.isFile() && libPropertiesFile.exists() && libPropertiesFile.isFile()) {
+                        needMergeProperties = true;
+                    }
+                    if (libGroovyFile.isDirectory() && libGroovyFile.exists()) {
+                        FileUtils.copyDirectory(libGroovyFile, deploy);
+                    }
+                    File libResourceFile = new File(libP + "/src/main/resources");
+                    if (libResourceFile.exists() && libResourceFile.isDirectory()) {
+                        FileUtils.copyDirectory(libResourceFile, deploy);
+                    }
+
+                    Collection<File> fileList = FileUtils.listFiles(libGroovyFile, null, true);
+                    for (File file : fileList) {
+                        int pathPos = file.getAbsolutePath().indexOf(path);
+                        if (pathPos < 0) {
+                            LoggerEx.warn(TAG, "Find path " + path + " in file " + file.getAbsolutePath() + " failed, " + pathPos + ". Ignore...");
+                            continue;
+                        }
+                        String key = file.getAbsolutePath().substring(pathPos + path.length());
+                        coreContent.append(key).append("\r\n");
+                    }
                 }
-                File libResourceFile = new File(libP + "/src/main/resources");
-                if (libResourceFile.exists() && libResourceFile.isDirectory()) {
-                    FileUtils.copyDirectory(libResourceFile, deploy);
-                }
+                fos.write(coreContent.toString().getBytes("utf-8"));
             }
 
+        } catch (IOException e) {
+            LoggerEx.error(TAG, "Read core file path failed, reason is " + ExceptionUtils.getFullStackTrace(e));
+        } finally {
+            if (fos != null) {
+                fos.close();
+            }
         }
+
 
         //copy source
         File groovyFile = new File(servicePath + "/src/main/groovy");
@@ -161,7 +196,7 @@ public class DeployServiceUtils {
             FileInputStream fin = new FileInputStream(deployPropertiesFile);
             mainProperties.load(fin);
 
-            String[] libPaths = libPath.split(",");
+//            String[] libPaths = libPath.split(",");
             for (String libP : libPaths) {
                 File libPropertiesFile = new File(libP + "/src/main/groovy/config.properties");
                 if (libPropertiesFile.exists() && libPropertiesFile.isFile()) {
@@ -170,7 +205,7 @@ public class DeployServiceUtils {
                     libProperties.load(fin2);
                     Set<String> propertyNames = libProperties.stringPropertyNames();
 
-                    FileWriter fout = new FileWriter(deployPropertiesFile,true);
+                    FileWriter fout = new FileWriter(deployPropertiesFile, true);
                     fout.write("\r\n\r\n");
                     fout.write("#merge \r\n");
                     for (String key : propertyNames) {
@@ -193,7 +228,7 @@ public class DeployServiceUtils {
         doZip(new File(FilenameUtils.separatorsToUnix(root.getAbsolutePath()) + (prefix != null ? "/" + prefix : "") + "/" + serviceName + "/1.zip"), deploy);
 //        clean(deploy, ".zip");
         FileUtils.deleteQuietly(deploy);
-        FileUtils.deleteQuietly(new File( servicePath + "/src/main/groovy/config"));
+        FileUtils.deleteQuietly(new File(servicePath + "/src/main/groovy/config"));
         File[] toRemoveEmptyFolders = root.listFiles();
         for (File findEmptyFolder : toRemoveEmptyFolders) {
             if (getAllEmptyFoldersOfDir(findEmptyFolder)) {
@@ -400,21 +435,53 @@ public class DeployServiceUtils {
             }
         }
     }
-    private static List<PomObject> getPomObjects(String projectPath){
+
+    private static List<String> getLibPaths(String projectPath) {
+        List<String> paths = new ArrayList<>();
+        try {
+            File pomFile = new File(projectPath + "/pom.xml");
+            if(pomFile.exists()){
+                String pomContent = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
+                if (pomContent != null) {
+                    pomContent = pomContent.replaceAll("", "");
+                    if (pomContent.contains("<!--CoreStart-->") && pomContent.contains("<!--CoreEnd-->")) {
+                        int startIndex = pomContent.indexOf("<!--CoreStart-->");
+                        int endIndex = pomContent.indexOf("<!--CoreEnd-->");
+                        String coreString = pomContent.substring(startIndex, endIndex);
+                        if (coreString != null && coreString.contains("</dependency>")) {
+                            coreString = coreString.replaceAll("\n", "").replaceAll("\r", "");
+                            String[] pathContentArray = coreString.split("</dependency>");
+                            for (String pathContent : pathContentArray) {
+                                if (StringUtils.isNotBlank(pathContent)) {
+                                    String path = pathContent.substring(pathContent.indexOf("path=\"") + 6, pathContent.indexOf("\"-->"));
+                                    paths.add(path);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return paths;
+    }
+
+    private static List<PomObject> getPomObjects(String projectPath) {
         List list = new ArrayList();
         try {
             File pomFile = new File(projectPath + "/pom.xml");
             String pomContent = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
-            if(pomContent != null){
+            if (pomContent != null) {
                 pomContent = pomContent.replaceAll(" ", "");
-                if(pomContent.contains("<!--GroovyGrapesStart!!!CantDelete-->") && pomContent.contains("<!--GroovyGrapesEnd!!!CantDelete-->")){
+                if (pomContent.contains("<!--GroovyGrapesStart!!!CantDelete-->") && pomContent.contains("<!--GroovyGrapesEnd!!!CantDelete-->")) {
                     int startIndex = pomContent.indexOf("<!--GroovyGrapesStart!!!CantDelete-->");
                     int endIndex = pomContent.indexOf("<!--GroovyGrapesEnd!!!CantDelete-->");
                     String grapeContent = pomContent.substring(startIndex + "<!--GroovyGrapesStart!!!CantDelete-->".length() + 1, endIndex);
-                    if(grapeContent.contains("<dependency>") && grapeContent.contains("</dependency>")){
+                    if (grapeContent.contains("<dependency>") && grapeContent.contains("</dependency>")) {
                         String[] everyDependencyCOntents = grapeContent.split("</dependency>");
                         for (int i = 0; i < everyDependencyCOntents.length; i++) {
-                            if(everyDependencyCOntents[i].contains("<groupId>") && everyDependencyCOntents[i].contains("<artifactId>")){
+                            if (everyDependencyCOntents[i].contains("<groupId>") && everyDependencyCOntents[i].contains("<artifactId>")) {
                                 String dependencyField = everyDependencyCOntents[i].replaceAll("\n", "").replaceAll("\r", "");
                                 int groupIndex = dependencyField.indexOf("<groupId>");
                                 int groupIndexEnd = dependencyField.indexOf("</groupId>");
@@ -436,28 +503,29 @@ public class DeployServiceUtils {
                     }
                 }
             }
-        }catch (Throwable t){
+        } catch (Throwable t) {
             t.printStackTrace();
         }
         return null;
     }
-    private static void writeToGrape(String projectPath){
+
+    private static void writeToGrape(String projectPath) {
         try {
             String flag = "\r\n";
             List<PomObject> list = getPomObjects(projectPath);
-            if(list != null && !list.isEmpty()){
+            if (list != null && !list.isEmpty()) {
                 String configPath = projectPath + "/src/main/groovy/config/imports.groovy";
                 File configFile = new File(configPath);
-                if(configFile.exists()){
+                if (configFile.exists()) {
                     FileUtils.deleteQuietly(configFile);
                 }
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append("@Grapes([" + flag);
                 for (int i = 0; i < list.size(); i++) {
                     PomObject pomObject = list.get(i);
-                    if(i == (list.size() -1 )){
+                    if (i == (list.size() - 1)) {
                         stringBuilder.append("@Grab(group='" + pomObject.getGroupId() + "', module='" + pomObject.getArtifactId() + "', version='" + pomObject.getVersion() + "')" + flag);
-                    }else {
+                    } else {
                         stringBuilder.append("@Grab(group='" + pomObject.getGroupId() + "', module='" + pomObject.getArtifactId() + "', version='" + pomObject.getVersion() + "')," + flag);
                     }
                 }
@@ -465,11 +533,12 @@ public class DeployServiceUtils {
                 stringBuilder.append("package config" + flag);
                 FileUtils.writeStringToFile(configFile, stringBuilder.toString(), "utf8");
             }
-        }catch (Throwable t){
+        } catch (Throwable t) {
             t.printStackTrace();
         }
     }
-    private static class PomObject{
+
+    private static class PomObject {
         private String groupId;
         private String artifactId;
         private String version;
