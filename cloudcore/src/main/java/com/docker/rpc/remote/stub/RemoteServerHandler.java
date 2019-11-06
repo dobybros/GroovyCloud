@@ -9,7 +9,6 @@ import com.docker.rpc.*;
 import com.docker.rpc.remote.MethodMapping;
 import com.docker.server.OnlineServer;
 import com.docker.utils.ScriptHttpUtils;
-import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.types.ObjectId;
 
@@ -143,6 +142,7 @@ public class RemoteServerHandler {
                 LoggerEx.info(TAG, "The service: " + toService + " ,the version being used is " + server.getVersion());
                 if (ip != null && port != null) {
                     RPCClientAdapter clientAdapter = thisRpcClientAdapterMap.registerServer(ip, port, server.getServer());
+                    clientAdapter.addToRemoteServerFutureList(callbackFutureId);
                     clientAdapter.callAsync(request);
                     LoggerEx.info(TAG, "Successfully callAsync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount);
                     return RpcCacheManager.getInstance().getAsyncRpcFuture(callbackFutureId).getFuture();

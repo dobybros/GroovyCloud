@@ -87,4 +87,16 @@ public class DatabaseBean{
     public ServiceVersionServiceImpl serviceVersionService(){
         return instance.getServiceVersionService();
     }
+    @Bean
+    public ScheduledTaskServiceImpl scheduledTaskService(){
+        return instance.getScheduledTaskService();
+    }
+    @Bean
+    public ScheduledTaskDAO scheduledTaskDAO(){
+        return instance.getScheduledTaskDAO();
+    }
+    @Bean
+    public MongoHelper scheduledTaskHelper(){
+        return instance.getScheduledTaskHelper();
+    }
 }

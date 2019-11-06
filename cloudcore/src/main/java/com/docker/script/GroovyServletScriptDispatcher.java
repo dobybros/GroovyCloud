@@ -6,7 +6,9 @@ import chat.logs.LoggerEx;
 import chat.scheduled.QuartzFactory;
 import chat.utils.ChatUtils;
 import com.alibaba.fastjson.JSON;
+import com.docker.data.ScheduleTask;
 import com.docker.script.servlet.GroovyServletManagerEx;
+import com.docker.storage.adapters.impl.ScheduledTaskServiceImpl;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.quartz.JobKey;
@@ -118,6 +120,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
             Scheduler scheduler = QuartzFactory.getInstance().getSchedulerFactory().getScheduler();
             List<Map<String, String>> list = new ArrayList<Map<String, String>>();
             Map<String, String> map = null;
+            ScheduledTaskServiceImpl scheduledTaskService = (ScheduledTaskServiceImpl) SpringContextUtil.getBean("scheduledTaskService");
             for (String groupName : scheduler.getJobGroupNames()) {
                 for (JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(groupName))) {
                     String jobName = jobKey.getName();
@@ -134,6 +137,15 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                         prefireTime = ChatUtils.dateString(triggers.get(0).getPreviousFireTime());
                     }
                     map.put("taskId", jobName);
+                    if(jobName.contains("OneTimeTask") || jobName.contains("PeriodicTask")){
+                        if(scheduledTaskService != null){
+                            ScheduleTask scheduleTask = scheduledTaskService.getSchedeuleTask(jobName);
+                            if(scheduleTask != null){
+                                map.put("status", scheduleTask.getStatus()  == null ? "null" : scheduleTask.getStatus().toString());
+                                map.put("reason", scheduleTask.getReason() == null ? "null" : scheduleTask.getReason());
+                            }
+                        }
+                    }
                     map.put("nextFireTime", nextFireTime);
                     map.put("preFireTime", prefireTime);
                     TriggerKey triggerKey = TriggerKey.triggerKey(jobName, jobGroup);

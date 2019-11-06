@@ -46,6 +46,13 @@
 			<artifactId>groovy</artifactId>
 			<version>3.0.0-beta-3</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>28.1-jre</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
@@ -511,6 +518,7 @@
                     <target>11</target>
                 </configuration>
             </plugin>
+
 		</plugins>
 	</build>
 </project>

@@ -18,14 +18,11 @@ import com.docker.onlineserver.OnlineServerWithStatus;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.rpc.impl.RMIServerImplWrapper;
-import com.docker.rpc.remote.stub.RPCInterceptorFactory;
-import com.docker.rpc.remote.stub.RemoteServersManager;
-import com.docker.rpc.remote.stub.RpcCacheManager;
 import com.docker.script.ScriptManager;
 import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
+import com.docker.storage.adapters.impl.ScheduledTaskServiceImpl;
 import com.docker.storage.adapters.impl.ServersServiceImpl;
 import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
-import com.docker.storage.cache.CacheStorageFactory;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import com.docker.tasks.Task;
@@ -38,6 +35,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.filter.ssl.KeyStoreFactory;
 import org.apache.mina.filter.ssl.SslContextFactory;
 import org.apache.mina.filter.ssl.SslFilter;
@@ -73,6 +71,7 @@ public class BeanApp extends ConfigApp{
     private MongoHelper dockerStatusHelper;
     private MongoHelper logsHelper;
     private MongoHelper configHelper;
+    private MongoHelper scheduledTaskHelper;
     private DockerStatusDAO dockerStatusDAO;
     private ServersDAO serversDAO;
     private LansDAO lansDAO;
@@ -122,11 +121,26 @@ public class BeanApp extends ConfigApp{
     private RMIServerHandler dockerRpcServerAdapterSsl;
     private ServersServiceImpl serversService;
     private ServiceVersionServiceImpl serviceVersionService;
-
+    private ScheduledTaskServiceImpl scheduledTaskService;
+    private ScheduledTaskDAO scheduledTaskDAO;
+    public synchronized ScheduledTaskServiceImpl getScheduledTaskService(){
+        if(scheduledTaskService == null){
+            scheduledTaskService = new ScheduledTaskServiceImpl();
+            scheduledTaskService.setScheduledTaskDAO(instance.getScheduledTaskDAO());
+        }
+        return scheduledTaskService;
+    }
+    public synchronized ScheduledTaskDAO getScheduledTaskDAO(){
+        if(scheduledTaskDAO == null){
+            scheduledTaskDAO = new ScheduledTaskDAO();
+            scheduledTaskDAO.setMongoHelper(instance.getScheduledTaskHelper());
+        }
+        return scheduledTaskDAO;
+    }
     public synchronized ServiceVersionServiceImpl getServiceVersionService() {
         if(serviceVersionService == null){
             serviceVersionService = new ServiceVersionServiceImpl();
-            serviceVersionService.setServiceVersionDAO(getServiceVersionDAO());
+            serviceVersionService.setServiceVersionDAO(instance.getServiceVersionDAO());
         }
         return serviceVersionService;
     }
@@ -416,6 +430,7 @@ public class BeanApp extends ConfigApp{
             Map map = new LinkedHashMap();
             map.put("sslFilter", instance.getSslFilter());
             map.put("codecFilter", instance.getWsCodecFilter());
+            map.put("loggingFilter", new LoggingFilter());
             wsFilterChainBuilder.setFilters(map);
         }
         return wsFilterChainBuilder;
@@ -591,6 +606,17 @@ public class BeanApp extends ConfigApp{
             dockerStatusHelper.setPassword(instance.getMongoPassword());
         }
         return dockerStatusHelper;
+    }
+    public synchronized MongoHelper getScheduledTaskHelper() {
+        if(scheduledTaskHelper == null){
+            scheduledTaskHelper = new MongoHelper();
+            scheduledTaskHelper.setHost(instance.getMongoHost());
+            scheduledTaskHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
+            scheduledTaskHelper.setDbName("scheduled");
+            scheduledTaskHelper.setUsername(instance.getMongoUsername());
+            scheduledTaskHelper.setPassword(instance.getMongoPassword());
+        }
+        return scheduledTaskHelper;
     }
 
     public synchronized MongoHelper getLogsHelper() {

@@ -12,7 +12,8 @@ import com.docker.errors.CoreErrorCodes;
 import com.docker.rpc.*;
 import com.docker.rpc.async.AsyncCallbackRequest;
 import com.docker.rpc.async.AsyncRpcFuture;
-import com.docker.rpc.remote.MethodMapping;
+import com.docker.rpc.remote.RpcServerInterceptor;
+import com.docker.rpc.remote.skeleton.ServiceSkeletonAnnotationHandler;
 import com.docker.rpc.remote.stub.RpcCacheManager;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.MyBaseRuntime;
@@ -31,6 +32,7 @@ import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
@@ -135,12 +137,13 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                     asyncCallbackRequest.setEncode(encode);
                     asyncCallbackRequest.setType(asyncCallbackRequest.getType());
                     asyncCallbackRequest.setCallbackFutureId(callbackFutureId);
-                    MethodMapping methodMapping = null;
+                    ServiceSkeletonAnnotationHandler.SkelectonMethodMapping methodMapping = null;
                     MethodRequest request = new MethodRequest();
                     Object returnObj = null;
                     Throwable throwable = null;
                     Long time = System.currentTimeMillis();
                     StringBuilder builder = new StringBuilder();
+                    List<RpcServerInterceptor> rpcServerInterceptors = null;
                     try {
                         if (serverWrapper.serverMethodInvocation == null)
                             serverWrapper.serverMethodInvocation = new RPCServerMethodInvocation();
@@ -148,6 +151,9 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                         request.setType(type);
                         request.setData(data);
                         request.resurrect();
+                        methodMapping = serverWrapper.serverMethodInvocation.getMethodMapping(request);
+                        rpcServerInterceptors = methodMapping.getRpcServerInterceptors();
+                        handleInterceptors(data, type, encode, callbackFutureId, rpcServerInterceptors);
                         String parentTrackId = ((MethodRequest) request).getTrackId();
                         String currentTrackId = null;
                         if (parentTrackId != null) {
@@ -155,7 +161,6 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                             Tracker tracker = new Tracker(currentTrackId, parentTrackId);
                             Tracker.trackerThreadLocal.set(tracker);
                         }
-                        methodMapping = serverWrapper.serverMethodInvocation.getMethodMapping(request);
                         builder.append("$$async methodrequest:: " + methodMapping.getMethod().getDeclaringClass().getSimpleName() + "#" + methodMapping.getMethod().getName() + " $$service:: " + request.getService() + " $$parenttrackid:: " + parentTrackId + " $$currenttrackid:: " + currentTrackId + " $$args:: " + request.getArgsTmpStr());
                         returnObj = serverWrapper.serverMethodInvocation.oncallAsync(request, callbackFutureId);
                         asyncCallbackRequest.setCrc((request).getCrc());
@@ -172,7 +177,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                             message = t.getMessage();
                         }
                         throwable = t;
-                        LoggerEx.error(TAG, "Async call remote failed, service_class_method: "  + RpcCacheManager.getInstance().getMethodByCrc(RpcCacheManager.getInstance().getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()) == null ? null : RpcCacheManager.getInstance().getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()).getCrc()) + ", err: " + message + " stack: " + ExceptionUtils.getFullStackTrace(t));
+                        LoggerEx.error(TAG, "Async call remote failed, service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(RpcCacheManager.getInstance().getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()) == null ? null : RpcCacheManager.getInstance().getAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId()).getCrc()) + ", err: " + message + " stack: " + ExceptionUtils.getFullStackTrace(t));
                     } finally {
                         String ip = OnlineServer.getInstance().getIp();
                         Tracker.trackerThreadLocal.remove();
@@ -180,55 +185,64 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                         builder.append(" $$takes:: " + invokeTokes);
                         builder.append(" $$sdockerip:: " + ip);
                         if (throwable != null) {
-                            Exception exception = null;
-                            if (throwable instanceof InvokerInvocationException) {
-                                Throwable t = throwable.getCause();
-                                if (t != null)
-                                    throwable = t;
+                            try {
+                                Exception exception = null;
+                                if (throwable instanceof InvokerInvocationException) {
+                                    Throwable t = throwable.getCause();
+                                    if (t != null)
+                                        throwable = t;
+                                }
+                                if (throwable instanceof CoreException) {
+                                    exception = (CoreException) throwable;
+                                } else {
+                                    LoggerEx.error(TAG, "Async callback err,err: " + ExceptionUtils.getFullStackTrace(throwable));
+                                    exception = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + throwable.getMessage());
+                                }
+                                asyncCallbackRequest.setException((CoreException) exception);
+                                builder.append(" $$returnobj:: " + JSON.toJSONString(exception));
+                                AnalyticsLogger.error(TAG, builder.toString());
+                                handlePersistent(asyncCallbackRequest, request);
+                            }finally {
+                                handleInterceptorsAfter(rpcServerInterceptors);
                             }
-                            if (throwable instanceof CoreException) {
-                                exception = (CoreException) throwable;
-                            } else {
-                                LoggerEx.error(TAG, "Async callback err,err: " + ExceptionUtils.getFullStackTrace(throwable));
-                                exception = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + throwable.getMessage());
-                            }
-                            asyncCallbackRequest.setException((CoreException) exception);
-                            builder.append(" $$returnobj:: " + JSON.toJSONString(exception));
-                            AnalyticsLogger.error(TAG, builder.toString());
-                            handlePersistent(asyncCallbackRequest, request);
                         } else {
                             if (returnObj != null && returnObj instanceof CompletableFuture) {
-//                                String methodName = methodMapping.getMethod().getName();
-//                                Class<?> clazz = methodMapping.getMethod().getDeclaringClass();
                                 CompletableFuture completeFuture = (CompletableFuture) returnObj;
+                                List<RpcServerInterceptor> theRpcServerInterceptors = rpcServerInterceptors;
                                 completeFuture.whenCompleteAsync((result, e) -> {
-                                    if (result != null) {
-                                        asyncCallbackRequest.setDataObject(result);
-                                    }
-                                    if (e != null) {
-                                        Throwable throwable1 = (Throwable) e;
-                                        Throwable cause = throwable1.getCause();
-                                        if (cause != null) {
-                                            throwable1 = cause;
+                                    try {
+                                        if (result != null) {
+                                            asyncCallbackRequest.setDataObject(result);
                                         }
-                                        throwable1.printStackTrace();
-                                        if (throwable1 instanceof CoreException) {
-                                            throwable1 = (CoreException) throwable1;
+                                        if (e != null) {
+                                            Throwable throwable1 = (Throwable) e;
+                                            Throwable cause = throwable1.getCause();
+                                            if (cause != null) {
+                                                throwable1 = cause;
+                                            }
+                                            throwable1.printStackTrace();
+                                            if (throwable1 instanceof CoreException) {
+                                                throwable1 = (CoreException) throwable1;
+                                            } else {
+                                                LoggerEx.error(TAG, "Async callback err,err: " + ExceptionUtils.getFullStackTrace(throwable1));
+                                                throwable1 = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + throwable1.getMessage());
+                                            }
+                                            asyncCallbackRequest.setException((CoreException) throwable1);
+                                        }
+                                        if (asyncCallbackRequest.getException() != null) {
+                                            builder.append(" $$returnobj:: " + JSON.toJSONString(asyncCallbackRequest.getException()));
+                                            AnalyticsLogger.error(TAG, builder.toString());
                                         } else {
-                                            LoggerEx.error(TAG, "Async callback err,err: " + ExceptionUtils.getFullStackTrace(throwable1));
-                                            throwable1 = new CoreException(ChatErrorCodes.ERROR_ASYNC_ERROR, "Async callback err,err: " + throwable1.getMessage());
+                                            builder.append(" $$returnobj:: " + JSON.toJSONString(asyncCallbackRequest.getDataObject()));
+                                            AnalyticsLogger.info(TAG, builder.toString());
                                         }
-                                        asyncCallbackRequest.setException((CoreException) throwable1);
+                                        handlePersistent(asyncCallbackRequest, request);
+                                    }finally {
+                                        handleInterceptorsAfter(theRpcServerInterceptors);
                                     }
-                                    if (asyncCallbackRequest.getException() != null) {
-                                        builder.append(" $$returnobj:: " + JSON.toJSONString(asyncCallbackRequest.getException()));
-                                        AnalyticsLogger.error(TAG, builder.toString());
-                                    } else {
-                                        builder.append(" $$returnobj:: " + JSON.toJSONString(asyncCallbackRequest.getDataObject()));
-                                        AnalyticsLogger.info(TAG, builder.toString());
-                                    }
-                                    handlePersistent(asyncCallbackRequest, request);
                                 }, ServerStart.getInstance().getAsyncThreadPoolExecutor());
+                            }else {
+                                LoggerEx.error(TAG, "Async return object is not CompletableFuture");
                             }
                         }
                     }
@@ -244,7 +258,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
                     asyncCallbackRequest.resurrect();
                     if (asyncCallbackRequest.getCallbackFutureId() != null) {
                         AsyncRpcFuture asyncRpcFuture = RpcCacheManager.getInstance().handlerAsyncRpcFuture(asyncCallbackRequest.getCallbackFutureId());
-                        if(asyncRpcFuture != null){
+                        if (asyncRpcFuture != null) {
                             CompletableFuture completableFuture = asyncRpcFuture.getFuture();
                             if (asyncCallbackRequest.getException() != null) {
                                 completableFuture.completeExceptionally(asyncCallbackRequest.getException());
@@ -305,6 +319,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
     public boolean alive() throws RemoteException {
         return true;
     }
+
     private RPCClientAdapter getClientAdapter(RPCRequest request) {
         if (((MethodRequest) request).getSourceIp() != null && ((MethodRequest) request).getSourcePort() != null && ((MethodRequest) request).getFromServerName() != null) {
             ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
@@ -375,6 +390,32 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
         }
         if (persistentSuccess) {
             callClientAdapterAsync(getClientAdapter(request), asyncCallbackRequest, request);
+        }
+    }
+
+    private void handleInterceptors(byte[] data, String type, Byte encode, String callbackFutureId, List<RpcServerInterceptor> rpcServerInterceptors) throws RemoteException, ServerNotActiveException {
+        if(rpcServerInterceptors != null && !rpcServerInterceptors.isEmpty()){
+            MethodRequest methodRequest = new MethodRequest();
+            methodRequest.setData(data);
+            methodRequest.setType(type);
+            methodRequest.setEncode(encode);
+            methodRequest.setCallbackFutureId(callbackFutureId);
+            for (RpcServerInterceptor rpcServerInterceptor : rpcServerInterceptors) {
+                Object result = rpcServerInterceptor.invoke(methodRequest, this);
+                if (result instanceof Boolean) {
+                    if (!(Boolean) result) {
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    private void handleInterceptorsAfter(List<RpcServerInterceptor> rpcServerInterceptors) {
+        if(rpcServerInterceptors != null && !rpcServerInterceptors.isEmpty()){
+            for (RpcServerInterceptor rpcServerInterceptor : rpcServerInterceptors){
+                rpcServerInterceptor.afterInvoke();
+            }
         }
     }
 }

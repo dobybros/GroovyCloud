@@ -119,6 +119,7 @@ public class RMIClientHandler extends RPCClientAdapter {
                             } catch (Throwable ce) {
                                 LoggerEx.info(TAG, "Check server alive failed, " + ExceptionUtils.getFullStackTrace(ce) + " need reconnect..." + ", server : " + server.toString() + ", serverHost : " + serverHost);
                                 connected.compareAndSet(true, false);
+                                clearRemoteServerFutureList(serverHost);
                                 for (ClientAdapterStatusListener statusListener : statusListeners) {
                                     try {
                                         statusListener.disconnected(rmiId);
