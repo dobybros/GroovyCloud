@@ -17,6 +17,7 @@ public class CacheEvictMethodInterceptor implements MethodInterceptor {
     public static final String TAG = CachePutMethodInterceptor.class.getSimpleName();
     private Map<String, CacheObj> cacheMethodMap;
     private CacheAnnotationHandler cacheAnnotationHandler;
+
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws CoreException {
         RPCMethodInvocation rpcMethodInvocation = (RPCMethodInvocation) methodInvocation;
@@ -32,12 +33,12 @@ public class CacheEvictMethodInterceptor implements MethodInterceptor {
                     return rpcMethodInvocation.proceed();
                 }
                 Object key = ReflectionUtil.parseSpel(cacheObj.getParamNames(), rpcMethodInvocation.arguments, cacheObj.getSpelKey());
-                if(key == null){
+                if (key == null) {
                     return rpcMethodInvocation.proceed();
                 } else {
-                    try{
-                        cacheStorageAdapter.deleteCacheData(cacheObj.getPrefix() + "_" + key);
-                    }catch (Throwable throwable){
+                    try {
+                        cacheStorageAdapter.deleteCacheData(cacheObj.getPrefix(), (String)key);
+                    } catch (Throwable throwable) {
                         LoggerEx.error(TAG, "Delete cache failed by key : " + cacheObj.getPrefix() + "_" + key + ",reason is " + ExceptionUtils.getFullStackTrace(throwable));
                     }
                     return rpcMethodInvocation.proceed();

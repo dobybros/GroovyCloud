@@ -9,7 +9,9 @@ import com.docker.script.servlet.WebServiceAnnotationHandler;
 import com.docker.storage.cache.CacheAnnotationHandler;
 import com.docker.storage.cache.CacheStorageFactory;
 import com.docker.storage.cache.CacheStorageMethod;
+import com.docker.storage.cache.handlers.EhCacheCacheStorageHandler;
 import com.docker.storage.cache.handlers.RedisCacheStorageHandler;
+import com.docker.storage.ehcache.EhCacheHandler;
 import com.docker.storage.kafka.KafkaConfCenter;
 import com.docker.storage.kafka.KafkaProducerHandler;
 import com.docker.storage.redis.RedisHandler;
@@ -21,7 +23,6 @@ import connectors.mongodb.annotations.handlers.MongoDatabaseAnnotationHolder;
 import connectors.mongodb.annotations.handlers.MongoDocumentAnnotationHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import script.filter.JsonFilterFactory;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.*;
@@ -41,6 +42,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 
     private MongoDBHandler mongoDBHandler;
     private RedisHandler redisHandler;
+    private EhCacheHandler ehCacheHandler;
     private KafkaProducerHandler kafkaProducerHandler;
     private KafkaConfCenter kafkaConfCenter;
     private I18nHandler i18nHandler;
@@ -86,6 +88,8 @@ public abstract class BaseRuntime extends GroovyRuntime {
                 RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler)CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS,redisHost);
                 redisHandler = cacheStorageAdapter.getRedisHandler();
             }
+            EhCacheCacheStorageHandler ehCacheCacheStorageHandler = (EhCacheCacheStorageHandler)CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_EHCACHE, null);
+            ehCacheHandler = ehCacheCacheStorageHandler.getEhCacheHandler();
             String produce = properties.getProperty("db.kafka.produce");
             kafkaConfCenter = new KafkaConfCenter();
             kafkaConfCenter.filterKafkaConf(properties, KafkaConfCenter.FIELD_PRODUCE, KafkaConfCenter.FIELD_CONSUMER);
@@ -290,6 +294,10 @@ public abstract class BaseRuntime extends GroovyRuntime {
             return (String) cacheRedisUri;
         }
         return null;
+    }
+
+    public EhCacheHandler getEhCacheHandler() {
+        return ehCacheHandler;
     }
 
     public void setConfig(Properties config) {
