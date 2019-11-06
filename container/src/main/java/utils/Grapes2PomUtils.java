@@ -1,8 +1,6 @@
 package utils;
 
-import chat.logs.LoggerEx;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.File;
@@ -14,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Grapes2PomUtils {
-    private static final String path = "/home/qiliao/projects/TuitionCloud";
+    private static final String path = "/Users/huzhanjing/workspace/ACServers";
     private static final String flag = "\r\n";
 
     public static void main(String[] args) {
