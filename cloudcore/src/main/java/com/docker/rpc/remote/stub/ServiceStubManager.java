@@ -6,6 +6,7 @@ import chat.utils.ReflectionUtil;
 import com.docker.data.Lan;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
+import com.docker.rpc.async.AsyncRpcFuture;
 import com.docker.rpc.remote.MethodMapping;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import script.groovy.servlets.Tracker;
@@ -150,7 +151,12 @@ public class ServiceStubManager {
 
     public CompletableFuture<?> callAsync(String service, String className, String method, Object... args) throws CoreException {
         MethodRequest request = getMethodRequest(service, className, method, args);
-        return getRemoteServerHandler(service).callAsync(request);
+        AsyncRpcFuture asyncRpcFuture = new AsyncRpcFuture(ReflectionUtil.getCrc(className, method, service), null);
+        RemoteServerHandler remoteServerHandler = getRemoteServerHandler(service);
+        remoteServerHandler.setCallbackFutureId(asyncRpcFuture.getCallbackFutureId());
+        RpcCacheManager.getInstance().pushToAsyncRpcMap(asyncRpcFuture.getCallbackFutureId(), asyncRpcFuture);
+        LoggerEx.info(TAG, "pushToAsyncRpcMap success, callbackFutureId: " + asyncRpcFuture.getCallbackFutureId() + ",CurrentThread: " + Thread.currentThread() + ",asyncFuture:" + RpcCacheManager.getInstance().getAsyncRpcFuture(asyncRpcFuture.getCallbackFutureId()));
+        return remoteServerHandler.callAsync(request);
     }
 
     public Object call(String service, String className, String method, Object... args) throws CoreException {
