@@ -7,4 +7,5 @@ import java.lang.annotation.*;
 @Documented
 public @interface RemoteService {
     public int concurrentLimit() default -1;
+    public int waitingSize() default 20000;
 }

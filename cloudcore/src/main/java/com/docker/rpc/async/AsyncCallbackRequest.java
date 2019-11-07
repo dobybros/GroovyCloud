@@ -34,6 +34,7 @@ public class AsyncCallbackRequest extends RPCRequest {
     private CoreException exception;
     private Long crc;
     private String fromService;
+    private String fromServerName;
 
     public AsyncCallbackRequest() {
         super(RPCTYPE);
@@ -55,10 +56,11 @@ public class AsyncCallbackRequest extends RPCRequest {
                             callbackFutureId = dis.readUTF();
                             crc = dis.readLong();
                             fromService = dis.readUTF();
+                            fromServerName = dis.readUTF();
                             ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
                             MyBaseRuntime baseRuntime = (MyBaseRuntime) scriptManager.getBaseRuntime(fromService);
                             MethodMapping methodMapping = null;
-                            if (baseRuntime != null){
+                            if (baseRuntime != null) {
                                 ServiceStubManager serviceStubManager = baseRuntime.getServiceStubManager();
                                 methodMapping = serviceStubManager.getMethodMapping(crc);
                             }
@@ -77,19 +79,19 @@ public class AsyncCallbackRequest extends RPCRequest {
                                     if (methodMapping == null || methodMapping.getReturnClass().equals(Object.class)) {
                                         dataObject = JSON.parse(json);
                                     } else {
-                                        if(methodMapping.getGenericReturnClass().getTypeName().contains(CompletableFuture.class.getTypeName())){
-                                           if(methodMapping.getGenericReturnActualTypeArguments() != null && methodMapping.getGenericReturnActualTypeArguments().length > 0){
-                                               dataObject = JSON.parseObject(json, methodMapping.getGenericReturnActualTypeArguments()[0]);
-                                           }else {
-                                               dataObject = JSON.parseObject(json);
-                                           }
-                                        }else {
+                                        if (methodMapping.getGenericReturnClass().getTypeName().contains(CompletableFuture.class.getTypeName())) {
+                                            if (methodMapping.getGenericReturnActualTypeArguments() != null && methodMapping.getGenericReturnActualTypeArguments().length > 0) {
+                                                dataObject = JSON.parseObject(json, methodMapping.getGenericReturnActualTypeArguments()[0]);
+                                            } else {
+                                                dataObject = JSON.parseObject(json);
+                                            }
+                                        } else {
                                             dataObject = JSON.parseObject(json, methodMapping.getGenericReturnClass());
                                         }
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
-                                    LoggerEx.error(TAG, "Parse return bytes failed, " + e.getMessage()+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                                    LoggerEx.error(TAG, "Parse return bytes failed, " + e.getMessage() + ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                                 }
                             }
 
@@ -106,13 +108,13 @@ public class AsyncCallbackRequest extends RPCRequest {
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
-                                    LoggerEx.error(TAG, "Parse exception bytes failed, " + e.getMessage()+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                                    LoggerEx.error(TAG, "Parse exception bytes failed, " + e.getMessage() + ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                                 }
                             }
                         } catch (Throwable e) {
                             e.printStackTrace();
-                            throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed when callback, " + e.getMessage()+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
-                        }finally {
+                            throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed when callback, " + e.getMessage() + ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                        } finally {
                             IOUtils.closeQuietly(bais);
                             IOUtils.closeQuietly(dis.original());
                         }
@@ -125,11 +127,11 @@ public class AsyncCallbackRequest extends RPCRequest {
     }
 
     @Override
-    public void persistent() throws CoreException{
+    public void persistent() throws CoreException {
         Byte encode = getEncode();
         if (encode == null) {
             LoggerEx.error(TAG, "Encoder is null for persistent when callback,service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
-            throw  new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NULL, "Encoder is null for persistent when callback for service_class_method" + RpcCacheManager.getInstance().getMethodByCrc(crc));
+            throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NULL, "Encoder is null for persistent when callback for service_class_method" + RpcCacheManager.getInstance().getMethodByCrc(crc));
         }
         switch (encode) {
             case ENCODE_JAVABINARY:
@@ -141,6 +143,7 @@ public class AsyncCallbackRequest extends RPCRequest {
                     dis.writeUTF(callbackFutureId);
                     dis.writeLong(crc);
                     dis.writeUTF(fromService);
+                    dis.writeUTF(fromServerName);
                     byte[] returnBytes = null;
                     String returnStr = null;
                     if (dataObject != null) {
@@ -149,7 +152,7 @@ public class AsyncCallbackRequest extends RPCRequest {
                             returnBytes = GZipUtils.compress(returnStr.getBytes("utf8"));
                         } catch (IOException e) {
                             e.printStackTrace();
-                            LoggerEx.error(TAG, "Generate return " + returnStr + " to bytes failed when callback, service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc)+ ",err: " + e.getMessage());
+                            LoggerEx.error(TAG, "Generate return " + returnStr + " to bytes failed when callback, service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc) + ",err: " + e.getMessage());
                         }
                     }
                     if (returnBytes != null) {
@@ -162,7 +165,7 @@ public class AsyncCallbackRequest extends RPCRequest {
                     byte[] exceptionBytes = null;
                     if (exception != null) {
                         JSONObject json = new JSONObject();
-                        json.put("code", exception.getCode());
+                        json.put("code", ((CoreException) exception).getCode());
                         json.put("message", exception.getMessage());
                         String errorStr = json.toJSONString();//JSON.toJSONString(exception);
                         try {
@@ -187,8 +190,8 @@ public class AsyncCallbackRequest extends RPCRequest {
                     exception = null;
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    LoggerEx.error(TAG, "PB parse data failed when callback, " + t.getMessage()+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
-                    throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed when call back, " + t.getMessage()+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                    LoggerEx.error(TAG, "PB parse data failed when callback, " + t.getMessage() + ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                    throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed when call back, " + t.getMessage() + ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                 } finally {
                     IOUtils.closeQuietly(baos);
                     IOUtils.closeQuietly(dis.original());
@@ -238,5 +241,13 @@ public class AsyncCallbackRequest extends RPCRequest {
 
     public void setException(CoreException exception) {
         this.exception = exception;
+    }
+
+    public String getFromServerName() {
+        return fromServerName;
+    }
+
+    public void setFromServerName(String fromServerName) {
+        this.fromServerName = fromServerName;
     }
 }

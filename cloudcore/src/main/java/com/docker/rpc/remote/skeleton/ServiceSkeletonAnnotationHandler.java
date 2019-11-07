@@ -221,6 +221,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
             return;
         com.docker.rpc.remote.annotations.RemoteService remoteService = clazz.getAnnotation(com.docker.rpc.remote.annotations.RemoteService.class);
         int concurrentLimit = remoteService.concurrentLimit();
+        int queueSize = remoteService.waitingSize();
         Method[] methods = ReflectionUtil.getMethods(clazz);
         if (methods != null) {
             for (Method method : methods) {
@@ -257,7 +258,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 if (method.getGenericReturnType().getTypeName().contains(CompletableFuture.class.getTypeName())) {
                     mm.setAsync(true);
                     if(concurrentLimit != -1){
-                        RpcServerInterceptor concurrentLimitRpcServerInterceptor = new ConcurrentLimitRpcServerInterceptor(concurrentLimit);
+                        RpcServerInterceptor concurrentLimitRpcServerInterceptor = new ConcurrentLimitRpcServerInterceptor(concurrentLimit, queueSize,  clazz.getName() +"-" + method.getName());
                         List<RpcServerInterceptor> rpcServerInterceptors = new ArrayList<>();
                         rpcServerInterceptors.add(concurrentLimitRpcServerInterceptor);
                         mm.setRpcServerInterceptors(rpcServerInterceptors);
@@ -354,6 +355,11 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
         serviceAnnotation.setClassName(method.getDeclaringClass().getSimpleName());
         serviceAnnotation.setMethodName(method.getName());
         serviceAnnotation.setType(annotation.annotationType().getSimpleName());
+        if (method.getGenericReturnType().getTypeName().contains(CompletableFuture.class.getTypeName())){
+            serviceAnnotation.setAsync(true);
+        }else {
+            serviceAnnotation.setAsync(false);
+        }
         return serviceAnnotation;
     }
     @Override

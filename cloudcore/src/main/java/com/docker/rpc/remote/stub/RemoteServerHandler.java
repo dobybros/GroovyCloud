@@ -6,11 +6,11 @@ import chat.json.Result;
 import chat.logs.LoggerEx;
 import com.alibaba.fastjson.JSON;
 import com.docker.rpc.*;
+import com.docker.rpc.async.AsyncRpcFuture;
 import com.docker.rpc.remote.MethodMapping;
 import com.docker.server.OnlineServer;
 import com.docker.utils.ScriptHttpUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.bson.types.ObjectId;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -102,7 +102,6 @@ public class RemoteServerHandler {
     }
 
     public CompletableFuture<?> callAsync(MethodRequest request) throws CoreException {
-        String id = ObjectId.get().toString();
         setSortedServers(request);
         List<RemoteServers.Server> keptSortedServers = this.remoteServers.getSortedServers();
         int count = 0;
@@ -121,15 +120,12 @@ public class RemoteServerHandler {
                 break;
             try {
                 String ip = null;
-                if (this.serviceStubManager.getUsePublicDomain()) {
-                    ip = server.getPublicDomain();
-                } else {
-                    ip = server.getIp();
-                }
                 Integer port = null;
                 if (thisRpcClientAdapterMap.isEnableSsl()) {
+                    ip = server.getPublicDomain();
                     port = server.getSslRpcPort();
                 } else {
+                    ip = server.getIp();
                     port = server.getRpcPort();
                 }
                 request.setService(toService + "_v" + server.getVersion());
@@ -143,9 +139,15 @@ public class RemoteServerHandler {
                 if (ip != null && port != null) {
                     RPCClientAdapter clientAdapter = thisRpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     clientAdapter.addToRemoteServerFutureList(callbackFutureId);
+                    AsyncRpcFuture asyncRpcFuture = RpcCacheManager.getInstance().getAsyncRpcFuture(callbackFutureId);
+                    asyncRpcFuture.setRemoteServers(server.getServer(), keptSortedServers, thisRpcClientAdapterMap, request);
                     clientAdapter.callAsync(request);
                     LoggerEx.info(TAG, "Successfully callAsync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount);
-                    return RpcCacheManager.getInstance().getAsyncRpcFuture(callbackFutureId).getFuture();
+                    if(asyncRpcFuture != null){
+                        return asyncRpcFuture.getFuture();
+                    }else {
+                        LoggerEx.error(TAG, "Call async method err,asyncRpcFuture is null, callbackFutureId" + callbackFutureId + ",CurrentThread: " + Thread.currentThread());
+                    }
                 } else {
                     LoggerEx.info(TAG, "No ip " + ip + " or port " + port + ", fail to callSync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount);
                 }

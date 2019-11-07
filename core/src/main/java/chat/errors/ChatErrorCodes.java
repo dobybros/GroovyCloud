@@ -97,10 +97,12 @@ public interface ChatErrorCodes {
 	public static final int ERROR_QUARTZ_ADDFAILED =  CODE_CORE + 209;
 	public static final int ERROR_QUARTZ_CANCELEDFAILED= CODE_CORE + 210;
 	public static final int ERROR_SERVER_CONNECT_FAILED= CODE_CORE + 211;
-
 	/*******************ehcache******************/
 	public static final int ERROR_CREATE_CACHE= CODE_CORE + 212;
 	public static final int ERROR_CACHE_ILLEGAL_PARAMETER= CODE_CORE + 213;
 	public static final int ERROR_CACHE_PUT= CODE_CORE + 214;
 	public static final int ERROR_CACHE_GET= CODE_CORE + 215;
+
+	public static final int ERROR_REMOTEERVICE_CONCURRENTLIMIT= CODE_CORE + 216;
+	public static final int ERROR_ASYNC_NEEDRETRY= CODE_CORE + 217;
 }

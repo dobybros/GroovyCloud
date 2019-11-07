@@ -1,6 +1,7 @@
 package com.docker.rpc.remote.stub;
 
 import chat.errors.CoreException;
+import chat.logs.LoggerEx;
 import com.docker.data.Lan;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.async.AsyncRpcFuture;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public class RemoteInvocationHandlerImpl implements RemoteInvocationHandler {
+    private final String TAG = RemoteInvocationHandlerImpl.class.getSimpleName();
     private RemoteServerHandler remoteServerHandler;
 
     protected RemoteInvocationHandlerImpl(RemoteServerHandler remoteServerHandler) {
@@ -48,6 +50,7 @@ public class RemoteInvocationHandlerImpl implements RemoteInvocationHandler {
             AsyncRpcFuture asyncRpcFuture = new AsyncRpcFuture(methodRequest.getCrc(), null);
             remoteServerHandler.setCallbackFutureId(asyncRpcFuture.getCallbackFutureId());
             RpcCacheManager.getInstance().pushToAsyncRpcMap(asyncRpcFuture.getCallbackFutureId(), asyncRpcFuture);
+            LoggerEx.info(TAG, "pushToAsyncRpcMap success, callbackFutureId: " + asyncRpcFuture.getCallbackFutureId() + ",CurrentThread: " + Thread.currentThread() + ",asyncFuture:" + RpcCacheManager.getInstance().getAsyncRpcFuture(asyncRpcFuture.getCallbackFutureId()));
         }
     }
 }

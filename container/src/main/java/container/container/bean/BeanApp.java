@@ -35,7 +35,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.filter.ssl.KeyStoreFactory;
 import org.apache.mina.filter.ssl.SslContextFactory;
 import org.apache.mina.filter.ssl.SslFilter;
@@ -430,7 +429,6 @@ public class BeanApp extends ConfigApp{
             Map map = new LinkedHashMap();
             map.put("sslFilter", instance.getSslFilter());
             map.put("codecFilter", instance.getWsCodecFilter());
-            map.put("loggingFilter", new LoggingFilter());
             wsFilterChainBuilder.setFilters(map);
         }
         return wsFilterChainBuilder;
