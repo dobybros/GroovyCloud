@@ -15,6 +15,11 @@ public class RedisCacheStorageHandler extends CacheStorageAdapter {
         redisHandler.connect();
     }
 
+    public void disconnect(){
+        if(redisHandler != null)
+            redisHandler.disconnect();
+    }
+
     @Override
     public Object addCacheData(String prefix, String key, Object value, Long expired) throws CoreException {
         if (key != null && value != null)

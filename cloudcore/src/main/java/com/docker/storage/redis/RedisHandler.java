@@ -160,6 +160,14 @@ public class RedisHandler {
         }
     }
 
+    public String getHosts() {
+        return hosts;
+    }
+
+    public void setHosts(String hosts) {
+        this.hosts = hosts;
+    }
+
     /**
      * 将哈希表 key 中的域 field 的值设置为 value ，当且仅当域 field 不存在。
      * <p>
