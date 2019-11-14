@@ -299,6 +299,7 @@ public class BeanApp extends ConfigApp{
             onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
             onlineServer.setTcpPort(instance.getUpstreamPort());
             onlineServer.setWsPort(instance.getUpstreamWsPort());
+            onlineServer.setPublicWsPort(instance.getPublicWsPort());
             onlineServer.setStatus(1);
             onlineServer.setConfigPath("container.properties");
             onlineServer.setIpHolder(instance.getIpHolder());

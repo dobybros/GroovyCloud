@@ -1,10 +1,5 @@
 package container.container.bean;
 
-import chat.logs.LoggerEx;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -36,6 +31,7 @@ public class ConfigApp {
     private String keymanagerPwd;
     private String upstreamSslPort;
     private String upstreamWsPort;
+    private String publicWsPort;
 
     private String ipPrefix;
     private String ethPrefix;
@@ -96,6 +92,7 @@ public class ConfigApp {
             keymanagerPwd = prop.getProperty("keymanager.pwd");
             upstreamSslPort = prop.getProperty("upstream-ssl-port");
             upstreamWsPort = prop.getProperty("upstream-ws-port");
+            publicWsPort = prop.getProperty("public-ws-port");
             maxUsers = prop.getProperty("server.max.users");
             hotDeployment = prop.getProperty("hotDeployment");
             killProcess = prop.getProperty("killProcess");
@@ -260,5 +257,13 @@ public class ConfigApp {
 
     public String getKillProcess() {
         return killProcess;
+    }
+
+    public String getPublicWsPort() {
+        return publicWsPort;
+    }
+
+    public void setPublicWsPort(String publicWsPort) {
+        this.publicWsPort = publicWsPort;
     }
 }
