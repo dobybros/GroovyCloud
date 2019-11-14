@@ -9,7 +9,7 @@ public class OnlineServerWithStatus extends OnlineServer {
 	private Integer statusForBalancer;
 	private boolean changingForBalancer;
 	private String publicDomain;
-	
+
 	public OnlineServerWithStatus() {
 		super();
 	}

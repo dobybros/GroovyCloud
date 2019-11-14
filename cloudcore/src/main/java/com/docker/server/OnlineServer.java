@@ -50,6 +50,7 @@ public class OnlineServer {
     private String sslRpcPort;
     private String rpcPort;
     private String wsPort;
+    private String publicWsPort;
     private String tcpPort;
     private String sslTcpPort;
     private Integer status;
@@ -113,16 +114,13 @@ public class OnlineServer {
         dockerStatus.setSslRpcPort(Integer.valueOf(sslRpcPort));
         dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
         dockerStatus.setWsPort(Integer.valueOf(wsPort));
+        dockerStatus.setPublicWsPort(Integer.valueOf(publicWsPort));
         dockerStatus.setRpcPort(Integer.valueOf(rpcPort));
         dockerStatus.setTime(ChatUtils.dateString(System.currentTimeMillis()));
         if (status == null)
             status = DockerStatus.STATUS_OK;
         dockerStatus.setStatus(status);
         Map<String, Object> info = new HashMap<String, Object>();
-        info.put(DockerStatus.FIELD_SERVERSTATUS_SSLRPCPORT, sslRpcPort);
-        info.put(DockerStatus.FIELD_SERVERSTATUS_TCPPORT, tcpPort);
-        info.put(DockerStatus.FIELD_SERVERSTATUS_WEBSOCKETPORT, wsPort);
-        info.put(DockerStatus.FIELD_SERVERSTATUS_RPCPORT, rpcPort);
         dockerStatus.setInfo(info);
         return dockerStatus;
     }
@@ -177,6 +175,12 @@ public class OnlineServer {
             if (wsPort != null) {
                 try {
                     dockerStatus.setWsPort(Integer.parseInt(wsPort));
+                } catch (Throwable t) {
+                }
+            }
+            if (publicWsPort != null) {
+                try {
+                    dockerStatus.setPublicWsPort(Integer.parseInt(publicWsPort));
                 } catch (Throwable t) {
                 }
             }
@@ -396,6 +400,14 @@ public class OnlineServer {
 
     public void setWsPort(String wsPort) {
         this.wsPort = wsPort;
+    }
+
+    public String getPublicWsPort() {
+        return publicWsPort;
+    }
+
+    public void setPublicWsPort(String publicWsPort) {
+        this.publicWsPort = publicWsPort;
     }
 
     public DockerStatusService getDockerStatusService() {
