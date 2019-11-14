@@ -15,7 +15,7 @@ public class QuartzJob implements Job {
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
         TimerTaskEx task = (TimerTaskEx) jobExecutionContext.getMergedJobDataMap().get("TimerTaskEx");
         if(task != null){
-            ThreadTaskRecord.getInstance().execute(ServerStart.getInstance().getTimerThreadPoolExecutor(), 1, task, task.getId());
+            ThreadTaskRecord.getInstance().execute(ServerStart.getInstance().getTimerThreadPoolExecutor(), 1, task, task.getId(), null);
         }
     }
 }

@@ -10,15 +10,15 @@
 	</parent>
 	<groupId>groovycloud</groupId>
 	<artifactId>GroovyCloud</artifactId>
-	<version>1.0.0</version>
+	<version>1.0</version>
 	<packaging>pom</packaging>
-	<name>GroovyCloud</name>
 	<description>Demo project for Spring Boot</description>
 	<modules>
 		<module>core</module>
-		<module>cloudcore</module>
 		<module>mongodbconnector</module>
 		<module>container</module>
+		<module>imcontainer</module>
+		<module>proxycontainer</module>
 	</modules>
 
 	<properties>
@@ -27,12 +27,6 @@
 	</properties>
 	<!--<dependencyManagement>-->
 	<dependencies>
-<!--		&lt;!&ndash; https://mvnrepository.com/artifact/org.codehaus.groovy/groovy-all &ndash;&gt;-->
-<!--		<dependency>-->
-<!--			<groupId>org.codehaus.groovy</groupId>-->
-<!--			<artifactId>groovy-all</artifactId>-->
-<!--			<version>3.0.0-alpha-1</version>-->
-<!--		</dependency>-->
 		<!-- https://mvnrepository.com/artifact/org.codehaus.groovy/groovy-all -->
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
@@ -500,6 +494,22 @@
 			<groupId>org.ehcache</groupId>
 			<artifactId>ehcache</artifactId>
 			<version>3.8.0</version>
+		</dependency>
+		<!--system monitor-->
+		<dependency>
+			<groupId>com.github.oshi</groupId>
+			<artifactId>oshi-core</artifactId>
+			<version>3.12.2</version>
+		</dependency>
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>5.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna-platform</artifactId>
+			<version>5.2.0</version>
 		</dependency>
 	</dependencies>
 	<build>

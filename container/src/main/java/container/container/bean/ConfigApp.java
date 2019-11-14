@@ -1,10 +1,5 @@
 package container.container.bean;
 
-import chat.logs.LoggerEx;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -30,15 +25,9 @@ public class ConfigApp {
     private String gridUsername;
     private String gridPassword;
 
-    private String upstreamPort;
-    private String keystorePwd;
-    private String keystorePath;
-    private String keymanagerPwd;
-    private String upstreamSslPort;
-    private String upstreamWsPort;
-
     private String ipPrefix;
     private String ethPrefix;
+    private String type;
     private String serverType;
     private String internalKey;
     private String rpcPort;
@@ -57,7 +46,7 @@ public class ConfigApp {
     private String fileBucket;
     private String dockerName;
 
-    ConfigApp(){
+    public ConfigApp(){
         InputStream inStream = ConfigApp.class.getClassLoader().getResourceAsStream("container.properties");
         InputStream appInStream = ConfigApp.class.getClassLoader().getResourceAsStream("application.properties");
         Properties prop = new Properties();
@@ -78,6 +67,7 @@ public class ConfigApp {
             gridPassword = prop.getProperty("gridfs.password");
             ipPrefix = prop.getProperty("server.ip.prefix");
             ethPrefix = prop.getProperty("server.eth.prefix");
+            type = prop.getProperty("type");
             serverType = prop.getProperty("server.type");
             internalKey = prop.getProperty("internal.key");
             rpcPort = prop.getProperty("rpc.port");
@@ -90,12 +80,6 @@ public class ConfigApp {
             localPath = prop.getProperty("script.local.path");
             remotePath = prop.getProperty("script.remote.path");
             runtimeBootClass = prop.getProperty("runtimeBootClass");
-            upstreamPort = prop.getProperty("upstream-port");
-            keystorePwd = prop.getProperty("keystore.pwd");
-            keystorePath = prop.getProperty("keystore.path");
-            keymanagerPwd = prop.getProperty("keymanager.pwd");
-            upstreamSslPort = prop.getProperty("upstream-ssl-port");
-            upstreamWsPort = prop.getProperty("upstream-ws-port");
             maxUsers = prop.getProperty("server.max.users");
             hotDeployment = prop.getProperty("hotDeployment");
             killProcess = prop.getProperty("killProcess");
@@ -159,30 +143,6 @@ public class ConfigApp {
 
     public String getGridPassword() {
         return gridPassword;
-    }
-
-    public String getUpstreamPort() {
-        return upstreamPort;
-    }
-
-    public String getKeystorePwd() {
-        return keystorePwd;
-    }
-
-    public String getKeystorePath() {
-        return keystorePath;
-    }
-
-    public String getKeymanagerPwd() {
-        return keymanagerPwd;
-    }
-
-    public String getUpstreamSslPort() {
-        return upstreamSslPort;
-    }
-
-    public String getUpstreamWsPort() {
-        return upstreamWsPort;
     }
 
     public String getIpPrefix() {
@@ -260,5 +220,9 @@ public class ConfigApp {
 
     public String getKillProcess() {
         return killProcess;
+    }
+
+    public String getType() {
+        return type;
     }
 }

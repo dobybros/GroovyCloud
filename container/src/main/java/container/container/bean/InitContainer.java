@@ -2,16 +2,13 @@ package container.container.bean;
 
 import chat.utils.IPHolder;
 import com.alibaba.fastjson.util.TypeUtils;
-import com.dobybros.chat.props.GlobalLansProperties;
-import com.dobybros.chat.utils.AutoReloadProperties;
-import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.onlineserver.OnlineServerWithStatus;
 import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.script.ScriptManager;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
-import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
+import com.docker.utils.AutoReloadProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -24,8 +21,6 @@ import org.springframework.stereotype.Component;
 public class InitContainer implements CommandLineRunner{
     @Autowired
     MongoHelper dockerStatusHelper;
-    @Autowired
-    GlobalLansProperties globalLansProperties;
     @Autowired
     MongoHelper configHelper;
     @Autowired
@@ -49,10 +44,6 @@ public class InitContainer implements CommandLineRunner{
     @Autowired
     GridFSFileHandler fileAdapter;
     @Autowired
-    NioSocketAcceptorEx tcpIoAcceptor;
-    @Autowired
-    NioSocketAcceptorEx wsIoAcceptor;
-    @Autowired
     IPHolder ipHolder;
     @Autowired
     AutoReloadProperties oauth2ClientProperties;
@@ -64,14 +55,11 @@ public class InitContainer implements CommandLineRunner{
     RMIServerHandler dockerRpcServerAdapterSsl;
     @Autowired
     OnlineServerWithStatus onlineServer;
-    @Autowired
-    OnlineUserManagerImpl onlineUserManager;
 
     @Override
     public void run(String... args) throws Exception {
         TypeUtils.compatibleWithJavaBean = true;
         System.setProperty("es.set.netty.runtime.available.processors", "false");
-        globalLansProperties.init();
         dockerStatusHelper.init();
         configHelper.init();
         scheduledTaskHelper.init();
@@ -84,14 +72,10 @@ public class InitContainer implements CommandLineRunner{
         logsHelper.init();
         gridfsHelper.init();
         fileAdapter.init();
-        tcpIoAcceptor.bind();
-        wsIoAcceptor.bind();
         ipHolder.init();
         oauth2ClientProperties.init();
         onlineServer.start();
         scriptManager.init();
-        onlineUserManager.init();
-//        rpcServerAdapter.serverStart();
         dockerRpcServerAdapter.serverStart();
         dockerRpcServerAdapterSsl.serverStart();
     }

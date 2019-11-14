@@ -1,6 +1,5 @@
 package container.container.bean;
 
-import com.dobybros.chat.props.GlobalLansProperties;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -9,10 +8,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @Auther: lick
@@ -26,10 +21,6 @@ public class HttpBean{
         instance = BeanApp.getInstance();
     }
 //    @Bean(initMethod = "init")
-    @Bean
-    public GlobalLansProperties globalLansProperties(){
-        return instance.getGlobalLansProperties();
-    }
     @Bean
     public PlainSocketFactory plainSocketFactory(){
         return instance.getPlainSocketFactory();

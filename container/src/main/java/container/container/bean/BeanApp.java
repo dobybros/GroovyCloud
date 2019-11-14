@@ -1,23 +1,13 @@
 package container.container.bean;
 
 import chat.utils.IPHolder;
-import com.dobybros.chat.handlers.ConsumeOfflineMessageHandler;
-import com.dobybros.chat.props.GlobalLansProperties;
-import com.dobybros.chat.services.impl.ConsumeQueueService;
-import com.dobybros.chat.tasks.OfflineMessageSavingTask;
-import com.dobybros.chat.tasks.RPCMessageSendingTask;
-import com.dobybros.chat.utils.AutoReloadProperties;
-import com.dobybros.gateway.channels.tcp.UpStreamHandler;
-import com.dobybros.gateway.channels.tcp.codec.HailProtocalCodecFactory;
-import com.dobybros.gateway.channels.websocket.codec.WebSocketCodecFactory;
-import com.dobybros.gateway.eventhandler.MessageEventHandler;
-import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
-import com.dobybros.http.MyHttpParameters;
 import com.docker.file.adapters.GridFSFileHandler;
+import com.docker.http.MyHttpParameters;
 import com.docker.onlineserver.OnlineServerWithStatus;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.rpc.impl.RMIServerImplWrapper;
+import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
 import com.docker.storage.adapters.impl.ScheduledTaskServiceImpl;
@@ -25,7 +15,7 @@ import com.docker.storage.adapters.impl.ServersServiceImpl;
 import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
-import com.docker.tasks.Task;
+import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
@@ -33,20 +23,12 @@ import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
-import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.ssl.KeyStoreFactory;
-import org.apache.mina.filter.ssl.SslContextFactory;
-import org.apache.mina.filter.ssl.SslFilter;
-import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
 import script.filter.JsonFilterFactory;
 import script.groovy.servlets.RequestPermissionHandler;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 //import com.dobybros.chat.log.LogIndexQueue;
 //import com.dobybros.chat.storage.mongodb.daos.BulkLogDAO;
@@ -56,17 +38,16 @@ import java.util.*;
  * @Description:
  * @Date:2019/5/26 15:41
  */
-public class BeanApp extends ConfigApp{
+public class BeanApp extends ConfigApp {
     private static BeanApp instance;
     private SpringContextUtil springContextUtil;
-    private GlobalLansProperties globalLansProperties;
     private PlainSocketFactory plainSocketFactory;
     private SSLSocketFactory sslSocketFactory;
+    private DefaultHttpClient httpClient;
     private Scheme httpScheme;
     private Scheme httpsScheme;
     private SchemeRegistry schemeRegistry;
     private ThreadSafeClientConnManager clientConnManager;
-    private DefaultHttpClient httpClient;
     private MongoHelper dockerStatusHelper;
     private MongoHelper logsHelper;
     private MongoHelper configHelper;
@@ -76,659 +57,402 @@ public class BeanApp extends ConfigApp{
     private LansDAO lansDAO;
     private SDockerDAO sdockerDAO;
     private ServiceVersionDAO serviceVersionDAO;
-//    private BulkLogDAO bulkLogDAO;
     private GridFSFileHandler fileAdapter;
     private MongoHelper gridfsHelper;
-    private UpStreamHandler upstreamHandler;
-    private ProtocolCodecFilter tcpCodecFilter;
-    private DefaultIoFilterChainBuilder tcpFilterChainBuilder;
-    private NioSocketAcceptorEx tcpIoAcceptor;
-    private ProtocolCodecFilter sslTcpCodecFilter;
-    private HailProtocalCodecFactory hailProtocalCodecFactory;
-    private KeyStoreFactory keystoreFactory;
-    private SslContextFactory sslContextFactory;
-    private SslFilter sslFilter;
-    private DefaultIoFilterChainBuilder sslTcpFilterChainBuilder;
-    private NioSocketAcceptorEx sslTcpIoAcceptor;
-    private WebSocketCodecFactory webSocketCodecFactory;
-    private ProtocolCodecFilter wsCodecFilter;
-    private DefaultIoFilterChainBuilder wsFilterChainBuilder;
-    private NioSocketAcceptorEx wsIoAcceptor;
     private DockerStatusServiceImpl dockerStatusService;
-    private ConsumeQueueService bulkLogQueueService;
-//    private LogIndexQueue logIndexQueue;
     private IPHolder ipHolder;
-    private AutoReloadProperties oauth2ClientProperties;
-    private ConsumeOfflineMessageHandler consumeOfflineMessageHandler;
-    private OfflineMessageSavingTask offlineMessageSavingTask;
-    private RPCMessageSendingTask messageSendingTask;
     private JsonFilterFactory jsonFilterFactory;
     private RequestPermissionHandler requestPermissionHandler;
+    private AutoReloadProperties oauth2ClientProperties;
     private ScriptManager scriptManager;
-    private OnlineUserManagerImpl onlineUserManager;
     private OnlineServerWithStatus onlineServer;
     private RPCClientAdapterMap rpcClientAdapterMap;
     private RPCClientAdapterMap rpcClientAdapterMapSsl;
     private RMIServerImplWrapper rpcServer;
-//    private RMIHandler rpcServerAdapter;
     private RMIServerImplWrapper rpcServerSsl;
-//    private RMIHandler rpcServerAdapterSsl;
-    private MessageEventHandler messageEventHandler;
-    private com.docker.rpc.impl.RMIServerImplWrapper dockerRpcServer;
+    private RMIServerImplWrapper dockerRpcServer;
     private RMIServerHandler dockerRpcServerAdapter;
-    private com.docker.rpc.impl.RMIServerImplWrapper dockerRpcServerSsl;
+    private RMIServerImplWrapper dockerRpcServerSsl;
     private RMIServerHandler dockerRpcServerAdapterSsl;
     private ServersServiceImpl serversService;
     private ServiceVersionServiceImpl serviceVersionService;
     private ScheduledTaskServiceImpl scheduledTaskService;
     private ScheduledTaskDAO scheduledTaskDAO;
-    public synchronized ScheduledTaskServiceImpl getScheduledTaskService(){
-        if(scheduledTaskService == null){
-            scheduledTaskService = new ScheduledTaskServiceImpl();
-            scheduledTaskService.setScheduledTaskDAO(instance.getScheduledTaskDAO());
+
+    public synchronized ScheduledTaskServiceImpl getScheduledTaskService() {
+        if (instance.scheduledTaskService == null) {
+            instance.scheduledTaskService = new ScheduledTaskServiceImpl();
+            instance.scheduledTaskService.setScheduledTaskDAO(instance.getScheduledTaskDAO());
         }
-        return scheduledTaskService;
+        return instance.scheduledTaskService;
     }
-    public synchronized ScheduledTaskDAO getScheduledTaskDAO(){
-        if(scheduledTaskDAO == null){
-            scheduledTaskDAO = new ScheduledTaskDAO();
-            scheduledTaskDAO.setMongoHelper(instance.getScheduledTaskHelper());
+
+    public synchronized ScheduledTaskDAO getScheduledTaskDAO() {
+        if (instance.scheduledTaskDAO == null) {
+            instance.scheduledTaskDAO = new ScheduledTaskDAO();
+            instance.scheduledTaskDAO.setMongoHelper(instance.getScheduledTaskHelper());
         }
-        return scheduledTaskDAO;
+        return instance.scheduledTaskDAO;
     }
+
     public synchronized ServiceVersionServiceImpl getServiceVersionService() {
-        if(serviceVersionService == null){
-            serviceVersionService = new ServiceVersionServiceImpl();
-            serviceVersionService.setServiceVersionDAO(instance.getServiceVersionDAO());
+        if (instance.serviceVersionService == null) {
+            instance.serviceVersionService = new ServiceVersionServiceImpl();
+            instance.serviceVersionService.setServiceVersionDAO(instance.getServiceVersionDAO());
         }
-        return serviceVersionService;
+        return instance.serviceVersionService;
     }
 
     public synchronized ServiceVersionDAO getServiceVersionDAO() {
-        if(serviceVersionDAO == null){
-            serviceVersionDAO = new ServiceVersionDAO();
-            serviceVersionDAO.setMongoHelper(instance.getDockerStatusHelper());
+        if (instance.serviceVersionDAO == null) {
+            instance.serviceVersionDAO = new ServiceVersionDAO();
+            instance.serviceVersionDAO.setMongoHelper(instance.getDockerStatusHelper());
         }
-        return serviceVersionDAO;
+        return instance.serviceVersionDAO;
     }
 
     public synchronized ServersServiceImpl getServersService() {
-        if(serversService == null){
-            serversService = new ServersServiceImpl();
+        if (instance.serversService == null) {
+            instance.serversService = new ServersServiceImpl();
         }
-        return serversService;
+        return instance.serversService;
     }
 
     public synchronized DockerStatusDAO getDockerStatusDAO() {
-        if(dockerStatusDAO == null){
-            dockerStatusDAO = new DockerStatusDAO();
-            dockerStatusDAO.setMongoHelper(instance.getDockerStatusHelper());
+        if (instance.dockerStatusDAO == null) {
+            instance.dockerStatusDAO = new DockerStatusDAO();
+            instance.dockerStatusDAO.setMongoHelper(instance.getDockerStatusHelper());
         }
-        return dockerStatusDAO;
+        return instance.dockerStatusDAO;
     }
 
     public synchronized RMIServerHandler getDockerRpcServerAdapterSsl() {
-        if(dockerRpcServerAdapterSsl == null){
-            dockerRpcServerAdapterSsl = new RMIServerHandler();
-            dockerRpcServerAdapterSsl.setServerImpl(instance.getDockerRpcServerSsl());
-            dockerRpcServerAdapterSsl.setIpHolder(instance.getIpHolder());
-            dockerRpcServerAdapterSsl.setRmiPort(Integer.valueOf(instance.getSslRpcPort()));
-            dockerRpcServerAdapterSsl.setEnableSsl(true);
-            dockerRpcServerAdapterSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
-            dockerRpcServerAdapterSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
-            dockerRpcServerAdapterSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
+        if (instance.dockerRpcServerAdapterSsl == null) {
+            instance.dockerRpcServerAdapterSsl = new RMIServerHandler();
+            instance.dockerRpcServerAdapterSsl.setServerImpl(instance.getDockerRpcServerSsl());
+            instance.dockerRpcServerAdapterSsl.setIpHolder(instance.getIpHolder());
+            instance.dockerRpcServerAdapterSsl.setRmiPort(Integer.valueOf(instance.getSslRpcPort()));
+            instance.dockerRpcServerAdapterSsl.setEnableSsl(true);
+            instance.dockerRpcServerAdapterSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
+            instance.dockerRpcServerAdapterSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
+            instance.dockerRpcServerAdapterSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
         }
-        return dockerRpcServerAdapterSsl;
+        return instance.dockerRpcServerAdapterSsl;
     }
 
-    public synchronized com.docker.rpc.impl.RMIServerImplWrapper getDockerRpcServerSsl() {
-        if(dockerRpcServerSsl == null){
+    public synchronized RMIServerImplWrapper getDockerRpcServerSsl() {
+        if (instance.dockerRpcServerSsl == null) {
             try {
-                dockerRpcServerSsl = instance.getRpcServerSsl();
+                instance.dockerRpcServerSsl = instance.getRpcServerSsl();
 //                dockerRpcServerSsl = new com.docker.rpc.impl.RMIServerImplWrapper(Integer.valueOf(getRpcPort()));
-                dockerRpcServerSsl.setRmiServerHandler(instance.getDockerRpcServerAdapterSsl());
+                instance.dockerRpcServerSsl.setRmiServerHandler(instance.getDockerRpcServerAdapterSsl());
             } catch (Throwable e) {
                 e.printStackTrace();
             }
         }
-        return dockerRpcServerSsl;
+        return instance.dockerRpcServerSsl;
     }
 
     public synchronized RMIServerHandler getDockerRpcServerAdapter() {
-        if(dockerRpcServerAdapter == null){
-            dockerRpcServerAdapter = new RMIServerHandler();
-            dockerRpcServerAdapter.setServerImpl(instance.getDockerRpcServer());
-            dockerRpcServerAdapter.setIpHolder(instance.getIpHolder());
-            dockerRpcServerAdapter.setRmiPort(Integer.valueOf(instance.getRpcPort()));
+        if (instance.dockerRpcServerAdapter == null) {
+            instance.dockerRpcServerAdapter = new RMIServerHandler();
+            instance.dockerRpcServerAdapter.setServerImpl(instance.getDockerRpcServer());
+            instance.dockerRpcServerAdapter.setIpHolder(instance.getIpHolder());
+            instance.dockerRpcServerAdapter.setRmiPort(Integer.valueOf(instance.getRpcPort()));
         }
-        return dockerRpcServerAdapter;
+        return instance.dockerRpcServerAdapter;
     }
 
-    public synchronized com.docker.rpc.impl.RMIServerImplWrapper getDockerRpcServer() {
-        if(dockerRpcServer == null){
+    public synchronized RMIServerImplWrapper getDockerRpcServer() {
+        if (instance.dockerRpcServer == null) {
             try {
-                dockerRpcServer = instance.getRpcServer();
+                instance.dockerRpcServer = instance.getRpcServer();
 //                dockerRpcServer = new com.docker.rpc.impl.RMIServerImplWrapper(Integer.valueOf(getRpcPort()));
-                dockerRpcServer.setRmiServerHandler(instance.getDockerRpcServerAdapter());
+                instance.dockerRpcServer.setRmiServerHandler(instance.getDockerRpcServerAdapter());
             } catch (Throwable e) {
                 e.printStackTrace();
             }
         }
-        return dockerRpcServer;
+        return instance.dockerRpcServer;
     }
-
-    public synchronized MessageEventHandler getMessageEventHandler() {
-        if(messageEventHandler == null){
-            messageEventHandler = new MessageEventHandler();
-        }
-        return messageEventHandler;
-    }
-
-//    public synchronized RMIHandler getRpcServerAdapterSsl() {
-//        if(rpcServerAdapterSsl == null){
-//            rpcServerAdapterSsl = new RMIHandler();
-//        }
-//        return rpcServerAdapterSsl;
-//    }
 
     public synchronized RMIServerImplWrapper getRpcServerSsl() {
-        if(rpcServerSsl == null){
+        if (instance.rpcServerSsl == null) {
             try {
-                rpcServerSsl = new RMIServerImplWrapper(Integer.valueOf(getSslRpcPort()));
+                instance.rpcServerSsl = new RMIServerImplWrapper(Integer.valueOf(getSslRpcPort()));
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
         }
-        return rpcServerSsl;
-    }
-
-//    public synchronized RMIHandler getRpcServerAdapter() {
-//        if(rpcServerAdapter == null){
-//            rpcServerAdapter = new RMIHandler();
-//        }
-//        return rpcServerAdapter;
-//    }
-
-    public synchronized RMIServerImplWrapper getRpcServer() {
-        if(rpcServer == null){
-            try {
-                rpcServer = new RMIServerImplWrapper(Integer.valueOf(getRpcPort()));
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        return rpcServer;
-    }
-
-    public synchronized RPCClientAdapterMap getRpcClientAdapterMapSsl() {
-        if(rpcClientAdapterMapSsl == null){
-            rpcClientAdapterMapSsl = new RPCClientAdapterMap();
-            rpcClientAdapterMapSsl.setEnableSsl(true);
-            rpcClientAdapterMapSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
-            rpcClientAdapterMapSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
-            rpcClientAdapterMapSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
-        }
-        return rpcClientAdapterMapSsl;
-    }
-
-    public synchronized RPCClientAdapterMap getRpcClientAdapterMap() {
-        if(rpcClientAdapterMap == null){
-            rpcClientAdapterMap = new RPCClientAdapterMap();
-        }
-        return rpcClientAdapterMap;
-    }
-
-    public synchronized OnlineServerWithStatus getOnlineServer() {
-        if(onlineServer == null){
-            onlineServer = new OnlineServerWithStatus();
-            onlineServer.setDockerStatusService(instance.getDockerStatusService());
-            List<Task> tasks = new ArrayList<>();
-            tasks.add(instance.getMessageSendingTask());
-            tasks.add(instance.getOfflineMessageSavingTask());
-            onlineServer.setTasks(tasks);
-            onlineServer.setServerType(instance.getServerType());
-            onlineServer.setDockerName(instance.getDockerName());
-            onlineServer.setHttpPort(Integer.valueOf(instance.getServerPort()));
-            onlineServer.setInternalKey(instance.getInternalKey());
-            onlineServer.setRpcPort(instance.getRpcPort());
-            onlineServer.setSslRpcPort(instance.getSslRpcPort());
-            onlineServer.setPublicDomain(instance.getPublicDomain());
-            onlineServer.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
-            onlineServer.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
-            onlineServer.setRpcSslJksPwd(instance.getRpcSslJksPwd());
-            onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
-            onlineServer.setTcpPort(instance.getUpstreamPort());
-            onlineServer.setWsPort(instance.getUpstreamWsPort());
-            onlineServer.setStatus(1);
-            onlineServer.setConfigPath("container.properties");
-            onlineServer.setIpHolder(instance.getIpHolder());
-        }
-        return onlineServer;
-    }
-
-    public synchronized OnlineUserManagerImpl getOnlineUserManager() {
-        if(onlineUserManager == null){
-            onlineUserManager = new OnlineUserManagerImpl();
-            onlineUserManager.setAdminOnlineUserClass(com.dobybros.gateway.onlineusers.impl.AdminOnlineUserImpl.class);
-        }
-        return onlineUserManager;
-    }
-
-    public synchronized ScriptManager getScriptManager() {
-        if(scriptManager == null){
-            scriptManager = new ScriptManager();
-            scriptManager.setLocalPath(instance.getLocalPath());
-            scriptManager.setRemotePath(instance.getRemotePath());
-            scriptManager.setBaseRuntimeClass(com.dobybros.chat.script.annotations.gateway.GatewayGroovyRuntime.class);
-            scriptManager.setRuntimeBootClass(instance.getRuntimeBootClass());
-//            scriptManager.setDockerStatusService(instance.getDockerStatusService());
-//            scriptManager.setFileAdapter(instance.getFileAdapter());
-            scriptManager.setHotDeployment(Boolean.valueOf(instance.getHotDeployment()));
-            scriptManager.setKillProcess(Boolean.valueOf(instance.getKillProcess()));
-            scriptManager.setServerType(instance.getServerType());
-//            scriptManager.setServiceVersionService(instance.getServiceVersionService());
-        }
-        return scriptManager;
-    }
-
-    public synchronized RequestPermissionHandler getRequestPermissionHandler() {
-        if(requestPermissionHandler == null){
-            requestPermissionHandler = new RequestPermissionHandler();
-        }
-        return requestPermissionHandler;
-    }
-
-    public synchronized JsonFilterFactory getJsonFilterFactory() {
-        if(jsonFilterFactory == null){
-            jsonFilterFactory = new JsonFilterFactory();
-        }
-        return jsonFilterFactory;
-    }
-
-    public synchronized RPCMessageSendingTask getMessageSendingTask() {
-        if(messageSendingTask == null){
-            messageSendingTask = new RPCMessageSendingTask();
-            messageSendingTask.setNumOfThreads(4);
-        }
-        return messageSendingTask;
-    }
-
-    public synchronized OfflineMessageSavingTask getOfflineMessageSavingTask() {
-        if(offlineMessageSavingTask == null){
-            offlineMessageSavingTask = new OfflineMessageSavingTask();
-        }
-        return offlineMessageSavingTask;
-    }
-
-    public synchronized ConsumeOfflineMessageHandler getConsumeOfflineMessageHandler() {
-        if(consumeOfflineMessageHandler == null){
-            consumeOfflineMessageHandler = new ConsumeOfflineMessageHandler();
-        }
-        return consumeOfflineMessageHandler;
+        return instance.rpcServerSsl;
     }
 
     public synchronized AutoReloadProperties getOauth2ClientProperties() {
-        if(oauth2ClientProperties == null){
-            oauth2ClientProperties = new AutoReloadProperties();
+        if(instance.oauth2ClientProperties == null){
+            instance.oauth2ClientProperties = new AutoReloadProperties();
+            instance.oauth2ClientProperties.setPath("container.properties");
         }
-        return oauth2ClientProperties;
+        return instance.oauth2ClientProperties;
+    }
+
+    public synchronized RMIServerImplWrapper getRpcServer() {
+        if (instance.rpcServer == null) {
+            try {
+                instance.rpcServer = new RMIServerImplWrapper(Integer.valueOf(getRpcPort()));
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return instance.rpcServer;
+    }
+
+    public synchronized RPCClientAdapterMap getRpcClientAdapterMapSsl() {
+        if (instance.rpcClientAdapterMapSsl == null) {
+            instance.rpcClientAdapterMapSsl = new RPCClientAdapterMap();
+            instance.rpcClientAdapterMapSsl.setEnableSsl(true);
+            instance.rpcClientAdapterMapSsl.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
+            instance.rpcClientAdapterMapSsl.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
+            instance.rpcClientAdapterMapSsl.setRpcSslJksPwd(instance.getRpcSslJksPwd());
+        }
+        return instance.rpcClientAdapterMapSsl;
+    }
+
+    public synchronized RPCClientAdapterMap getRpcClientAdapterMap() {
+        if (instance.rpcClientAdapterMap == null) {
+            instance.rpcClientAdapterMap = new RPCClientAdapterMap();
+        }
+        return instance.rpcClientAdapterMap;
+    }
+
+    public synchronized OnlineServerWithStatus getOnlineServer() {
+        if (instance.onlineServer == null) {
+            instance.onlineServer = new OnlineServerWithStatus();
+            instance.onlineServer.setDockerStatusService(instance.getDockerStatusService());
+            instance.onlineServer.setServerType(instance.getServerType());
+            instance.onlineServer.setDockerName(instance.getDockerName());
+            instance.onlineServer.setHttpPort(Integer.valueOf(instance.getServerPort()));
+            instance.onlineServer.setInternalKey(instance.getInternalKey());
+            instance.onlineServer.setRpcPort(instance.getRpcPort());
+            instance.onlineServer.setSslRpcPort(instance.getSslRpcPort());
+            instance.onlineServer.setPublicDomain(instance.getPublicDomain());
+            instance.onlineServer.setRpcSslClientTrustJksPath(instance.getRpcSslClientTrustJksPath());
+            instance.onlineServer.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
+            instance.onlineServer.setRpcSslJksPwd(instance.getRpcSslJksPwd());
+            instance.onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
+            instance.onlineServer.setStatus(1);
+            instance.onlineServer.setType(Integer.valueOf(instance.getType()));
+            instance.onlineServer.setConfigPath("container.properties");
+            instance.onlineServer.setIpHolder(instance.getIpHolder());
+        }
+        return instance.onlineServer;
+    }
+
+    public synchronized ScriptManager getScriptManager() {
+        if (instance.scriptManager == null) {
+            instance.scriptManager = new ScriptManager();
+            instance.scriptManager.setLocalPath(instance.getLocalPath());
+            instance.scriptManager.setRemotePath(instance.getRemotePath());
+            instance.scriptManager.setBaseRuntimeClass(MyBaseRuntime.class);
+            instance.scriptManager.setRuntimeBootClass(instance.getRuntimeBootClass());
+            instance.scriptManager.setHotDeployment(Boolean.valueOf(instance.getHotDeployment()));
+            instance.scriptManager.setKillProcess(Boolean.valueOf(instance.getKillProcess()));
+            instance.scriptManager.setServerType(instance.getServerType());
+        }
+        return instance.scriptManager;
+    }
+
+    public synchronized RequestPermissionHandler getRequestPermissionHandler() {
+        if (instance.requestPermissionHandler == null) {
+            instance.requestPermissionHandler = new RequestPermissionHandler();
+        }
+        return instance.requestPermissionHandler;
+    }
+
+    public synchronized JsonFilterFactory getJsonFilterFactory() {
+        if (instance.jsonFilterFactory == null) {
+            instance.jsonFilterFactory = new JsonFilterFactory();
+        }
+        return instance.jsonFilterFactory;
     }
 
     public synchronized IPHolder getIpHolder() {
-        if(ipHolder == null){
-            ipHolder = new IPHolder();
-            ipHolder.setEthPrefix(instance.getEthPrefix());
-            ipHolder.setIpPrefix(instance.getIpPrefix());
+        if (instance.ipHolder == null) {
+            instance.ipHolder = new IPHolder();
+            instance.ipHolder.setEthPrefix(instance.getEthPrefix());
+            instance.ipHolder.setIpPrefix(instance.getIpPrefix());
         }
-        return ipHolder;
+        return instance.ipHolder;
     }
 
-//    public synchronized LogIndexQueue getLogIndexQueue() {
-//        if(logIndexQueue == null){
-//            logIndexQueue = new LogIndexQueue();
-//        }
-//        return logIndexQueue;
-//    }
-
-    public synchronized ConsumeQueueService getBulkLogQueueService() {
-        if(bulkLogQueueService == null){
-            bulkLogQueueService = new ConsumeQueueService();
-        }
-        return bulkLogQueueService;
-    }
 
     public synchronized DockerStatusServiceImpl getDockerStatusService() {
-        if(dockerStatusService == null){
-            dockerStatusService = new DockerStatusServiceImpl();
-            dockerStatusService.setDockerStatusDAO(instance.getDockerStatusDAO());
+        if (instance.dockerStatusService == null) {
+            instance.dockerStatusService = new DockerStatusServiceImpl();
+            instance.dockerStatusService.setDockerStatusDAO(instance.getDockerStatusDAO());
         }
-        return dockerStatusService;
+        return instance.dockerStatusService;
     }
 
     public synchronized SpringContextUtil getSpringContextUtil() {
-        if(springContextUtil == null){
-            springContextUtil = new SpringContextUtil();
+        if (instance.springContextUtil == null) {
+            instance.springContextUtil = new SpringContextUtil();
         }
-        return springContextUtil;
-    }
-
-    public synchronized NioSocketAcceptorEx getWsIoAcceptor() {
-        if(wsIoAcceptor == null){
-            wsIoAcceptor = new NioSocketAcceptorEx();
-            wsIoAcceptor.setHandler(instance.getUpstreamHandler());
-            wsIoAcceptor.setFilterChainBuilder(instance.getWsFilterChainBuilder());
-            wsIoAcceptor.setReuseAddress(true);
-            wsIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamWsPort())));
-        }
-        return wsIoAcceptor;
-    }
-
-    public synchronized DefaultIoFilterChainBuilder getWsFilterChainBuilder() {
-        if(wsFilterChainBuilder == null){
-            wsFilterChainBuilder = new DefaultIoFilterChainBuilder();
-            Map map = new LinkedHashMap();
-            map.put("sslFilter", instance.getSslFilter());
-            map.put("codecFilter", instance.getWsCodecFilter());
-            wsFilterChainBuilder.setFilters(map);
-        }
-        return wsFilterChainBuilder;
-    }
-
-    public synchronized ProtocolCodecFilter getWsCodecFilter() {
-        if(wsCodecFilter == null){
-            wsCodecFilter = new ProtocolCodecFilter(getWebSocketCodecFactory());
-        }
-        return wsCodecFilter;
-    }
-
-    public synchronized WebSocketCodecFactory getWebSocketCodecFactory() {
-        if(webSocketCodecFactory == null){
-            webSocketCodecFactory = new WebSocketCodecFactory();
-        }
-        return webSocketCodecFactory;
-    }
-
-    public synchronized NioSocketAcceptorEx getSslTcpIoAcceptor() {
-        if(sslTcpIoAcceptor == null){
-            sslTcpIoAcceptor = new NioSocketAcceptorEx();
-            sslTcpIoAcceptor.setHandler(instance.getUpstreamHandler());
-            sslTcpIoAcceptor.setFilterChainBuilder(instance.getSslTcpFilterChainBuilder());
-            sslTcpIoAcceptor.setReuseAddress(true);
-            sslTcpIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamSslPort())));
-        }
-        return sslTcpIoAcceptor;
-    }
-
-    public DefaultIoFilterChainBuilder getSslTcpFilterChainBuilder() {
-        if(sslTcpFilterChainBuilder == null){
-            sslTcpFilterChainBuilder = new DefaultIoFilterChainBuilder();
-            Map map = new LinkedHashMap();
-            map.put("codecFilter", instance.getSslTcpCodecFilter());
-            map.put("sslFilter", instance.getSslFilter());
-            sslTcpFilterChainBuilder.setFilters(map);
-        }
-        return sslTcpFilterChainBuilder;
-    }
-
-    public synchronized SslFilter getSslFilter() {
-        if(sslFilter == null){
-            try {
-                sslFilter = new SslFilter(getSslContextFactory().newInstance());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return sslFilter;
-    }
-
-    public synchronized SslContextFactory getSslContextFactory() {
-        if(sslContextFactory == null){
-            sslContextFactory = new SslContextFactory();
-            try {
-                sslContextFactory.setKeyManagerFactoryKeyStore(instance.getKeystoreFactory().newInstance());
-                sslContextFactory.setProtocol("TLSV1.2");
-                sslContextFactory.setKeyManagerFactoryAlgorithm("SunX509");
-                sslContextFactory.setKeyManagerFactoryKeyStorePassword(instance.getKeymanagerPwd());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return sslContextFactory;
-    }
-
-    public synchronized KeyStoreFactory getKeystoreFactory() {
-        if(keystoreFactory == null){
-            keystoreFactory = new KeyStoreFactory();
-            keystoreFactory.setPassword(instance.getKeystorePwd());
-            URL keystorePathUrl = null;
-            try {
-                keystorePathUrl = new URL(instance.getKeystorePath());
-                keystoreFactory.setDataUrl(keystorePathUrl);
-            }catch (IOException e){
-                e.printStackTrace();
-            }
-        }
-        return keystoreFactory;
-    }
-
-    public synchronized ProtocolCodecFilter getSslTcpCodecFilter() {
-        if(sslTcpCodecFilter == null){
-            sslTcpCodecFilter = new ProtocolCodecFilter(getHailProtocalCodecFactory());
-        }
-        return sslTcpCodecFilter;
-    }
-
-    public synchronized NioSocketAcceptorEx getTcpIoAcceptor() {
-        if(tcpIoAcceptor == null){
-            tcpIoAcceptor = new NioSocketAcceptorEx();
-            tcpIoAcceptor.setHandler(instance.getUpstreamHandler());
-            tcpIoAcceptor.setFilterChainBuilder(instance.getTcpFilterChainBuilder());
-            tcpIoAcceptor.setReuseAddress(true);
-            tcpIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamPort())));
-        }
-        return tcpIoAcceptor;
-    }
-
-    public synchronized GlobalLansProperties getGlobalLansProperties() {
-        if(globalLansProperties == null){
-            globalLansProperties = new GlobalLansProperties();
-        }
-        return globalLansProperties;
+        return instance.springContextUtil;
     }
 
     public synchronized PlainSocketFactory getPlainSocketFactory() {
-        if(plainSocketFactory == null){
-            plainSocketFactory = PlainSocketFactory.getSocketFactory();
+        if (instance.plainSocketFactory == null) {
+            instance.plainSocketFactory = PlainSocketFactory.getSocketFactory();
         }
-        return plainSocketFactory;
+        return instance.plainSocketFactory;
     }
 
     public synchronized SSLSocketFactory getSslSocketFactory() {
-        if(sslSocketFactory == null){
-            sslSocketFactory = SSLSocketFactory.getSocketFactory();
+        if (instance.sslSocketFactory == null) {
+            instance.sslSocketFactory = SSLSocketFactory.getSocketFactory();
         }
-        return sslSocketFactory;
+        return instance.sslSocketFactory;
     }
 
     public synchronized Scheme getHttpScheme() {
-        if(httpScheme == null){
-            httpScheme = new Scheme("http", 80, getPlainSocketFactory());
+        if (instance.httpScheme == null) {
+            instance.httpScheme = new Scheme("http", 80, getPlainSocketFactory());
         }
-        return httpScheme;
+        return instance.httpScheme;
     }
 
     public synchronized Scheme getHttpsScheme() {
-        if(httpsScheme == null){
-            httpsScheme = new Scheme("https", 443, getSslSocketFactory());
+        if (instance.httpsScheme == null) {
+            instance.httpsScheme = new Scheme("https", 443, getSslSocketFactory());
         }
-        return httpsScheme;
+        return instance.httpsScheme;
     }
-
-    public synchronized SchemeRegistry getSchemeRegistry() {
-        if(schemeRegistry == null){
-            schemeRegistry = new SchemeRegistry();
-            Map map = new HashMap();
-            map.put("http", instance.getHttpScheme());
-            map.put("https", instance.getHttpsScheme());
-            schemeRegistry.setItems(map);
-        }
-        return schemeRegistry;
-    }
-
-    public synchronized ThreadSafeClientConnManager getClientConnManager() {
-        if(clientConnManager == null){
-            clientConnManager = new ThreadSafeClientConnManager(getSchemeRegistry());
-            clientConnManager.setMaxTotal(20);
-        }
-        return clientConnManager;
-    }
-
     public synchronized DefaultHttpClient getHttpClient() {
-        if(httpClient == null){
+        if(instance.httpClient == null){
             MyHttpParameters myHttpParameters = new MyHttpParameters();
             myHttpParameters.setCharset("utf8");
             myHttpParameters.setConnectionTimeout(30000);
             myHttpParameters.setSocketTimeout(30000);
-            httpClient = new DefaultHttpClient(getClientConnManager(), myHttpParameters);
+            instance.httpClient = new DefaultHttpClient(getClientConnManager(), myHttpParameters);
         }
-        return httpClient;
+        return instance.httpClient;
+    }
+    public synchronized SchemeRegistry getSchemeRegistry() {
+        if (instance.schemeRegistry == null) {
+            instance.schemeRegistry = new SchemeRegistry();
+            Map map = new HashMap();
+            map.put("http", instance.getHttpScheme());
+            map.put("https", instance.getHttpsScheme());
+            instance.schemeRegistry.setItems(map);
+        }
+        return instance.schemeRegistry;
+    }
+
+    public synchronized ThreadSafeClientConnManager getClientConnManager() {
+        if (instance.clientConnManager == null) {
+            instance.clientConnManager = new ThreadSafeClientConnManager(getSchemeRegistry());
+            instance.clientConnManager.setMaxTotal(20);
+        }
+        return instance.clientConnManager;
     }
 
     public synchronized MongoHelper getDockerStatusHelper() {
-        if(dockerStatusHelper == null){
-            dockerStatusHelper = new MongoHelper();
-            dockerStatusHelper.setHost(instance.getMongoHost());
-            dockerStatusHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
-            dockerStatusHelper.setDbName(instance.getDbName());
-            dockerStatusHelper.setUsername(instance.getMongoUsername());
-            dockerStatusHelper.setPassword(instance.getMongoPassword());
+        if (instance.dockerStatusHelper == null) {
+            instance.dockerStatusHelper = new MongoHelper();
+            instance.dockerStatusHelper.setHost(instance.getMongoHost());
+            instance.dockerStatusHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
+            instance.dockerStatusHelper.setDbName(instance.getDbName());
+            instance.dockerStatusHelper.setUsername(instance.getMongoUsername());
+            instance.dockerStatusHelper.setPassword(instance.getMongoPassword());
         }
-        return dockerStatusHelper;
+        return instance.dockerStatusHelper;
     }
+
     public synchronized MongoHelper getScheduledTaskHelper() {
-        if(scheduledTaskHelper == null){
-            scheduledTaskHelper = new MongoHelper();
-            scheduledTaskHelper.setHost(instance.getMongoHost());
-            scheduledTaskHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
-            scheduledTaskHelper.setDbName("scheduled");
-            scheduledTaskHelper.setUsername(instance.getMongoUsername());
-            scheduledTaskHelper.setPassword(instance.getMongoPassword());
+        if (instance.scheduledTaskHelper == null) {
+            instance.scheduledTaskHelper = new MongoHelper();
+            instance.scheduledTaskHelper.setHost(instance.getMongoHost());
+            instance.scheduledTaskHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
+            instance.scheduledTaskHelper.setDbName("scheduled");
+            instance.scheduledTaskHelper.setUsername(instance.getMongoUsername());
+            instance.scheduledTaskHelper.setPassword(instance.getMongoPassword());
         }
-        return scheduledTaskHelper;
+        return instance.scheduledTaskHelper;
     }
 
     public synchronized MongoHelper getLogsHelper() {
-        if(logsHelper == null){
-            logsHelper = new MongoHelper();
-            logsHelper.setHost(instance.getMongoHost());
-            logsHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
-            logsHelper.setDbName(instance.getLogsDBName());
-            logsHelper.setUsername(instance.getMongoUsername());
-            logsHelper.setPassword(instance.getMongoPassword());
+        if (instance.logsHelper == null) {
+            instance.logsHelper = new MongoHelper();
+            instance.logsHelper.setHost(instance.getMongoHost());
+            instance.logsHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
+            instance.logsHelper.setDbName(instance.getLogsDBName());
+            instance.logsHelper.setUsername(instance.getMongoUsername());
+            instance.logsHelper.setPassword(instance.getMongoPassword());
         }
-        return logsHelper;
+        return instance.logsHelper;
     }
 
     public synchronized MongoHelper getConfigHelper() {
-        if(configHelper == null){
-            configHelper = new MongoHelper();
-            configHelper.setHost(instance.getMongoHost());
-            configHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
-            configHelper.setDbName(instance.getConfigDBName());
-            configHelper.setUsername(instance.getMongoUsername());
-            configHelper.setPassword(instance.getMongoPassword());
+        if (instance.configHelper == null) {
+            instance.configHelper = new MongoHelper();
+            instance.configHelper.setHost(instance.getMongoHost());
+            instance.configHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
+            instance.configHelper.setDbName(instance.getConfigDBName());
+            instance.configHelper.setUsername(instance.getMongoUsername());
+            instance.configHelper.setPassword(instance.getMongoPassword());
         }
-        return configHelper;
+        return instance.configHelper;
     }
 
     public synchronized ServersDAO getServersDAO() {
-        if(serversDAO == null){
-            serversDAO = new ServersDAO();
-            serversDAO.setMongoHelper(instance.getConfigHelper());
+        if (instance.serversDAO == null) {
+            instance.serversDAO = new ServersDAO();
+            instance.serversDAO.setMongoHelper(instance.getConfigHelper());
         }
-        return serversDAO;
+        return instance.serversDAO;
     }
 
     public synchronized LansDAO getLansDAO() {
-        if(lansDAO == null){
-            lansDAO = new LansDAO();
-            lansDAO.setMongoHelper(instance.getConfigHelper());
+        if (instance.lansDAO == null) {
+            instance.lansDAO = new LansDAO();
+            instance.lansDAO.setMongoHelper(instance.getConfigHelper());
         }
-        return lansDAO;
+        return instance.lansDAO;
     }
 
     public synchronized SDockerDAO getSdockerDAO() {
-        if(sdockerDAO == null){
-            sdockerDAO = new SDockerDAO();
-            sdockerDAO.setMongoHelper(instance.getConfigHelper());
+        if (instance.sdockerDAO == null) {
+            instance.sdockerDAO = new SDockerDAO();
+            instance.sdockerDAO.setMongoHelper(instance.getConfigHelper());
         }
-        return sdockerDAO;
+        return instance.sdockerDAO;
     }
 
-//    public synchronized BulkLogDAO getBulkLogDAO() {
-//        if(bulkLogDAO == null){
-//            bulkLogDAO = new BulkLogDAO();
-//        }
-//        return bulkLogDAO;
-//    }
-
     public synchronized MongoHelper getGridfsHelper() {
-        if(gridfsHelper == null){
-            gridfsHelper = new MongoHelper();
-            gridfsHelper.setHost(instance.getGridHost());
-            gridfsHelper.setConnectionsPerHost(Integer.valueOf(instance.getGirdConnectionsPerHost()));
-            gridfsHelper.setDbName(instance.getGridDbName());
-            gridfsHelper.setUsername(instance.getGridUsername());
-            gridfsHelper.setPassword(instance.getGridPassword());
+        if (instance.gridfsHelper == null) {
+            instance.gridfsHelper = new MongoHelper();
+            instance.gridfsHelper.setHost(instance.getGridHost());
+            instance.gridfsHelper.setConnectionsPerHost(Integer.valueOf(instance.getGirdConnectionsPerHost()));
+            instance.gridfsHelper.setDbName(instance.getGridDbName());
+            instance.gridfsHelper.setUsername(instance.getGridUsername());
+            instance.gridfsHelper.setPassword(instance.getGridPassword());
         }
-        return gridfsHelper;
+        return instance.gridfsHelper;
     }
 
     public synchronized GridFSFileHandler getFileAdapter() {
-        if(fileAdapter == null){
-            fileAdapter = new GridFSFileHandler();
-            fileAdapter.setResourceHelper(instance.getGridfsHelper());
-            fileAdapter.setBucketName(instance.getFileBucket());
+        if (instance.fileAdapter == null) {
+            instance.fileAdapter = new GridFSFileHandler();
+            instance.fileAdapter.setResourceHelper(instance.getGridfsHelper());
+            instance.fileAdapter.setBucketName(instance.getFileBucket());
         }
-        return fileAdapter;
+        return instance.fileAdapter;
     }
 
-    public synchronized UpStreamHandler getUpstreamHandler() {
-        if(upstreamHandler == null){
-            upstreamHandler = new UpStreamHandler();
-            upstreamHandler.setReadIdleTime(720);
-            upstreamHandler.setWriteIdleTime(720);
-        }
-        return upstreamHandler;
-    }
-
-    public synchronized HailProtocalCodecFactory getHailProtocalCodecFactory() {
-        if(hailProtocalCodecFactory == null){
-            hailProtocalCodecFactory = new HailProtocalCodecFactory();
-        }
-        return hailProtocalCodecFactory;
-    }
-
-    public synchronized ProtocolCodecFilter getTcpCodecFilter() {
-        if(tcpCodecFilter == null){
-            tcpCodecFilter = new ProtocolCodecFilter(getHailProtocalCodecFactory());
-        }
-        return tcpCodecFilter;
-    }
-
-    public synchronized DefaultIoFilterChainBuilder getTcpFilterChainBuilder() {
-        if(tcpFilterChainBuilder == null){
-            tcpFilterChainBuilder = new DefaultIoFilterChainBuilder();
-            Map map = new LinkedHashMap();
-            map.put("codecFilter", instance.getTcpCodecFilter());
-            tcpFilterChainBuilder.setFilters(map);
-        }
-        return tcpFilterChainBuilder;
-    }
-    public synchronized static BeanApp getInstance(){
-        if(instance == null){
-            synchronized (BeanApp.class){
-                if (instance == null){
+    public synchronized static BeanApp getInstance() {
+        if (instance == null) {
+            synchronized (BeanApp.class) {
+                if (instance == null) {
                     instance = new BeanApp();
                 }
             }

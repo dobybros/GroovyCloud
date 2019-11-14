@@ -3,6 +3,7 @@ package chat.thread;
 import chat.logs.LoggerEx;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -17,10 +18,10 @@ public class ThreadTaskRecord {
     private static ThreadTaskRecord instance;
     private Map<Object, SpecifyThreads> specifyThreadsMap = new ConcurrentHashMap<>();
 
-    public void execute(ThreadPoolExecutor threadPoolExecutor, Integer countThreads, Runnable t, Object key) {
+    public void execute(ThreadPoolExecutor threadPoolExecutor, Integer countThreads, Runnable t, Object key, List<ThreadTaskRecordListener> threadTaskRecordListeners) {
         SpecifyThreads specifyThreads = specifyThreadsMap.get(key);
         if(specifyThreads == null){
-            specifyThreads = new SpecifyThreads(threadPoolExecutor, countThreads, t, key);
+            specifyThreads = new SpecifyThreads(threadPoolExecutor, countThreads, t, key, threadTaskRecordListeners);
             SpecifyThreads specifyThreadsOld = specifyThreadsMap.putIfAbsent(key, specifyThreads);
             if(specifyThreadsOld != null){
                 specifyThreads = specifyThreadsOld;
@@ -42,8 +43,8 @@ public class ThreadTaskRecord {
         private Runnable t;
         private Object key;
         private AtomicInteger counter = new AtomicInteger(0);
-
-        private SpecifyThreads(ThreadPoolExecutor threadPoolExecutor, Integer countThreads, Runnable t, Object key) {
+        private List<ThreadTaskRecordListener> threadTaskRecordListeners;
+        private SpecifyThreads(ThreadPoolExecutor threadPoolExecutor, Integer countThreads, Runnable t, Object key, List<ThreadTaskRecordListener> threadTaskRecordListeners) {
             this.threadPoolExecutor = threadPoolExecutor;
             if (countThreads == null) {
                 countThreads = 1;
@@ -51,10 +52,16 @@ public class ThreadTaskRecord {
             this.countThreads = countThreads;
             this.t = t;
             this.key = key;
+            this.threadTaskRecordListeners = threadTaskRecordListeners;
         }
 
         public void execute() {
             if (counter.get() >= this.countThreads) {
+                if(threadTaskRecordListeners != null && !threadTaskRecordListeners.isEmpty()){
+                    for (ThreadTaskRecordListener threadTaskRecordListener : threadTaskRecordListeners){
+                        threadTaskRecordListener.executeFailed();
+                    }
+                }
                 return;
             }
             counter.incrementAndGet();

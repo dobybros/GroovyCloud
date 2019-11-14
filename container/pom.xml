@@ -5,37 +5,29 @@
 	<parent>
 		<groupId>groovycloud</groupId>
 		<artifactId>GroovyCloud</artifactId>
-		<version>1.0.0</version>
+		<version>1.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<groupId>container</groupId>
-	<artifactId>container</artifactId>
-	<version>1.0.0</version>
-	<name>container</name>
-	<description>Demo project for Spring Boot</description>
 
-	<properties>
-		<java.version>11</java.version>
-	</properties>
+	<artifactId>container</artifactId>
+	<version>1.0</version>
 
 	<dependencies>
 		<dependency>
-			<groupId>mongodbconnector</groupId>
-			<artifactId>MongodbConnector</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>cloudcore</groupId>
-			<artifactId>cloudcore</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>core</groupId>
+			<groupId>groovycloud</groupId>
 			<artifactId>core</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>groovycloud</groupId>
+			<artifactId>MongodbConnector</artifactId>
+			<version>1.0</version>
 		</dependency>
 	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -48,9 +40,9 @@
 							<mainClass>container.container.ContainerApplication</mainClass>
 							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
-<!--						<manifestEntries>-->
-<!--							<Class-Path>lib/cloudcore-0.0.1-SNAPSHOT.jar lib/core-0.0.1-SNAPSHOT.jar lib/mongodbconnector-0.0.1-SNAPSHOT.jar</Class-Path>-->
-<!--						</manifestEntries>-->
+						<!--						<manifestEntries>-->
+						<!--							<Class-Path>lib/cloudcore-0.0.1-SNAPSHOT.jar lib/core-0.0.1-SNAPSHOT.jar lib/mongodbconnector-0.0.1-SNAPSHOT.jar</Class-Path>-->
+						<!--						</manifestEntries>-->
 					</archive>
 					<excludes>
 						<exclude>**/*.xml</exclude>

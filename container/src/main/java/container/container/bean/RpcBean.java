@@ -1,6 +1,5 @@
 package container.container.bean;
 
-import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.impl.RMIServerHandler;
 import org.springframework.context.annotation.Bean;
@@ -24,10 +23,6 @@ public class RpcBean{
     @Bean
     public RPCClientAdapterMap rpcClientAdapterMapSsl(){
         return instance.getRpcClientAdapterMapSsl();
-    }
-    @Bean
-    public MessageEventHandler messageEventHandler(){
-        return instance.getMessageEventHandler();
     }
     @Bean
     public com.docker.rpc.impl.RMIServerImplWrapper dockerRpcServer(){
