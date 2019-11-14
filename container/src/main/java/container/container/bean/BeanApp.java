@@ -1,5 +1,6 @@
 package container.container.bean;
 
+import chat.logs.LoggerEx;
 import chat.utils.IPHolder;
 import com.dobybros.chat.handlers.ConsumeOfflineMessageHandler;
 import com.dobybros.chat.props.GlobalLansProperties;
@@ -27,14 +28,18 @@ import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import com.docker.tasks.Task;
 import com.docker.utils.SpringContextUtil;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
+import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.filter.ssl.KeyStoreFactory;
 import org.apache.mina.filter.ssl.SslContextFactory;
 import org.apache.mina.filter.ssl.SslFilter;
@@ -42,6 +47,9 @@ import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
 import script.filter.JsonFilterFactory;
 import script.groovy.servlets.RequestPermissionHandler;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLParameters;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -57,6 +65,7 @@ import java.util.*;
  * @Date:2019/5/26 15:41
  */
 public class BeanApp extends ConfigApp{
+    private static final String TAG = BeanApp.class.getSimpleName();
     private static BeanApp instance;
     private SpringContextUtil springContextUtil;
     private GlobalLansProperties globalLansProperties;
@@ -428,7 +437,8 @@ public class BeanApp extends ConfigApp{
         if(wsFilterChainBuilder == null){
             wsFilterChainBuilder = new DefaultIoFilterChainBuilder();
             Map map = new LinkedHashMap();
-            map.put("sslFilter", instance.getSslFilter());
+//            map.put("sslFilter", instance.getSslFilter());
+//            map.put("loggingFilter", new LoggingFilter());
             map.put("codecFilter", instance.getWsCodecFilter());
             wsFilterChainBuilder.setFilters(map);
         }
@@ -464,8 +474,8 @@ public class BeanApp extends ConfigApp{
         if(sslTcpFilterChainBuilder == null){
             sslTcpFilterChainBuilder = new DefaultIoFilterChainBuilder();
             Map map = new LinkedHashMap();
-            map.put("codecFilter", instance.getSslTcpCodecFilter());
             map.put("sslFilter", instance.getSslFilter());
+            map.put("codecFilter", instance.getSslTcpCodecFilter());
             sslTcpFilterChainBuilder.setFilters(map);
         }
         return sslTcpFilterChainBuilder;
@@ -474,7 +484,14 @@ public class BeanApp extends ConfigApp{
     public synchronized SslFilter getSslFilter() {
         if(sslFilter == null){
             try {
-                sslFilter = new SslFilter(getSslContextFactory().newInstance());
+                SSLContext sslContext = getSslContextFactory().newInstance();
+                SSLParameters params = sslContext.getDefaultSSLParameters();
+                LoggerEx.debug(TAG, "SSL context params - need client auth: " + params.getNeedClientAuth() + " want client auth: " + params.getWantClientAuth() + " endpoint id algorithm: " + params.getEndpointIdentificationAlgorithm());
+                String[] supportedProtocols = params.getProtocols();
+                for (String protocol : supportedProtocols) {
+                    LoggerEx.debug(TAG, "SSL context supported protocol: " + protocol);
+                }
+                sslFilter = new SslFilter(sslContext);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -482,12 +499,38 @@ public class BeanApp extends ConfigApp{
         return sslFilter;
     }
 
+//    private static class MySslFilter extends SslFilter {
+//
+//        public MySslFilter(SSLContext sslContext) {
+//            super(sslContext);
+//        }
+//
+//        public boolean startSsl(IoSession session) throws SSLException {
+//            return super.startSsl(session);
+//        }
+//        public void messageReceived(NextFilter nextFilter, IoSession session, Object message) throws SSLException {
+//            super.messageReceived(nextFilter, session, message);
+//            IoBuffer buffer = (IoBuffer) message;
+//            LoggerEx.debug(TAG, "SSL received " + new String(buffer.array()));
+//        }
+//
+//        public void exceptionCaught(NextFilter nextFilter, IoSession session, Throwable cause) throws Exception {
+//            super.exceptionCaught(nextFilter, session, cause);
+//            LoggerEx.debug(TAG, "SSL exceptionCaught " + ExceptionUtils.getFullStackTrace(cause));
+//        }
+//        public void initiateHandshake(IoSession session) throws SSLException {
+//            super.initiateHandshake(session);
+//        }
+//    }
+
     public synchronized SslContextFactory getSslContextFactory() {
-        if(sslContextFactory == null){
+        if(sslContextFactory == null) {
             sslContextFactory = new SslContextFactory();
             try {
                 sslContextFactory.setKeyManagerFactoryKeyStore(instance.getKeystoreFactory().newInstance());
-                sslContextFactory.setProtocol("TLSV1.2");
+
+
+                sslContextFactory.setProtocol("TLSv1.2");
                 sslContextFactory.setKeyManagerFactoryAlgorithm("SunX509");
                 sslContextFactory.setKeyManagerFactoryKeyStorePassword(instance.getKeymanagerPwd());
             } catch (Exception e) {
