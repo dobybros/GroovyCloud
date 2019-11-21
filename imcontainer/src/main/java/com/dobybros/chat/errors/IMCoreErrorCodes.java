@@ -89,7 +89,6 @@ public interface IMCoreErrorCodes {
 	public static final int ERROR_PASSWORD_ILLEGAL = CODE_CORE + 60;
 	public static final int ERROR_TERMINAL_ILLEGAL = CODE_CORE + 61;
 	public static final int ERROR_DEVICETOKEN_ILLEGAL = CODE_CORE + 62;
-	public static final int ERROR_CANTGETSERVERNOW = CODE_CORE + 63;
 
 	public static final int ERROR_OAUTH_LOGINURL_NULL = CODE_CORE + 63;
 	public static final int ERROR_OAUTH_CLIENTKEY_NULL = CODE_CORE + 64;
@@ -403,6 +402,8 @@ public interface IMCoreErrorCodes {
 	int ERROR_RPC_CALLOUTSIDE_FAILED = CODE_CORE + 361;
 	int ERROR_METHODRESPONSE_NULL = CODE_CORE + 362;
 	int ERROR_USER_NOTIN_GATEWAY = CODE_CORE + 363;
+	int ERROR_REMOTESERVER_NULL = CODE_CORE + 364;
+	public static final int ERROR_CANTGETSERVERNOW = CODE_CORE + 365;
 	//vip权限错误
 	public static final int ERROR_HAVENT_GOT_VIP_PERMISSION = CODE_MEMBERSHIP + 1;
 	public static final int ERROR_APPROVE_GROUP_APPLICATION_EXCEEDED_MAX_MEMBER_COUNT = CODE_MEMBERSHIP + 2;

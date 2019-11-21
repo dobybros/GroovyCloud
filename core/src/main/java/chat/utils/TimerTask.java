@@ -1,7 +1,5 @@
 package chat.utils;
 
-import chat.thread.ThreadTaskRecord;
-
 /**
  * Created by lick on 2019/6/9.
  * Description：

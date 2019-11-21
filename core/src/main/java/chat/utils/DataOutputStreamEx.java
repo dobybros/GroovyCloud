@@ -165,7 +165,17 @@ public class DataOutputStreamEx {
 		  dos.writeUTF(str);
 	  }
   }
-  
+	public void writeIntegerArray(Integer[] integers) throws IOException {
+		if(integers == null) {
+			dos.writeInt(NOVALUE);
+			return;
+		} else {
+			dos.writeInt(integers.length);
+		}
+		for(Integer integer : integers) {
+			dos.writeInt(integer);
+		}
+	}
   public void writeLongString(String str) throws IOException {
 	  if(str == null) {
 		  dos.writeInt(NOVALUE);

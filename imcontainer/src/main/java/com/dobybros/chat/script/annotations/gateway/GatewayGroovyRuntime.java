@@ -5,6 +5,7 @@ import chat.logs.LoggerEx;
 import chat.main.ServerStart;
 import com.alibaba.fastjson.JSONObject;
 import com.dobybros.chat.binary.data.Data;
+import com.dobybros.chat.open.data.IMConfig;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.open.data.MsgResult;
 import com.dobybros.chat.open.data.UserStatus;
@@ -22,6 +23,7 @@ import com.dobybros.gateway.open.GatewayMSGServers;
 import com.dobybros.gateway.pack.Pack;
 import com.docker.script.MyBaseRuntime;
 import com.docker.utils.SpringContextUtil;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.mina.core.session.IoSession;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
@@ -148,7 +150,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                 return sessionListener.getObject().channelRegisterd(userId, service, terminal);
             } catch (Throwable t) {
                 t.printStackTrace();
-                LoggerEx.error(TAG, "Handle channel " + terminal + " regitered by " + userId + " failed, " + t.getMessage());
+                LoggerEx.error(TAG, "Handle channel " + terminal + " regitered by " + userId + " failed, " + ExceptionUtils.getFullStackTrace(t));
             }
         } else {
             ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
@@ -157,7 +159,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                     listener.channelRegistered(terminal);
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    LoggerEx.error(TAG, "Handle channel " + terminal + " regitered by " + userId + "@" + service + " failed, " + t.getMessage());
+                    LoggerEx.error(TAG, "Handle channel " + terminal + " regitered by " + userId + "@" + service + " failed, " + ExceptionUtils.getFullStackTrace(t));
                 }
         }
 //		} finally {
@@ -200,7 +202,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 //						listener.getObject().channelCreated(userId, service, terminal);
 //					} catch (Throwable t) {
 //						t.printStackTrace();
-//						LoggerEx.error(TAG, "Handle channel " + terminal + " created by " + userId + " failed, " + t.getMessage());
+//						LoggerEx.error(TAG, "Handle channel " + terminal + " created by " + userId + " failed, " + ExceptionUtils.getFullStackTrace(t));
 //					}
 //				}
 //			}
@@ -221,7 +223,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 //						listener.getObject().channelClosed(userId, service, terminal, close);
 //					} catch (Throwable t) {
 //						t.printStackTrace();
-//						LoggerEx.error(TAG, "Handle channel " + terminal + " closed by " + userId + " failed, " + t.getMessage());
+//						LoggerEx.error(TAG, "Handle channel " + terminal + " closed by " + userId + " failed, " + ExceptionUtils.getFullStackTrace(t));
 //					}
 //				}
 //			}
@@ -243,7 +245,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 //						listener.getObject().sessionClosed(userId, service, close);
 //					} catch (Throwable t) {
 //						t.printStackTrace();
-//						LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " close failed, " + t.getMessage());
+//						LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " close failed, " + ExceptionUtils.getFullStackTrace(t));
 //					}
 //				}
 //			}
@@ -264,7 +266,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 //						listener.getObject().sessionCreated(userId, service);
 //					} catch (Throwable t) {
 //						t.printStackTrace();
-//						LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " sessionCreated failed, " + t.getMessage());
+//						LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " sessionCreated failed, " + ExceptionUtils.getFullStackTrace(t));
 //					}
 //				}
 //			}
@@ -272,7 +274,29 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 //			sessionLock.readLock().unlock();
 //		}
     }
-
+    public IMConfig getIMConfig(String userId, String service){
+        if (sessionListener != null) {
+            try {
+                return sessionListener.getObject().getIMConfig(userId, service);
+            } catch (Throwable t) {
+                t.printStackTrace();
+                LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getIMConfig failed, " + ExceptionUtils.getFullStackTrace(t));
+            }
+        } else {
+            ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
+            if (listener != null)
+                try {
+                    listener.getIMConfig();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getIMConfig failed, " + ExceptionUtils.getFullStackTrace(t));
+                }
+        }
+//		} finally {
+//			sessionLock.readLock().unlock();
+//		}
+        return null;
+    }
     public Long getMaxInactiveInterval(String userId, String service) {
 //		sessionLock.readLock().lock();
 //		try {
@@ -281,7 +305,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                 return sessionListener.getObject().getMaxInactiveInterval(userId, service);
             } catch (Throwable t) {
                 t.printStackTrace();
-                LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getMaxInactiveInterval failed, " + t.getMessage());
+                LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getMaxInactiveInterval failed, " + ExceptionUtils.getFullStackTrace(t));
             }
         } else {
             ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
@@ -290,7 +314,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                     listener.getMaxInactiveInterval();
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getMaxInactiveInterval failed, " + t.getMessage());
+                    LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getMaxInactiveInterval failed, " + ExceptionUtils.getFullStackTrace(t));
                 }
         }
 //		} finally {
@@ -330,7 +354,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                                     msgResult = listener.messageReceived(message, terminal);
                                 } catch (Throwable t) {
                                     t.printStackTrace();
-                                    LoggerEx.error(TAG, "ServiceUserSessionListener receive message error, eMsg: " + t.getMessage());
+                                    LoggerEx.error(TAG, "ServiceUserSessionListener receive message error, eMsg: " + ExceptionUtils.getFullStackTrace(t));
                                 }
                             }
                         }
@@ -444,7 +468,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                                     msgResult = listener.dataReceived(message, terminal);
                                 } catch (Throwable t) {
                                     t.printStackTrace();
-                                    LoggerEx.error(TAG, "ServiceUserSessionListener receive data error, eMsg: " + t.getMessage());
+                                    LoggerEx.error(TAG, "ServiceUserSessionListener receive data error, eMsg: " + ExceptionUtils.getFullStackTrace(t));
                                 }
                             }
                         }
@@ -534,7 +558,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                     }
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    LoggerEx.error(TAG, "Handle message " + message + " messageReceived failed, " + t.getMessage());
+                    LoggerEx.error(TAG, "Handle message " + message + " messageReceived failed, " + ExceptionUtils.getFullStackTrace(t));
                 }
             }
         }
@@ -563,7 +587,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                         listener.getObject().messageNotReceived(message, userStatusMap);
                     } catch (Throwable t) {
                         t.printStackTrace();
-                        LoggerEx.error(TAG, "Handle message " + message + " messageNotReceived failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "Handle message " + message + " messageNotReceived failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                 });
             }
@@ -587,13 +611,13 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                             listener.messageSent(data, excludeTerminal, toTerminal);
                         } catch (Throwable t) {
                             t.printStackTrace();
-                            LoggerEx.error(TAG, "ServiceUserSessionListener sent message error, eMsg: " + t.getMessage());
+                            LoggerEx.error(TAG, "ServiceUserSessionListener sent message error, eMsg: " + ExceptionUtils.getFullStackTrace(t));
                         }
                     }
                 }
             } catch (Throwable t) {
                 t.printStackTrace();
-                LoggerEx.error(TAG, "Handle classroom " + data + " excludeTerminal " + excludeTerminal + " toTerminal " + toTerminal + " messageSent failed, " + t.getMessage());
+                LoggerEx.error(TAG, "Handle classroom " + data + " excludeTerminal " + excludeTerminal + " toTerminal " + toTerminal + " messageSent failed, " + ExceptionUtils.getFullStackTrace(t));
             }
         });
 //		} finally {
@@ -610,7 +634,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                     sessionListener.getObject().messageReceivedFromUsers(message, receiverId, receiverService);
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    LoggerEx.error(TAG, "Handle message " + message + " messageReceivedFromUsers failed, " + t.getMessage());
+                    LoggerEx.error(TAG, "Handle message " + message + " messageReceivedFromUsers failed, " + ExceptionUtils.getFullStackTrace(t));
                 }
             } else {
                 ServiceUserSessionListener listener = getServiceUserSessionListener(message.getUserId(), message.getService());
@@ -619,7 +643,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                         listener.messageReceivedFromUsers(message, receiverId, receiverService);
                     } catch (Throwable t) {
                         t.printStackTrace();
-                        LoggerEx.error(TAG, "Handle message " + message + " messageReceivedFromUsers failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "Handle message " + message + " messageReceivedFromUsers failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                 }
             }
@@ -642,7 +666,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                     sessionListener.getObject().pingReceived(userId, service, terminal);
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    LoggerEx.error(TAG, "Handle pingReceived failed, " + t.getMessage());
+                    LoggerEx.error(TAG, "Handle pingReceived failed, " + ExceptionUtils.getFullStackTrace(t));
                 }
             } else {
                 ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
@@ -651,7 +675,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                         listener.pingReceived(terminal);
                     } catch (Throwable t) {
                         t.printStackTrace();
-                        LoggerEx.error(TAG, "Handle pingReceived failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "Handle pingReceived failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                 }
             }

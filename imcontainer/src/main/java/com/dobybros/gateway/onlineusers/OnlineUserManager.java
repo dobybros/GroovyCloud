@@ -165,7 +165,8 @@ public abstract class OnlineUserManager {
 		if(onlineUser != null) {
 			OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(user.getService());
 			if(serviceUser == null) {
-				serviceUser = onlineUser.addOnlineServiceUser(user.getService(), user, preSessionId);
+				serviceUser = new OnlineServiceUser();
+				serviceUser = onlineUser.addOnlineServiceUser(user.getService(), user, preSessionId, serviceUser);
 			}
 		}
 		return onlineUser;

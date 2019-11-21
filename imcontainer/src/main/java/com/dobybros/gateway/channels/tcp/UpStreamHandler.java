@@ -26,6 +26,7 @@ public class UpStreamHandler extends IoHandlerAdapter {
 	public static final String ATTRIBUTE_CHANNEL = "CHANNEL";
 	public static final String ATTRIBUTE_VERSION = "VERSION";
 	public static final String ATTRIBUTE_TERMINAL = "TERMINAL";
+	public static final String ATTRIBUTE_SESSIONCONTEXTATTR = "SESSIONCONTEXTATTR";
 	public static final String ATTRIBUTE_IP = "IP";
 	private static final String TAG = "UpStream";
     @Resource

@@ -1,5 +1,7 @@
 package proxycontainer.proxycontainer.bean;
 
+import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
+import com.dobybros.chat.handlers.RpcProxyContainerDuplexSender;
 import com.dobybros.gateway.channels.tcp.codec.HailProtocalCodecFactory;
 import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.proxy.im.ProxyUpStreamHandler;
@@ -114,5 +116,13 @@ public class TcpBean {
     @Bean
     public ProxyAnnotationHandler tcpAnnotationHandler(){
         return instance.getProxyAnnotationHandler();
+    }
+    @Bean
+    public ProxyContainerDuplexSender proxyContainerDuplexSender(){
+        return instance.getProxyContainerDuplexSender();
+    }
+    @Bean
+    public RpcProxyContainerDuplexSender rpcMessageSendInvoke(){
+        return instance.getRpcProxyContainerDuplexSender();
     }
 }

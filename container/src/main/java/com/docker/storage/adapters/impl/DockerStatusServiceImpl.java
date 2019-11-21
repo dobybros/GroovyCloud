@@ -4,9 +4,12 @@ import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ChatUtils;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.docker.data.DataObject;
 import com.docker.data.DockerStatus;
 import com.docker.data.Service;
+import com.docker.data.ServiceAnnotation;
 import com.docker.storage.DBException;
 import com.docker.storage.adapters.DockerStatusService;
 import com.docker.storage.mongodb.daos.DockerStatusDAO;
@@ -16,6 +19,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -242,5 +246,66 @@ public class DockerStatusServiceImpl implements DockerStatusService {
 
 	public void setDockerStatusDAO(DockerStatusDAO dockerStatusDAO) {
 		this.dockerStatusDAO = dockerStatusDAO;
+	}
+
+	@Override
+	public List<Service> getServiceAnnotation(List<String> types, String id) throws CoreException {
+		try {
+		List<Service> services = new ArrayList<>();
+		List<String> serviceNames = new ArrayList<>();
+		if((types == null || types.isEmpty()) && StringUtils.isBlank(id))
+			return null;
+
+		Document query = new Document();
+		if(types != null) {
+			query.append("${DockerStatus.FIELD_DOCKERSTATUS_SERVICES}.${Service.FIELD_SERVICE_SERVICEANNOTATION}.${ServiceAnnotation.FIELD_TYPE}",
+					new Document("$in", types));
+		}
+		if(id != null) {
+			query.append("${DockerStatus.FIELD_DOCKERSTATUS_SERVICES}.${Service.FIELD_SERVICE_SERVICEANNOTATION}.${ServiceAnnotation.FIELD_ANNOTATIONPARAMS}.id", id);
+		}
+
+		FindIterable<Document> iterable = dockerStatusDAO.query(query);
+		MongoCursor<Document> cursor = iterable.iterator();
+
+		while(cursor.hasNext()) {
+			DockerStatus dockerStatus = new DockerStatus();
+			dockerStatus.fromDocument(cursor.next());
+			for(Service serviceTemp : dockerStatus.getServices()){
+				if(serviceTemp.getServiceAnnotations() != null && serviceTemp.getServiceAnnotations().size()>0){
+					for(ServiceAnnotation serviceAnnotationDocument : serviceTemp.getServiceAnnotations()){
+						JSONObject serviceAnnotation = JSON.parseObject(serviceAnnotationDocument.toDocument().toJson());
+						if(types != null && id != null){
+							if(types.contains(serviceAnnotation.getString("type")) && serviceAnnotation.getJSONObject("params").getString("id") == id){
+								if(!serviceNames.contains(serviceTemp.getService())){
+									services.add(serviceTemp);
+									serviceNames.add(serviceTemp.getService());
+								}
+								break;
+							}
+						}else if(types != null){
+							if(types.contains(serviceAnnotation.getString("type")))
+								if(!serviceNames.contains(serviceTemp.getService())){
+									services.add(serviceTemp);
+									serviceNames.add(serviceTemp.getService());
+								}
+							break;
+						}else{
+							if(serviceAnnotation.getJSONObject("params").getString("id") == id)
+								if(!serviceNames.contains(serviceTemp.getService())){
+									services.add(serviceTemp);
+									serviceNames.add(serviceTemp.getService());
+								}
+							break;
+						}
+					}
+				}
+			}
+		}
+		return services;
+	} catch (DBException e) {
+		e.printStackTrace();
+		throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_QUERY_FAILED, "Query all docker servers serviceAnnotation failed, " + e.getMessage());
+	}
 	}
 }

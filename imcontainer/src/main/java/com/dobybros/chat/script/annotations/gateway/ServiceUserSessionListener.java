@@ -1,16 +1,12 @@
 package com.dobybros.chat.script.annotations.gateway;
 
 import chat.errors.CoreException;
-import com.alibaba.fastjson.JSONObject;
 import com.dobybros.chat.binary.data.Data;
 import com.dobybros.chat.channels.Channel;
+import com.dobybros.chat.open.data.IMConfig;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.open.data.MsgResult;
 import com.dobybros.gateway.open.GatewayMSGServers;
-import com.dobybros.gateway.pack.HailPack;
-import org.apache.commons.lang.NotImplementedException;
-import scala.Int;
-import script.memodb.ObjectId;
 
 import java.util.List;
 
@@ -45,6 +41,8 @@ public abstract class ServiceUserSessionListener {
     public MsgResult dataReceived(Message message, Integer terminal) {
         return null;
     }
+
+    public IMConfig getIMConfig(){return null;}
 
     public Long getMaxInactiveInterval() {
         return null;

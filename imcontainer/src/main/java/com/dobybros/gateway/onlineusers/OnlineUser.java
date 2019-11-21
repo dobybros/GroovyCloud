@@ -96,17 +96,54 @@ public class OnlineUser {
 		return serviceUser;
 	}
 
-	public synchronized OnlineServiceUser addOnlineServiceUser(String service, UserInfo userInfo, String preSessionId) {
+//	public synchronized OnlineServiceUser addOnlineServiceUser(String service, UserInfo userInfo, String preSessionId, boolean isProxy) {
+//		OnlineServiceUser serviceUser = serviceUserMap.get(service);
+//		if(serviceUser != null) {
+//			return serviceUser;
+//		}
+//		if(isProxy){
+//			serviceUser = new ProxyOnlineServiceUser();
+//		}else {
+//			serviceUser = new OnlineServiceUser();
+//		}
+//		serviceUser.setService(service);
+//		serviceUser.setUserInfo(userInfo);
+//		serviceUser.setOnlineUser(this);
+//
+//		//方法上加同步了， 就不应该出现并发写的问题了
+//		OnlineServiceUser old = serviceUserMap.putIfAbsent(service, serviceUser);
+//		if(old != null)
+//			return old;
+//
+//		if(preSessionId == null) {
+//			preSessionId = ObjectId.get().toString();
+//		}
+//
+//		if(serviceUser.getStatus() < OnlineServiceUser.STATUS_CREATED) {
+//			serviceUser.setSessionId(preSessionId);
+//			try {
+//				serviceUser.userCreated();
+//				serviceUser.setStatus(OnlineServiceUser.STATUS_CREATED);
+//			} catch (Throwable t) {
+//				t.printStackTrace();
+//			}
+//		}
+//
+//		serviceUser.initOnlineUser();
+//
+//		return serviceUser;
+//	}
+	public synchronized OnlineServiceUser addOnlineServiceUser(String service, UserInfo userInfo, String preSessionId, OnlineServiceUser onlineServiceUser) {
 		OnlineServiceUser serviceUser = serviceUserMap.get(service);
 		if(serviceUser != null) {
 			return serviceUser;
 		}
-		serviceUser = new OnlineServiceUser();
+		serviceUser = onlineServiceUser;
 		serviceUser.setService(service);
 		serviceUser.setUserInfo(userInfo);
 		serviceUser.setOnlineUser(this);
-		
-		//方法上加同步了， 就不应该出现并发写的问题了 
+
+		//方法上加同步了， 就不应该出现并发写的问题了
 		OnlineServiceUser old = serviceUserMap.putIfAbsent(service, serviceUser);
 		if(old != null)
 			return old;
@@ -129,7 +166,6 @@ public class OnlineUser {
 
 		return serviceUser;
 	}
-	
 	public synchronized void removeOnlineServiceUser(String service, OnlineServiceUser onlineServiceUser, int close) {
 		boolean deleted = serviceUserMap.remove(service, onlineServiceUser);
 		if(deleted) {

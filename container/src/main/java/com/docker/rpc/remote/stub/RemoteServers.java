@@ -49,6 +49,12 @@ public class RemoteServers {
         return builder.toString();
     }
     public static class Server {
+        public Server(){}
+        public Server(String server, String ip, Integer rpcPort){
+            this.server = server;
+            this.ip = ip;
+            this.rpcPort = rpcPort;
+        }
         /**
          * 6位服务器名称， 随机生成的， 在数据库中是唯一字段
          */

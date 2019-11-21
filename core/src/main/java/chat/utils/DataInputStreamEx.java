@@ -151,7 +151,17 @@ public class DataInputStreamEx {
 		}
 		return null;
 	}
-	
+	public Integer[] readIntegerArray() throws IOException {
+		int length = dis.readInt();
+		if (length != 0) {
+			Integer[] integers = new Integer[length];
+			for (int i = 0; i < length; i++) {
+				integers[i] = dis.readInt();
+			}
+			return integers;
+		}
+		return null;
+	}
 	public void readCollectionString(Collection<String> collectionStrings) throws IOException {
 		int length = dis.readInt();
 		for (int i = 0;i < length;i++) {

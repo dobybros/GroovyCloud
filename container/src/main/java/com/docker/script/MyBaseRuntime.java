@@ -117,6 +117,7 @@ public class MyBaseRuntime extends BaseRuntime {
         serviceSkeletonAnnotationHandler.addExtraAnnotation(Transactions.class);
         serviceSkeletonAnnotationHandler.addExtraAnnotation(Transaction.class);
         serviceSkeletonAnnotationHandler.addExtraAnnotation(TransactionResultNotify.class);
+        serviceSkeletonAnnotationHandler.addExtraAnnotation(ProxyContainerTransportType.class);
         addClassAnnotationHandler(serviceSkeletonAnnotationHandler);
 
         final MyBaseRuntime instance = this;

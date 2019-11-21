@@ -80,6 +80,7 @@ public class RPCClientAdapterMap {
             });
             clientAdapter = rmiClient;
 
+            clientAdapter.addStatusListener(statusListener);
             clientAdapter.clientStart();
             RPCClientAdapter existingClientAdapter = clientAdapterMap.putIfAbsent(serverName, clientAdapter);
             if (existingClientAdapter != null) {
@@ -88,7 +89,6 @@ public class RPCClientAdapterMap {
                 clientAdapter = existingClientAdapter;
             }
         }
-        clientAdapter.addStatusListener(statusListener);
         return clientAdapter;
     }
 

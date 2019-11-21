@@ -2,6 +2,7 @@ package com.proxy.im.mina;
 
 import com.dobybros.chat.binary.data.Data;
 import com.dobybros.gateway.channels.data.DataVersioning;
+import com.dobybros.gateway.pack.HailPack;
 import com.dobybros.gateway.pack.Pack;
 import com.proxy.im.SessionContext;
 import org.apache.mina.core.session.IoSession;
@@ -49,6 +50,13 @@ public class MinaSessionContext implements SessionContext {
     public void write(Data data) {
         Pack hailPack = DataVersioning.getDataPack(session, data);
         session.write(hailPack);
+    }
+
+    @Override
+    public void write(byte[] data, byte type) {
+        Pack pack = new HailPack();
+        pack.setData(data, type);
+        session.write(pack);
     }
 
     @Override

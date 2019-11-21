@@ -15,6 +15,8 @@ public interface SessionContext {
 
     public void write(Data data);
 
+    public void write(byte[] data, byte type);
+
     public void write(int code, String description, String forId);
 
     public void close();

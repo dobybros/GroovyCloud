@@ -62,7 +62,16 @@ public abstract class Pack {
 		content = data.getData();
 		length = content.length;
 	}
-	
+
+	public void setData(byte[] content, byte type){
+		if(content == null){
+			throw new NullPointerException("Content is null when setData, type: " + type);
+		}
+		this.content = content;
+		this.type = type;
+		this.length = content.length;
+	}
+
 	public byte getType() {
 		return type;
 	}

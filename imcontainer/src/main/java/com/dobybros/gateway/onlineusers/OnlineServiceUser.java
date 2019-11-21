@@ -33,6 +33,7 @@ import com.docker.script.BaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.server.OnlineServer;
 import com.docker.utils.SpringContextUtil;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.mina.core.session.IoSession;
 import script.memodb.ObjectId;
 
@@ -213,7 +214,7 @@ public class OnlineServiceUser implements ChannelListener {
 		}
 	}
 
-	private final void pushToChannelsSync(Data event, Integer excludeTerminal, Integer toTerminal) {
+	protected void pushToChannelsSync(Data event, Integer excludeTerminal, Integer toTerminal) {
 		if(channelMap != null && event != null) {
 			BaseRuntime runtime = scriptManager.getBaseRuntime(getServiceAndVersion());
 			if(runtime != null && runtime instanceof GatewayGroovyRuntime) {
@@ -882,7 +883,7 @@ public class OnlineServiceUser implements ChannelListener {
 	}
 	
 	public void exceptionCaught(Throwable cause) {
-		LoggerEx.info(TAG, userInfo() + "'s tcp channel occur error " + cause.getMessage() + "|" + cause);
+		LoggerEx.info(TAG, userInfo() + "'s tcp channel occur error in exceptionCaught,errMsg: " + ExceptionUtils.getFullStackTrace(cause) + "|" + cause);
 	}
 	
 	/////////////impl
@@ -965,4 +966,7 @@ public class OnlineServiceUser implements ChannelListener {
 		return null;
 	}
 
+	public ScriptManager getScriptManager() {
+		return scriptManager;
+	}
 }
