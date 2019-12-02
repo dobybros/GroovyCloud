@@ -1,7 +1,11 @@
 package imcontainer.imcontainer.bean;
 
 import com.dobybros.chat.handlers.ConsumeOfflineMessageHandler;
+import com.dobybros.chat.handlers.PingHandler;
+import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
+import com.dobybros.chat.handlers.RpcProxyContainerDuplexSender;
 import com.dobybros.chat.props.GlobalLansProperties;
+import com.dobybros.chat.script.annotations.gateway.GatewayGroovyRuntime;
 import com.dobybros.chat.services.impl.ConsumeQueueService;
 import com.dobybros.chat.tasks.OfflineMessageSavingTask;
 import com.dobybros.chat.tasks.RPCMessageSendingTask;
@@ -11,6 +15,7 @@ import com.dobybros.gateway.channels.websocket.codec.WebSocketCodecFactory;
 import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.onlineserver.OnlineServerWithStatus;
+import com.docker.script.ScriptManager;
 import com.docker.tasks.Task;
 import container.container.bean.BeanApp;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
@@ -60,7 +65,19 @@ public class IMBeanApp extends IMConfigApp {
     private RPCMessageSendingTask messageSendingTask;
     private OnlineUserManagerImpl onlineUserManager;
     private OnlineServerWithStatus onlineServer;
+    private ScriptManager scriptManager;
     private MessageEventHandler messageEventHandler;
+    private PingHandler pingHandler;
+    private ProxyContainerDuplexSender proxyContainerDuplexSender;
+    private RpcProxyContainerDuplexSender rpcProxyContainerDuplexSender;
+
+    public synchronized PingHandler getPingHandler() {
+        if(instance.pingHandler == null){
+            instance.pingHandler = new PingHandler();
+            instance.pingHandler.setUseProxy(getUseProxy());
+        }
+        return instance.pingHandler;
+    }
 
     public synchronized MessageEventHandler getMessageEventHandler() {
         if(instance.messageEventHandler == null){
@@ -98,7 +115,19 @@ public class IMBeanApp extends IMConfigApp {
         }
         return instance.onlineServer;
     }
-
+    public synchronized ScriptManager getScriptManager() {
+        if (instance.scriptManager == null) {
+            instance.scriptManager = new ScriptManager();
+            instance.scriptManager.setLocalPath(instance.getLocalPath());
+            instance.scriptManager.setRemotePath(instance.getRemotePath());
+            instance.scriptManager.setBaseRuntimeClass(GatewayGroovyRuntime.class);
+            instance.scriptManager.setRuntimeBootClass(instance.getRuntimeBootClass());
+            instance.scriptManager.setHotDeployment(Boolean.valueOf(instance.getHotDeployment()));
+            instance.scriptManager.setKillProcess(Boolean.valueOf(instance.getKillProcess()));
+            instance.scriptManager.setServerType(instance.getServerType());
+        }
+        return instance.scriptManager;
+    }
     public synchronized OnlineUserManagerImpl getOnlineUserManager() {
         if(instance.onlineUserManager == null){
             instance.onlineUserManager = new OnlineUserManagerImpl();
@@ -114,7 +143,18 @@ public class IMBeanApp extends IMConfigApp {
         }
         return instance.messageSendingTask;
     }
-
+    public synchronized ProxyContainerDuplexSender getProxyContainerDuplexSender() {
+        if (instance.proxyContainerDuplexSender == null) {
+            instance.proxyContainerDuplexSender = new ProxyContainerDuplexSender();
+        }
+        return instance.proxyContainerDuplexSender;
+    }
+    public synchronized RpcProxyContainerDuplexSender getRpcProxyContainerDuplexSender() {
+        if (instance.rpcProxyContainerDuplexSender == null) {
+            instance.rpcProxyContainerDuplexSender = new RpcProxyContainerDuplexSender();
+        }
+        return instance.rpcProxyContainerDuplexSender;
+    }
     public synchronized OfflineMessageSavingTask getOfflineMessageSavingTask() {
         if(instance.offlineMessageSavingTask == null){
             instance.offlineMessageSavingTask = new OfflineMessageSavingTask();

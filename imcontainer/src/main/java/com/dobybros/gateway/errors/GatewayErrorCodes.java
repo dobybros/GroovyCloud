@@ -6,7 +6,7 @@ public class GatewayErrorCodes {
 	public static final int ERROR_TCPCHANNEL_MISSING_ONLINEUSER = TCPCHANNEL_CLOSE_START + 1;
 	public static final int TCPCHANNEL_CLOSE_END = 8499;
 
-	//Error code between 8000 and 9000 will force close tcp channel and ignore the messages in tcp channel
+	//Error code between 8500 and 9000 will force close tcp channel and ignore the messages in tcp channel
 	public static final int TCPCHANNEL_CLOSE_IMMEDIATELY_START = 8500;
 	public static final int ERROR_TCPCHANNEL_IDENTIFY_FAILED = TCPCHANNEL_CLOSE_IMMEDIATELY_START + 1;
 	public static final int ERROR_TCPCHANNEL_ALREADY_CREATED = TCPCHANNEL_CLOSE_IMMEDIATELY_START + 2;
@@ -208,7 +208,9 @@ public class GatewayErrorCodes {
 	public static final int ERROR_USER_NULL = GATEWAY_ERROR_START + 188;
 	public static final int ERROR_ONLINESERVICEUSER_NULL = GATEWAY_ERROR_START + 189;
 	public static final int ERROR_SERVERINFO_NOTEXPECTED = GATEWAY_ERROR_START + 190;
-	
+	public static final int ERROR_SERVER_NULL = GATEWAY_ERROR_START + 191;
+	public static final int ERROR_SESSIONCONTEXTATTR_NULL = GATEWAY_ERROR_START + 192;
+
 	public static final int TALENTCHAT_ERROR_END = 2000;
 	
 }

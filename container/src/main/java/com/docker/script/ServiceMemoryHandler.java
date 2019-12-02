@@ -1,7 +1,6 @@
 package com.docker.script;
 
 import chat.logs.LoggerEx;
-import com.alibaba.fastjson.JSONObject;
 import com.docker.script.annotations.ServiceMemory;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import script.groovy.object.GroovyObjectEx;
@@ -17,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by wenqi on 2018/12/4
+ * Created by lick on 2019/11/4
  */
 public class ServiceMemoryHandler extends ClassAnnotationHandler {
     private final String TAG = ServiceMemory.class.getSimpleName();

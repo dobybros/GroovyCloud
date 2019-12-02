@@ -1,6 +1,5 @@
 package proxycontainer.proxycontainer.bean;
 
-import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.impl.RMIServerHandler;
 import imcontainer.imcontainer.bean.IMBeanApp;
@@ -28,11 +27,6 @@ public class RpcBean {
     @Bean
     public RPCClientAdapterMap rpcClientAdapterMapSsl() {
         return instance.getRpcClientAdapterMapSsl();
-    }
-
-    @Bean
-    public MessageEventHandler messageEventHandler() {
-        return instance.getMessageEventHandler();
     }
 
     @Bean

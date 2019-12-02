@@ -9,7 +9,6 @@ import com.docker.onlineserver.OnlineServerWithStatus;
 import com.docker.script.ScriptManager;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
-import imcontainer.imcontainer.bean.IMBeanApp;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import script.filter.JsonFilterFactory;
@@ -23,9 +22,9 @@ import script.groovy.servlets.RequestPermissionHandler;
  */
 @Configuration
 public class CommonBean {
-    private IMBeanApp instance;
+    private ProxyBeanApp instance;
     CommonBean(){
-        instance = IMBeanApp.getInstance();
+        instance = ProxyBeanApp.getInstance();
     }
     @Bean
     public SpringContextUtil springContextUtil() {

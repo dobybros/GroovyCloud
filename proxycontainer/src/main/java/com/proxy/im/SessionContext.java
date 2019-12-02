@@ -11,6 +11,8 @@ public interface SessionContext {
 
     public Object getAttribute(Object key);
 
+    public  Short getEncodeVersion();
+
     public void removeAttribute(Object key);
 
     public void write(Data data);

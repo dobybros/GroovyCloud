@@ -389,7 +389,7 @@ public class RMIClientHandler extends RPCClientAdapter {
 //            if (averageCounter != null)
 //                averageCounter.add((int) (System.currentTimeMillis() - time));
             if (data == null) {
-                LoggerEx.error(TAG, "Server call return null for reuqest " + request.getType());
+                LoggerEx.warn(TAG, "Server call return null for reuqest " + request.getType());
                 return null;
             }
             RPCResponse response = handleResponse(request.getType(), request, data);

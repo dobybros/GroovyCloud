@@ -47,7 +47,7 @@ public class OnlineServiceUser implements ChannelListener {
 	private Integer serviceVersion;
 	private OnlineUser onlineUser;
 	private boolean mobileQuiet = false;
-	protected Long touch;
+	protected long noChannelTime = System.currentTimeMillis();
 //	protected ConcurrentHashMap<String, PushInfo> waitClientACKMessageMap;
 	protected FreezableQueue waitClientACKMessageQueue;
 	protected RecentTopicMap recentTopicMap;
@@ -68,13 +68,13 @@ public class OnlineServiceUser implements ChannelListener {
 	public static final int STATUS_INITED = 20;
 	public static final int STATUS_DESTROYED = 30;
 	
-	protected static final String TAG = "OU";
+	protected static final String TAG = "OnlineServiceUser";
 	
 	/**
 	 * Key is terminal string. 
 	 */
 	private ConcurrentHashMap<Integer, Channel> channelMap = new ConcurrentHashMap<>();
-	
+	private final int[] noChannelTimeLock = new int[0];
 	/**
 	 * OnlineUser thread will take the event from this queue. 
 	 */
@@ -426,10 +426,6 @@ public class OnlineServiceUser implements ChannelListener {
 
 	private UserInfo userInfo;
 	
-	public void touch() {
-		this.touch = System.currentTimeMillis();
-	}
-
 	public String description() {
 		StringBuilder buffer = new StringBuilder();
 		if(userInfo != null) {
@@ -753,6 +749,13 @@ public class OnlineServiceUser implements ChannelListener {
 		if(runtime != null && runtime instanceof GatewayGroovyRuntime) {
 			((GatewayGroovyRuntime)runtime).channelClosed(userInfo.getUserId(), service, channel.getTerminal(), close);
 		}
+		if(channelMap.isEmpty()){
+			synchronized (noChannelTimeLock){
+				if(channelMap.isEmpty()){
+					noChannelTime = System.currentTimeMillis();
+				}
+			}
+		}
 	}
 
 	public void channelCreated(Channel channel) {
@@ -786,6 +789,13 @@ public class OnlineServiceUser implements ChannelListener {
 		BaseRuntime runtime = scriptManager.getBaseRuntime(getServiceAndVersion());
 		if(runtime != null && runtime instanceof GatewayGroovyRuntime) {
 			((GatewayGroovyRuntime)runtime).channelCreated(userInfo.getUserId(), service, channel.getTerminal());
+		}
+		if(!channelMap.isEmpty()){
+			synchronized (noChannelTimeLock){
+				if(!channelMap.isEmpty()){
+					noChannelTime = -1;
+				}
+			}
 		}
 	}
 //
@@ -883,15 +893,11 @@ public class OnlineServiceUser implements ChannelListener {
 	}
 	
 	public void exceptionCaught(Throwable cause) {
-		LoggerEx.info(TAG, userInfo() + "'s tcp channel occur error in exceptionCaught,errMsg: " + ExceptionUtils.getFullStackTrace(cause) + "|" + cause);
+		LoggerEx.error(TAG, userInfo() + "'s tcp channel occur error in exceptionCaught,errMsg: " + ExceptionUtils.getFullStackTrace(cause) + "|" + cause);
 	}
 	
 	/////////////impl
 	
-	public Long getTouch() {
-		return touch;
-	}
-
 	public FreezableQueue getWaitClientACKMessageQueue() {
 		return waitClientACKMessageQueue;
 	}
@@ -943,11 +949,15 @@ public class OnlineServiceUser implements ChannelListener {
 	}
 
 	private Long maxInactiveIntervalCache = null;
+
 	public Long getMaxInactiveInterval() {
 		if(maxInactiveIntervalCache == null && userInfo != null && service != null) {
 			BaseRuntime runtime = scriptManager.getBaseRuntime(getServiceAndVersion());
 			if(runtime != null && runtime instanceof GatewayGroovyRuntime) {
 				maxInactiveIntervalCache = ((GatewayGroovyRuntime)runtime).getMaxInactiveInterval(userInfo.getUserId(), service);
+				if(maxInactiveIntervalCache == null){
+					maxInactiveIntervalCache = ((GatewayGroovyRuntime)runtime).getIMConfig(userInfo.getUserId(), service).getMaxInactiveInterval();
+				}
 			}
 		}
 		return maxInactiveIntervalCache;
@@ -966,7 +976,15 @@ public class OnlineServiceUser implements ChannelListener {
 		return null;
 	}
 
+	public ConcurrentHashMap<Integer, Channel> getChannelMap() {
+		return channelMap;
+	}
+
 	public ScriptManager getScriptManager() {
 		return scriptManager;
+	}
+
+	public long getNoChannelTime() {
+		return noChannelTime;
 	}
 }

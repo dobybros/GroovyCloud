@@ -2,6 +2,7 @@ package imcontainer.imcontainer.bean;
 
 import chat.utils.IPHolder;
 import com.alibaba.fastjson.util.TypeUtils;
+import com.dobybros.chat.handlers.PingHandler;
 import com.dobybros.chat.props.GlobalLansProperties;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.file.adapters.GridFSFileHandler;
@@ -66,6 +67,8 @@ public class InitContainer implements CommandLineRunner{
     OnlineServerWithStatus onlineServer;
     @Autowired
     OnlineUserManagerImpl onlineUserManager;
+    @Autowired
+    PingHandler pingHandler;
 
     @Override
     public void run(String... args) throws Exception {
@@ -94,5 +97,6 @@ public class InitContainer implements CommandLineRunner{
 //        rpcServerAdapter.serverStart();
         dockerRpcServerAdapter.serverStart();
         dockerRpcServerAdapterSsl.serverStart();
+        pingHandler.init();
     }
 }

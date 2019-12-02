@@ -88,7 +88,11 @@ public class DataOutputStreamEx {
 	  if(writeValueStatus(paramInt))
 		  dos.writeShort(paramInt);
   }
-
+	public void writeShort(Short paramInt)
+			throws IOException {
+		if(writeValueStatus(paramInt))
+			dos.writeShort(paramInt);
+	}
   public void writeChar(Integer paramInt)
     throws IOException {
 	  if(writeValueStatus(paramInt))
@@ -171,9 +175,9 @@ public class DataOutputStreamEx {
 			return;
 		} else {
 			dos.writeInt(integers.length);
-		}
-		for(Integer integer : integers) {
-			dos.writeInt(integer);
+			for (int i = 0; i < integers.length; i++) {
+				dos.writeInt(integers[i]);
+			}
 		}
 	}
   public void writeLongString(String str) throws IOException {

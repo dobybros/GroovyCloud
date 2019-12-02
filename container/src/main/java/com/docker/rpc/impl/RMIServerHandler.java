@@ -145,6 +145,22 @@ public class RMIServerHandler {
                         e.printStackTrace();
                     }
                     break;
+                case "proxyim":
+                    try {
+                        requestClass = (Class<? extends RPCRequest>) Class.forName("com.dobybros.chat.rpc.reqres.balancer.ProxyIMRequest");
+                        responseClass = (Class<? extends RPCResponse>) Class.forName("com.dobybros.chat.rpc.reqres.balancer.ProxyIMResponse");
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case "improxy":
+                    try {
+                        requestClass = (Class<? extends RPCRequest>) Class.forName("com.dobybros.chat.rpc.reqres.balancer.IMProxyRequest");
+                        responseClass = (Class<? extends RPCResponse>) Class.forName("com.dobybros.chat.rpc.reqres.balancer.IMProxyResponse");
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                    break;
             }
             if(requestClass != null && responseClass != null) {
                 entity = new RPCEntity();

@@ -5,8 +5,9 @@ import chat.logs.LoggerEx;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
 import com.dobybros.chat.rpc.reqres.balancer.IMProxyRequest;
-import com.dobybros.chat.rpc.reqres.balancer.IMResponse;
+import com.dobybros.chat.rpc.reqres.balancer.IMProxyResponse;
 import com.dobybros.chat.rpc.reqres.balancer.ProxyIMRequest;
+import com.dobybros.chat.rpc.reqres.balancer.ProxyIMResponse;
 import com.docker.annotations.ProxyContainerTransportType;
 import com.docker.data.Service;
 import com.docker.data.ServiceAnnotation;
@@ -28,11 +29,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ProxyContainerDuplexSender {
     @Resource
     RpcProxyContainerDuplexSender rpcProxyContainerDuplexSender;
+    @Resource
+    DockerStatusServiceImpl dockerStatusService;
     private final String TAG = ProxyContainerDuplexSender.class.getSimpleName();
     //serviceTransportTypeMap
     private Map<String, Map<String, Integer>> serviceMap = new ConcurrentHashMap<>();
-    @Resource
-    DockerStatusServiceImpl dockerStatusService;
+
     private Integer select(String service, String contentType){
         Integer type = ProxyContainerTransportType.TYPE_RPC;
         if(service != null){
@@ -48,7 +50,7 @@ public class ProxyContainerDuplexSender {
         return type;
     }
 
-    public IMResponse sendIM(ProxyIMRequest request, String contentType, RemoteServers.Server server, RPCClientAdapter.ClientAdapterStatusListener clientAdapterStatusListener){
+    public ProxyIMResponse sendIM(ProxyIMRequest request, String contentType, RemoteServers.Server server, RPCClientAdapter.ClientAdapterStatusListener clientAdapterStatusListener){
         if(server != null && request != null && request.checkParamsNotNull()){
             switch (select(request.getService(), contentType)){
                 case ProxyContainerTransportType.TYPE_RPC:
@@ -61,7 +63,7 @@ public class ProxyContainerDuplexSender {
         }
         return null;
     }
-    public IMResponse sendProxy(IMProxyRequest request, String contentType, RemoteServers.Server server, RPCClientAdapter.ClientAdapterStatusListener clientAdapterStatusListener) throws CoreException{
+    public IMProxyResponse sendProxy(IMProxyRequest request, String contentType, RemoteServers.Server server, RPCClientAdapter.ClientAdapterStatusListener clientAdapterStatusListener) throws CoreException{
         if(server != null && request != null && request.checkParamsNotNull()){
             switch (select(request.getService(), contentType)){
                 case ProxyContainerTransportType.TYPE_RPC:

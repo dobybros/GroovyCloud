@@ -95,7 +95,8 @@ public class MultipleFixedThreadManager {
                         LoggerEx.error(TAG, "Excute SpecifyThreads error,key: "+ key +" err: " + ExceptionUtils.getFullStackTrace(t));
                     } finally {
                         synchronized (lock) {
-                            if (--counter == 0) {
+                            counter --;
+                            if(counter == 0){
                                 specifyThreadsMap.remove(this.key);
                             }
                         }

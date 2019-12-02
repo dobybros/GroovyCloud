@@ -43,7 +43,7 @@ public abstract class ServiceUserSessionListener {
     }
 
     public IMConfig getIMConfig(){return null;}
-
+    @Deprecated
     public Long getMaxInactiveInterval() {
         return null;
     }
@@ -80,6 +80,9 @@ public abstract class ServiceUserSessionListener {
     }
 
     public void pingReceived(Integer terminal) {
+    }
+
+    public void pingTimeoutReceived(Integer terminal) {
     }
 
 

@@ -1,5 +1,7 @@
 package imcontainer.imcontainer.bean;
 
+import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
+import com.dobybros.chat.handlers.RpcProxyContainerDuplexSender;
 import com.dobybros.gateway.channels.tcp.UpStreamAnnotationHandler;
 import com.dobybros.gateway.channels.tcp.UpStreamHandler;
 import com.dobybros.gateway.channels.tcp.codec.HailProtocalCodecFactory;
@@ -24,9 +26,9 @@ import java.util.Map;
  * @Date:2019/5/26 17:37
  */
 @Configuration
-public class MinaBean {
+public class TcpBean {
     private IMBeanApp instance;
-    MinaBean(){
+    TcpBean(){
         instance = IMBeanApp.getInstance();
     }
     @Bean
@@ -42,7 +44,7 @@ public class MinaBean {
     @Bean
     public CustomEditorConfigurer customEditorConfigurer() {
         CustomEditorConfigurer customEditorConfigurer = new CustomEditorConfigurer();
-        Map<Class<?>, Class<? extends PropertyEditor>> map = new HashMap();
+        Map<Class<?>, Class<? extends PropertyEditor>> map = new HashMap<>();
         map.put(java.net.SocketAddress.class, org.apache.mina.integration.beans.InetSocketAddressEditor.class);
         customEditorConfigurer.setCustomEditors(map);
         return customEditorConfigurer;
@@ -109,5 +111,13 @@ public class MinaBean {
     @Bean
     public MessageEventHandler messageEventHandler(){
         return instance.getMessageEventHandler();
+    }
+    @Bean
+    public ProxyContainerDuplexSender proxyContainerDuplexSender(){
+        return instance.getProxyContainerDuplexSender();
+    }
+    @Bean
+    public RpcProxyContainerDuplexSender rpcProxyContainerDuplexSender(){
+        return instance.getRpcProxyContainerDuplexSender();
     }
 }

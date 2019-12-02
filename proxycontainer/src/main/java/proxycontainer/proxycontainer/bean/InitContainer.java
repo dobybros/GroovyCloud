@@ -68,7 +68,7 @@ public class InitContainer implements CommandLineRunner{
     @Autowired
     OnlineUserManagerImpl onlineUserManager;
     @Autowired
-    ProxyContainerDuplexSender imMessageSendInvoke;
+    ProxyContainerDuplexSender proxyContainerDuplexSender;
 
     @Override
     public void run(String... args) throws Exception {
@@ -97,6 +97,6 @@ public class InitContainer implements CommandLineRunner{
 //        rpcServerAdapter.serverStart();
         dockerRpcServerAdapter.serverStart();
         dockerRpcServerAdapterSsl.serverStart();
-        imMessageSendInvoke.init();
+        proxyContainerDuplexSender.init();
     }
 }

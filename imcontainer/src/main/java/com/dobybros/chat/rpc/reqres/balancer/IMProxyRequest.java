@@ -25,9 +25,10 @@ public class IMProxyRequest extends RPCRequest {
     private String channelId;
     private String userId;
     private String service;
-    public static final Integer CHANNELSTATUS_CLOSE = 1;
-    public static final Integer CHANNELSTATUS_NORMAL = 2;
-    private Integer channelStatus = 2;  //1.关闭  2.正常
+    public static final Integer CHANNELSTATUS_CLOSE = -1;
+    public static final Integer CHANNELSTATUS_CLOSE_IMMEDIATELY = -2;
+    public static final Integer CHANNELSTATUS_NORMAL = 1;
+    private Integer channelStatus = 1;  // 1.正常 -1.关闭 -2.立即关闭
     private Integer[] includeTerminals;
     private Integer[] excludeTerminals;
     private Byte theType;
