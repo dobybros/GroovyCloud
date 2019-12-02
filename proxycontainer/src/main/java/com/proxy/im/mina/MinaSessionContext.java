@@ -14,9 +14,11 @@ import org.apache.mina.core.session.IoSession;
  */
 public class MinaSessionContext implements SessionContext {
     private IoSession session;
-    public MinaSessionContext(IoSession session){
+
+    public MinaSessionContext(IoSession session) {
         this.session = session;
     }
+
     @Override
     public void setAttribute(Object key, Object value) {
         session.setAttribute(key, value);
@@ -34,12 +36,16 @@ public class MinaSessionContext implements SessionContext {
 
     @Override
     public void close() {
-        session.close();
+        if (!isClosing()) {
+            session.close();
+        }
     }
 
     @Override
     public void close(boolean immediately) {
-        session.close(immediately);
+        if (!isClosing()) {
+            session.close(immediately);
+        }
     }
 
     @Override
@@ -54,20 +60,26 @@ public class MinaSessionContext implements SessionContext {
 
     @Override
     public void write(Data data) {
-        Pack hailPack = DataVersioning.getDataPack(session, data);
-        session.write(hailPack);
+        if (!isClosing()) {
+            Pack hailPack = DataVersioning.getDataPack(session, data);
+            session.write(hailPack);
+        }
     }
 
     @Override
     public void write(byte[] data, byte type) {
-        Pack pack = new HailPack();
-        pack.setData(data, type);
-        session.write(pack);
+        if (!isClosing()) {
+            Pack pack = new HailPack();
+            pack.setData(data, type);
+            session.write(pack);
+        }
     }
 
     @Override
     public void write(int code, String description, String forId) {
-        Pack hailPack = DataVersioning.getResult(session, code, description, forId);
-        session.write(hailPack);
+        if (!isClosing()) {
+            Pack hailPack = DataVersioning.getResult(session, code, description, forId);
+            session.write(hailPack);
+        }
     }
 }

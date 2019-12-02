@@ -88,6 +88,8 @@ public class RPCClientAdapterMap {
                 clientAdapter.clientDestroy();
                 clientAdapter = existingClientAdapter;
             }
+        }else {
+            clientAdapter.addStatusListener(statusListener);
         }
         return clientAdapter;
     }
