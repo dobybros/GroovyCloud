@@ -30,7 +30,13 @@ public class DataVersioning{
 		data.setForId(forId);
 		return data;
 	}
-	
+	public static Result getResultData(Short encodeVersion, int code, String description, String forId) {
+		Result data = (Result) get(encodeVersion, Pack.TYPE_OUT_RESULT);
+		data.setCode(code);
+		data.setDescription(description);
+		data.setForId(forId);
+		return data;
+	}
 	public static Pack getResult(IoSession session, int code, String description, String forId) {
 		Byte version = HailProtocalDecoder.getVersion(session);
 		Short encodeVersion = HailProtocalDecoder.getEncodeVersion(session);

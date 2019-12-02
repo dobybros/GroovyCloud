@@ -17,8 +17,10 @@ import java.io.ByteArrayOutputStream;
  */
 public class ProxyIMRequest extends RPCRequest {
     private final String TAG = ProxyIMRequest.class.getSimpleName();
-    public static final String RPCTYPE = "proxyim";
-
+    static final String RPCTYPE = "proxyim";
+    public static final Integer CONNECTSTATUS_CONNECT = 1;
+    public static final Integer CONNECTSTATUS_SESSIONERROR = -1;
+    public static final Integer CONNECTSTATUS_PINGTIMEOUT = -2;
     private String channelId;
     private String userId;
     private String service;
@@ -29,6 +31,7 @@ public class ProxyIMRequest extends RPCRequest {
     private Integer sourcePort;
     private String sourceServer;
     private byte[] theData;
+    private Short imEncodeVersion;
 
     //存内存
     private String forId;
@@ -58,6 +61,7 @@ public class ProxyIMRequest extends RPCRequest {
                             sourceIp = dis.readUTF();
                             sourcePort = dis.readInt();
                             sourceServer = dis.readUTF();
+                            imEncodeVersion = dis.readShort();
                             int theDataCount = dis.readInt();
                             if(theDataCount > 0){
                                 theData = new byte[theDataCount];
@@ -99,6 +103,7 @@ public class ProxyIMRequest extends RPCRequest {
                     dis.writeUTF(sourceIp);
                     dis.writeInt(sourcePort);
                     dis.writeUTF(sourceServer);
+                    dis.writeShort(imEncodeVersion);
                     if(theData != null){
                         dis.writeInt(theData.length);
                         dis.write(theData);
@@ -210,7 +215,15 @@ public class ProxyIMRequest extends RPCRequest {
         this.forId = forId;
     }
 
+    public Short getImEncodeVersion() {
+        return imEncodeVersion;
+    }
+
+    public void setImEncodeVersion(Short imEncodeVersion) {
+        this.imEncodeVersion = imEncodeVersion;
+    }
+
     public boolean checkParamsNotNull(){
-        return channelId != null && userId != null && service != null && terminal != null && sourceServer != null && sourceIp != null && sourcePort != null;
+        return channelId != null && userId != null && service != null && terminal != null && imEncodeVersion != null;
     }
 }

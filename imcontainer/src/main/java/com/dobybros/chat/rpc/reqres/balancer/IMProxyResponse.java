@@ -15,15 +15,15 @@ import java.io.ByteArrayOutputStream;
  * @author lick
  * @date 2019/11/15
  */
-public class IMResponse extends RPCResponse {
+public class IMProxyResponse extends RPCResponse {
     public static final Integer CHANNELSTATUS_CLOSE = 1;
     public static final Integer CHANNELSTATUS_NORMAL = 2;
     private Integer channelStatus = CHANNELSTATUS_NORMAL;
     private Byte returnType;
     private byte[] returnData;  //RESULT
 
-    public IMResponse(){
-        super(ProxyIMRequest.RPCTYPE);
+    public IMProxyResponse(){
+        super(IMProxyRequest.RPCTYPE);
     }
     @Override
     public void resurrect() throws CoreException {
@@ -64,7 +64,7 @@ public class IMResponse extends RPCResponse {
     public void persistent() throws CoreException {
         Byte encode = getEncode();
         if (encode == null)
-            throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NULL, "ProxyIMResponse Encoder is null for persistent");
+            throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NULL, "IMProxyResponse Encoder is null for persistent");
         switch (encode) {
             case ENCODE_JAVABINARY:
                 ByteArrayOutputStream baos = null;
@@ -83,14 +83,14 @@ public class IMResponse extends RPCResponse {
                     setType(ProxyIMRequest.RPCTYPE);
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, " ProxyIMResponse PB parse data failed, " + ExceptionUtils.getFullStackTrace(t));
+                    throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, " IMProxyResponse PB parse data failed, " + ExceptionUtils.getFullStackTrace(t));
                 } finally {
                     IOUtils.closeQuietly(baos);
                     IOUtils.closeQuietly(dis.original());
                 }
                 break;
             default:
-                throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NOTFOUND, "ProxyIMResponse Encoder type doesn't be found for persistent ");
+                throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODER_NOTFOUND, "IMProxyResponse Encoder type doesn't be found for persistent ");
         }
     }
 

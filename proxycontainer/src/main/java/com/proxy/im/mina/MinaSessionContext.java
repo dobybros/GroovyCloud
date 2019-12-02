@@ -2,6 +2,7 @@ package com.proxy.im.mina;
 
 import com.dobybros.chat.binary.data.Data;
 import com.dobybros.gateway.channels.data.DataVersioning;
+import com.dobybros.gateway.channels.tcp.codec.HailProtocalDecoder;
 import com.dobybros.gateway.pack.HailPack;
 import com.dobybros.gateway.pack.Pack;
 import com.proxy.im.SessionContext;
@@ -24,6 +25,11 @@ public class MinaSessionContext implements SessionContext {
     @Override
     public Object getAttribute(Object key) {
         return session.getAttribute(key);
+    }
+
+    @Override
+    public Short getEncodeVersion() {
+        return HailProtocalDecoder.getEncodeVersion(session);
     }
 
     @Override

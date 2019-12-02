@@ -4,6 +4,7 @@ import chat.logs.LoggerEx;
 import com.dobybros.chat.binary.data.Data;
 import com.dobybros.chat.channels.Channel;
 import com.dobybros.gateway.channels.data.DataVersioning;
+import com.dobybros.gateway.channels.tcp.codec.HailProtocalDecoder;
 import com.dobybros.gateway.onlineusers.OnlineServiceUser;
 import com.dobybros.gateway.onlineusers.OnlineUser;
 import com.dobybros.gateway.pack.Pack;
@@ -11,9 +12,12 @@ import org.apache.mina.core.future.WriteFuture;
 import org.apache.mina.core.session.IoSession;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class TcpChannel extends Channel {
 	protected static final String TAG = "TCP";
+	private Long pingTime = 0L;
+	private Long pingInterval = TimeUnit.SECONDS.toMillis(8);
 	private IoSession session;
 	private OnlineUser onlineUser;
 	private Map<String, OnlineServiceUser> onlineServiceUsers;
@@ -104,5 +108,24 @@ public class TcpChannel extends Channel {
 	public void setOnlineServiceUsers(Map<String, OnlineServiceUser> onlineServiceUsers) {
 		this.onlineServiceUsers = onlineServiceUsers;
 	}
+	@Override
+	public Short getEncodeVersion(){
+		return HailProtocalDecoder.getEncodeVersion(session);
+	}
 
+	public Long getPingTime() {
+		return pingTime;
+	}
+
+	public void ping(Long pingTime) {
+		this.pingTime = pingTime;
+	}
+
+	public Long getPingInterval() {
+		return pingInterval;
+	}
+
+	public void setPingInterval(Long pingInterval) {
+		this.pingInterval = pingInterval;
+	}
 }

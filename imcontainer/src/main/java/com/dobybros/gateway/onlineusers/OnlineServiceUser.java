@@ -948,6 +948,9 @@ public class OnlineServiceUser implements ChannelListener {
 			BaseRuntime runtime = scriptManager.getBaseRuntime(getServiceAndVersion());
 			if(runtime != null && runtime instanceof GatewayGroovyRuntime) {
 				maxInactiveIntervalCache = ((GatewayGroovyRuntime)runtime).getMaxInactiveInterval(userInfo.getUserId(), service);
+				if(maxInactiveIntervalCache == null){
+					maxInactiveIntervalCache = ((GatewayGroovyRuntime)runtime).getIMConfig(userInfo.getUserId(), service).getMaxInactiveInterval();
+				}
 			}
 		}
 		return maxInactiveIntervalCache;
@@ -964,6 +967,10 @@ public class OnlineServiceUser implements ChannelListener {
 			}
 		}
 		return null;
+	}
+
+	public ConcurrentHashMap<Integer, Channel> getChannelMap() {
+		return channelMap;
 	}
 
 	public ScriptManager getScriptManager() {

@@ -1,29 +1,27 @@
 package script.groovy.servlets;
 
-import java.io.IOException;
-import java.lang.reflect.Parameter;
-import java.util.HashMap;
-import java.util.Set;
+import chat.errors.ChatErrorCodes;
+import chat.errors.CoreException;
+import chat.logs.AnalyticsLogger;
+import chat.logs.LoggerEx;
+import chat.main.ServerStart;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import script.groovy.object.GroovyObjectEx;
+import script.groovy.runtime.GroovyRuntime;
+import script.groovy.servlets.GroovyServletManager.PermissionIntercepter;
+import script.groovy.servlets.grayreleased.GrayReleased;
+import script.memodb.ObjectId;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import chat.logs.AnalyticsLogger;
-import chat.main.ServerStart;
-import com.alibaba.fastjson.JSON;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
-import script.groovy.object.GroovyObjectEx;
-import script.groovy.runtime.GroovyRuntime;
-import script.groovy.servlets.GroovyServletManager.PermissionIntercepter;
-import chat.errors.ChatErrorCodes;
-import chat.errors.CoreException;
-import chat.logs.LoggerEx;
-import script.groovy.servlets.grayreleased.GrayReleased;
-import script.memodb.ObjectId;
+import java.io.IOException;
+import java.lang.reflect.Parameter;
+import java.util.HashMap;
+import java.util.Set;
 
 public class RequestHolder {
     private static final String TAG = RequestHolder.class.getSimpleName();
@@ -291,10 +289,9 @@ public class RequestHolder {
                 if (permissionIntecepter != null) {
                     permissionIntecepter.getObject().invoke(permissions, requestUriWrapper.getMethod(), request, response);
                 }
-//				return servletObj.invokeMethod(groovyMethod, args);
             }
             Object returnObj = servletObj.invokeMethod(groovyMethod, args);
-            builder.append(" $$returnobj:: " + (returnObj != null ? JSON.toJSONString(returnObj) : returnObj));
+//            builder.append(" $$returnobj:: " + (returnObj != null ? JSON.toJSONString(returnObj) : returnObj));
             return returnObj;
         } catch (Throwable t) {
             error = true; LoggerEx.error(TAG, "servletObj " + servletObj + " invoke method " + groovyMethod + " failed, " + ExceptionUtils.getFullStackTrace(t));

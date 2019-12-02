@@ -5,7 +5,7 @@ import chat.logs.LoggerEx;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.script.annotations.handler.ServiceUserSessionAnnotationHandler;
 import com.dobybros.chat.utils.SingleThreadQueue;
-import org.apache.mina.core.session.IoSession;
+import com.dobybros.gateway.onlineusers.OnlineUser;
 import script.groovy.object.GroovyObjectEx;
 
 public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
@@ -72,12 +72,12 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                 if(container != null){
                     synchronized (container) {
                         container.type = PendingMessageContainer.CHANNELCREATED;
-                        IoSession session = container.session;
-                        if(session != null){
+                        OnlineUser onlineUser = container.onlineUser;
+                        if(onlineUser != null){
                             if(container.pendingMessages != null && container.pendingMessages.size() > 0){
                                 for(Object message : container.pendingMessages){
                                     try {
-                                        runtime.messageReceived((Message) message, gwUserParams.terminal, (IoSession) session, container.needTcpResult);
+                                        runtime.messageReceived((Message) message, gwUserParams.terminal, onlineUser, container.needTcpResult);
                                     } catch (Throwable t) {
                                         t.printStackTrace();
                                         LoggerEx.error(TAG, "Handle message " + gwUserParams.terminal + " created by " + gwUserParams.userId + " failed, " + t.getMessage());
@@ -87,7 +87,7 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                             if(container.pendingDatas != null && container.pendingDatas.size() > 0){
                                 for(Object data : container.pendingDatas){
                                     try {
-                                        runtime.dataReceived((Message) data, gwUserParams.terminal, (IoSession) session);
+                                        runtime.dataReceived((Message) data, gwUserParams.terminal, onlineUser);
                                     } catch (Throwable t) {
                                         t.printStackTrace();
                                         LoggerEx.error(TAG, "Handle message " + gwUserParams.terminal + " created by " + gwUserParams.userId + " failed, " + t.getMessage());
@@ -96,7 +96,7 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                             }
                             container.pendingDatas = null;
                             container.pendingMessages = null;
-                            container.session = null;
+                            container.onlineUser = null;
                         }
                     }
                 }

@@ -137,13 +137,13 @@ public class ScriptManager implements ShutdownListener {
             List<String> serviceVersionFinalList = getServiceVersions();
             if (serviceVersionFinalList != null) {
                 Set<String> remoteServices = new HashSet<>();
-                for (String service_version : serviceVersionFinalList) {
+                for (String theServiceVersion : serviceVersionFinalList) {
                     String zipFile = "groovy.zip";
                     try {
-                        FileEntity fileEntity = fileAdapter.getFileEntity(new PathEx(remotePath + service_version + "/" + zipFile));
+                        FileEntity fileEntity = fileAdapter.getFileEntity(new PathEx(remotePath + theServiceVersion + "/" + zipFile));
                         if (fileEntity != null) {
                             boolean createRuntime = false;
-                            String service = service_version;
+                            String service = theServiceVersion;
                             String localScriptPath = null;
                             String serverTypePath = "/" + serverType + "/";
                             remoteServices.add(service);
@@ -186,7 +186,7 @@ public class ScriptManager implements ShutdownListener {
                             }
 
                             if (runtime != null && needRedeploy) {
-                                File localZipFile = new File(localPath + serverTypePath + service_version + "/" + zipFile);
+                                File localZipFile = new File(localPath + serverTypePath + theServiceVersion + "/" + zipFile);
                                 FileUtils.deleteQuietly(localZipFile);
                                 OutputStream zipOs = FileUtils.openOutputStream(localZipFile);
                                 fileAdapter.readFile(new PathEx(fileEntity.getAbsolutePath()), zipOs);
@@ -303,13 +303,13 @@ public class ScriptManager implements ShutdownListener {
                                 LoggerEx.info(TAG, "=====Notice!!! The service: " + service + " has being redeployed====");
                             }
                         } else {
-                            LoggerEx.error(TAG, "Failed get groovy.zip, service is " + service_version);
-                            throw new CoreException(ChatErrorCodes.ERROR_NO_GROOVYFILE, "Failed get groovy.zip, service is " + service_version);
+                            LoggerEx.error(TAG, "Failed get groovy.zip, service is " + theServiceVersion);
+                            throw new CoreException(ChatErrorCodes.ERROR_NO_GROOVYFILE, "Failed get groovy.zip, service is " + theServiceVersion);
                         }
-                    }catch (Exception e){
-                        if(killProcess){
+                    } catch (Exception e) {
+                        if (killProcess) {
                             throw e;
-                        }else {
+                        } else {
                             e.printStackTrace();
                             LoggerEx.error(TAG, "err: " + e);
                         }
@@ -344,7 +344,7 @@ public class ScriptManager implements ShutdownListener {
 
         } catch (Exception e) {
             e.printStackTrace();
-            if(killProcess){
+            if (killProcess) {
                 System.exit(1);
             }
         } finally {
@@ -354,7 +354,7 @@ public class ScriptManager implements ShutdownListener {
     }
 
     public BaseRuntime getBaseRuntime(String service) {
-        if(service == null) return null;
+        if (service == null) return null;
         if (!service.contains(versionSeperator)) {
             if (defalutServiceVersionMap.size() > 0) {
                 Integer version = defalutServiceVersionMap.get(service);
@@ -387,7 +387,7 @@ public class ScriptManager implements ShutdownListener {
                             } else {
                                 defaultVersionMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
                             }
-                        }else {
+                        } else {
                             if (!StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
                                 if (Integer.valueOf(serviceVersionMap.get(serviceName)) > defaultVersionMap.get(serviceName)) {
                                     defaultVersionMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
@@ -431,9 +431,9 @@ public class ScriptManager implements ShutdownListener {
             List<String> serviceVersionFinalList = new ArrayList<>();
             List<String> discoveryServiceList = new ArrayList<>();
             for (String type : serviceVersionFinalMap.keySet()) {
-                List<String> service_versionList = serviceVersionFinalMap.get(type);
-                if (service_versionList != null && service_versionList.size() > 0) {
-                    for (String serviceVersion : service_versionList) {
+                List<String> serviceVersionList = serviceVersionFinalMap.get(type);
+                if (serviceVersionList != null && serviceVersionList.size() > 0) {
+                    for (String serviceVersion : serviceVersionList) {
                         if (serviceVersion.contains("discovery")) {
                             if (!discoveryServiceList.contains(serviceVersion)) {
                                 discoveryServiceList.add(serviceVersion);

@@ -4,7 +4,8 @@ import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.alibaba.fastjson.JSON;
 import com.dobybros.chat.rpc.reqres.balancer.IMProxyRequest;
-import com.dobybros.chat.rpc.reqres.balancer.IMResponse;
+import com.dobybros.chat.rpc.reqres.balancer.IMProxyResponse;
+import com.dobybros.chat.rpc.reqres.balancer.ProxyIMResponse;
 import com.dobybros.chat.rpc.reqres.balancer.ProxyIMRequest;
 import com.dobybros.gateway.channels.data.Result;
 import com.dobybros.gateway.pack.HailPack;
@@ -22,16 +23,18 @@ public class RpcProxyContainerDuplexSender {
     private final String TAG = RpcProxyContainerDuplexSender.class.getSimpleName();
     private RPCClientAdapterMap rpcClientAdapterMap = RPCClientAdapterMapFactory.getInstance().getRpcClientAdapterMap();
 
-    IMResponse sendIM(ProxyIMRequest request, RemoteServers.Server server, RPCClientAdapter.ClientAdapterStatusListener clientAdapterStatusListener) {
+    ProxyIMResponse sendIM(ProxyIMRequest request, RemoteServers.Server server, RPCClientAdapter.ClientAdapterStatusListener clientAdapterStatusListener) {
         if (request != null && request.checkParamsNotNull()) {
             if (server != null) {
-                IMResponse response = null;
+                ProxyIMResponse response = null;
                 try {
-                    RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(server.getIp(), server.getRpcPort(), server.getServer());
+                    RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(server.getIp(), server.getRpcPort(), server.getServer(), clientAdapterStatusListener);
                     if (clientAdapter != null) {
-                        response = (IMResponse) clientAdapter.call(request);
-                        response.resurrect();
-                        return response;
+                        response = (ProxyIMResponse) clientAdapter.call(request);
+                        if(response != null){
+                            response.resurrect();
+                            return response;
+                        }
                     }
                 } catch (Throwable throwable) {
                     LoggerEx.error(TAG, "Call remoteservice failed,ProxyIMRequest: " + JSON.toJSONString(request) + ",errMsg: " + ExceptionUtils.getFullStackTrace(throwable));
@@ -41,7 +44,7 @@ public class RpcProxyContainerDuplexSender {
                         result.setForId(request.getForId());
                         result.setCode(((CoreException) throwable).getCode());
                         result.setDescription(((CoreException) throwable).getMessage());
-                        response = new IMResponse();
+                        response = new ProxyIMResponse();
                         try {
                             result.persistent();
                             response.setReturnData(result.getData());
@@ -57,14 +60,16 @@ public class RpcProxyContainerDuplexSender {
         return null;
     }
 
-    IMResponse sendProxy(IMProxyRequest request, RemoteServers.Server server, RPCClientAdapter.ClientAdapterStatusListener clientAdapterStatusListener) throws CoreException{
+    IMProxyResponse sendProxy(IMProxyRequest request, RemoteServers.Server server, RPCClientAdapter.ClientAdapterStatusListener clientAdapterStatusListener) throws CoreException{
         if (request != null && request.checkParamsNotNull()) {
             if (server != null) {
                 RPCClientAdapter clientAdapter = rpcClientAdapterMap.registerServer(server.getIp(), server.getRpcPort(), server.getServer(), clientAdapterStatusListener);
                 if (clientAdapter != null) {
-                    IMResponse response = (IMResponse) clientAdapter.call(request);
-                    response.resurrect();
-                    return response;
+                    IMProxyResponse response = (IMProxyResponse) clientAdapter.call(request);
+                    if(response != null){
+                        response.resurrect();
+                        return response;
+                    }
                 }
             }
         }

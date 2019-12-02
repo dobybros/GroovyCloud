@@ -19,6 +19,7 @@ public class IMConfigApp extends BeanApp {
     private String keymanagerPwd;
     private String upstreamSslPort;
     private String upstreamWsPort;
+    private Boolean useProxy;
 
     public IMConfigApp(){
         super();
@@ -32,6 +33,7 @@ public class IMConfigApp extends BeanApp {
             keymanagerPwd = prop.getProperty("keymanager.pwd");
             upstreamSslPort = prop.getProperty("upstream-ssl-port");
             upstreamWsPort = prop.getProperty("upstream-ws-port");
+            useProxy = Boolean.valueOf(prop.getProperty("useProxy"));
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -65,5 +67,9 @@ public class IMConfigApp extends BeanApp {
 
     public String getUpstreamWsPort() {
         return upstreamWsPort;
+    }
+
+    public Boolean getUseProxy() {
+        return useProxy;
     }
 }

@@ -82,6 +82,9 @@ public abstract class ServiceUserSessionListener {
     public void pingReceived(Integer terminal) {
     }
 
+    public void pingTimeoutReceived(Integer terminal) {
+    }
+
 
     public String getUserId() {
         return userId;
