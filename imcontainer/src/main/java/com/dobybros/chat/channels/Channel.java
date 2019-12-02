@@ -111,6 +111,9 @@ public abstract class Channel {
 		public static final int CLOSE_SHUTDOWN = 90;
 		public static final int CLOSE_MUSTUPGRADE = 100;
 		public static final int CLOSE_PASSWORDCHANGED = 110;
+		public static final int CLOSE_NOTICEIM_IMMEDIATELY = 117;
+		public static final int CLOSE_NOTICEIM = 118;
+		public static final int CLOSE_IMMEDIATELY = 119;
 		public static final int CLOSE_FORBIDDEN = 120;
 
 		public void channelClosed(Channel channel, int close);
