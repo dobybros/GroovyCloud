@@ -5,7 +5,7 @@ import chat.logs.LoggerEx;
 import chat.scheduled.QuartzFactory;
 import org.apache.commons.lang.exception.ExceptionUtils;
 public abstract class TimerTaskEx extends TimerTask{
-	private final String TAG = TimerTaskEx.class.getSimpleName();
+	protected final String TAG = TimerTaskEx.class.getSimpleName();
 	private String id;
 	private Long delay;
 	private Long period;

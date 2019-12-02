@@ -181,7 +181,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
             response.setCrc(crc);
             if (returnObj != null)
                 response.setReturnTmpStr(JSON.toJSONString(returnObj));
-            builder.append(" $$returnobj:: " + response.getReturnTmpStr());
+//            builder.append(" $$returnobj:: " + response.getReturnTmpStr());
             if (error)
                 AnalyticsLogger.error(TAG, builder.toString());
             else

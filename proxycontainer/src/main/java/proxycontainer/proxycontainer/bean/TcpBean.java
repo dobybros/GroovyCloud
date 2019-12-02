@@ -4,9 +4,9 @@ import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
 import com.dobybros.chat.handlers.RpcProxyContainerDuplexSender;
 import com.dobybros.gateway.channels.tcp.codec.HailProtocalCodecFactory;
 import com.dobybros.gateway.eventhandler.MessageEventHandler;
-import com.proxy.im.ProxyUpStreamHandler;
 import com.proxy.im.ProxyAnnotationHandler;
 import com.proxy.im.ProxyUpStreamAnnotationHandler;
+import com.proxy.im.ProxyUpStreamHandler;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.ssl.KeyStoreFactory;
@@ -33,19 +33,19 @@ public class TcpBean {
         instance = ProxyBeanApp.getInstance();
     }
     @Bean
-    public ProxyUpStreamAnnotationHandler tcpUpStreamAnnotationHandler() {
+    public ProxyUpStreamAnnotationHandler proxyUpStreamAnnotationHandler() {
         return new ProxyUpStreamAnnotationHandler();
     }
 
     @Bean
-    public ProxyUpStreamHandler upstreamHandler() {
+    public ProxyUpStreamHandler proxyUpStreamHandler() {
         return instance.getProxyUpStreamHandler();
     }
 
     @Bean
     public CustomEditorConfigurer customEditorConfigurer() {
         CustomEditorConfigurer customEditorConfigurer = new CustomEditorConfigurer();
-        Map<Class<?>, Class<? extends PropertyEditor>> map = new HashMap();
+        Map<Class<?>, Class<? extends PropertyEditor>> map = new HashMap<>();
         map.put(java.net.SocketAddress.class, org.apache.mina.integration.beans.InetSocketAddressEditor.class);
         customEditorConfigurer.setCustomEditors(map);
         return customEditorConfigurer;
@@ -114,7 +114,7 @@ public class TcpBean {
         return instance.getMessageEventHandler();
     }
     @Bean
-    public ProxyAnnotationHandler tcpAnnotationHandler(){
+    public ProxyAnnotationHandler proxyAnnotationHandler(){
         return instance.getProxyAnnotationHandler();
     }
     @Bean
@@ -122,7 +122,7 @@ public class TcpBean {
         return instance.getProxyContainerDuplexSender();
     }
     @Bean
-    public RpcProxyContainerDuplexSender rpcMessageSendInvoke(){
+    public RpcProxyContainerDuplexSender rpcProxyContainerDuplexSender(){
         return instance.getRpcProxyContainerDuplexSender();
     }
 }

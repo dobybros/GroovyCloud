@@ -258,11 +258,11 @@ public class DockerStatusServiceImpl implements DockerStatusService {
 
 		Document query = new Document();
 		if(types != null) {
-			query.append("${DockerStatus.FIELD_DOCKERSTATUS_SERVICES}.${Service.FIELD_SERVICE_SERVICEANNOTATION}.${ServiceAnnotation.FIELD_TYPE}",
+			query.append("services.serviceAnnotations.type",
 					new Document("$in", types));
 		}
 		if(id != null) {
-			query.append("${DockerStatus.FIELD_DOCKERSTATUS_SERVICES}.${Service.FIELD_SERVICE_SERVICEANNOTATION}.${ServiceAnnotation.FIELD_ANNOTATIONPARAMS}.id", id);
+			query.append("services.serviceAnnotations.params.id", id);
 		}
 
 		FindIterable<Document> iterable = dockerStatusDAO.query(query);

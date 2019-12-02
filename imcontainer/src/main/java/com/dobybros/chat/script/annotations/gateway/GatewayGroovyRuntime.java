@@ -5,6 +5,7 @@ import chat.logs.LoggerEx;
 import chat.main.ServerStart;
 import com.alibaba.fastjson.JSONObject;
 import com.dobybros.chat.binary.data.Data;
+import com.dobybros.chat.channels.Channel;
 import com.dobybros.chat.open.data.IMConfig;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.open.data.MsgResult;
@@ -14,17 +15,14 @@ import com.dobybros.chat.utils.SingleThreadQueue;
 import com.dobybros.gateway.channels.data.DataVersioning;
 import com.dobybros.gateway.channels.data.OutgoingData;
 import com.dobybros.gateway.channels.data.Result;
-import com.dobybros.gateway.channels.tcp.UpStreamHandler;
 import com.dobybros.gateway.errors.GatewayErrorCodes;
 import com.dobybros.gateway.onlineusers.OnlineServiceUser;
 import com.dobybros.gateway.onlineusers.OnlineUser;
 import com.dobybros.gateway.onlineusers.OnlineUserManager;
 import com.dobybros.gateway.open.GatewayMSGServers;
-import com.dobybros.gateway.pack.Pack;
 import com.docker.script.MyBaseRuntime;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.mina.core.session.IoSession;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.GroovyRuntime;
@@ -40,11 +38,12 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
     private GroovyObjectEx<SessionListener> sessionListener;
     private List<GroovyObjectEx<MessageNotReceivedListener>> messageNotReceivedListeners;
 
-//	private ReadWriteLock sessionLock = new ReentrantReadWriteLock();
+    //	private ReadWriteLock sessionLock = new ReentrantReadWriteLock();
 //	private ReadWriteLock messageNotReceivedLock = new ReentrantReadWriteLock();
     private ConcurrentHashMap<String, SingleThreadQueue> singleThreadMap = new ConcurrentHashMap<>();
     private OnlineUserManager onlineUserManager = (OnlineUserManager) SpringContextUtil.getBean("onlineUserManager");
-    public ConcurrentHashMap<String, PendingMessageContainer> channelCreatedMessage = new ConcurrentHashMap();
+    public ConcurrentHashMap<String, PendingMessageContainer> channelCreatedMessage = new ConcurrentHashMap<>();
+
     @Override
     public void prepare(String service, Properties properties, String localScriptPath) {
         super.prepare(service, properties, localScriptPath);
@@ -274,10 +273,12 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 //			sessionLock.readLock().unlock();
 //		}
     }
-    public IMConfig getIMConfig(String userId, String service){
+
+    public IMConfig getIMConfig(String userId, String service) {
+        IMConfig imConfig = null;
         if (sessionListener != null) {
             try {
-                return sessionListener.getObject().getIMConfig(userId, service);
+                imConfig = sessionListener.getObject().getIMConfig(userId, service);
             } catch (Throwable t) {
                 t.printStackTrace();
                 LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getIMConfig failed, " + ExceptionUtils.getFullStackTrace(t));
@@ -286,17 +287,18 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
             if (listener != null)
                 try {
-                    listener.getIMConfig();
+                    imConfig = listener.getIMConfig();
                 } catch (Throwable t) {
                     t.printStackTrace();
                     LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getIMConfig failed, " + ExceptionUtils.getFullStackTrace(t));
                 }
         }
-//		} finally {
-//			sessionLock.readLock().unlock();
-//		}
-        return null;
+        if (imConfig == null) {
+            imConfig = new IMConfig();
+        }
+        return imConfig;
     }
+
     public Long getMaxInactiveInterval(String userId, String service) {
 //		sessionLock.readLock().lock();
 //		try {
@@ -329,16 +331,10 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
      * @param message
      * @return 非空就不用发送消息了， 为空时会继续发送。 默认为为空
      */
-    public void messageReceived(Message message, Integer terminal, IoSession session, boolean needTcpResult) {
-        OnlineUser onlineUser = (OnlineUser) session.getAttribute(UpStreamHandler.ATTRIBUTE_ONLINEUSER);
-        if (onlineUser == null) {
-            LoggerEx.error(TAG, "Online user " + message.getUserId() + " not found while receiving message " + message);
-            return;
-        }
-//            throw new CoreException(GatewayErrorCodes.ERROR_ONLINEUSER_NULL, "Online user " + message.getUserId() + " not found while receiving message " + message);
+    public void messageReceived(Message message, Integer terminal, OnlineUser onlineUser, boolean needTcpResult) {
         PendingMessageContainer container = channelCreatedMessage.get(PendingMessageContainer.getKey(onlineUser.getUserId(), getService(), terminal));
         if (container == null) {
-            LoggerEx.error(TAG, "channel is not created, terminal: " + terminal + " message: " + JSONObject.toJSONString(message) + " session: " + JSONObject.toJSONString(session));
+            LoggerEx.error(TAG, "channel is not created, terminal: " + terminal + " message: " + JSONObject.toJSONString(message));
             return;
         } else {
             if (container.type == PendingMessageContainer.CHANNELCREATED) {
@@ -363,16 +359,17 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                             throw new CoreException(GatewayErrorCodes.ERROR_ONLINESERVICEUSER_NULL, "Online service user " + message.getUserId() + "@" + message.getService() + " not found while sending result " + msgResult + " for message " + message);
 
                         if (msgResult != null && msgResult.isShouldIntercept()) {
-                            Result result = DataVersioning.getResultData(session, msgResult.getCode(), null, message.getClientId());
-                            result.setContentEncode(msgResult.getDataEncode());
-                            result.setContent(msgResult.getData());
-                            result.setTime(message.getTime());
-                            if (result != null) {
-                                Pack resultPack = DataVersioning.getDataPack(session, result);
-                                if (resultPack != null) {
-                                    session.write(resultPack);
+                            Channel channel = serviceUser.getChannel(terminal);
+                            if (channel != null) {
+                                Result result = DataVersioning.getResultData(channel.getEncodeVersion(), msgResult.getCode(), null, message.getClientId());
+                                result.setContentEncode(msgResult.getDataEncode());
+                                result.setContent(msgResult.getData());
+                                result.setTime(message.getTime());
+                                if (result != null) {
+                                    channel.send(result);
                                 }
                             }
+                            return;
                         }
 
                         Result resultEvent = (Result) serviceUser.sendTopic(message, needTcpResult, theTopic -> {
@@ -387,15 +384,14 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 
                         // 组织result
                         if (msgResult != null) {
-                            if (msgResult.getCode() != null)
-                                resultEvent.setCode(msgResult.getCode());
-                            resultEvent.setContentEncode(msgResult.getDataEncode());
-                            resultEvent.setContent(msgResult.getData());
-                            resultEvent.setTime(message.getTime());
-                            if (resultEvent != null) {
-                                Pack resultPack = DataVersioning.getDataPack(session, resultEvent);
-                                if (resultPack != null) {
-                                    session.write(resultPack);
+                            Channel channel = serviceUser.getChannel(terminal);
+                            if (channel != null) {
+                                Result result = DataVersioning.getResultData(channel.getEncodeVersion(), msgResult.getCode(), null, message.getClientId());
+                                result.setContentEncode(msgResult.getDataEncode());
+                                result.setContent(msgResult.getData());
+                                result.setTime(message.getTime());
+                                if (result != null) {
+                                    channel.send(result);
                                 }
                             }
                         }
@@ -407,16 +403,16 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             } else if (container.type == PendingMessageContainer.CHANNELNOTCREATED) {
                 //和异步调用groovy层的channelCreated之后的更改为CREATED状态做同步处理， 防止丢消息
                 synchronized (container) {
-                    if(container.type == PendingMessageContainer.CHANNELNOTCREATED) {
-                        if(container.pendingMessages == null) {
+                    if (container.type == PendingMessageContainer.CHANNELNOTCREATED) {
+                        if (container.pendingMessages == null) {
                             container.pendingMessages = new ArrayList<>();
                         }
                         container.pendingMessages.add(message);
-                        container.session = session;
+                        container.onlineUser = onlineUser;
                         container.needTcpResult = needTcpResult;
                     } else {
                         //如果再添加消息过程中， container的type从NOTCREATED改变到了CREATED， 就再执行一边该方法， 确保不会丢消息
-                        messageReceived(message, terminal, session, needTcpResult);
+                        messageReceived(message, terminal, onlineUser, needTcpResult);
                     }
                 }
 
@@ -442,18 +438,10 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
      * @param message
      * @return 非空就不用发送消息了， 为空时会继续发送。 默认为为空
      */
-    public void dataReceived(Message message, Integer terminal, IoSession session) {
-        OnlineUser onlineUser = (OnlineUser) session.getAttribute(UpStreamHandler.ATTRIBUTE_ONLINEUSER);
-        if (onlineUser == null) {
-            LoggerEx.error(TAG, "Online user " + message.getUserId() + " not found while receiving message " + message);
-            return;
-        }
-//            throw new CoreException(GatewayErrorCodes.ERROR_ONLINEUSER_NULL, "Online user " + message.getUserId() + " not found while receiving message " + message);
+    public void dataReceived(Message message, Integer terminal, OnlineUser onlineUser) {
         PendingMessageContainer container = channelCreatedMessage.get(PendingMessageContainer.getKey(onlineUser.getUserId(), getService(), terminal));
-//        Map terminalObject = channelCreatedMessage.get(PendingMessageContainer.getKey(userId, getService()));
         if (container == null) {
-            LoggerEx.error(TAG, "channel is not created, terminal: " + terminal + " message: " + JSONObject.toJSONString(message) + " session: " + JSONObject.toJSONString(session));
-            return;
+            LoggerEx.error(TAG, "channel is not created, terminal: " + terminal + " message: " + JSONObject.toJSONString(message));
         } else {
             if (container.type == PendingMessageContainer.CHANNELCREATED) {
                 ServerStart.getInstance().getGatewayThreadPoolExecutor().execute(() -> {
@@ -472,22 +460,19 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                                 }
                             }
                         }
-//                                OnlineUser onlineUser = onlineUserManager.getOnlineUser(message.getUserId());
-//                                if (onlineUser == null)
-//                                    throw new CoreException(GatewayErrorCodes.ERROR_ONLINEUSER_NULL, "Online user " + message.getUserId() + " not found while sending result " + msgResult + " for message " + message);
                         OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(message.getService());
                         if (serviceUser == null)
                             throw new CoreException(GatewayErrorCodes.ERROR_ONLINESERVICEUSER_NULL, "Online service user " + message.getUserId() + "@" + message.getService() + " not found while sending result " + msgResult + " for message " + message);
 
                         if (msgResult != null && msgResult.isShouldIntercept()) {
-                            Result result = DataVersioning.getResultData(session, msgResult.getCode(), null, message.getClientId());
-                            result.setContentEncode(msgResult.getDataEncode());
-                            result.setContent(msgResult.getData());
-                            result.setTime(message.getTime());
-                            if (result != null) {
-                                Pack resultPack = DataVersioning.getDataPack(session, result);
-                                if (resultPack != null) {
-                                    session.write(resultPack);
+                            Channel channel = serviceUser.getChannel(terminal);
+                            if (channel != null) {
+                                Result result = DataVersioning.getResultData(channel.getEncodeVersion(), msgResult.getCode(), null, message.getClientId());
+                                result.setContentEncode(msgResult.getDataEncode());
+                                result.setContent(msgResult.getData());
+                                result.setTime(message.getTime());
+                                if (result != null) {
+                                    channel.send(result);
                                 }
                             }
                             return;
@@ -505,14 +490,14 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
 
                         // 组织result
                         if (msgResult != null) {
-                            Result resultEvent = DataVersioning.getResultData(session, msgResult.getCode(), null, message.getClientId());
-                            resultEvent.setContentEncode(msgResult.getDataEncode());
-                            resultEvent.setContent(msgResult.getData());
-                            resultEvent.setTime(message.getTime());
-                            if (resultEvent != null) {
-                                Pack resultPack = DataVersioning.getDataPack(session, resultEvent);
-                                if (resultPack != null) {
-                                    session.write(resultPack);
+                            Channel channel = serviceUser.getChannel(terminal);
+                            if (channel != null) {
+                                Result result = DataVersioning.getResultData(channel.getEncodeVersion(), msgResult.getCode(), null, message.getClientId());
+                                result.setContentEncode(msgResult.getDataEncode());
+                                result.setContent(msgResult.getData());
+                                result.setTime(message.getTime());
+                                if (result != null) {
+                                    channel.send(result);
                                 }
                             }
                         }
@@ -523,51 +508,21 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                 });
             } else if (container.type == PendingMessageContainer.CHANNELNOTCREATED) {
                 synchronized (container) {
-                    if(container.type == PendingMessageContainer.CHANNELNOTCREATED) {
-                        if(container.pendingDatas == null) {
+                    if (container.type == PendingMessageContainer.CHANNELNOTCREATED) {
+                        if (container.pendingDatas == null) {
                             container.pendingDatas = new ArrayList<>();
                         }
                         //多线程安全问题,如果同时进来两个线程,第二个list会把第一个覆盖掉,导致丢掉一个message
                         container.pendingDatas.add(message);
-                        container.session = session;
+                        container.onlineUser = onlineUser;
                     } else {
                         //如果再添加消息过程中， container的type从NOTCREATED改变到了CREATED， 就再执行一边该方法， 确保不会丢消息
-                        dataReceived(message, terminal, session);
+                        dataReceived(message, terminal, onlineUser);
                     }
                 }
             }
         }
     }
-
-/*
-    public void messageReceivedAsync(Message message, Integer terminal) {
-//		sessionLock.readLock().lock();
-//		try {
-        if(sessionListeners != null) {
-            for(GroovyObjectEx<SessionListener> listener : sessionListeners) {
-                try {
-                    if(listener.getObject().needAsync()) {
-                        ServerStart.getInstance().getGatewayThreadPoolExecutor().execute(() -> {
-                            try {
-                                listener.getObject().messageReceivedAsync(message, terminal);
-                            } catch (CoreException e) {
-                                e.printStackTrace();
-                                LoggerEx.error(TAG, "Handle message " + message + " messageReceived failed, " + e.getMessage());
-                            }
-                        });
-                    }
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    LoggerEx.error(TAG, "Handle message " + message + " messageReceived failed, " + ExceptionUtils.getFullStackTrace(t));
-                }
-            }
-        }
-
-//		} finally {
-//			sessionLock.readLock().unlock();
-//		}
-    }
-*/
 
     /**
      * 因为用户不存在导致消息没有收到的回掉， 主要用于离线消息的推送， 例如苹果的APN
@@ -658,12 +613,37 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
      * @return 非空就不用发送消息了， 为空时会继续发送。 默认为为空
      */
     public void pingReceived(String userId, String service, Integer terminal) {
+//        ServerStart.getInstance().getGatewayThreadPoolExecutor().execute(() -> {
+//            if (sessionListener != null) {
+//                try {
+//                    sessionListener.getObject().pingReceived(userId, service, terminal);
+//                } catch (Throwable t) {
+//                    t.printStackTrace();
+//                    LoggerEx.error(TAG, "Handle pingReceived failed, " + ExceptionUtils.getFullStackTrace(t));
+//                }
+//            } else {
+//                ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
+//                if (listener != null) {
+//                    try {
+//                        listener.pingReceived(terminal);
+//                    } catch (Throwable t) {
+//                        t.printStackTrace();
+//                        LoggerEx.error(TAG, "Handle pingReceived failed, " + ExceptionUtils.getFullStackTrace(t));
+//                    }
+//                }
+//            }
+//
+//        });
+
+    }
+
+    public void pingTimeoutReceived(String userId, String service, Integer terminal) {
 //		sessionLock.readLock().lock();
 //		try {
         ServerStart.getInstance().getGatewayThreadPoolExecutor().execute(() -> {
             if (sessionListener != null) {
                 try {
-                    sessionListener.getObject().pingReceived(userId, service, terminal);
+                    sessionListener.getObject().pingTimeoutReceived(userId, service, terminal);
                 } catch (Throwable t) {
                     t.printStackTrace();
                     LoggerEx.error(TAG, "Handle pingReceived failed, " + ExceptionUtils.getFullStackTrace(t));
@@ -672,7 +652,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                 ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
                 if (listener != null) {
                     try {
-                        listener.pingReceived(terminal);
+                        listener.pingTimeoutReceived(terminal);
                     } catch (Throwable t) {
                         t.printStackTrace();
                         LoggerEx.error(TAG, "Handle pingReceived failed, " + ExceptionUtils.getFullStackTrace(t));
@@ -681,6 +661,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             }
 
         });
+
 //		} finally {
 //			sessionLock.readLock().unlock();
 //		}

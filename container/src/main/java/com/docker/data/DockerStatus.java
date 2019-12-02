@@ -28,6 +28,7 @@ public class DockerStatus extends DataObject {
 	public static final String FIELD_DOCKERSTATUS_SERVERTYPE = "serverType";
 	public static final String FIELD_DOCKERSTATUS_DOCKERNAME = "dockerName";
 	public static final String FIELD_DOCKERSTATUS_INFO = "serverInfo";
+	public static final String FIELD_DOCKERSTATUS_SSLTCPPORT = "sslTcpPort";
 
 	public static final String FIELD_SERVERSTATUS_RPCPORT = "rp";
 	public static final String FIELD_SERVERSTATUS_SSLRPCPORT = "srp";
@@ -233,6 +234,8 @@ public class DockerStatus extends DataObject {
 		dockerName = (String) dbObj.get(FIELD_DOCKERSTATUS_DOCKERNAME);
 		time =  (String) dbObj.get(FIELD_SERVERSTATUS_TIME);
 		type = dbObj.getInteger(FIELD_SERVERSTATUS_TYPE);
+		sslTcpPort = dbObj.getInteger(FIELD_DOCKERSTATUS_SSLTCPPORT);
+		wsPort = dbObj.getInteger(FIELD_SERVERSTATUS_WEBSOCKETPORT);
 		List<Document> servicesList = (List<Document>) dbObj.get(FIELD_DOCKERSTATUS_SERVICES);
 		if(servicesList != null) {
 			services = new ArrayList<>();
@@ -271,6 +274,10 @@ public class DockerStatus extends DataObject {
             dbObj.put(FIELD_DOCKERSTATUS_SSLRPCPORT, sslRpcPort);
 		if(publicDomain != null)
 			dbObj.put(FIELD_DOCKERSTATUS_PUBLICDOMAIN, publicDomain);
+		if(sslTcpPort != null)
+			dbObj.put(FIELD_DOCKERSTATUS_SSLTCPPORT, sslTcpPort);
+		if(wsPort != null)
+			dbObj.put(FIELD_SERVERSTATUS_WEBSOCKETPORT, wsPort);
 		if(lanId != null)
 			dbObj.put(FIELD_DOCKERSTATUS_LANID, lanId);
 		if(status != null)

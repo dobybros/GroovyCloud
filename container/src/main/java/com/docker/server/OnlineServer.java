@@ -17,9 +17,7 @@ import org.bson.Document;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -113,19 +111,26 @@ public class OnlineServer {
         dockerStatus.setLanId(lanId);
         dockerStatus.setHealth(0);
         dockerStatus.setSslRpcPort(Integer.valueOf(sslRpcPort));
-        dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
-        dockerStatus.setWsPort(Integer.valueOf(wsPort));
+        if(tcpPort != null){
+            dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
+        }
+        if(wsPort != null){
+            dockerStatus.setWsPort(Integer.valueOf(wsPort));
+        }
+        if(sslTcpPort != null){
+            dockerStatus.setSslTcpPort(Integer.valueOf(sslTcpPort));
+        }
         dockerStatus.setRpcPort(Integer.valueOf(rpcPort));
         dockerStatus.setTime(ChatUtils.dateString(System.currentTimeMillis()));
         if (status == null)
             status = DockerStatus.STATUS_OK;
         dockerStatus.setStatus(status);
-        Map<String, Object> info = new HashMap<String, Object>();
-        info.put(DockerStatus.FIELD_SERVERSTATUS_SSLRPCPORT, sslRpcPort);
-        info.put(DockerStatus.FIELD_SERVERSTATUS_TCPPORT, tcpPort);
-        info.put(DockerStatus.FIELD_SERVERSTATUS_WEBSOCKETPORT, wsPort);
-        info.put(DockerStatus.FIELD_SERVERSTATUS_RPCPORT, rpcPort);
-        dockerStatus.setInfo(info);
+//        Map<String, Object> info = new HashMap<String, Object>();
+//        info.put(DockerStatus.FIELD_SERVERSTATUS_SSLRPCPORT, sslRpcPort);
+//        info.put(DockerStatus.FIELD_SERVERSTATUS_TCPPORT, tcpPort);
+//        info.put(DockerStatus.FIELD_SERVERSTATUS_WEBSOCKETPORT, wsPort);
+//        info.put(DockerStatus.FIELD_SERVERSTATUS_RPCPORT, rpcPort);
+//        dockerStatus.setInfo(info);
         return dockerStatus;
     }
 

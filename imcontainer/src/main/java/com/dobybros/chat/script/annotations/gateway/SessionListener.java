@@ -53,5 +53,7 @@ public abstract class SessionListener {
 
     public void pingReceived(String userId, String service, Integer terminal) {
     }
+    public void pingTimeoutReceived(String userId, String service, Integer terminal) {
+    }
 //	public void pingReceivedAsync(String userId, String service, Integer terminal) {}
 }

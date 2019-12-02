@@ -1,7 +1,7 @@
 package com.dobybros.chat.script.annotations.gateway;
 
 import com.dobybros.chat.open.data.Message;
-import org.apache.mina.core.session.IoSession;
+import com.dobybros.gateway.onlineusers.OnlineUser;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ class PendingMessageContainer {
     int type = CHANNELNOTCREATED;
     List<Message> pendingMessages;
     List<Message> pendingDatas;
-    IoSession session;
+    OnlineUser onlineUser;
     Boolean needTcpResult;
 
     public static String getKey(String userId, String service, Integer terminal) {
