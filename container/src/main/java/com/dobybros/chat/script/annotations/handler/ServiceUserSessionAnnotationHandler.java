@@ -1,5 +1,6 @@
 package com.dobybros.chat.script.annotations.handler;
 
+import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionHandler;
 import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionListener;
@@ -28,6 +29,19 @@ public class ServiceUserSessionAnnotationHandler extends ClassAnnotationHandler 
     @Override
     public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, MyGroovyClassLoader classLoader) {
         this.setAnnotatedClassMap(annotatedClassMap);
+    }
+
+    @Override
+    public void handlerShutdown() {
+        super.handlerShutdown();
+        for (String serverUser : listenerMap.keySet()) {
+            ServiceUserSessionListener listener = listenerMap.get(serverUser);
+            try {
+                listener.closeSession();
+            } catch (CoreException e) {
+                LoggerEx.error(TAG, "Listener close session error when handlerShutdown, eMsg : " + e.getMessage());
+            }
+        }
     }
 
     public ServiceUserSessionListener createAnnotatedListener(String userId, String service) {
