@@ -1,5 +1,6 @@
 package com.docker.storage.cache;
 
+import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.docker.storage.cache.handlers.CacheStorageAdapter;
 import com.docker.storage.cache.handlers.RedisCacheStorageHandler;
@@ -20,6 +21,7 @@ public class CacheStorageFactory {
     private Map<String, CacheStorageAdapter> localCacheAdapterMap;
 
     public CacheStorageAdapter getCacheStorageAdapter(String cacheMethod, String host) {
+        LoggerEx.info(TAG, "Cache method is " + cacheMethod + ", host is " + host);
         if (StringUtils.isBlank(cacheMethod)) {
             cacheMethod = CacheStorageAdapter.DEFAULT_CACHE_METHOD;
         }
