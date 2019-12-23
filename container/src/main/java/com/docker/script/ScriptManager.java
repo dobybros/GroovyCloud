@@ -221,20 +221,12 @@ public class ScriptManager implements ShutdownListener {
                                         if (serversService != null) {
                                             Document configDoc = serversService.getServerConfig(serviceName);
                                             if (configDoc != null) {
-                                                LoggerEx.info(TAG, "Read server " + serviceName + " config " + configDoc);
                                                 Set<String> keys = configDoc.keySet();
                                                 for (String key : keys) {
-                                                    String theValue = configDoc.getString(key);
-                                                    String value = properties.getProperty(key);
-                                                    if (value == null) {
-                                                        key = key.replaceAll("_", ".");
-                                                        value = properties.getProperty(key);
-                                                    }
-                                                    if (value != null) {
-                                                        properties.put(key, theValue);
-                                                    }
+                                                    properties.put(key.replaceAll("_", "."), configDoc.getString(key));
                                                 }
                                             }
+                                            LoggerEx.info(TAG, "Read service: " + serviceName + ", merge config: " + properties);
                                         } else {
                                             LoggerEx.info(TAG, "serversService is null, will not read config from database for service " + serviceName);
                                         }

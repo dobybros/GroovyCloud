@@ -90,9 +90,6 @@ public class OnlineUser {
 		if(service == null)
 			return null;
 		OnlineServiceUser serviceUser = serviceUserMap.get(service);
-		if(serviceUser != null) {
-			serviceUser.touch();
-		}
 		return serviceUser;
 	}
 

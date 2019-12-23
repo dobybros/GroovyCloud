@@ -7,8 +7,10 @@ import chat.utils.TimerTaskEx;
 import com.dobybros.chat.binary.data.Data;
 import com.dobybros.chat.channels.Channel;
 import com.dobybros.chat.channels.Channel.ChannelListener;
+import com.dobybros.chat.data.SessionContextAttr;
 import com.dobybros.gateway.channels.msgs.MessageReceivedListener;
 import com.dobybros.gateway.errors.GatewayErrorCodes;
+import com.dobybros.gateway.onlineusers.OnlineServiceUser;
 import com.dobybros.gateway.onlineusers.OnlineUser;
 import com.dobybros.gateway.onlineusers.OnlineUserManager;
 import com.dobybros.gateway.pack.Pack;
@@ -111,13 +113,13 @@ public class UpStreamHandler extends IoHandlerAdapter {
 	@Override
 	public void messageReceived(IoSession session, Object message)
 			throws Exception {
-		OnlineUser onlineUser = null;
+		SessionContextAttr sessionContextAttr = null;
 		try {
-			onlineUser = (OnlineUser) session.getAttribute(ATTRIBUTE_ONLINEUSER);
+			sessionContextAttr = (SessionContextAttr) session.getAttribute(ATTRIBUTE_SESSIONCONTEXTATTR);
 			if(message != null && (message instanceof Data)) {
 				Data pack = (Data) message;
 				Byte type = pack.getType();
-				if(type != Pack.TYPE_IN_IDENTITY && onlineUser == null)
+				if(type != Pack.TYPE_IN_IDENTITY && sessionContextAttr == null)
 					throw new CoreException(GatewayErrorCodes.ERROR_TCPCHANNEL_MISSING_ONLINEUSER, "Online user is missing for receiving message");
 
 //			if(onlineUser != null)
@@ -144,22 +146,40 @@ public class UpStreamHandler extends IoHandlerAdapter {
 			if(coreException == null)
 				coreException = new CoreException(GatewayErrorCodes.ERROR_TCPCHANNEL_UNKNOWN, "Unknown error occured while receiving message from tcp channel, channel " + session + " message " + message + " error " + t.getMessage());
 			if(coreException.getCode() >= GatewayErrorCodes.TCPCHANNEL_CLOSE_START && coreException.getCode() < GatewayErrorCodes.TCPCHANNEL_CLOSE_END){
-				if(onlineUser != null) {
-					Channel channel = (Channel) session.getAttribute(ATTRIBUTE_CHANNEL);
-					if(channel != null) { 
-						onlineUser.removeChannel(channel, ChannelListener.CLOSE_ERROR);
+				boolean closeSuccess = false;
+				if(sessionContextAttr != null) {
+					OnlineUser onlineUser = onlineUserManager.getOnlineUser(sessionContextAttr.getUserId());
+					if(onlineUser != null){
+						OnlineServiceUser onlineServiceUser = onlineUser.getOnlineServiceUser(sessionContextAttr.getService());
+						if(onlineServiceUser != null){
+							Channel channel = onlineServiceUser.getChannel(sessionContextAttr.getTerminal());
+							if(channel != null) {
+								closeSuccess = true;
+								onlineUser.removeChannel(channel, ChannelListener.CLOSE_ERROR);
+							}
+						}
 					}
-				} else {
+				}
+				if(!closeSuccess){
 					session.close(false);
 				}
 			} else if(coreException.getCode() >= GatewayErrorCodes.TCPCHANNEL_CLOSE_IMMEDIATELY_START && coreException.getCode() < GatewayErrorCodes.TCPCHANNEL_CLOSE_IMMEDIATELY_END){
-				if(onlineUser != null) {
-					Channel channel = (Channel) session.getAttribute(ATTRIBUTE_CHANNEL);
-					if(channel != null) { 
-						onlineUser.removeChannel(channel, ChannelListener.CLOSE_ERROR);
+				boolean closeSuccess = false;
+				if(sessionContextAttr != null) {
+					OnlineUser onlineUser = onlineUserManager.getOnlineUser(sessionContextAttr.getUserId());
+					if(onlineUser != null){
+						OnlineServiceUser onlineServiceUser = onlineUser.getOnlineServiceUser(sessionContextAttr.getService());
+						if(onlineServiceUser != null){
+							Channel channel = onlineServiceUser.getChannel(sessionContextAttr.getTerminal());
+							if(channel != null) {
+								closeSuccess = true;
+								onlineUser.removeChannel(channel, ChannelListener.CLOSE_ERROR);
+							}
+						}
 					}
-				} else {
-					session.close(true);
+				}
+				if(!closeSuccess){
+					session.close(false);
 				}
 			} else {
 				session.close(true);

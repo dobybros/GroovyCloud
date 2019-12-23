@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 @Retention(value = RetentionPolicy.RUNTIME)
 @Documented
 public @interface TimerTask {
-	public long period() default 0;
+	public long period() default 0;   //ms
 	public String key();
 	public String cron() default "";
 }
