@@ -65,6 +65,8 @@ public class OnlineServer {
 
     private Properties config;
 
+    private Long maxUserNumber;
+
     public static interface OnlineServerStartHandler {
         public void serverWillStart(OnlineServer onlineServer) throws CoreException;
 
@@ -95,6 +97,7 @@ public class OnlineServer {
         dockerStatus.setDockerName(dockerName);
         dockerStatus.setIp(ipHolder.getIp());
         dockerStatus.setType(type);
+        dockerStatus.setMaxUserNumber(maxUserNumber);
         if (rpcPort != null) {
             try {
                 dockerStatus.setRpcPort(Integer.parseInt(rpcPort));
@@ -487,5 +490,13 @@ public class OnlineServer {
 
     public void setType(Integer type) {
         this.type = type;
+    }
+
+    public Long getMaxUserNumber() {
+        return maxUserNumber;
+    }
+
+    public void setMaxUserNumber(Long maxUserNumber) {
+        this.maxUserNumber = maxUserNumber;
     }
 }

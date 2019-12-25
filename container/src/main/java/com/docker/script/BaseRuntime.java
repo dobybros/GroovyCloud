@@ -157,12 +157,14 @@ public abstract class BaseRuntime extends GroovyRuntime {
 				}
 			}
 		} catch(Throwable t) {
+		    LoggerEx.error(TAG, "Close mongo error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
 		}
 		try {
 			if(redisHandler != null) {
-				redisHandler.disconnect();
+//				redisHandler.disconnect();
 			}
 		} catch(Throwable t) {
+            LoggerEx.error(TAG, "Close redis error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
 		}
 		super.close();
 		clear();
