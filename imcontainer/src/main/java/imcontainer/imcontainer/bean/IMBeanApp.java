@@ -108,6 +108,7 @@ public class IMBeanApp extends IMConfigApp {
             instance.onlineServer.setTcpPort(instance.getUpstreamPort());
             instance.onlineServer.setWsPort(instance.getUpstreamWsPort());
             instance.onlineServer.setSslTcpPort(instance.getUpstreamSslPort());
+            instance.onlineServer.setPublicWsPort(instance.getPublicWsPort());
             instance.onlineServer.setStatus(1);
             instance.onlineServer.setType(Integer.valueOf(instance.getType()));
             instance.onlineServer.setConfigPath("container.properties");

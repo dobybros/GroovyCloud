@@ -1,10 +1,14 @@
 package com.docker.storage.cache;
 
+import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.docker.storage.cache.handlers.CacheStorageAdapter;
+import com.docker.storage.cache.handlers.RedisCacheStorageHandler;
+import com.docker.storage.redis.RedisHandler;
 import org.apache.commons.lang.StringUtils;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,6 +21,7 @@ public class CacheStorageFactory {
     private Map<String, CacheStorageAdapter> localCacheAdapterMap;
 
     public CacheStorageAdapter getCacheStorageAdapter(String cacheMethod, String host) {
+        LoggerEx.info(TAG, "Cache method is " + cacheMethod + ", host is " + host);
         if (StringUtils.isBlank(cacheMethod)) {
             cacheMethod = CacheStorageAdapter.DEFAULT_CACHE_METHOD;
         }
@@ -63,6 +68,26 @@ public class CacheStorageFactory {
             return cacheStorageAdapter;
         }
     }
+    public void removeCacheStorageAdapter(String cacheMethod, String host) {
+        if (StringUtils.isBlank(cacheMethod)) {
+            cacheMethod = CacheStorageAdapter.DEFAULT_CACHE_METHOD;
+        }
+        if (host != null) {
+            Map<String, CacheStorageAdapter> cacheStorageAdapterMap = cacheAdapterMap.get(cacheMethod);
+            if (cacheStorageAdapterMap != null) {
+                CacheStorageAdapter cacheStorageAdapter = cacheStorageAdapterMap.get(host);
+                if (cacheStorageAdapter != null) {
+                    if(StringUtils.equals(cacheMethod,CacheStorageMethod.METHOD_REDIS)){
+                        RedisCacheStorageHandler redisCacheStorageHandler = (RedisCacheStorageHandler)cacheStorageAdapter;
+                        boolean result =  cacheStorageAdapterMap.remove(host, cacheStorageAdapter);
+                        if (result) {
+                            redisCacheStorageHandler.disconnect();
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     private CacheStorageAdapter createCacheStorage(String cacheMethod, String host) {
         try {
@@ -93,6 +118,7 @@ public class CacheStorageFactory {
 
         return null;
     }
+
     public synchronized static CacheStorageFactory getInstance() {
         if(instance == null){
             instance = new CacheStorageFactory();

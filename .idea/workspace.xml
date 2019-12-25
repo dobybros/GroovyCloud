@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="d30068ac-81e7-4c86-b448-5280d1ed829e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/container/src/main/java/com/docker/data/DockerStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/java/com/docker/data/DockerStatus.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/java/com/docker/onlineserver/OnlineServerWithStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/java/com/docker/onlineserver/OnlineServerWithStatus.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/java/com/docker/script/BaseRuntime.java" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/java/com/docker/script/BaseRuntime.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/java/com/docker/server/OnlineServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/java/com/docker/server/OnlineServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/java/com/docker/storage/cache/CacheStorageFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/java/com/docker/storage/cache/CacheStorageFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/java/com/docker/storage/cache/handlers/RedisCacheStorageHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/java/com/docker/storage/cache/handlers/RedisCacheStorageHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/java/com/docker/storage/redis/RedisHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/java/com/docker/storage/redis/RedisHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/java/container/container/bean/BeanApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/java/container/container/bean/BeanApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/java/container/container/bean/ConfigApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/java/container/container/bean/ConfigApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/resources/container.properties" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/resources/container.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/resources/protobuf/Mobile.proto" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/resources/protobuf/Mobile.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/resources/protobuf/gen.sh" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/resources/protobuf/gen.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container/src/main/resources/protobuf/message.proto" beforeDir="false" afterPath="$PROJECT_DIR$/container/src/main/resources/protobuf/message.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/main/java/script/groovy/object/GroovyObjectEx.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/script/groovy/object/GroovyObjectEx.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/imcontainer/src/main/java/com/dobybros/chat/script/annotations/handler/ServiceUserSessionAnnotationHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/imcontainer/src/main/java/com/dobybros/chat/script/annotations/handler/ServiceUserSessionAnnotationHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/imcontainer/src/main/java/com/protobuf/Mobile.proto" beforeDir="false" afterPath="$PROJECT_DIR$/imcontainer/src/main/java/com/protobuf/Mobile.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/imcontainer/src/main/java/com/protobuf/message.proto" beforeDir="false" afterPath="$PROJECT_DIR$/imcontainer/src/main/java/com/protobuf/message.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/imcontainer/src/main/java/com/protobuf/objcoutput/Mobile.pbobjc.h" beforeDir="false" afterPath="$PROJECT_DIR$/imcontainer/src/main/java/com/protobuf/objcoutput/Mobile.pbobjc.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/imcontainer/src/main/java/com/protobuf/objcoutput/Mobile.pbobjc.m" beforeDir="false" afterPath="$PROJECT_DIR$/imcontainer/src/main/java/com/protobuf/objcoutput/Mobile.pbobjc.m" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/imcontainer/src/main/java/imcontainer/imcontainer/bean/IMBeanApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/imcontainer/src/main/java/imcontainer/imcontainer/bean/IMBeanApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/imcontainer/src/main/java/imcontainer/imcontainer/bean/IMConfigApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/imcontainer/src/main/java/imcontainer/imcontainer/bean/IMConfigApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/imcontainer/src/main/resources/container.properties" beforeDir="false" afterPath="$PROJECT_DIR$/imcontainer/src/main/resources/container.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxycontainer/src/main/resources/container.properties" beforeDir="false" afterPath="$PROJECT_DIR$/proxycontainer/src/main/resources/container.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/GatewayService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/GatewayService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/GatewayService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/GatewayService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/IMAPIGatewayWeb/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/IMAPIGatewayWeb/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/IMAPIGatewayWeb/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/IMAPIGatewayWeb/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/IMAgencyService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/IMAgencyService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/IMOfflineMsgService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/IMOfflineMsgService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/IMOfflineMsgService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/IMOfflineMsgService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/IMProxyService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/IMProxyService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/IMProxyService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/IMProxyService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/IMUserInPresenceService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/IMUserInPresenceService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/IMUserInPresenceService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/IMUserInPresenceService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/IMUserInfoService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/IMUserInfoService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IMServers/IMUserInfoService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../IMServers/IMUserInfoService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/DiscoveryService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/DiscoveryService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/DiscoveryService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/DiscoveryService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/DistributeTransactionService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/DistributeTransactionService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/DistributeTransactionService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/DistributeTransactionService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/DistributeTransactionTest/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/DistributeTransactionTest/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/DistributeTransactionTest2/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/DistributeTransactionTest2/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/IMAdminWeb/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/IMAdminWeb/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/IndexConsumer/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/IndexConsumer/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/IndexConsumer/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/IndexConsumer/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/KafkaService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/KafkaService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/NotificationService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/NotificationService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/NotificationService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/NotificationService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/RemoteProxyService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/RemoteProxyService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/RemoteProxyService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/RemoteProxyService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ResourceWeb/src/main/groovy/handlers/MainHandler.groovy" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ResourceWeb/src/main/groovy/handlers/MainHandler.groovy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ScheduledTaskService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ScheduledTaskService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ScheduledTaskService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ScheduledTaskService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/async-edge-cases.js" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/async-edge-cases.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/basic-ssr.js" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/basic-ssr.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/commits.js" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/commits.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/grid.js" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/grid.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/markdown.js" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/markdown.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/modal.js" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/modal.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/select2.js" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/select2.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/svg.js" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/svg.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/todomvc.js" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/todomvc.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/tree.js" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/ServiceAdminWeb/src/main/resources/static/AculearnAdmin/plugins/vue-dev/test/e2e/specs/tree.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/TrackLogConsumer/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/TrackLogConsumer/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/WhiteListService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/WhiteListService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SharedServices/WhiteListService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../SharedServices/WhiteListService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/CallbackTaskService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/CallbackTaskService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/CallbackTaskService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/CallbackTaskService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/CallbackTaskService/src/main/groovy/handler/P2PConferenceCallbacks.groovy" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/CallbackTaskService/src/main/groovy/handler/P2PConferenceCallbacks.groovy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/ConverterTask/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/ConverterTask/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/ConverterTask/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/ConverterTask/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWConferenceService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWConferenceService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWConferenceService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWConferenceService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWLiveBroadcastService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWLiveBroadcastService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWLiveBroadcastService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWLiveBroadcastService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWLiveBroadcastService/src/main/groovy/gwlivebroadcast/data/memory/Class.groovy" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWLiveBroadcastService/src/main/groovy/gwlivebroadcast/data/memory/Class.groovy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWPlainRoomService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWPlainRoomService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWPlainRoomService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWPlainRoomService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWPrepareKmsService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWPrepareKmsService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWSignalService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWSignalService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWSignalService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWSignalService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWTCPlayerService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWTCPlayerService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWTCPlayerService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWTCPlayerService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWTuitionRoomService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWTuitionRoomService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/GWTuitionRoomService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/GWTuitionRoomService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/KMSMonitorService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/KMSMonitorService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/KMSMonitorService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/KMSMonitorService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/NfsService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/NfsService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/NfsService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/NfsService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/PlayerWeb/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/PlayerWeb/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/StreamMediaService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/StreamMediaService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCAPIGatewayWeb/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCAPIGatewayWeb/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCAPIGatewayWeb/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCAPIGatewayWeb/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCClassWeb/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCClassWeb/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCClassWeb/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCClassWeb/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCClassroomService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCClassroomService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCClassroomService/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCClassroomService/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCClassroomService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCClassroomService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCCore/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCCore/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCEnterpriseService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCEnterpriseService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCEnterpriseService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCEnterpriseService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCIntegrationService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCIntegrationService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCIntegrationService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCIntegrationService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCSuperAdminWeb/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCSuperAdminWeb/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCSuperAdminWeb/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCSuperAdminWeb/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCUserService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCUserService/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TCUserService/src/main/groovy/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TCUserService/src/main/groovy/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/TuitionCloudWeb/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/TuitionCloudWeb/deploy.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TuitionCloudNew/VodConvertService/deploy.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../TuitionCloudNew/VodConvertService/deploy.properties" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$/../IMServers" value="master" />
+        <entry key="$PROJECT_DIR$/../TuitionCloudNew" value="master" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="importingSettings">
+      <MavenImportingSettings>
+        <option name="importAutomatically" value="true" />
+      </MavenImportingSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="1VN3uMzoNZyMU9pDVUiZ6DQnWY0" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.14513788" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+  </component>
+  <component name="RunManager">
+    <configuration name="IMContainerApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="imcontainer.imcontainer.IMContainerApplication" />
+      <module name="imcontainer" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="imcontainer.imcontainer.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.IMContainerApplication" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="d30068ac-81e7-4c86-b448-5280d1ed829e" name="Default Changelist" comment="" />
+      <created>1577079946818</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1577079946818</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Merge branch 'master' into CloudProxy&#10;&#10;# Conflicts:&#10;#&#9;container/src/main/java/com/docker/server/OnlineServer.java&#10;#&#9;container/src/main/java/com/protobuf/Mobile.proto&#10;#&#9;container/src/main/java/com/protobuf/message.proto&#10;#&#9;container/src/main/java/container/container/bean/BeanApp.java&#10;#&#9;container/src/main/java/container/container/bean/ConfigApp.java&#10;#&#9;container/src/main/resources/container.properties&#10;#&#9;container/src/main/resources/protobuf/Mobile.proto&#10;#&#9;container/src/main/resources/protobuf/gen.sh&#10;#&#9;container/src/main/resources/protobuf/message.proto&#10;#&#9;imcontainer/src/main/java/com/protobuf/Mobile.proto&#10;#&#9;imcontainer/src/main/java/com/protobuf/message.proto&#10;#&#9;imcontainer/src/main/java/com/protobuf/objcoutput/Mobile.pbobjc.h&#10;#&#9;imcontainer/src/main/java/com/protobuf/objcoutput/Mobile.pbobjc.m" />
+    <option name="LAST_COMMIT_MESSAGE" value="Merge branch 'master' into CloudProxy&#10;&#10;# Conflicts:&#10;#&#9;container/src/main/java/com/docker/server/OnlineServer.java&#10;#&#9;container/src/main/java/com/protobuf/Mobile.proto&#10;#&#9;container/src/main/java/com/protobuf/message.proto&#10;#&#9;container/src/main/java/container/container/bean/BeanApp.java&#10;#&#9;container/src/main/java/container/container/bean/ConfigApp.java&#10;#&#9;container/src/main/resources/container.properties&#10;#&#9;container/src/main/resources/protobuf/Mobile.proto&#10;#&#9;container/src/main/resources/protobuf/gen.sh&#10;#&#9;container/src/main/resources/protobuf/message.proto&#10;#&#9;imcontainer/src/main/java/com/protobuf/Mobile.proto&#10;#&#9;imcontainer/src/main/java/com/protobuf/message.proto&#10;#&#9;imcontainer/src/main/java/com/protobuf/objcoutput/Mobile.pbobjc.h&#10;#&#9;imcontainer/src/main/java/com/protobuf/objcoutput/Mobile.pbobjc.m" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="304" y="187" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1577085022672">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="304" y="187" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1577085022672" />
+    <state x="653" y="244" key="#com.intellij.ide.util.MemberChooser" timestamp="1577264165198">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="653" y="244" key="#com.intellij.ide.util.MemberChooser/0.23.1680.1027@0.23.1680.1027" timestamp="1577264165198" />
+    <state x="342" y="23" key="CommitChangelistDialog2" timestamp="1577264528766">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="342" y="23" key="CommitChangelistDialog2/0.23.1680.1027@0.23.1680.1027" timestamp="1577264528766" />
+    <state x="168" y="115" key="DiffContextDialog" timestamp="1577264337905">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="168" y="94" key="DiffContextDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1577087169992" />
+    <state x="168" y="115" key="DiffContextDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1577264337905" />
+    <state width="1638" height="416" key="GridCell.Tab.0.bottom" timestamp="1577262766512">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state width="1638" height="400" key="GridCell.Tab.0.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1577087972080" />
+    <state width="1638" height="416" key="GridCell.Tab.0.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1577262766512" />
+    <state width="1638" height="416" key="GridCell.Tab.0.center" timestamp="1577262766510">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state width="1638" height="400" key="GridCell.Tab.0.center/0.0.1680.1050@0.0.1680.1050" timestamp="1577087972079" />
+    <state width="1638" height="416" key="GridCell.Tab.0.center/0.23.1680.1027@0.23.1680.1027" timestamp="1577262766510" />
+    <state width="1638" height="416" key="GridCell.Tab.0.left" timestamp="1577262766510">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state width="1638" height="400" key="GridCell.Tab.0.left/0.0.1680.1050@0.0.1680.1050" timestamp="1577087972078" />
+    <state width="1638" height="416" key="GridCell.Tab.0.left/0.23.1680.1027@0.23.1680.1027" timestamp="1577262766510" />
+    <state width="1638" height="416" key="GridCell.Tab.0.right" timestamp="1577262766511">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state width="1638" height="400" key="GridCell.Tab.0.right/0.0.1680.1050@0.0.1680.1050" timestamp="1577087972079" />
+    <state width="1638" height="416" key="GridCell.Tab.0.right/0.23.1680.1027@0.23.1680.1027" timestamp="1577262766511" />
+    <state width="1638" height="416" key="GridCell.Tab.1.bottom" timestamp="1577262766513">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state width="1638" height="476" key="GridCell.Tab.1.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1577087932703" />
+    <state width="1638" height="416" key="GridCell.Tab.1.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1577262766513" />
+    <state width="1638" height="416" key="GridCell.Tab.1.center" timestamp="1577262766512">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state width="1638" height="476" key="GridCell.Tab.1.center/0.0.1680.1050@0.0.1680.1050" timestamp="1577087932702" />
+    <state width="1638" height="416" key="GridCell.Tab.1.center/0.23.1680.1027@0.23.1680.1027" timestamp="1577262766512" />
+    <state width="1638" height="416" key="GridCell.Tab.1.left" timestamp="1577262766512">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state width="1638" height="476" key="GridCell.Tab.1.left/0.0.1680.1050@0.0.1680.1050" timestamp="1577087932701" />
+    <state width="1638" height="416" key="GridCell.Tab.1.left/0.23.1680.1027@0.23.1680.1027" timestamp="1577262766512" />
+    <state width="1638" height="416" key="GridCell.Tab.1.right" timestamp="1577262766512">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state width="1638" height="476" key="GridCell.Tab.1.right/0.0.1680.1050@0.0.1680.1050" timestamp="1577087932703" />
+    <state width="1638" height="416" key="GridCell.Tab.1.right/0.23.1680.1027@0.23.1680.1027" timestamp="1577262766512" />
+    <state x="465" y="294" key="NewModule_or_Project.wizard" timestamp="1577080249492">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="465" y="294" key="NewModule_or_Project.wizard/0.23.1680.1027@0.23.1680.1027" timestamp="1577080249492" />
+    <state x="469" y="254" key="RollbackChangesDialog" timestamp="1577262946846">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="469" y="236" key="RollbackChangesDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1577087172384" />
+    <state x="469" y="254" key="RollbackChangesDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1577262946846" />
+    <state x="497" y="93" key="SettingsEditor" timestamp="1577086696277">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="497" y="93" key="SettingsEditor/0.0.1680.1050@0.0.1680.1050" timestamp="1577086696277" />
+    <state x="497" y="114" key="SettingsEditor/0.23.1680.1027@0.23.1680.1027" timestamp="1577080251668" />
+    <state x="100" y="100" width="1480" height="850" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1577087659434">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="100" y="100" width="1480" height="850" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1577087659434" />
+    <state x="517" y="357" key="com.intellij.ide.util.TipDialog" timestamp="1577086713675">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="517" y="357" key="com.intellij.ide.util.TipDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1577086713675" />
+    <state x="421" y="272" width="837" height="540" key="find.popup" timestamp="1577263593589">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="421" y="255" width="837" height="540" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1577086956301" />
+    <state x="421" y="272" width="837" height="540" key="find.popup/0.23.1680.1027@0.23.1680.1027" timestamp="1577263593589" />
+    <state x="492" y="256" key="git4idea.branch.GitSmartOperationDialog" timestamp="1577080163269">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="492" y="256" key="git4idea.branch.GitSmartOperationDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1577080163269" />
+    <state x="515" y="323" key="git4idea.merge.GitPullDialog" timestamp="1577087340502">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="515" y="323" key="git4idea.merge.GitPullDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1577087340502" />
+    <state width="600" height="424" key="javadoc.popup" timestamp="1577263969786">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state width="600" height="424" key="javadoc.popup/0.23.1680.1027@0.23.1680.1027" timestamp="1577263969786" />
+    <state x="505" y="250" width="670" height="676" key="search.everywhere.popup" timestamp="1577264256316">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="505" y="250" width="670" height="676" key="search.everywhere.popup/0.23.1680.1027@0.23.1680.1027" timestamp="1577264256316" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/container/src/main/java/com/docker/rpc/MethodRequest.java</url>
+          <line>106</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

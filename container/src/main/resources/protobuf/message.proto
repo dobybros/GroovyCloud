@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+option java_package = "com.pbdata.generated.mobile"; 
+option java_outer_classname = "MobilePB";
+ 
+message TextMessage { 
+  string text = 1; //文字内容
+} 
+
+message ImageMessage { 
+  string thumbnailUrl = 1; //缩略图的下载url, 400 * 400保持比例
+  string bigUrl = 2; //大图的下载url， 2000 * 2000保持比例
+  string originalUrl = 3; //原始图的下载url， 原图大小
+  int32 width = 4; //最大图的宽
+  int32 height = 5; //最大图的高
+  int32 size = 6; //文件大小
+}
+
+message AudioMessage { 
+  string url = 1; //下载录音的url
+  int32 seconds = 2; //录音长度
+  int32 size = 3; //文件大小
+}
+
+message ProductMessage { 
+  string productId = 1; //产品id
+  string name = 2; //产品名字
+  string price = 3; //产品价格
+  string imageUrl = 4; //产品的缩略图
+  string ownerId = 5; //卖家用户id
+  string ownerName = 6; //卖家名字
+  string activityId = 7; //活动id
+}
+
+message ContactMessage { 
+  string userId = 1; //联系人的用户Id
+  string name = 2; //联系人的名字
+  string thumbnailUrl = 3; //联系人的头像url
+}
+
+message CouponMessage {
+	string couponCode = 1; //优惠券代码
+	string activityName = 2; //活动名称
+	string currency = 3; //币种
+	string amount = 4; //优惠券面额
+}
+

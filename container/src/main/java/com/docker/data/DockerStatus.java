@@ -92,6 +92,12 @@ public class DockerStatus extends DataObject {
 	 * Gateway服务器才会有wsPort
 	 */
 	private Integer wsPort;
+
+	/**
+	 * Gateway服务器才会有wsPort
+	 */
+	private Integer publicWsPort;
+
 	/**
 	 * 状态， OK是可以正常工作， Standby是服务器刚启动后的待命状态， 此时还不能提供服务器， 到OK状态之后开始服务。
 	 */
@@ -348,5 +354,13 @@ public class DockerStatus extends DataObject {
 
 	public void setTime(String time) {
 		this.time = time;
+	}
+
+	public Integer getPublicWsPort() {
+		return publicWsPort;
+	}
+
+	public void setPublicWsPort(Integer publicWsPort) {
+		this.publicWsPort = publicWsPort;
 	}
 }
