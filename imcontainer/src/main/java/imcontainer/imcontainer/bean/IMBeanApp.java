@@ -192,7 +192,7 @@ public class IMBeanApp extends IMConfigApp {
         if(instance.wsFilterChainBuilder == null){
             instance.wsFilterChainBuilder = new DefaultIoFilterChainBuilder();
             Map map = new LinkedHashMap();
-            map.put("sslFilter", instance.getSslFilter());
+//            map.put("sslFilter", instance.getSslFilter());
             map.put("codecFilter", instance.getWsCodecFilter());
             instance.wsFilterChainBuilder.setFilters(map);
         }
