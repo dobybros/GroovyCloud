@@ -21,7 +21,7 @@ public class CacheStorageFactory {
     private Map<String, CacheStorageAdapter> localCacheAdapterMap;
 
     public CacheStorageAdapter getCacheStorageAdapter(String cacheMethod, String host) {
-        LoggerEx.info(TAG, "Cache method is " + cacheMethod + ", host is " + host);
+//        LoggerEx.info(TAG, "Cache method is " + cacheMethod + ", host is " + host);
         if (StringUtils.isBlank(cacheMethod)) {
             cacheMethod = CacheStorageAdapter.DEFAULT_CACHE_METHOD;
         }
