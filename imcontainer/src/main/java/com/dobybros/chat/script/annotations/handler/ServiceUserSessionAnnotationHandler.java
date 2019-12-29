@@ -41,6 +41,7 @@ public class ServiceUserSessionAnnotationHandler extends ClassAnnotationHandler 
             } catch (CoreException e) {
                 LoggerEx.error(TAG, "Listener close session error when handlerShutdown, eMsg : " + e.getMessage());
             }
+            listenerMap.remove(serverUser);
         }
     }
 
@@ -52,7 +53,7 @@ public class ServiceUserSessionAnnotationHandler extends ClassAnnotationHandler 
                 return listener;
             for (Class<?> annotatedClass : annotatedClassMap.values()) {
                 try {
-                    Object obj = annotatedClass.newInstance();
+                    Object obj = annotatedClass.getDeclaredConstructor().newInstance();
                     if (obj instanceof ServiceUserSessionListener) {
                         listener = (ServiceUserSessionListener)obj;
                         listener.setUserId(userId);
