@@ -174,7 +174,7 @@ public class MethodResponse extends RPCResponse {
                     if (exception != null) {
                         JSONObject json = new JSONObject();
                         json.put("code", exception.getCode());
-                        json.put("message", ExceptionUtils.getFullStackTrace(exception));
+                        json.put("message", exception.getMessage());
                         String errorStr = json.toJSONString();//JSON.toJSONString(exception);
                         try {
                             exceptionBytes = GZipUtils.compress(errorStr.getBytes("utf8"));

@@ -312,16 +312,7 @@ public class DockerStatus extends DataObject {
 		}
 		return dbObj;
 	}
-	public Boolean containsServiceVersion(String serviceName, Integer version){
-		for (Service service : services){
-			if(service.getService().equals(serviceName)){
-				if(service.getVersion() != null && service.getVersion() == version){
-					return true;
-				}
-			}
-		}
-		return false;
-	}
+
 	public String getServerType() {
 		return serverType;
 	}
