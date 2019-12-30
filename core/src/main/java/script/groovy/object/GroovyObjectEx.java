@@ -14,6 +14,7 @@ import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.codehaus.groovy.runtime.NullObject;
 import org.springframework.aop.framework.ReflectiveMethodInvocation;
 import org.springframework.cache.annotation.CacheEvict;
@@ -100,12 +101,12 @@ public class GroovyObjectEx<T> {
                 if (groovyClass != null) {
                     try {
                         gObj = (GroovyObject) groovyClass.getDeclaredConstructor().newInstance();
+                        holder.setCachedObject(gObj);
                         if (forceFill)
                             GroovyObjectEx.fillGroovyObject(gObj, groovyRuntime);
-                        holder.setCachedObject(gObj);
                     } catch (Throwable e) {
                         e.printStackTrace();
-                        throw new CoreException(GroovyErrorCodes.ERROR_GROOY_NEWINSTANCE_FAILED, "New instance for class " + groovyClass + " failed " + e.getMessage() + " in classLoader " + classLoader);
+                        throw new CoreException(GroovyErrorCodes.ERROR_GROOY_NEWINSTANCE_FAILED, "New instance for class " + groovyClass + " failed " + ExceptionUtils.getFullStackTrace(e) + " in classLoader " + classLoader);
                     }
                     if (objectListener != null)
                         objectListener.objectPrepared(gObj);

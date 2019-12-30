@@ -1,5 +1,6 @@
 package com.dobybros.chat.script.annotations.handler;
 
+import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.dobybros.chat.handlers.imextention.IMExtensionCache;
 import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionHandler;
@@ -33,6 +34,20 @@ public class ServiceUserSessionAnnotationHandler extends ClassAnnotationHandler 
         this.setAnnotatedClassMap(annotatedClassMap);
     }
 
+    @Override
+    public void handlerShutdown() {
+        super.handlerShutdown();
+        for (String serverUser : listenerMap.keySet()) {
+            ServiceUserSessionListener listener = listenerMap.get(serverUser);
+            try {
+                listener.closeSession();
+            } catch (CoreException e) {
+                LoggerEx.error(TAG, "Listener close session error when handlerShutdown, eMsg : " + e.getMessage());
+            }
+            listenerMap.remove(serverUser);
+        }
+    }
+
     public ServiceUserSessionListener createAnnotatedListener(String userId, String service) {
         if (annotatedClassMap != null && !annotatedClassMap.isEmpty()) {
             String key = getUserKey(userId, service);
@@ -41,7 +56,7 @@ public class ServiceUserSessionAnnotationHandler extends ClassAnnotationHandler 
                 return listener;
             for (Class<?> annotatedClass : annotatedClassMap.values()) {
                 try {
-                    Object obj = annotatedClass.newInstance();
+                    Object obj = annotatedClass.getDeclaredConstructor().newInstance();
                     if (obj instanceof ServiceUserSessionListener) {
                         listener = (ServiceUserSessionListener)obj;
                         listener.setParentUserId(imExtensionCache.getUserId(userId));

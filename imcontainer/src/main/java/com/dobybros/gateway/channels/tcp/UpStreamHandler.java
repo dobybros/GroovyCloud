@@ -73,11 +73,7 @@ public class UpStreamHandler extends IoHandlerAdapter {
 	@Override
 	public void sessionClosed(IoSession session) throws Exception {
 //		LoggerEx.info(TAG, "sessionClosed for session : " + session + ", at sessionId : " + session.getId());
-		OnlineUser onlineUser = (OnlineUser) session.getAttribute(ATTRIBUTE_ONLINEUSER);
-		Channel channel = (Channel) session.getAttribute(ATTRIBUTE_CHANNEL);
-		if(onlineUser != null && channel != null) {
-			onlineUser.removeChannel(channel, ChannelListener.CLOSE);
-		}
+		closeUserChannel(session, ChannelListener.CLOSE, null);
 	}
 	
 	@Override
@@ -92,19 +88,7 @@ public class UpStreamHandler extends IoHandlerAdapter {
 			throws Exception {
 //		LoggerEx.info(TAG, "exceptionCaught for session : " + session + ", at sessionId : " + session.getId() + ", cause : " + cause.getMessage() + ". Session closed!");
 		try {
-			OnlineUser onlineUser = (OnlineUser) session.getAttribute(ATTRIBUTE_ONLINEUSER);
-			Channel channel = (Channel) session.getAttribute(ATTRIBUTE_CHANNEL);
-			if(onlineUser != null && channel != null) {
-				ChannelListener listener = channel.getChannelListener();
-				if(listener != null) 
-					try {
-						listener.exceptionCaught(cause);
-					} catch (Throwable e) {
-						e.printStackTrace();
-						LoggerEx.error(TAG, "TcpChannel exceptionCaught " + cause + "|" + cause.getMessage() + " occur error " + e.getMessage() + " channel " + channel);
-					}
-				onlineUser.removeChannel(channel, ChannelListener.CLOSE_ERROR);
-			}
+			closeUserChannel(session, ChannelListener.CLOSE_ERROR, cause);
 		} finally {
 			session.close(true);
 		}
@@ -146,45 +130,49 @@ public class UpStreamHandler extends IoHandlerAdapter {
 			if(coreException == null)
 				coreException = new CoreException(GatewayErrorCodes.ERROR_TCPCHANNEL_UNKNOWN, "Unknown error occured while receiving message from tcp channel, channel " + session + " message " + message + " error " + t.getMessage());
 			if(coreException.getCode() >= GatewayErrorCodes.TCPCHANNEL_CLOSE_START && coreException.getCode() < GatewayErrorCodes.TCPCHANNEL_CLOSE_END){
-				boolean closeSuccess = false;
-				if(sessionContextAttr != null) {
-					OnlineUser onlineUser = onlineUserManager.getOnlineUser(sessionContextAttr.getUserId());
-					if(onlineUser != null){
-						OnlineServiceUser onlineServiceUser = onlineUser.getOnlineServiceUser(sessionContextAttr.getService());
-						if(onlineServiceUser != null){
-							Channel channel = onlineServiceUser.getChannel(sessionContextAttr.getTerminal());
-							if(channel != null) {
-								closeSuccess = true;
-								onlineUser.removeChannel(channel, ChannelListener.CLOSE_ERROR);
-							}
-						}
-					}
-				}
+				boolean closeSuccess = closeUserChannel(session, ChannelListener.CLOSE_ERROR, null);
 				if(!closeSuccess){
 					session.close(false);
 				}
 			} else if(coreException.getCode() >= GatewayErrorCodes.TCPCHANNEL_CLOSE_IMMEDIATELY_START && coreException.getCode() < GatewayErrorCodes.TCPCHANNEL_CLOSE_IMMEDIATELY_END){
-				boolean closeSuccess = false;
-				if(sessionContextAttr != null) {
-					OnlineUser onlineUser = onlineUserManager.getOnlineUser(sessionContextAttr.getUserId());
-					if(onlineUser != null){
-						OnlineServiceUser onlineServiceUser = onlineUser.getOnlineServiceUser(sessionContextAttr.getService());
-						if(onlineServiceUser != null){
-							Channel channel = onlineServiceUser.getChannel(sessionContextAttr.getTerminal());
-							if(channel != null) {
-								closeSuccess = true;
-								onlineUser.removeChannel(channel, ChannelListener.CLOSE_ERROR);
-							}
-						}
-					}
-				}
+				boolean closeSuccess = closeUserChannel(session, ChannelListener.CLOSE_ERROR, null);
 				if(!closeSuccess){
-					session.close(false);
+					session.close(true);
 				}
 			} else {
 				session.close(true);
 			}
 		}
+	}
+
+	private Boolean closeUserChannel(IoSession session, int closeError, Throwable exceptionCause) throws CoreException {
+		if (session != null) {
+			SessionContextAttr sessionContextAttr = (SessionContextAttr) session.getAttribute(ATTRIBUTE_SESSIONCONTEXTATTR);
+			if (sessionContextAttr != null) {
+				OnlineUser onlineUser = onlineUserManager.getOnlineUser(sessionContextAttr.getUserId());
+				if(onlineUser != null){
+					OnlineServiceUser onlineServiceUser = onlineUser.getOnlineServiceUser(sessionContextAttr.getService());
+					if(onlineServiceUser != null){
+						Channel channel = onlineServiceUser.getChannel(sessionContextAttr.getTerminal());
+						if(channel != null) {
+							if (exceptionCause != null) {
+								ChannelListener listener = channel.getChannelListener();
+								if(listener != null)
+									try {
+										listener.exceptionCaught(exceptionCause);
+									} catch (Throwable e) {
+										e.printStackTrace();
+										LoggerEx.error(TAG, "TcpChannel exceptionCaught " + exceptionCause + "|" + exceptionCause.getMessage() + " occur error " + e.getMessage() + " channel " + channel);
+									}
+							}
+							onlineUser.removeChannel(channel, closeError);
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	public void messageSent(IoSession session, Object message) throws Exception {

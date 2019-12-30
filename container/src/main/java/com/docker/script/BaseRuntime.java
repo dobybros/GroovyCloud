@@ -40,12 +40,13 @@ public abstract class BaseRuntime extends GroovyRuntime {
     public static final String TAG = BaseRuntime.class.getSimpleName();
     private ConcurrentHashMap<String, Object> memoryCache = new ConcurrentHashMap<>();
 
-    private MongoDBHandler mongoDBHandler;
-    private RedisHandler redisHandler;
-    private EhCacheHandler ehCacheHandler;
-    private KafkaProducerHandler kafkaProducerHandler;
-    private KafkaConfCenter kafkaConfCenter;
-    private I18nHandler i18nHandler;
+	private MongoDBHandler mongoDBHandler;
+	//	private RedisHandler redisHandler;
+	private String redisHost;
+	private EhCacheHandler ehCacheHandler;
+	private KafkaProducerHandler kafkaProducerHandler;
+	private KafkaConfCenter kafkaConfCenter;
+	private I18nHandler i18nHandler;
 
     private String service;
 
@@ -53,75 +54,72 @@ public abstract class BaseRuntime extends GroovyRuntime {
     private Integer serviceVersion;
 
 	private Properties config;
-    public void prepare(String service, Properties properties, String rootPath) {
-        LoggerEx.info(TAG, "prepare service: " + service + " properties: " + properties + " rootPath: " + rootPath);
-        this.service = service.toLowerCase();
-        this.config = properties;
-        String enableGroovyMVC = null;
-        addClassAnnotationHandler(new GroovyBeanFactory());
-        if (properties != null) {
-            Object rpcServerHandler = SpringContextUtil.getBean("dockerRpcServer");
-            if (rpcServerHandler != null && rpcServerHandler instanceof ClassAnnotationHandler)
-                addClassAnnotationHandler((ClassAnnotationHandler) rpcServerHandler);
-            Object rpcServerSslHandler = SpringContextUtil.getBean("dockerRpcServerSsl");
-            if (rpcServerSslHandler != null && rpcServerSslHandler instanceof ClassAnnotationHandler)
-                addClassAnnotationHandler((ClassAnnotationHandler) rpcServerSslHandler);
-            Object upStreamAnnotationHandler = SpringContextUtil.getBean("upStreamAnnotationHandler");
-            if (upStreamAnnotationHandler != null && upStreamAnnotationHandler instanceof ClassAnnotationHandler)
-                addClassAnnotationHandler((ClassAnnotationHandler) upStreamAnnotationHandler);
 
-            enableGroovyMVC = properties.getProperty("web.groovymvc.enable");
-            String mongodbHost = properties.getProperty("db.mongodb.uri");
-            if (mongodbHost != null) {
-                addClassAnnotationHandler(new MongoDatabaseAnnotationHolder());
-                addClassAnnotationHandler(new MongoCollectionAnnotationHolder());
-                addClassAnnotationHandler(new MongoDocumentAnnotationHolder());
-                mongoDBHandler = new MongoDBHandler();
-                MongoClientHelper helper = new MongoClientHelper();
-                helper.setHosts(mongodbHost);
-                mongoDBHandler.setMongoClientHelper(helper);
-                addClassAnnotationHandler(mongoDBHandler);
-            }
+	public void prepare(String service, Properties properties, String rootPath) {
+		LoggerEx.info(TAG, "prepare service: " + service + " properties: " + properties + " rootPath: " + rootPath);
+		this.service = service.toLowerCase();
+		this.config = properties;
+		String enableGroovyMVC = null;
+		addClassAnnotationHandler(new GroovyBeanFactory());
+		if (properties != null) {
+			Object rpcServerHandler = SpringContextUtil.getBean("dockerRpcServer");
+			if (rpcServerHandler != null && rpcServerHandler instanceof ClassAnnotationHandler)
+				addClassAnnotationHandler((ClassAnnotationHandler) rpcServerHandler);
+			Object rpcServerSslHandler = SpringContextUtil.getBean("dockerRpcServerSsl");
+			if (rpcServerSslHandler != null && rpcServerSslHandler instanceof ClassAnnotationHandler)
+				addClassAnnotationHandler((ClassAnnotationHandler) rpcServerSslHandler);
+			Object upStreamAnnotationHandler = SpringContextUtil.getBean("upStreamAnnotationHandler");
+			if (upStreamAnnotationHandler != null && upStreamAnnotationHandler instanceof ClassAnnotationHandler)
+				addClassAnnotationHandler((ClassAnnotationHandler) upStreamAnnotationHandler);
 
-            String redisHost = properties.getProperty("db.redis.uri");
-            if (redisHost != null) {
-                RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler)CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS,redisHost);
-                redisHandler = cacheStorageAdapter.getRedisHandler();
-            }
-            EhCacheCacheStorageHandler ehCacheCacheStorageHandler = (EhCacheCacheStorageHandler)CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_EHCACHE, null);
-            ehCacheHandler = ehCacheCacheStorageHandler.getEhCacheHandler();
-            String produce = properties.getProperty("db.kafka.produce");
-            kafkaConfCenter = new KafkaConfCenter();
-            kafkaConfCenter.filterKafkaConf(properties, KafkaConfCenter.FIELD_PRODUCE, KafkaConfCenter.FIELD_CONSUMER);
-            if (produce != null) {
-                kafkaProducerHandler = new KafkaProducerHandler(kafkaConfCenter);
-                kafkaProducerHandler.connect();
-            }
-            String i18nFolder = properties.getProperty("i18n.folder");
-            String name = properties.getProperty("i18n.name");
-            if (i18nFolder != null && name != null) {
-                i18nHandler = new I18nHandler();
-                File messageFile = new File(rootPath + i18nFolder);
-                if (messageFile != null) {
-                    File[] files = messageFile.listFiles();
-                    if (files != null) {
-                        for (File file : files) {
-                            String fileName = file.getName();
-                            fileName = fileName.replace(name + "_", "");
-                            fileName = fileName.replace(".properties", "");
-                            MessageProperties messageProperties = new MessageProperties();
-                            messageProperties.setAbsolutePath(file.getAbsolutePath());
-                            try {
-                                messageProperties.init();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            i18nHandler.getMsgPropertyMap().put(fileName, messageProperties);
-                        }
-                    }
-                }
-            }
-        }
+			enableGroovyMVC = properties.getProperty("web.groovymvc.enable");
+			String mongodbHost = properties.getProperty("db.mongodb.uri");
+			if (mongodbHost != null) {
+				addClassAnnotationHandler(new MongoDatabaseAnnotationHolder());
+				addClassAnnotationHandler(new MongoCollectionAnnotationHolder());
+				addClassAnnotationHandler(new MongoDocumentAnnotationHolder());
+				mongoDBHandler = new MongoDBHandler();
+				MongoClientHelper helper = new MongoClientHelper();
+				helper.setHosts(mongodbHost);
+				mongoDBHandler.setMongoClientHelper(helper);
+				addClassAnnotationHandler(mongoDBHandler);
+			}
+			this.redisHost = properties.getProperty("db.redis.uri");
+//			this.redisHandler = this.getRedisHandler();
+			EhCacheCacheStorageHandler ehCacheCacheStorageHandler = (EhCacheCacheStorageHandler) CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_EHCACHE, null);
+			ehCacheHandler = ehCacheCacheStorageHandler.getEhCacheHandler();
+			String produce = properties.getProperty("db.kafka.produce");
+			kafkaConfCenter = new KafkaConfCenter();
+			kafkaConfCenter.filterKafkaConf(properties, KafkaConfCenter.FIELD_PRODUCE, KafkaConfCenter.FIELD_CONSUMER);
+			if (produce != null) {
+				kafkaProducerHandler = new KafkaProducerHandler(kafkaConfCenter);
+				kafkaProducerHandler.connect();
+			}
+			String i18nFolder = properties.getProperty("i18n.folder");
+			String name = properties.getProperty("i18n.name");
+			if (i18nFolder != null && name != null) {
+				i18nHandler = new I18nHandler();
+				File messageFile = new File(rootPath + i18nFolder);
+				if (messageFile != null) {
+					File[] files = messageFile.listFiles();
+					if (files != null) {
+						for (File file : files) {
+							String fileName = file.getName();
+							fileName = fileName.replace(name + "_", "");
+							fileName = fileName.replace(".properties", "");
+							MessageProperties messageProperties = new MessageProperties();
+							messageProperties.setAbsolutePath(file.getAbsolutePath());
+							try {
+								messageProperties.init();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							i18nHandler.getMsgPropertyMap().put(fileName, messageProperties);
+						}
+					}
+				}
+			}
+		}
 
         if (enableGroovyMVC != null && enableGroovyMVC.trim().equals("true")) {
             GroovyServletManagerEx servletManagerEx = new GroovyServletManagerEx(this.serviceName, this.serviceVersion);
@@ -160,8 +158,8 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		    LoggerEx.error(TAG, "Close mongo error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
 		}
 		try {
-			if(redisHandler != null) {
-//				redisHandler.disconnect();
+			if (redisHost != null) {
+				CacheStorageFactory.getInstance().removeCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, redisHost);
 			}
 		} catch(Throwable t) {
             LoggerEx.error(TAG, "Close redis error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
@@ -236,9 +234,13 @@ public abstract class BaseRuntime extends GroovyRuntime {
         return mongoDBHandler;
     }
 
-    public RedisHandler getRedisHandler() {
-        return redisHandler;
-    }
+	public RedisHandler getRedisHandler() {
+		if (redisHost != null) {
+			RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler) CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, redisHost);
+			return cacheStorageAdapter.getRedisHandler();
+		}
+		return null;
+	}
 
     public KafkaProducerHandler getKafkaProducerHandler() {
         return kafkaProducerHandler;

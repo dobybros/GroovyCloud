@@ -137,7 +137,6 @@ public class RedisHandler {
         if (!lockedCode.equals(set(LOCK_PREFIX + id, lock, "NX", "EX", expirseTime))) {
             throw new CoreException(CoreErrorCodes.ERROR_LOCK, "Can't lock.");
         }
-        ;
         return lock;
     }
 
@@ -158,6 +157,14 @@ public class RedisHandler {
         } finally {
             return true;
         }
+    }
+
+    public String getHosts() {
+        return hosts;
+    }
+
+    public void setHosts(String hosts) {
+        this.hosts = hosts;
     }
 
     /**

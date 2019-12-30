@@ -1,5 +1,6 @@
 package container.container.bean;
 
+import chat.logs.LoggerEx;
 import chat.utils.IPHolder;
 import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.http.MyHttpParameters;
@@ -17,6 +18,7 @@ import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -25,7 +27,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import script.filter.JsonFilterFactory;
 import script.groovy.servlets.RequestPermissionHandler;
-
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +39,9 @@ import java.util.Map;
  * @Description:
  * @Date:2019/5/26 15:41
  */
-public class BeanApp extends ConfigApp {
+
+public class BeanApp extends ConfigApp{
+    private static final String TAG = BeanApp.class.getSimpleName();
     private static BeanApp instance;
     private SpringContextUtil springContextUtil;
     private PlainSocketFactory plainSocketFactory;
@@ -299,6 +302,7 @@ public class BeanApp extends ConfigApp {
         }
         return instance.springContextUtil;
     }
+
 
     public synchronized PlainSocketFactory getPlainSocketFactory() {
         if (instance.plainSocketFactory == null) {
