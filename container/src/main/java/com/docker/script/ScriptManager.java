@@ -8,7 +8,6 @@ import chat.utils.TimerTaskEx;
 import com.docker.data.Service;
 import com.docker.data.ServiceVersion;
 import com.docker.file.adapters.GridFSFileHandler;
-import com.docker.rpc.remote.stub.RemoteServersManager;
 import com.docker.server.OnlineServer;
 import com.docker.storage.adapters.ServersService;
 import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
@@ -438,6 +437,7 @@ public class ScriptManager implements ShutdownListener {
                     }
                 }
             }
+            return serviceVersionFinalList;
         }
         return null;
     }

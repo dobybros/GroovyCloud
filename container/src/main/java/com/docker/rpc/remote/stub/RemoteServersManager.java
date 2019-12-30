@@ -174,36 +174,40 @@ public class RemoteServersManager {
                                 Map<String, String> serverTypeMap = typeMap.get(serverType);
                                 List<DockerStatus> dockers = dockerStatusService.getAllDockerStatus();
                                 for (String serverTypeService : serverTypeMap.keySet()) {
-                                    for (DockerStatus dockerStatus : dockers) {
-                                        if (dockerStatus.getServerType().equals(serverType)) {
-                                            List<Service> services = dockerStatus.getServices();
-                                            RemoteServers.Server server = null;
-                                            for (Service service : services) {
-                                                if (service.getService().equals(serverTypeService)) {
-                                                    Map<String, RemoteServers.Server> servers = typeServerMap.computeIfAbsent(service.getService(), k -> new ConcurrentHashMap<>());
-                                                    server = new RemoteServers.Server();
-                                                    if (serverTypeMap.get(serverTypeService).equals("-1") || (service.getService().equals(serverTypeService) && service.getVersion().toString().equals(serverTypeMap.get(serverTypeService)))) {
-                                                        boolean canAddService = false;
-                                                        if (servers.size() > 0) {
-                                                            RemoteServers.Server serverOld = servers.get(0);
-                                                            if (service.getVersion() > serverOld.getVersion()) {
-                                                                servers.clear();
-                                                                canAddService = true;
-                                                            } else if (service.getVersion() == serverOld.getVersion()) {
-                                                                canAddService = true;
+                                    if(dockers != null){
+                                        for (DockerStatus dockerStatus : dockers) {
+                                            if (dockerStatus.getServerType().equals(serverType)) {
+                                                List<Service> services = dockerStatus.getServices();
+                                                RemoteServers.Server server = null;
+                                                if(services != null){
+                                                    for (Service service : services) {
+                                                        if (service.getService().equals(serverTypeService)) {
+                                                            Map<String, RemoteServers.Server> servers = typeServerMap.computeIfAbsent(service.getService(), k -> new ConcurrentHashMap<>());
+                                                            server = new RemoteServers.Server();
+                                                            if (serverTypeMap.get(serverTypeService).equals("-1") || (service.getService().equals(serverTypeService) && service.getVersion().toString().equals(serverTypeMap.get(serverTypeService)))) {
+                                                                boolean canAddService = false;
+                                                                if (servers.size() > 0) {
+                                                                    RemoteServers.Server serverOld = servers.get(0);
+                                                                    if (service.getVersion() > serverOld.getVersion()) {
+                                                                        servers.clear();
+                                                                        canAddService = true;
+                                                                    } else if (service.getVersion() == serverOld.getVersion()) {
+                                                                        canAddService = true;
+                                                                    }
+                                                                } else {
+                                                                    canAddService = true;
+                                                                }
+                                                                if (canAddService) {
+                                                                    server.setIp(dockerStatus.getIp());
+                                                                    server.setLanId(dockerStatus.getLanId());
+                                                                    server.setRpcPort(dockerStatus.getRpcPort());
+                                                                    server.setServer(dockerStatus.getServer());
+                                                                    server.setSslRpcPort(dockerStatus.getSslRpcPort());
+                                                                    server.setVersion(service.getVersion());
+                                                                    server.setPublicDomain(dockerStatus.getPublicDomain());
+                                                                    servers.put(dockerStatus.getServer(), server);
+                                                                }
                                                             }
-                                                        } else {
-                                                            canAddService = true;
-                                                        }
-                                                        if (canAddService) {
-                                                            server.setIp(dockerStatus.getIp());
-                                                            server.setLanId(dockerStatus.getLanId());
-                                                            server.setRpcPort(dockerStatus.getRpcPort());
-                                                            server.setServer(dockerStatus.getServer());
-                                                            server.setSslRpcPort(dockerStatus.getSslRpcPort());
-                                                            server.setVersion(service.getVersion());
-                                                            server.setPublicDomain(dockerStatus.getPublicDomain());
-                                                            servers.put(dockerStatus.getServer(), server);
                                                         }
                                                     }
                                                 }
@@ -237,26 +241,30 @@ public class RemoteServersManager {
                         serviceVersionReallyMap.put(type, typeMap);
                     }
                     List<String> serverTypes = serviceVersion.getServerType();
-                    for (String serverType : serverTypes) {
-                        //serverType层
-                        Map<String, String> serverTypeMap = typeMap.get(serverType);
-                        if (serverTypeMap == null) {
-                            serverTypeMap = new ConcurrentHashMap<>();
-                            typeMap.put(serverType, serverTypeMap);
-                        }
-                        Map<String, String> serviceVersionsMap = serviceVersion.getServiceVersions();
-                        for (String service : serviceVersionsMap.keySet()) {
-                            //service version层
-                            //使用最大版本
-                            if (StringUtils.isEmpty(serverTypeMap.get(service))) {
-                                if (StringUtils.isEmpty(serviceVersionsMap.get(service))) {
-                                    serverTypeMap.put(service, "-1");
-                                } else {
-                                    serverTypeMap.put(service, serviceVersionsMap.get(service));
-                                }
-                            } else {
-                                if (Integer.parseInt(serviceVersionsMap.get(service)) > Integer.parseInt(serverTypeMap.get(service))) {
-                                    serverTypeMap.put(service, serviceVersionsMap.get(service));
+                    if(serverTypes != null){
+                        for (String serverType : serverTypes) {
+                            //serverType层
+                            Map<String, String> serverTypeMap = typeMap.get(serverType);
+                            if (serverTypeMap == null) {
+                                serverTypeMap = new ConcurrentHashMap<>();
+                                typeMap.put(serverType, serverTypeMap);
+                            }
+                            Map<String, String> serviceVersionsMap = serviceVersion.getServiceVersions();
+                            if(serviceVersionsMap != null){
+                                for (String service : serviceVersionsMap.keySet()) {
+                                    //service version层
+                                    //使用最大版本
+                                    if (StringUtils.isEmpty(serverTypeMap.get(service))) {
+                                        if (StringUtils.isEmpty(serviceVersionsMap.get(service))) {
+                                            serverTypeMap.put(service, "-1");
+                                        } else {
+                                            serverTypeMap.put(service, serviceVersionsMap.get(service));
+                                        }
+                                    } else {
+                                        if (Integer.parseInt(serviceVersionsMap.get(service)) > Integer.parseInt(serverTypeMap.get(service))) {
+                                            serverTypeMap.put(service, serviceVersionsMap.get(service));
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -316,7 +324,9 @@ public class RemoteServersManager {
     private void setDockerStatusService(DockerStatusServiceImpl dockerStatusService) {
         this.dockerStatusService = dockerStatusService;
     }
-
+    public static RemoteServersManager getRemoteServersManager(){
+        return instance;
+    }
     public synchronized static RemoteServersManager getInstance() {
         if (instance == null) {
             instance = new RemoteServersManager();

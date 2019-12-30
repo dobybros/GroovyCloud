@@ -53,13 +53,13 @@ public class ServiceStubManager {
         this.host = host;
     }
     public void init(){
-        if (this.host == null) {
-            throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
-        }
-        if (!this.host.startsWith("http")) {
-            this.host = "http://" + this.host;
-        }
         if(this.lanType != null && this.lanType.equals(Lan.TYPE_http)){
+            if (this.host == null) {
+                throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
+            }
+            if (!this.host.startsWith("http")) {
+                this.host = "http://" + this.host;
+            }
             RemoteServersManager.getInstance().addCrossHost(this.host);
         }
         handle();
@@ -106,7 +106,7 @@ public class ServiceStubManager {
                 MethodMapping mm = new MethodMapping(method);
                 long value = ReflectionUtil.getCrc(method, service);
                 if (methodMap.containsKey(value)) {
-                    LoggerEx.fatal(TAG, "Don't support override methods, please rename your method " + method + " for crc " + value + " and existing method " + methodMap.get(value).getMethod());
+                    LoggerEx.warn(TAG, "Don't support override methods, please rename your method " + method + " for crc " + value + " and existing method " + methodMap.get(value).getMethod());
                     continue;
                 }
                 Class<?>[] parameterTypes = method.getParameterTypes();
@@ -185,8 +185,6 @@ public class ServiceStubManager {
     }
 
     public <T> T getService(String service, Class<T> adapterClass, Integer version) {
-        if (host == null)
-            throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
         if (service == null)
             throw new NullPointerException("Service can not be nulll");
         T adapterService = null;
@@ -261,7 +259,7 @@ public class ServiceStubManager {
         this.lanType = lanType;
     }
     private void handle(){
-        if(RemoteServersManager.getInstance() == null){
+        if(RemoteServersManager.getRemoteServersManager() == null){
             ServiceVersionServiceImpl serviceVersionService = (ServiceVersionServiceImpl) GroovyCloudBean.getBean(GroovyCloudBean.SERVICEVERSIONSERVICE);
             DockerStatusServiceImpl dockerStatusService = (DockerStatusServiceImpl)GroovyCloudBean.getBean(GroovyCloudBean.DOCKERSTATUSSERVICE);
             if(serviceVersionService == null || dockerStatusService == null){
@@ -291,7 +289,7 @@ public class ServiceStubManager {
                         dockerStatusService.setDockerStatusDAO(dockerStatusDAO);
                     }
                 }catch (Throwable t){
-                    LoggerEx.error(TAG, "Get groovycloud.propertiesperties err, errMsg : " + ExceptionUtils.getFullStackTrace(t));
+                    LoggerEx.error(TAG, "Get groovycloud.properties err, errMsg : " + ExceptionUtils.getFullStackTrace(t));
                 }finally {
                     try {
                         configResource.getInputStream().close();

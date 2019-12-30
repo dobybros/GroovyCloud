@@ -3,14 +3,12 @@ package com.docker.storage.adapters.impl;
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import com.alibaba.fastjson.JSON;
-import com.docker.data.DockerStatus;
 import com.docker.data.ServiceVersion;
 import com.docker.storage.DBException;
 import com.docker.storage.adapters.ServiceVersionService;
 import com.docker.storage.mongodb.daos.ServiceVersionDAO;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
-import com.mongodb.client.model.UpdateOptions;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -61,11 +59,14 @@ public class ServiceVersionServiceImpl implements ServiceVersionService {
     @Override
     public List<ServiceVersion> getServiceVersionsAll() throws CoreException {
         try {
-            FindIterable<ServiceVersion> iterable = serviceVersionDAO.find();
-            MongoCursor<ServiceVersion> cursor = iterable.iterator();
-            List list = new ArrayList();
+            FindIterable<Document> iterable = serviceVersionDAO.find();
+            MongoCursor<Document> cursor = iterable.iterator();
+            List<ServiceVersion> list = new ArrayList<>();
             while (cursor.hasNext()) {
-                list.add(cursor.next());
+                Document document = cursor.next();
+                ServiceVersion serviceVersion = new ServiceVersion();
+                serviceVersion.fromDocument(document);
+                list.add(serviceVersion);
             }
             return list;
         } catch (DBException e) {
