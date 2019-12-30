@@ -121,6 +121,7 @@ public class IMBeanApp extends IMConfigApp {
             instance.onlineServer.setType(Integer.valueOf(instance.getType()));
             instance.onlineServer.setConfigPath("groovycloud.properties");
             instance.onlineServer.setIpHolder(instance.getIpHolder());
+            instance.onlineServer.setMaxUserNumber(instance.getMaxUserNumber());
         }
         return instance.onlineServer;
     }
