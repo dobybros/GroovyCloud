@@ -6,21 +6,24 @@ import chat.logs.LoggerEx;
 import chat.scheduled.QuartzFactory;
 import chat.utils.ChatUtils;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.docker.data.ScheduleTask;
+import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.servlet.GroovyServletManagerEx;
 import com.docker.storage.adapters.impl.ScheduledTaskServiceImpl;
+import com.docker.utils.JWTUtils;
 import com.docker.utils.SpringContextUtil;
+import io.jsonwebtoken.Jwts;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.impl.matchers.GroupMatcher;
-import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.GroovyRuntime;
 import script.groovy.servlets.GroovyServletDispatcher;
 import script.groovy.servlets.GroovyServletManager;
-import script.groovy.servlets.RequestHolder;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -28,16 +31,17 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @WebServlet(urlPatterns = "/base", asyncSupported = true)
 public class GroovyServletScriptDispatcher extends HttpServlet {
     private static final String TAG = GroovyServletManager.class.getSimpleName();
+    ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
 
     public void handle(HttpServletRequest request, HttpServletResponse response) {
         try {
@@ -57,7 +61,6 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                         String service = uriStrs[2];
                         String serviceVersion = null;
                         if (!service.contains("_v")) {
-                            ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
                             Integer version = scriptManager.getDefalutServiceVersionMap().get(service);
                             if (version != null) {
                                 serviceVersion = service + "_v" + version;
@@ -77,6 +80,40 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                 } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_TIMER)) {
                     List list = handleTimer();
                     result.setData(list);
+                } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERACCESSSERVICE)) {
+                    String token = request.getHeader("crossClusterToken");
+                    if (token == null) {
+                        LoggerEx.error(TAG, "Token is null when Cross-cluster!!!");
+                        result.setMsg("Token is null when Cross-cluster!!!");
+                    }
+                    try {
+                        Jwts.parser().setSigningKey(JWTUtils.secretkey + "crossClusterToken").parseClaimsJws(token).getBody();
+                    } catch (Throwable e) {
+                        LoggerEx.error(TAG, "Jwt expired or not found when Cross-cluster, please check!!!err: " + ExceptionUtils.getFullStackTrace(e));
+                        result.setMsg("Jwt expired or not found when Cross-cluster, please check!!!");
+                    }
+                    if (result.getMsg() == null) {
+                        String requestStr = IOUtils.toString(request.getInputStream(), Charset.defaultCharset());
+                        CallServiceParams callServiceParams = JSON.parseObject(requestStr, CallServiceParams.class);
+                        if (callServiceParams != null && callServiceParams.checkParamsNotNull()) {
+                            Object[] objects = null;
+                            if (callServiceParams.args != null) {
+                                objects = new Object[callServiceParams.args.size()];
+                                int i = 0;
+                                for (Object o : callServiceParams.args) {
+                                    objects[i] = o;
+                                    i++;
+                                }
+                            }
+                            Object o = new ServiceStubManager().call(callServiceParams.service, callServiceParams.className, callServiceParams.methodName, objects);
+                            if (o != null) {
+                                result.setData(o);
+                            }
+                        }
+                    }
+                } else if(uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERCREATETOKEN)){
+                    String token = JWTUtils.createToken("crossClusterToken", null, 10800000L);//3小时
+                    result.setData(token);
                 }
             }
             respond(response, result);
@@ -137,11 +174,11 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                         prefireTime = ChatUtils.dateString(triggers.get(0).getPreviousFireTime());
                     }
                     map.put("taskId", jobName);
-                    if(jobName.contains("OneTimeTask") || jobName.contains("PeriodicTask")){
-                        if(scheduledTaskService != null){
+                    if (jobName.contains("OneTimeTask") || jobName.contains("PeriodicTask")) {
+                        if (scheduledTaskService != null) {
                             ScheduleTask scheduleTask = scheduledTaskService.getSchedeuleTask(jobName);
-                            if(scheduleTask != null){
-                                map.put("status", scheduleTask.getStatus()  == null ? "null" : scheduleTask.getStatus().toString());
+                            if (scheduleTask != null) {
+                                map.put("status", scheduleTask.getStatus() == null ? "null" : scheduleTask.getStatus().toString());
                                 map.put("reason", scheduleTask.getReason() == null ? "null" : scheduleTask.getReason());
                             }
                         }
@@ -169,5 +206,48 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         handle(req, resp);
+    }
+
+    private class CallServiceParams {
+        private String service;
+        private String className;
+        private String methodName;
+        private JSONArray args;
+
+        private Boolean checkParamsNotNull() {
+            return service != null && className != null && methodName != null;
+        }
+
+        public String getService() {
+            return service;
+        }
+
+        public void setService(String service) {
+            this.service = service;
+        }
+
+        public String getClassName() {
+            return className;
+        }
+
+        public void setClassName(String className) {
+            this.className = className;
+        }
+
+        public String getMethodName() {
+            return methodName;
+        }
+
+        public void setMethodName(String methodName) {
+            this.methodName = methodName;
+        }
+
+        public JSONArray getArgs() {
+            return args;
+        }
+
+        public void setArgs(JSONArray args) {
+            this.args = args;
+        }
     }
 }

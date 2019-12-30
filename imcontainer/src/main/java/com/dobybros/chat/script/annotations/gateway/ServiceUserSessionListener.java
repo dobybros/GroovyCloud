@@ -11,6 +11,7 @@ import com.dobybros.gateway.open.GatewayMSGServers;
 import java.util.List;
 
 public abstract class ServiceUserSessionListener {
+    private String parentUserId;
 
     private String userId;
 
@@ -42,7 +43,10 @@ public abstract class ServiceUserSessionListener {
         return null;
     }
 
-    public IMConfig getIMConfig(){return null;}
+    public IMConfig getIMConfig() {
+        return null;
+    }
+
     @Deprecated
     public Long getMaxInactiveInterval() {
         return null;
@@ -63,12 +67,12 @@ public abstract class ServiceUserSessionListener {
     }
 
     public void closeChannel(Integer terminal, int code) throws CoreException {
-        if(terminal != null)
+        if (terminal != null)
             gatewayMSGServers.closeUserChannel(userId, service, terminal, code);
     }
 
     public void closeSession() throws CoreException {
-        gatewayMSGServers.closeUserSession(userId, service, Channel.ChannelListener.CLOSE_SHUTDOWN );
+        gatewayMSGServers.closeUserSession(userId, service, Channel.ChannelListener.CLOSE_SHUTDOWN);
     }
 
     public boolean isSessionAlive() throws CoreException {
@@ -85,6 +89,13 @@ public abstract class ServiceUserSessionListener {
     public void pingTimeoutReceived(Integer terminal) {
     }
 
+    public String getParentUserId() {
+        return parentUserId;
+    }
+
+    public void setParentUserId(String parentUserId) {
+        this.parentUserId = parentUserId;
+    }
 
     public String getUserId() {
         return userId;

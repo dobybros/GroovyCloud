@@ -97,7 +97,7 @@ public class DockerStatus extends DataObject {
 	 * 状态， OK是可以正常工作， Standby是服务器刚启动后的待命状态， 此时还不能提供服务器， 到OK状态之后开始服务。
 	 */
 	private Integer status;
-	public static final int STATUS_OK = 1;
+	public static final int STATUS_OK = 1000;
 	public static final int STATUS_PREPARING = 50;
 	public static final int STATUS_STANDBY = 100;
 	public static final int STATUS_DELETED = 200;

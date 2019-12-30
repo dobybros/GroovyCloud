@@ -2,6 +2,7 @@ package proxycontainer.proxycontainer.bean;
 
 import chat.utils.IPHolder;
 import com.dobybros.chat.handlers.ConsumeOfflineMessageHandler;
+import com.dobybros.chat.handlers.imextention.IMExtensionCache;
 import com.dobybros.chat.tasks.OfflineMessageSavingTask;
 import com.dobybros.chat.tasks.RPCMessageSendingTask;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
@@ -91,5 +92,8 @@ public class CommonBean {
     public OnlineServerWithStatus onlineServer() {
         return instance.getOnlineServer();
     }
-
+    @Bean(initMethod = "init")
+    public IMExtensionCache imExtentionCache(){
+        return instance.getIMExtensionCache();
+    }
 }

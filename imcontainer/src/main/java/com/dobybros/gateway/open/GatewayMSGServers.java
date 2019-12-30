@@ -3,6 +3,7 @@ package com.dobybros.gateway.open;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.dobybros.chat.channels.Channel;
+import com.dobybros.chat.handlers.imextention.IMExtensionCache;
 import com.dobybros.chat.open.MSGServers;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionListener;
@@ -13,11 +14,13 @@ import com.dobybros.gateway.errors.GatewayErrorCodes;
 import com.dobybros.gateway.onlineusers.OnlineServiceUser;
 import com.dobybros.gateway.onlineusers.OnlineUser;
 import com.dobybros.gateway.onlineusers.OnlineUserManager;
+import com.docker.utils.GroovyCloudBean;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.StringUtils;
 import script.groovy.runtime.GroovyRuntime;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by aplomb on 17-7-15.
@@ -47,14 +50,13 @@ public final class GatewayMSGServers extends MSGServers {
     public static final int CHANNEL_CLOSE_FORBIDDEN = Channel.ChannelListener.CLOSE_FORBIDDEN;
 
 
-
-
     private OnlineUserManager onlineUserManager = (OnlineUserManager) SpringContextUtil.getBean("onlineUserManager");
+    private IMExtensionCache imExtensionCache = (IMExtensionCache) GroovyCloudBean.getBean(GroovyCloudBean.IMEXTENSIONCACHE);
 
     public static GatewayMSGServers getInstance() {
-        if(instance == null) {
+        if (instance == null) {
             synchronized (MSGServers.class) {
-                if(instance == null) {
+                if (instance == null) {
                     instance = new GatewayMSGServers();
                     instance.init("defaultkey");
                 }
@@ -66,9 +68,9 @@ public final class GatewayMSGServers extends MSGServers {
 
     public boolean isUserSessionAlive(String userId, String service) throws CoreException {
         OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
-        if(onlineUser != null) {
+        if (onlineUser != null) {
             OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(service);
-            if(serviceUser != null) {
+            if (serviceUser != null) {
                 return true;
             }
         }
@@ -76,11 +78,11 @@ public final class GatewayMSGServers extends MSGServers {
     }
 
     public boolean isChannelAlive(String userId, String service, Integer terminal) throws CoreException {
-        if(terminal == null) return false;
+        if (terminal == null) return false;
         OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
-        if(onlineUser != null) {
+        if (onlineUser != null) {
             OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(service);
-            if(serviceUser != null) {
+            if (serviceUser != null) {
                 return serviceUser.getChannel(terminal) != null;
             }
         }
@@ -90,9 +92,9 @@ public final class GatewayMSGServers extends MSGServers {
     public void closeUserSession(String userId, String service, int close) throws CoreException {
 
         OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
-        if(onlineUser != null) {
+        if (onlineUser != null) {
             OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(service);
-            if(serviceUser != null) {
+            if (serviceUser != null) {
                 onlineUserManager.deleteOnlineServiceUser(serviceUser, close);
             }
         }
@@ -100,11 +102,11 @@ public final class GatewayMSGServers extends MSGServers {
 
     public void closeUserChannel(String userId, String service, Integer terminal, int close) throws CoreException {
         OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
-        if(onlineUser != null) {
+        if (onlineUser != null) {
             OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(service);
-            if(serviceUser != null) {
+            if (serviceUser != null) {
                 Channel channel = serviceUser.getChannel(terminal);
-                if(channel != null) {
+                if (channel != null) {
                     serviceUser.removeChannel(channel, close);
                 }
             }
@@ -118,11 +120,11 @@ public final class GatewayMSGServers extends MSGServers {
                 && StringUtils.isNotBlank(key)
                 && StringUtils.isNotBlank(value)) {
             OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
-            if(onlineUser != null) {
+            if (onlineUser != null) {
                 OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(service);
-                if(serviceUser != null) {
+                if (serviceUser != null) {
                     Channel channel = serviceUser.getChannel(terminal);
-                    if(channel != null) {
+                    if (channel != null) {
                         channel.setAttribute(key, value);
                     }
                 }
@@ -136,11 +138,11 @@ public final class GatewayMSGServers extends MSGServers {
                 && terminal != null
                 && StringUtils.isNotBlank(key)) {
             OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
-            if(onlineUser != null) {
+            if (onlineUser != null) {
                 OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(service);
-                if(serviceUser != null) {
+                if (serviceUser != null) {
                     Channel channel = serviceUser.getChannel(terminal);
-                    if(channel != null) {
+                    if (channel != null) {
                         return channel.getAttribute(key);
                     }
                 }
@@ -151,21 +153,21 @@ public final class GatewayMSGServers extends MSGServers {
 
     public void sendMessage(Message message, Integer excludeTerminal, Integer toTerminal) throws CoreException {
         OnlineUser onlineUser = onlineUserManager.getOnlineUser(message.getUserId());
-        if(onlineUser == null)
+        if (onlineUser == null)
             throw new CoreException(GatewayErrorCodes.ERROR_ONLINEUSER_NULL, "Online user " + message.getUserId() + " not found while sending message " + message);
         OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(message.getService());
-        if(serviceUser == null)
+        if (serviceUser == null)
             throw new CoreException(GatewayErrorCodes.ERROR_ONLINESERVICEUSER_NULL, "Online service user " + message.getUserId() + "@" + message.getService() + " not found while sending message " + message);
 
-        if(message.getService().equals(message.getReceiverService())) {
+        if (message.getService().equals(message.getReceiverService())) {
             Collection<String> receiverIds = message.getReceiverIds();
-            if(receiverIds != null && receiverIds.contains(message.getUserId())) {
+            if (receiverIds != null && receiverIds.contains(message.getUserId())) {
                 //If sender is also the receiver, send message to sender excluded the terminal where sent the message.
                 OutgoingMessage out = new OutgoingMessage();
                 out.fromMessage(message);
                 serviceUser.pushToChannels(out, excludeTerminal, toTerminal);
 
-                if(receiverIds.size() == 1)
+                if (receiverIds.size() == 1)
                     return; //if send to user himself, then don't need to send across servers.
             }
         }
@@ -173,24 +175,38 @@ public final class GatewayMSGServers extends MSGServers {
         onlineUserManager.sendEvent(message, onlineUser);
     }
 
-    public void sendOutgoingData(Message message, Integer excludeTerminal, Integer toTerminal) throws CoreException {
+    public void sendClusterMessage(Message message, List<Integer> toTerminals) throws CoreException {
         OnlineUser onlineUser = onlineUserManager.getOnlineUser(message.getUserId());
-        if(onlineUser == null)
+        if (onlineUser == null)
             throw new CoreException(GatewayErrorCodes.ERROR_ONLINEUSER_NULL, "Online user " + message.getUserId() + " not found while sending message " + message);
         OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(message.getService());
-        if(serviceUser == null) {
+        if (serviceUser == null) {
             LoggerEx.error(TAG, "Online service user " + message.getUserId() + "@" + message.getService() + " not found while sending message " + message);
             return;
         }
-        if(message.getService().equals(message.getReceiverService())) {
+        if (message.getService().equals(message.getReceiverService())) {
+            serviceUser.pushToCrossServer(message, toTerminals);
+        }
+    }
+
+    public void sendOutgoingData(Message message, Integer excludeTerminal, Integer toTerminal) throws CoreException {
+        OnlineUser onlineUser = onlineUserManager.getOnlineUser(message.getUserId());
+        if (onlineUser == null)
+            throw new CoreException(GatewayErrorCodes.ERROR_ONLINEUSER_NULL, "Online user " + message.getUserId() + " not found while sending message " + message);
+        OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(message.getService());
+        if (serviceUser == null) {
+            LoggerEx.error(TAG, "Online service user " + message.getUserId() + "@" + message.getService() + " not found while sending message " + message);
+            return;
+        }
+        if (message.getService().equals(message.getReceiverService())) {
             Collection<String> receiverIds = message.getReceiverIds();
-            if(receiverIds != null && receiverIds.contains(message.getUserId())) {
+            if (receiverIds != null && receiverIds.contains(message.getUserId())) {
                 //If sender is also the receiver, send message to sender excluded the terminal where sent the message.
                 OutgoingData out = new OutgoingData();
                 out.fromMessage(message);
                 serviceUser.pushToChannels(out, excludeTerminal, toTerminal);
 
-                if(receiverIds.size() == 1)
+                if (receiverIds.size() == 1)
                     return; //if send to user himself, then don't need to send across servers.
             }
         }

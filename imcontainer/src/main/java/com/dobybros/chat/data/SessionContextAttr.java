@@ -60,4 +60,9 @@ public class SessionContextAttr {
         return userId != null && service != null && terminal != null && channelId != null;
     }
 
+    @Override
+    public String toString() {
+        return "SessionContextAttr [userId=" + userId + ",service=" + service + ", terminal=" + terminal + ", channelId=" + channelId
+                + "]";
+    }
 }

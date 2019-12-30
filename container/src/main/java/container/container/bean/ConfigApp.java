@@ -18,6 +18,7 @@ public class ConfigApp {
     private String configDBName;
     private String mongoUsername;
     private String mongoPassword;
+    private String redisHost;
 
     private String gridHost;
     private String girdConnectionsPerHost;
@@ -47,7 +48,7 @@ public class ConfigApp {
     private String dockerName;
 
     public ConfigApp(){
-        InputStream inStream = ConfigApp.class.getClassLoader().getResourceAsStream("container.properties");
+        InputStream inStream = ConfigApp.class.getClassLoader().getResourceAsStream("groovycloud.properties");
         InputStream appInStream = ConfigApp.class.getClassLoader().getResourceAsStream("application.properties");
         Properties prop = new Properties();
         Properties apppProp = new Properties();
@@ -84,6 +85,7 @@ public class ConfigApp {
             hotDeployment = prop.getProperty("hotDeployment");
             killProcess = prop.getProperty("killProcess");
             dockerName = prop.getProperty("docker.name");
+            redisHost = prop.getProperty("db.redis.uri");
             apppProp.load(appInStream);
             serverPort = apppProp.getProperty("server.port");
         } catch (IOException e) {
@@ -224,6 +226,10 @@ public class ConfigApp {
 
     public String getType() {
         return type;
+    }
+
+    public String getRedisHost() {
+        return redisHost;
     }
 }
 

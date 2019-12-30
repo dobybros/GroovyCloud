@@ -4,6 +4,8 @@ package com.dobybros.gateway.onlineusers;
 import com.docker.server.OnlineServer;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class OnlineUsersHolder {
@@ -70,7 +72,19 @@ public class OnlineUsersHolder {
 	public Collection<OnlineUser> onlineUsers() {
 		return onlineUserMap.values();
 	}
-	
+	public Map<String, Long> getServiceUserNumber(){
+		if(onlineUserMap != null){
+			Map<String, Long> map = new HashMap<>();
+			for (OnlineUser onlineUser : onlineUsers()){
+				for (String service : onlineUser.getServiceUserMap().keySet()){
+					OnlineServiceUser onlineServiceUser = onlineUser.getOnlineServiceUser(service);
+					map.put(service, (long) onlineServiceUser.getChannelMap().size());
+				}
+			}
+			return map;
+		}
+		return null;
+	}
 	public Collection<String> onlineUserIds() {
 		return onlineUserMap.keySet();
 	}

@@ -592,7 +592,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
                     LoggerEx.error(TAG, "Handle message " + message + " messageReceivedFromUsers failed, " + ExceptionUtils.getFullStackTrace(t));
                 }
             } else {
-                ServiceUserSessionListener listener = getServiceUserSessionListener(message.getUserId(), message.getService());
+                ServiceUserSessionListener listener = getServiceUserSessionListener(receiverId, receiverService);
                 if (listener != null) {
                     try {
                         listener.messageReceivedFromUsers(message, receiverId, receiverService);

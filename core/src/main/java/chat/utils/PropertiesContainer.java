@@ -11,7 +11,7 @@ public class PropertiesContainer {
     public static synchronized PropertiesContainer getInstance() {
         if (instance == null) {
             instance = new PropertiesContainer();
-            ClassPathResource configResource = new ClassPathResource("container.properties");
+            ClassPathResource configResource = new ClassPathResource("groovycloud.properties");
             if (properties == null)
                 properties = new Properties();
             try {

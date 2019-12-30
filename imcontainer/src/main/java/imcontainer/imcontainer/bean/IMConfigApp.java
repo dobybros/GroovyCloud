@@ -23,7 +23,7 @@ public class IMConfigApp extends BeanApp {
 
     public IMConfigApp(){
         super();
-        InputStream inStream = IMConfigApp.class.getClassLoader().getResourceAsStream("container.properties");
+        InputStream inStream = IMConfigApp.class.getClassLoader().getResourceAsStream("groovycloud.properties");
         Properties prop = new Properties();
         try {
             prop.load(inStream);

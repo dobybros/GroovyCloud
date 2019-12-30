@@ -33,13 +33,12 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class MyBaseRuntime extends BaseRuntime {
-	private static final String TAG = MyBaseRuntime.class.getSimpleName();
-	private String remoteServiceHost;
-	private ServiceStubManager serviceStubManager;
-	private ConcurrentHashMap<String, ServiceStubManager> stubManagerForLanIdMap = new ConcurrentHashMap<>();
+    private static final String TAG = MyBaseRuntime.class.getSimpleName();
+    private ServiceStubManager serviceStubManager;
+    private ConcurrentHashMap<String, ServiceStubManager> stubManagerForLanIdMap = new ConcurrentHashMap<>();
 
-	@Autowired
-	LansService lansService;
+    @Autowired
+    LansService lansService;
 
     private List<GroovyObjectEx<ServiceNotFoundListener>> serviceNotFoundListeners;
 
@@ -87,9 +86,9 @@ public class MyBaseRuntime extends BaseRuntime {
                         throw new NullPointerException("Lan " + lan + " is illegal for lanId " + lanId + " domain " + lan.getDomain() + " port " + lan.getPort() + " protocol " + lan.getProtocol());
                     String host = lan.getProtocol() + "://" + lan.getDomain() + ":" + lan.getPort();
                     manager = new ServiceStubManager(host, serviceStubManager.getFromService());
-                    if(lan.getType() == null){
+                    if (lan.getType() == null) {
                         manager.setLanType(Lan.TYPE_http);
-                    }else {
+                    } else {
                         manager.setLanType(lan.getType());
                     }
                     manager.setUsePublicDomain(true);
@@ -163,11 +162,8 @@ public class MyBaseRuntime extends BaseRuntime {
             }
         });
 
-        remoteServiceHost = properties.getProperty("remote.service.host");
-        if (remoteServiceHost != null) {
-            serviceStubManager = new ServiceStubManager(remoteServiceHost, service);
-            serviceStubManager.init();
-        }
+        serviceStubManager = new ServiceStubManager(service);
+        serviceStubManager.init();
         String libs = properties.getProperty("libs");
         if (libs != null) {
             String[] libArray = libs.split(",");
@@ -223,7 +219,7 @@ public class MyBaseRuntime extends BaseRuntime {
                     Object serviceStub = null;
                     if (StringUtils.isBlank(lanId)) {
                         serviceStub = baseRuntime.getServiceStubManager().getService(serviceName, field.getType());
-                    }else {
+                    } else {
                         serviceStub = baseRuntime.getServiceStubManager(lanId).getService(serviceName, field.getType());
                     }
                     if (!field.isAccessible())
@@ -303,10 +299,6 @@ public class MyBaseRuntime extends BaseRuntime {
             serviceNotFoundLock.readLock().unlock();
         }
         return null;
-    }
-
-    public String getRemoteServiceHost() {
-        return remoteServiceHost;
     }
 
     public void injectBean(Object obj) {

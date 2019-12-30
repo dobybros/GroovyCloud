@@ -8,6 +8,7 @@ import chat.utils.TimerTaskEx;
 import com.docker.data.Service;
 import com.docker.data.ServiceVersion;
 import com.docker.file.adapters.GridFSFileHandler;
+import com.docker.rpc.remote.stub.RemoteServersManager;
 import com.docker.server.OnlineServer;
 import com.docker.storage.adapters.ServersService;
 import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
@@ -25,10 +26,12 @@ import script.file.FileAdapter.FileEntity;
 import script.file.FileAdapter.PathEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.RuntimeBootListener;
+import script.groovy.servlets.grayreleased.GrayReleased;
 import script.utils.ShutdownListener;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,7 +92,6 @@ public class ScriptManager implements ShutdownListener {
         } else {
             reload();
         }
-
     }
 
     public Set<Map.Entry<String, BaseRuntime>> getBaseRunTimes() {
@@ -209,7 +211,9 @@ public class ScriptManager implements ShutdownListener {
                                     File propertiesFile = new File(propertiesPath);
                                     if (propertiesFile.exists() && propertiesFile.isFile()) {
                                         InputStream is = FileUtils.openInputStream(propertiesFile);
-                                        properties.load(is);
+                                        InputStreamReader reader = new InputStreamReader(is, "utf-8");
+                                        properties.load(reader);
+                                        reader.close();
                                         IOUtils.closeQuietly(is);
                                     }
                                     Integer version = getServiceVersion(service);
@@ -241,8 +245,8 @@ public class ScriptManager implements ShutdownListener {
                                     theService.setService(serviceName);
                                     theService.setVersion(version);
                                     theService.setUploadTime(fileEntity.getLastModificationTime());
-                                    if(properties.get(Service.FIELD_MAXUSERNUMBER) != null){
-                                        theService.setMaxUserNumber((Long)properties.get(Service.FIELD_MAXUSERNUMBER));
+                                    if (properties.get(Service.FIELD_MAXUSERNUMBER) != null) {
+                                        theService.setMaxUserNumber((Long) properties.get(Service.FIELD_MAXUSERNUMBER));
                                     }
                                     if (dockerStatusService != null) {
                                         //Aplomb delete service first before add, fixed the duplicated service bug.
@@ -368,14 +372,14 @@ public class ScriptManager implements ShutdownListener {
     private List<String> getServiceVersions() throws CoreException {
         List<ServiceVersion> serviceVersions = serviceVersionService.getServiceVersions(serverType);
 
-        Map<String, List> serviceVersionFinalMap = new ConcurrentHashMap<>();
-        Map<String, Integer> defaultVersionMap = new ConcurrentHashMap();
+        Map<String, List<String>> serviceVersionFinalMap = new ConcurrentHashMap<>();
+        Map<String, Integer> defaultVersionMap = new ConcurrentHashMap<>();
         for (ServiceVersion serviceVersion : serviceVersions) {
             Map<String, Integer> serviceFinalMap = new ConcurrentHashMap<>();
             Map<String, String> serviceVersionMap = serviceVersion.getServiceVersions();
             if (serviceVersionMap != null) {
                 for (String serviceName : serviceVersionMap.keySet()) {
-                    if (serviceVersion.getType().equals("default")) {
+                    if (serviceVersion.getType().equals(GrayReleased.defaultVersion)) {
                         if (serviceFinalMap.get(serviceName) == null) {
                             if (StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
                                 defaultVersionMap.put(serviceName, -1);
@@ -384,7 +388,7 @@ public class ScriptManager implements ShutdownListener {
                             }
                         } else {
                             if (!StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
-                                if (Integer.valueOf(serviceVersionMap.get(serviceName)) > defaultVersionMap.get(serviceName)) {
+                                if (Integer.parseInt(serviceVersionMap.get(serviceName)) > defaultVersionMap.get(serviceName)) {
                                     defaultVersionMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
                                 }
                             }
@@ -398,57 +402,41 @@ public class ScriptManager implements ShutdownListener {
                         }
                     } else {
                         if (!StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
-                            if (Integer.valueOf(serviceVersionMap.get(serviceName)) > serviceFinalMap.get(serviceName)) {
+                            if (Integer.parseInt(serviceVersionMap.get(serviceName)) > serviceFinalMap.get(serviceName)) {
                                 serviceFinalMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
                             }
                         }
                     }
                 }
-                List service_versionList = new ArrayList();
+                List<String> newServiceVersionList = new ArrayList<>();
                 if (serviceFinalMap.size() > 0) {
                     for (String serviceName : serviceFinalMap.keySet()) {
                         if (serviceFinalMap.get(serviceName) != -1) {
-                            service_versionList.add(serviceName + "_v" + serviceFinalMap.get(serviceName).toString());
+                            newServiceVersionList.add(serviceName + "_v" + serviceFinalMap.get(serviceName).toString());
                         } else {
-                            service_versionList.add(serviceName);
+                            newServiceVersionList.add(serviceName);
                         }
                     }
                 }
-                if (service_versionList.size() > 0) {
-                    serviceVersionFinalMap.put(serviceVersion.getType(), service_versionList);
+                if (newServiceVersionList.size() > 0) {
+                    serviceVersionFinalMap.put(serviceVersion.getType(), newServiceVersionList);
                 }
             }
         }
-        if (defaultVersionMap != null && defaultVersionMap.size() > 0) {
+        if (!defaultVersionMap.isEmpty()) {
             defalutServiceVersionMap = defaultVersionMap;
         }
         if (serviceVersionFinalMap.size() > 0) {
             List<String> serviceVersionFinalList = new ArrayList<>();
-            List<String> discoveryServiceList = new ArrayList<>();
             for (String type : serviceVersionFinalMap.keySet()) {
                 List<String> serviceVersionList = serviceVersionFinalMap.get(type);
                 if (serviceVersionList != null && serviceVersionList.size() > 0) {
                     for (String serviceVersion : serviceVersionList) {
-                        if (serviceVersion.contains("discovery")) {
-                            if (!discoveryServiceList.contains(serviceVersion)) {
-                                discoveryServiceList.add(serviceVersion);
-                            }
-                        } else {
-                            if (!serviceVersionFinalList.contains(serviceVersion)) {
-                                serviceVersionFinalList.add(serviceVersion);
-                            }
+                        if (!serviceVersionFinalList.contains(serviceVersion)) {
+                            serviceVersionFinalList.add(serviceVersion);
                         }
                     }
                 }
-            }
-            if (discoveryServiceList.size() > 0) {
-                for (int i = 0; i < discoveryServiceList.size(); i++) {
-                    serviceVersionFinalList.add(i, discoveryServiceList.get(i));
-                }
-                return serviceVersionFinalList;
-            } else {
-                LoggerEx.error(TAG, "Discovery not specify, please check!");
-                throw new CoreException(ChatErrorCodes.ERROR_DISCOVERY_NOTFOUND, "Discovery service not found, cant process!");
             }
         }
         return null;

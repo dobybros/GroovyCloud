@@ -3,6 +3,7 @@ package com.dobybros.gateway.channels.tcp
 import chat.logs.LoggerEx
 import com.dobybros.chat.binary.data.Data
 import com.dobybros.chat.handlers.ProxyContainerDuplexSender
+import com.dobybros.chat.handlers.imextention.IMExtensionCache
 import com.dobybros.chat.rpc.reqres.balancer.IMProxyRequest
 import com.dobybros.gateway.channels.data.OutgoingData
 import com.dobybros.gateway.channels.data.OutgoingMessage
@@ -10,6 +11,7 @@ import com.dobybros.gateway.onlineusers.OnlineServiceUser
 import com.dobybros.gateway.pack.Pack
 import com.docker.rpc.BinaryCodec
 import com.docker.rpc.remote.stub.RemoteServers
+import com.docker.utils.GroovyCloudBean
 import com.docker.utils.SpringContextUtil
 import org.apache.commons.lang.exception.ExceptionUtils
 
@@ -18,6 +20,8 @@ import org.apache.commons.lang.exception.ExceptionUtils
  */
 public class SimulateTcpChannel extends TcpChannel {
     private ProxyContainerDuplexSender proxyContainerDuplexSender = (ProxyContainerDuplexSender) SpringContextUtil.getBean("proxyContainerDuplexSender");
+    private IMExtensionCache imExtensionCache = (IMExtensionCache) GroovyCloudBean.getBean(GroovyCloudBean.IMEXTENSIONCACHE);
+
     private RemoteServers.Server server;
     private String userId;
     private String service;
@@ -106,6 +110,7 @@ public class SimulateTcpChannel extends TcpChannel {
                         request.setChannelStatus(IMProxyRequest.CHANNELSTATUS_CLOSE);
                     }
                     sendProxy(request, null);
+                    imExtensionCache.delNewUserId(userId, service, getTerminal())
                     channelClosed(close);
                 } catch (Throwable t) {
                     t.printStackTrace();

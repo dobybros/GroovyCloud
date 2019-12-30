@@ -4,17 +4,27 @@ import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
 import com.docker.data.Lan;
+import com.docker.errors.CoreErrorCodes;
 import com.docker.rpc.MethodRequest;
 import com.docker.rpc.MethodResponse;
 import com.docker.rpc.async.AsyncRpcFuture;
 import com.docker.rpc.remote.MethodMapping;
+import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
+import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
+import com.docker.storage.mongodb.MongoHelper;
+import com.docker.storage.mongodb.daos.DockerStatusDAO;
+import com.docker.storage.mongodb.daos.ServiceVersionDAO;
+import com.docker.utils.GroovyCloudBean;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.core.io.ClassPathResource;
 import script.groovy.servlets.Tracker;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,6 +41,11 @@ public class ServiceStubManager {
     public ServiceStubManager(){
 
     }
+    public ServiceStubManager(String fromService) {
+        if (fromService != null) {
+            this.fromService = fromService;
+        }
+    }
     public ServiceStubManager(String host, String fromService) {
         if (fromService != null) {
             this.fromService = fromService;
@@ -44,11 +59,10 @@ public class ServiceStubManager {
         if (!this.host.startsWith("http")) {
             this.host = "http://" + this.host;
         }
-        if(this.lanType == null || this.lanType.equals(Lan.TYPE_RPC)){
-            RemoteServersManager.getInstance().addRemoteHost(this.host);
-        }else {
+        if(this.lanType != null && this.lanType.equals(Lan.TYPE_http)){
             RemoteServersManager.getInstance().addCrossHost(this.host);
         }
+        handle();
     }
     public void clearCache() {
         methodMap.clear();
@@ -245,5 +259,52 @@ public class ServiceStubManager {
 
     public void setLanType(Integer lanType) {
         this.lanType = lanType;
+    }
+    private void handle(){
+        if(RemoteServersManager.getInstance() == null){
+            ServiceVersionServiceImpl serviceVersionService = (ServiceVersionServiceImpl) GroovyCloudBean.getBean(GroovyCloudBean.SERVICEVERSIONSERVICE);
+            DockerStatusServiceImpl dockerStatusService = (DockerStatusServiceImpl)GroovyCloudBean.getBean(GroovyCloudBean.DOCKERSTATUSSERVICE);
+            if(serviceVersionService == null || dockerStatusService == null){
+                ClassPathResource configResource = new ClassPathResource("groovycloud.properties");
+                Properties properties = new Properties();
+                try {
+                    properties.load(configResource.getInputStream());
+                    String mongoHost = properties.getProperty("database.host");
+                    if(mongoHost == null){
+                        LoggerEx.error(TAG, "Cant find config:database.host");
+                        throw new CoreException(CoreErrorCodes.ERROR_GROOVYCLOUDCONFIG_ILLEGAL, "Cant find config:database.host");
+                    }
+                    MongoHelper mongoHelper = new MongoHelper();
+                    mongoHelper.setHost(mongoHost);
+                    mongoHelper.setConnectionsPerHost(100);
+                    mongoHelper.setDbName("dockerdb");
+                    if(serviceVersionService == null){
+                        serviceVersionService = new ServiceVersionServiceImpl();
+                        ServiceVersionDAO serviceVersionDAO = new ServiceVersionDAO();
+                        serviceVersionDAO.setMongoHelper(mongoHelper);
+                        serviceVersionService.setServiceVersionDAO(serviceVersionDAO);
+                    }
+                    if(dockerStatusService == null){
+                        dockerStatusService = new DockerStatusServiceImpl();
+                        DockerStatusDAO dockerStatusDAO = new DockerStatusDAO();
+                        dockerStatusDAO.setMongoHelper(mongoHelper);
+                        dockerStatusService.setDockerStatusDAO(dockerStatusDAO);
+                    }
+                }catch (Throwable t){
+                    LoggerEx.error(TAG, "Get groovycloud.propertiesperties err, errMsg : " + ExceptionUtils.getFullStackTrace(t));
+                }finally {
+                    try {
+                        configResource.getInputStream().close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            if(serviceVersionService != null && dockerStatusService != null){
+                RemoteServersManager.getInstance(serviceVersionService, dockerStatusService).init();
+            }else {
+                LoggerEx.error(TAG, "serviceVersionService or dockerStatusService is null, cant init RemoteServersManager");
+            }
+        }
     }
 }

@@ -235,7 +235,9 @@ public class OnlineServiceUser implements ChannelListener {
             }
 		}
 	}
+	public void pushToCrossServer(Message message, List<Integer> toTerminals){
 
+	}
     public final void pushToChannels(Data event, Integer excludeTerminal) {
         pushToChannels(event, excludeTerminal, null);
     }
@@ -893,7 +895,7 @@ public class OnlineServiceUser implements ChannelListener {
 	}
 	
 	public void exceptionCaught(Throwable cause) {
-		LoggerEx.error(TAG, userInfo() + "'s tcp channel occur error in exceptionCaught,errMsg: " + ExceptionUtils.getFullStackTrace(cause) + "|" + cause);
+		LoggerEx.error(TAG, userInfo() + "'s tcp channel occur error in exceptionCaught,errMsg: " + ExceptionUtils.getFullStackTrace(cause));
 	}
 	
 	/////////////impl

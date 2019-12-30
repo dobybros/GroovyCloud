@@ -224,6 +224,10 @@ public class ProxyIMRequest extends RPCRequest {
     }
 
     public boolean checkParamsNotNull(){
-        return channelId != null && userId != null && service != null && terminal != null && imEncodeVersion != null;
+        if(theType == 0){
+            return userId != null && service != null && terminal != null && imEncodeVersion != null;
+        }else {
+            return channelId != null && userId != null && service != null && terminal != null && imEncodeVersion != null;
+        }
     }
 }

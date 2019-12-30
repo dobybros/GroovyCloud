@@ -49,7 +49,7 @@ public class StorageManager {
             e.printStackTrace();
             LoggerEx.error(TAG, "Prepare storage.properties is failed, " + e.getMessage());
         }
-        ClassPathResource sdockerResource = new ClassPathResource("container.properties");
+        ClassPathResource sdockerResource = new ClassPathResource("groovycloud.properties");
         sdockerProperties = new Properties();
         try {
             sdockerProperties.load(sdockerResource.getInputStream());

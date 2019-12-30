@@ -18,9 +18,10 @@ public interface CoreErrorCodes {
 	public static final int ERROR_RPC_TYPE_NOSERVERADAPTER = CODE_CORE +346;
 	public static final int ERROR_RPC_TYPE_NOMAPPING = CODE_CORE + 347;
 	public static final int ERROR_LOADPROPERTIES_FAILED = CODE_CORE + 348;
-
+	public static final int ERROR_GROOVYCLOUDCONFIG_ILLEGAL = CODE_CORE + 349;
 
 	public static final int ERROR_LOCK = 8000;
 	public static final int ERROR_LOCK_CAN_NOT_FOUND = ERROR_LOCK + 5;
 	public static final int ERROR_LOCK_VERIFY_FIELD = ERROR_LOCK + 2;
+
 }
