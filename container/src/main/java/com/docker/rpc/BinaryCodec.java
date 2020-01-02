@@ -6,7 +6,7 @@ public abstract class BinaryCodec {
 	public static final byte ENCODE_PB = 1;
 	public static final byte ENCODE_JSON = 10;
 	public static final byte ENCODE_JAVABINARY = 20;
-	
+
 	private Byte encode;
 	private byte[] data;
 	/**

@@ -23,7 +23,6 @@ import com.dobybros.chat.utils.SingleThreadQueue.BulkHandler;
 import com.dobybros.gateway.channels.data.OutgoingMessage;
 import com.dobybros.gateway.channels.data.Result;
 import com.dobybros.gateway.channels.tcp.TcpChannel;
-import com.dobybros.gateway.channels.tcp.UpStreamHandler;
 import com.dobybros.gateway.errors.GatewayErrorCodes;
 import com.dobybros.gateway.onlineusers.PushInfo.SpecialHandler;
 import com.dobybros.gateway.pack.Pack;
@@ -34,7 +33,6 @@ import com.docker.script.ScriptManager;
 import com.docker.server.OnlineServer;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.mina.core.session.IoSession;
 import script.memodb.ObjectId;
 
 import java.util.*;
@@ -969,10 +967,7 @@ public class OnlineServiceUser implements ChannelListener {
 		if (terminal != null) {
 			TcpChannel channel = (TcpChannel) getChannel(terminal);
 			if (channel != null) {
-				IoSession session = channel.getSession();
-				if (session != null) {
-					return  (String) session.getAttribute(UpStreamHandler.ATTRIBUTE_IP);
-				}
+				return channel.getIp();
 			}
 		}
 		return null;

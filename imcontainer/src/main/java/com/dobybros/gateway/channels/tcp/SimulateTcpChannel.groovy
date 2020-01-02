@@ -28,6 +28,7 @@ public class SimulateTcpChannel extends TcpChannel {
     private boolean closed = false;
     private int[] lock = new int[0];
     private Short encodeVersion;
+    private String ip
 
     public SimulateTcpChannel(Integer terminal) {
         super(terminal);
@@ -169,5 +170,14 @@ public class SimulateTcpChannel extends TcpChannel {
 
     public void setService(String service) {
         this.service = service;
+    }
+
+    @Override
+    String getIp() {
+        return ip
+    }
+
+    void setIp(String ip) {
+        this.ip = ip
     }
 }

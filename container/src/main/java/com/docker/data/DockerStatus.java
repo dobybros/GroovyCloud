@@ -37,6 +37,7 @@ public class DockerStatus extends DataObject {
 	public static final String FIELD_SERVERSTATUS_TIME = "time";
 	public static final String FIELD_SERVERSTATUS_TYPE = "type";
 	public static final String FIELD_MAXUSERNUMBER = "maxUserNumber";
+	public static final String FIELD_PUBLICWSPORT = "publicWsPort";
 	/**
 	 * 服务器的类型， login， gateway， presence等
 	 */
@@ -243,6 +244,7 @@ public class DockerStatus extends DataObject {
 		type = dbObj.getInteger(FIELD_SERVERSTATUS_TYPE);
 		sslTcpPort = dbObj.getInteger(FIELD_DOCKERSTATUS_SSLTCPPORT);
 		wsPort = dbObj.getInteger(FIELD_SERVERSTATUS_WEBSOCKETPORT);
+		publicWsPort = dbObj.getInteger(FIELD_PUBLICWSPORT);
 		maxUserNumber = dbObj.getLong(FIELD_MAXUSERNUMBER);
 		List<Document> servicesList = (List<Document>) dbObj.get(FIELD_DOCKERSTATUS_SERVICES);
 		if(servicesList != null) {
@@ -298,6 +300,9 @@ public class DockerStatus extends DataObject {
 			dbObj.put(FIELD_SERVERSTATUS_TYPE, type);
 		if(maxUserNumber != null){
 			dbObj.put(FIELD_MAXUSERNUMBER, maxUserNumber);
+		}
+		if(publicWsPort != null){
+			dbObj.put(FIELD_PUBLICWSPORT, publicWsPort);
 		}
 		if(services != null) {
 			List<Document> serviceList = new ArrayList<>();
