@@ -245,7 +245,7 @@ public class ScriptManager implements ShutdownListener {
                                     theService.setVersion(version);
                                     theService.setUploadTime(fileEntity.getLastModificationTime());
                                     if (properties.get(Service.FIELD_MAXUSERNUMBER) != null) {
-                                        theService.setMaxUserNumber((Long) properties.get(Service.FIELD_MAXUSERNUMBER));
+                                        theService.setMaxUserNumber(Long.valueOf((String) properties.get(Service.FIELD_MAXUSERNUMBER)));
                                     }
                                     if (dockerStatusService != null) {
                                         //Aplomb delete service first before add, fixed the duplicated service bug.
