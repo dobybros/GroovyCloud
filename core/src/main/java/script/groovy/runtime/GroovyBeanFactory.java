@@ -1,19 +1,15 @@
 package script.groovy.runtime;
 
+import chat.errors.CoreException;
+import org.apache.commons.lang.StringUtils;
+import script.groovy.annotation.Bean;
+import script.groovy.object.GroovyObjectEx;
+import script.groovy.runtime.classloader.MyGroovyClassLoader;
+
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import chat.errors.CoreException;
-import chat.logs.LoggerEx;
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.GroovyObject;
-import org.apache.commons.lang.StringUtils;
-
-import script.groovy.annotation.Bean;
-import script.groovy.object.GroovyObjectEx;
-import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 public class GroovyBeanFactory extends ClassAnnotationHandler {
 	private static final String TAG = GroovyBeanFactory.class.getSimpleName();
@@ -105,7 +101,17 @@ public class GroovyBeanFactory extends ClassAnnotationHandler {
 	@Override
 	public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap,
 									   MyGroovyClassLoader classLoader) {
-		ConcurrentHashMap<String, GroovyObjectEx> newBeanMap = new ConcurrentHashMap<>();
+		ConcurrentHashMap<String, GroovyObjectEx> newBeanMap = beanMap;//new ConcurrentHashMap<>();
+//		if(beanMap != null) {
+//			for(Map.Entry<String, GroovyObjectEx> entry : beanMap.entrySet()) {
+//				try {
+//					if(entry.getValue().getGroovyClass().getClassLoader().getParent().equals(classLoader)) {
+//						newBeanMap.put(entry.getKey(), entry.getValue());
+//					}
+//				} catch (Throwable e) {
+//				}
+//			}
+//		}
 //		ConcurrentHashMap<String, Class<?>> newProxyClassMap = new ConcurrentHashMap<>();
 		if (annotatedClassMap != null) {
 			Collection<Class<?>> values = annotatedClassMap.values();
@@ -158,10 +164,10 @@ public class GroovyBeanFactory extends ClassAnnotationHandler {
 //		if (oldProxyClassMap != null)
 //			oldProxyClassMap.clear();
 
-		ConcurrentHashMap<String, GroovyObjectEx> oldBeanMap = beanMap;
+//		ConcurrentHashMap<String, GroovyObjectEx> oldBeanMap = beanMap;
 		beanMap = newBeanMap;
-		if (oldBeanMap != null)
-			oldBeanMap.clear();
+//		if (oldBeanMap != null)
+//			oldBeanMap.clear();
 
 		GroovyObjectEx.fillGroovyObjects(beanMap.values(), getGroovyRuntime());
 	}

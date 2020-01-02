@@ -3,7 +3,6 @@ package com.dobybros.gateway.open;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.dobybros.chat.channels.Channel;
-import com.dobybros.chat.handlers.imextention.IMExtensionCache;
 import com.dobybros.chat.open.MSGServers;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionListener;
@@ -14,7 +13,6 @@ import com.dobybros.gateway.errors.GatewayErrorCodes;
 import com.dobybros.gateway.onlineusers.OnlineServiceUser;
 import com.dobybros.gateway.onlineusers.OnlineUser;
 import com.dobybros.gateway.onlineusers.OnlineUserManager;
-import com.docker.utils.GroovyCloudBean;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.StringUtils;
 import script.groovy.runtime.GroovyRuntime;
@@ -51,7 +49,6 @@ public final class GatewayMSGServers extends MSGServers {
 
 
     private OnlineUserManager onlineUserManager = (OnlineUserManager) SpringContextUtil.getBean("onlineUserManager");
-    private IMExtensionCache imExtensionCache = (IMExtensionCache) GroovyCloudBean.getBean(GroovyCloudBean.IMEXTENSIONCACHE);
 
     public static GatewayMSGServers getInstance() {
         if (instance == null) {

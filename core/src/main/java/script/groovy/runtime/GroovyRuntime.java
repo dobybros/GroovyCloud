@@ -234,7 +234,21 @@ public class GroovyRuntime extends ScriptRuntime {
                             annotationHandler.setGroovyRuntime(GroovyRuntime.this);
                         if (annotationHandler instanceof GroovyBeanFactory) {
                             beanFactory = (GroovyBeanFactory) annotationHandler;
+                            break;
                         }
+                    }
+                    for (ClassAnnotationHandler annotationHandler : handlers) {
+                        if(annotationHandler.isBean()){
+                            Map<String, Class<?>> values = handlerMap.get(annotationHandler);
+                            if(values != null){
+                                for (Class<?> c : values.values()){
+                                    beanFactory.getClassBean(c);
+                                }
+                            }
+                        }
+                    }
+
+                    for (ClassAnnotationHandler annotationHandler : handlers) {
                         Map<String, Class<?>> values = handlerMap.get(annotationHandler);
                         if (values != null) {
                             try {

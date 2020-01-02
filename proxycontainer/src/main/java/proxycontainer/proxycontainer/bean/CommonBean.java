@@ -93,7 +93,7 @@ public class CommonBean {
         return instance.getOnlineServer();
     }
     @Bean(initMethod = "init")
-    public IMExtensionCache imExtentionCache(){
+    public IMExtensionCache imExtensionCache(){
         return instance.getIMExtensionCache();
     }
 }

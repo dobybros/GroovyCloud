@@ -56,4 +56,8 @@ public class MongoDocumentAnnotationHolder extends ClassAnnotationHandler {
 		return documentClassMap;
 	}
 
+	@Override
+	public boolean isBean() {
+		return false;
+	}
 }
