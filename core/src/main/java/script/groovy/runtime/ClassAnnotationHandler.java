@@ -13,6 +13,8 @@ public abstract class ClassAnnotationHandler {
 	
 	public abstract void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, MyGroovyClassLoader classLoader);
 
+	public boolean isBean() {return true;}
+
 	public GroovyRuntime getGroovyRuntime() {
 		return groovyRuntime;
 	}

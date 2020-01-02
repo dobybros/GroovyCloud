@@ -111,4 +111,9 @@ public class ServiceUserSessionAnnotationHandler extends ClassAnnotationHandler 
     public void setAnnotatedClassMap(Map<String, Class<?>> annotatedClassMap) {
         this.annotatedClassMap = annotatedClassMap;
     }
+
+    @Override
+    public boolean isBean() {
+        return false;
+    }
 }

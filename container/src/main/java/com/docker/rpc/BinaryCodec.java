@@ -19,7 +19,7 @@ public abstract class BinaryCodec {
 	public void setEncodeVersion(short encodeVersion) {
 		this.encodeVersion = encodeVersion;
 	}
-	
+
 	public abstract void resurrect() throws CoreException;
 	public abstract void persistent() throws CoreException;
 	public byte[] getData() {
