@@ -174,12 +174,12 @@ public class RemoteServersManager {
                                 Map<String, String> serverTypeMap = typeMap.get(serverType);
                                 List<DockerStatus> dockers = dockerStatusService.getAllDockerStatus();
                                 for (String serverTypeService : serverTypeMap.keySet()) {
-                                    if(dockers != null){
+                                    if (dockers != null) {
                                         for (DockerStatus dockerStatus : dockers) {
                                             if (dockerStatus.getServerType().equals(serverType)) {
                                                 List<Service> services = dockerStatus.getServices();
                                                 RemoteServers.Server server = null;
-                                                if(services != null){
+                                                if (services != null) {
                                                     for (Service service : services) {
                                                         if (service.getService().equals(serverTypeService)) {
                                                             Map<String, RemoteServers.Server> servers = typeServerMap.computeIfAbsent(service.getService(), k -> new ConcurrentHashMap<>());
@@ -187,12 +187,15 @@ public class RemoteServersManager {
                                                             if (serverTypeMap.get(serverTypeService).equals("-1") || (service.getService().equals(serverTypeService) && service.getVersion().toString().equals(serverTypeMap.get(serverTypeService)))) {
                                                                 boolean canAddService = false;
                                                                 if (servers.size() > 0) {
-                                                                    RemoteServers.Server serverOld = servers.get(0);
-                                                                    if (service.getVersion() > serverOld.getVersion()) {
-                                                                        servers.clear();
-                                                                        canAddService = true;
-                                                                    } else if (service.getVersion() == serverOld.getVersion()) {
-                                                                        canAddService = true;
+                                                                    for (String serverStr : servers.keySet()) {
+                                                                        RemoteServers.Server serverOld = servers.get(serverStr);
+                                                                        if (service.getVersion() > serverOld.getVersion()) {
+                                                                            servers.clear();
+                                                                            canAddService = true;
+                                                                        } else if (service.getVersion() == serverOld.getVersion()) {
+                                                                            canAddService = true;
+                                                                        }
+                                                                        break;
                                                                     }
                                                                 } else {
                                                                     canAddService = true;
@@ -241,7 +244,7 @@ public class RemoteServersManager {
                         serviceVersionReallyMap.put(type, typeMap);
                     }
                     List<String> serverTypes = serviceVersion.getServerType();
-                    if(serverTypes != null){
+                    if (serverTypes != null) {
                         for (String serverType : serverTypes) {
                             //serverType层
                             Map<String, String> serverTypeMap = typeMap.get(serverType);
@@ -250,7 +253,7 @@ public class RemoteServersManager {
                                 typeMap.put(serverType, serverTypeMap);
                             }
                             Map<String, String> serviceVersionsMap = serviceVersion.getServiceVersions();
-                            if(serviceVersionsMap != null){
+                            if (serviceVersionsMap != null) {
                                 for (String service : serviceVersionsMap.keySet()) {
                                     //service version层
                                     //使用最大版本
@@ -311,7 +314,7 @@ public class RemoteServersManager {
 
     public String getServiceMaxVersion(String type, String service) {
         Map<String, String> serviceMap = serviceMaxVersionMap.get(type);
-        if(serviceMap != null){
+        if (serviceMap != null) {
             return serviceMap.get(service);
         }
         return null;
@@ -324,9 +327,11 @@ public class RemoteServersManager {
     private void setDockerStatusService(DockerStatusServiceImpl dockerStatusService) {
         this.dockerStatusService = dockerStatusService;
     }
-    public static RemoteServersManager getRemoteServersManager(){
+
+    public static RemoteServersManager getRemoteServersManager() {
         return instance;
     }
+
     public synchronized static RemoteServersManager getInstance() {
         if (instance == null) {
             instance = new RemoteServersManager();
