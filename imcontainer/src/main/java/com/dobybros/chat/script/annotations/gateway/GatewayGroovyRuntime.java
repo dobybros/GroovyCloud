@@ -299,6 +299,27 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
         return imConfig;
     }
 
+    public boolean shouldInterceptMessageReceivedFromUsers(Message message, String userId, String service) {
+        if (sessionListener != null) {
+            try {
+                return sessionListener.getObject().shouldInterceptMessageReceivedFromUsers(message, userId, service);
+            } catch (Throwable t) {
+                t.printStackTrace();
+                LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getIMConfig failed, " + ExceptionUtils.getFullStackTrace(t));
+            }
+        } else {
+            ServiceUserSessionListener listener = getServiceUserSessionListener(userId, service);
+            if (listener != null)
+                try {
+                    return listener.shouldInterceptMessageReceivedFromUsers(message);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    LoggerEx.error(TAG, "Handle session " + userId + " service " + service + " getIMConfig failed, " + ExceptionUtils.getFullStackTrace(t));
+                }
+        }
+        return false;
+    }
+
     public Long getMaxInactiveInterval(String userId, String service) {
 //		sessionLock.readLock().lock();
 //		try {

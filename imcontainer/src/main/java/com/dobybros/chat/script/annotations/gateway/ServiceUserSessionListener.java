@@ -51,7 +51,7 @@ public abstract class ServiceUserSessionListener {
     public Long getMaxInactiveInterval() {
         return null;
     }
-
+    public Boolean shouldInterceptMessageReceivedFromUsers(Message message){return false;}
     public void messageSent(Data event, Integer excludeTerminal, Integer toTerminal) {
     }
 
@@ -60,6 +60,10 @@ public abstract class ServiceUserSessionListener {
 
     public void sendMessage(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {
         gatewayMSGServers.sendMessage(message, excludeTerminal, terminal);
+    }
+
+    public void sendClusterMessage(Message message, List<Integer> toTerminals) throws CoreException{
+        gatewayMSGServers.sendClusterMessage(message, toTerminals);
     }
 
     public void sendData(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {

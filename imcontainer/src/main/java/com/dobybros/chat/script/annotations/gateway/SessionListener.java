@@ -38,9 +38,14 @@ public abstract class SessionListener {
     public IMConfig getIMConfig(String userId, String service) {
         return null;
     }
+
     @Deprecated
     public Long getMaxInactiveInterval(String userId, String service) {
         return null;
+    }
+
+    public boolean shouldInterceptMessageReceivedFromUsers(Message message, String userId, String service) {
+        return false;
     }
 
     public void messageSent(Data event, Integer excludeTerminal, Integer toTerminal, String userId, String service) {
@@ -53,6 +58,7 @@ public abstract class SessionListener {
 
     public void pingReceived(String userId, String service, Integer terminal) {
     }
+
     public void pingTimeoutReceived(String userId, String service, Integer terminal) {
     }
 //	public void pingReceivedAsync(String userId, String service, Integer terminal) {}
