@@ -97,10 +97,6 @@ public class RemoteServersManager {
         }
     }
 
-    public static class ServersResult extends Result<Map<String, Map<String, List<RemoteServers.Server>>>> {
-
-    }
-
     //用于跨集群刷新otken
     public static class RemoteTokenResult extends Result<String> {
 
