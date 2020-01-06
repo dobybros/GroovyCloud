@@ -135,7 +135,6 @@ public class RemoteServerHandler {
                     request.setSourceIp(OnlineServer.getInstance().getIp());
                     request.setSourcePort(Integer.valueOf(OnlineServer.getInstance().getRpcPort()));
                 }
-                LoggerEx.info(TAG, "The service: " + toService + " ,the version being used is " + server.getVersion());
                 if (ip != null && port != null) {
                     RPCClientAdapter clientAdapter = thisRpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     clientAdapter.addToRemoteServerFutureList(callbackFutureId);
@@ -204,7 +203,6 @@ public class RemoteServerHandler {
                     request.setSourceIp(OnlineServer.getInstance().getIp());
                     request.setSourcePort(Integer.valueOf(OnlineServer.getInstance().getRpcPort()));
                 }
-                LoggerEx.info(TAG, "The service: " + toService + " ,the version being used is " + server.getVersion());
                 if (ip != null && port != null) {
                     RPCClientAdapter clientAdapter = thisRpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     MethodResponse response = (MethodResponse) clientAdapter.call(request);

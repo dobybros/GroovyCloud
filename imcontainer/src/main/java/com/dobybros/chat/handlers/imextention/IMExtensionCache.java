@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class IMExtensionCache {
     private final String TAG = IMExtensionCache.class.getSimpleName();
-    private final String SYMBOL = "_";
+    private final String SYMBOL = "@";
     public Map<String, String> newUserIdMap = new ConcurrentHashMap<>();
     private final String SESSION_PREFIX_USER = "IMEXTENSIONUSER";
     private final String SESSION_PREFIX_NEWUSER = "IMEXTENSIONNEWUSER";

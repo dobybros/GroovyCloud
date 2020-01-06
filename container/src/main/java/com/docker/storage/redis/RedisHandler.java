@@ -1063,7 +1063,7 @@ public class RedisHandler {
         if (map != null && !map.isEmpty()) {
             Map<String, T> result = new HashMap<>();
             for (String theKey : map.keySet()) {
-                result.put(key, JSON.parseObject(map.get(theKey), clazz));
+                result.put(theKey, JSON.parseObject(map.get(theKey), clazz));
             }
             return result;
         }
