@@ -100,8 +100,13 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
             } catch (Throwable throwable) {
                 LoggerEx.error(TAG, "pushToChannelsSync err, errMsg: " + ExceptionUtils.getFullStackTrace(throwable));
             }
-
         }
+    }
+
+    @Override
+    public int eventReceived(Message event) {
+
+        return super.eventReceived(event);
     }
 
     @Override

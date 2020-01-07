@@ -239,9 +239,7 @@ public class OnlineServiceUser implements ChannelListener {
         }
     }
 
-    public void pushToCrossServer(Message message, List<Integer> toTerminals) {
-
-    }
+    public void pushToCrossServer(Message message, List<Integer> toTerminals) {}
 
     public final void pushToChannels(Data event, Integer excludeTerminal) {
         pushToChannels(event, excludeTerminal, null);

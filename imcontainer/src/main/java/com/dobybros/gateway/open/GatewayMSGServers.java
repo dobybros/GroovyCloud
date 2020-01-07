@@ -172,6 +172,11 @@ public final class GatewayMSGServers extends MSGServers {
         onlineUserManager.sendEvent(message, onlineUser);
     }
 
+    public void closeClusterSessions(String userId, String service) {
+        //TODO Aplomb provide this method for business layer to close cluster sessions easily.
+        //TODO Aplomb The message (close session message) will not be seen by business layer.
+    }
+
     public void sendClusterMessage(Message message, List<Integer> toTerminals) throws CoreException {
         OnlineUser onlineUser = onlineUserManager.getOnlineUser(message.getUserId());
         if (onlineUser == null)
