@@ -2,6 +2,7 @@ package com.dobybros.gateway.open;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import com.alibaba.fastjson.JSON;
 import com.dobybros.chat.channels.Channel;
 import com.dobybros.chat.open.MSGServers;
 import com.dobybros.chat.open.data.Message;
@@ -17,8 +18,8 @@ import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.StringUtils;
 import script.groovy.runtime.GroovyRuntime;
 
-import java.util.Collection;
-import java.util.List;
+import java.nio.charset.Charset;
+import java.util.*;
 
 /**
  * Created by aplomb on 17-7-15.
@@ -171,10 +172,26 @@ public final class GatewayMSGServers extends MSGServers {
 
         onlineUserManager.sendEvent(message, onlineUser);
     }
-
-    public void closeClusterSessions(String userId, String service) {
-        //TODO Aplomb provide this method for business layer to close cluster sessions easily.
-        //TODO Aplomb The message (close session message) will not be seen by business layer.
+    //userId is parentId
+    public void closeClusterSessions(String userId, String service, int close) throws CoreException {
+        OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
+        if (onlineUser == null)
+            throw new CoreException(GatewayErrorCodes.ERROR_ONLINEUSER_NULL, "Online user " + userId + " not found while closeClusterSessions ");
+        OnlineServiceUser serviceUser = onlineUser.getOnlineServiceUser(service);
+        if (serviceUser == null) {
+            LoggerEx.error(TAG, "Online service user " + userId + "@" + service + " not found while closeClusterSessions");
+            return;
+        }
+        Message message = new Message();
+        message.setReceiverService(service);
+        message.setService(service);
+        List<String> receiverIds = new ArrayList<>();
+        receiverIds.add(userId);
+        message.setReceiverIds(receiverIds);
+        Map<String, Integer> contentMap = new HashMap<>();
+        contentMap.put("close", close);
+        message.setData(JSON.toJSONString(contentMap).getBytes(Charset.defaultCharset()));
+        serviceUser.pushToCrossServer(message, null);
     }
 
     public void sendClusterMessage(Message message, List<Integer> toTerminals) throws CoreException {

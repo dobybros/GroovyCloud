@@ -51,7 +51,11 @@ public abstract class ServiceUserSessionListener {
     public Long getMaxInactiveInterval() {
         return null;
     }
-    public Boolean shouldInterceptMessageReceivedFromUsers(Message message){return false;}
+
+    public Boolean shouldInterceptMessageReceivedFromUsers(Message message) {
+        return false;
+    }
+
     public void messageSent(Data event, Integer excludeTerminal, Integer toTerminal) {
     }
 
@@ -61,12 +65,12 @@ public abstract class ServiceUserSessionListener {
     public void sendMessage(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {
         gatewayMSGServers.sendMessage(message, excludeTerminal, terminal);
     }
-    public void closeClusterSessions() {
-        //TODO Aplomb provide this method for business layer to close cluster sessions easily.
-        //TODO Aplomb The message (close session message) will not be seen by business layer.
-        gatewayMSGServers.closeClusterSessions(userId, service);
+
+    public void closeClusterSessions(int close) throws CoreException {
+        gatewayMSGServers.closeClusterSessions(parentUserId, service, close);
     }
-    public void sendClusterMessage(Message message, List<Integer> toTerminals) throws CoreException{
+
+    public void sendClusterMessage(Message message, List<Integer> toTerminals) throws CoreException {
         gatewayMSGServers.sendClusterMessage(message, toTerminals);
     }
 

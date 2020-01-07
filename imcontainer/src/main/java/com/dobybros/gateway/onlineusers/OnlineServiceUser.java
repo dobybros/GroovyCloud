@@ -1000,4 +1000,5 @@ public class OnlineServiceUser implements ChannelListener {
     public long getNoChannelTime() {
         return noChannelTime;
     }
+
 }

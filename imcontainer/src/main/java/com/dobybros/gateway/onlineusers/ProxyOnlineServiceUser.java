@@ -2,6 +2,7 @@ package com.dobybros.gateway.onlineusers;
 
 import chat.logs.LoggerEx;
 import chat.utils.ConcurrentHashSet;
+import com.alibaba.fastjson.JSONObject;
 import com.dobybros.chat.binary.data.Data;
 import com.dobybros.chat.channels.Channel;
 import com.dobybros.chat.data.userinfo.UserInfo;
@@ -21,6 +22,7 @@ import com.docker.script.BaseRuntime;
 import com.docker.utils.GroovyCloudBean;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -107,24 +109,46 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
 
     @Override
     public int eventReceived(Message event) {
-
-        return super.eventReceived(event);
+        switch (event.getType()) {
+            case Message.TYPE_CLOSECLUSTERSESSION:
+                try {
+                    if (event.getData() != null) {
+                        String contentStr = new String(event.getData(), Charset.defaultCharset());
+                        Map contentMap = JSONObject.parseObject(contentStr);
+                        if (contentMap != null) {
+                            Integer close = (Integer) contentMap.get("close");
+                            userDestroyed(Objects.requireNonNullElse(close, Channel.ChannelListener.CLOSE_DESTROYED));
+                        }
+                    }
+                }catch (Throwable t){
+                    LoggerEx.error(TAG, "Close clusterSession error, please check, errMsg: " + ExceptionUtils.getFullStackTrace(t));
+                    userDestroyed(Channel.ChannelListener.CLOSE_DESTROYED);
+                }
+                break;
+            default:
+                BaseRuntime runtime = getScriptManager().getBaseRuntime(getServiceAndVersion());
+                if (runtime != null && runtime instanceof GatewayGroovyRuntime) {
+                    ((GatewayGroovyRuntime) runtime).messageReceivedFromUsers(event, getOnlineUser().getUserId(), getService());
+                }
+                break;
+        }
+        return eventReceivedHandler(event);
     }
 
     @Override
     public synchronized void userDestroyed(int close) {
         UserInfo userInfo = getUserInfo();
-        if(userInfo != null){
+        if (userInfo != null) {
             try {
                 super.userDestroyed(close);
-            }finally {
+            } finally {
                 try {
                     imExtensionCache.delUserServer(userInfo.getUserId(), getService());
-                }catch (Throwable t){
+                } catch (Throwable t) {
                     LoggerEx.error(TAG, "Del user server error, " + "userId: " + userInfo.getUserId() + ",service: " + getService());
                 }
             }
-        }else {
+        } else {
             LoggerEx.error(TAG, "Del user server error, userInfo is null , " + "userId: " + userInfo.getUserId() + ",service: " + getService());
         }
     }
@@ -138,7 +162,7 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
                 for (String receiverId : receiverIds) {
                     List<String> newUserIds = new ArrayList<>();
                     if (toTerminals != null) {
-                        if(!toTerminals.isEmpty()){
+                        if (!toTerminals.isEmpty()) {
                             for (Integer terminal : toTerminals) {
                                 String newUserId = imExtensionCache.getNewUserId(receiverId, message.getService(), terminal);
                                 if (newUserId != null) {
@@ -148,7 +172,7 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
                         }
                     } else {
                         Map<String, RemoteServers.Server> serverMap = imExtensionCache.getNewUsers(receiverId, message.getService());
-                        if(serverMap != null && !serverMap.isEmpty()){
+                        if (serverMap != null && !serverMap.isEmpty()) {
                             newUserIds.addAll(serverMap.keySet());
                         }
                     }

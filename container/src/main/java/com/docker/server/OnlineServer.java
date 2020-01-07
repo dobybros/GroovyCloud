@@ -116,7 +116,9 @@ public class OnlineServer {
         dockerStatus.setHttpPort(port);
         dockerStatus.setLanId(lanId);
         dockerStatus.setHealth(0);
-        dockerStatus.setSslRpcPort(Integer.valueOf(sslRpcPort));
+        if(sslTcpPort != null){
+            dockerStatus.setSslRpcPort(Integer.valueOf(sslRpcPort));
+        }
         if(tcpPort != null){
             dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
         }
@@ -126,10 +128,18 @@ public class OnlineServer {
         if(sslTcpPort != null){
             dockerStatus.setSslTcpPort(Integer.valueOf(sslTcpPort));
         }
-        dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
-        dockerStatus.setWsPort(Integer.valueOf(wsPort));
-        dockerStatus.setPublicWsPort(Integer.valueOf(publicWsPort));
-        dockerStatus.setRpcPort(Integer.valueOf(rpcPort));
+        if(tcpPort != null){
+            dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
+        }
+        if(wsPort != null){
+            dockerStatus.setWsPort(Integer.valueOf(wsPort));
+        }
+        if(publicWsPort != null){
+            dockerStatus.setPublicWsPort(Integer.valueOf(publicWsPort));
+        }
+        if(rpcPort != null){
+            dockerStatus.setRpcPort(Integer.valueOf(rpcPort));
+        }
         dockerStatus.setTime(ChatUtils.dateString(System.currentTimeMillis()));
         if (status == null)
             status = DockerStatus.STATUS_OK;

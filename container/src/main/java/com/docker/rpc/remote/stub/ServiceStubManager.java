@@ -276,16 +276,19 @@ public class ServiceStubManager {
                     mongoHelper.setHost(mongoHost);
                     mongoHelper.setConnectionsPerHost(100);
                     mongoHelper.setDbName("dockerdb");
+                    mongoHelper.init();
                     if(serviceVersionService == null){
                         serviceVersionService = new ServiceVersionServiceImpl();
                         ServiceVersionDAO serviceVersionDAO = new ServiceVersionDAO();
                         serviceVersionDAO.setMongoHelper(mongoHelper);
+                        serviceVersionDAO.init();
                         serviceVersionService.setServiceVersionDAO(serviceVersionDAO);
                     }
                     if(dockerStatusService == null){
                         dockerStatusService = new DockerStatusServiceImpl();
                         DockerStatusDAO dockerStatusDAO = new DockerStatusDAO();
                         dockerStatusDAO.setMongoHelper(mongoHelper);
+                        dockerStatusDAO.init();
                         dockerStatusService.setDockerStatusDAO(dockerStatusDAO);
                     }
                 }catch (Throwable t){
