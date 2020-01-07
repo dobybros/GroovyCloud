@@ -113,9 +113,11 @@ public class IMExtensionCache {
     }
 
     public Long delUserServer(String newUserId, String service) throws CoreException {
-        String userId = getUserId(newUserId);
-        if (userId != null) {
-            return redisHandler.hdel(SESSION_PREFIX_NEWUSER + getNewUserKey(userId, service), newUserId);
+        if(newUserId != null && service != null){
+            String userId = getUserId(newUserId);
+            if (userId != null) {
+                return redisHandler.hdel(SESSION_PREFIX_NEWUSER + getNewUserKey(userId, service), newUserId);
+            }
         }
         return null;
     }

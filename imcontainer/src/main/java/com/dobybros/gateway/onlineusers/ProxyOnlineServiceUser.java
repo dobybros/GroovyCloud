@@ -4,6 +4,7 @@ import chat.logs.LoggerEx;
 import chat.utils.ConcurrentHashSet;
 import com.dobybros.chat.binary.data.Data;
 import com.dobybros.chat.channels.Channel;
+import com.dobybros.chat.data.userinfo.UserInfo;
 import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
 import com.dobybros.chat.handlers.imextention.IMExtensionCache;
 import com.dobybros.chat.open.data.Message;
@@ -100,6 +101,7 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
             } catch (Throwable throwable) {
                 LoggerEx.error(TAG, "pushToChannelsSync err, errMsg: " + ExceptionUtils.getFullStackTrace(throwable));
             }
+
         }
     }
 
@@ -107,6 +109,24 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
     public int eventReceived(Message event) {
 
         return super.eventReceived(event);
+    }
+
+    @Override
+    public synchronized void userDestroyed(int close) {
+        UserInfo userInfo = getUserInfo();
+        if(userInfo != null){
+            try {
+                super.userDestroyed(close);
+            }finally {
+                try {
+                    imExtensionCache.delUserServer(userInfo.getUserId(), getService());
+                }catch (Throwable t){
+                    LoggerEx.error(TAG, "Del user server error, " + "userId: " + userInfo.getUserId() + ",service: " + getService());
+                }
+            }
+        }else {
+            LoggerEx.error(TAG, "Del user server error, userInfo is null , " + "userId: " + userInfo.getUserId() + ",service: " + getService());
+        }
     }
 
     @Override
