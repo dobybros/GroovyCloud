@@ -1084,6 +1084,40 @@ public class RedisHandler {
             return jedis.smembers(key);
         });
     }
+    // sortedSet
+    public Integer zadd(String key, double score, String member) throws CoreException {
+        if (key != null && member != null) {
+            return doJedisExecute(jedis -> {
+                return jedis.zadd(key, score, member);
+            });
+        }
+        return null;
+    }
+    public Set<String> zrangebyscoreWithoutScore(String key, double minScore, double maxScore) throws CoreException {
+        if (key != null) {
+            return doJedisExecute(jedis -> {
+                return jedis.zrangeByScore(key, minScore, maxScore);
+            });
+        }
+        return null;
+    }
+    public Set<Tuple> zrangebyscoreWithScore(String key, double minScore, double maxScore) throws CoreException {
+        if (key != null) {
+            return doJedisExecute(jedis -> {
+                return jedis.zrangeByScoreWithScores(key, minScore, maxScore);
+            });
+        }
+        return null;
+    }
+    public Integer zrem(String key, String... member) throws CoreException {
+        if (key != null && member != null) {
+            return doJedisExecute(jedis -> {
+                return jedis.zrem(key, member);
+            });
+        }
+        return null;
+    }
+
     private <V> V doJedisExecute(JedisExcutor executor) throws CoreException {
         JedisCommands jedis = null;
         try {
@@ -1103,17 +1137,18 @@ public class RedisHandler {
         }
     }
 
+    // hash
     public List<Object> hgetAllByPipeline(final List<String> keys, final String prefixKey) throws CoreException {
         Object result = invokePipelineMethod(true, new PipelineExcutor() {
             @Override
             public void execute(PipelineBase pipelineBase) {
                 if (StringUtils.isBlank(prefixKey))
                     for (String key : keys) {
-                        pipeline.hgetAll(key);
+                        pipelineBase.hgetAll(key);
                     }
                 else
                     for (String key : keys) {
-                        pipeline.hgetAll(prefixKey + key);
+                        pipelineBase.hgetAll(prefixKey + key);
                     }
             }
         }, RedisContants.PIPELINE_SYNC_AND_RETURN_ALL);
