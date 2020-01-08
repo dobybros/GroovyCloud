@@ -210,6 +210,7 @@ public class GatewayErrorCodes {
 	public static final int ERROR_SERVERINFO_NOTEXPECTED = GATEWAY_ERROR_START + 190;
 	public static final int ERROR_SERVER_NULL = GATEWAY_ERROR_START + 191;
 	public static final int ERROR_SESSIONCONTEXTATTR_NULL = GATEWAY_ERROR_START + 192;
+	public static final int ERROR_SERVER_ISFULL = GATEWAY_ERROR_START + 193;
 
 	public static final int TALENTCHAT_ERROR_END = 2000;
 	

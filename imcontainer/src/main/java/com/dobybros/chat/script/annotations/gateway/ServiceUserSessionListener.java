@@ -70,6 +70,12 @@ public abstract class ServiceUserSessionListener {
         gatewayMSGServers.closeClusterSessions(parentUserId, service, close);
     }
 
+    /**
+     * message's receiverIds is parentUserId
+     * @param message
+     * @param toTerminals
+     * @throws CoreException
+     */
     public void sendClusterMessage(Message message, List<Integer> toTerminals) throws CoreException {
         gatewayMSGServers.sendClusterMessage(message, toTerminals);
     }

@@ -139,7 +139,6 @@ public class OnlineUser {
 		serviceUser.setService(service);
 		serviceUser.setUserInfo(userInfo);
 		serviceUser.setOnlineUser(this);
-
 		//方法上加同步了， 就不应该出现并发写的问题了
 		OnlineServiceUser old = serviceUserMap.putIfAbsent(service, serviceUser);
 		if(old != null)

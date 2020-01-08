@@ -185,6 +185,7 @@ public final class GatewayMSGServers extends MSGServers {
         Message message = new Message();
         message.setReceiverService(service);
         message.setService(service);
+        message.setType(Message.TYPE_CLOSECLUSTERSESSION);
         List<String> receiverIds = new ArrayList<>();
         receiverIds.add(userId);
         message.setReceiverIds(receiverIds);
