@@ -54,6 +54,7 @@ public class Message {
 	/**
 	 * 这是业务数据的类型
 	 */
+	public static final String TYPE_CLOSECLUSTERSESSION = "closeClusterSession";
 	private String type;
 
 	/**

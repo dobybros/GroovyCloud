@@ -245,4 +245,9 @@ public class MongoDBHandler extends ClassAnnotationHandler{
 	public void setDocumentMap(HashMap<Class<?>, ClassFieldsHolder> documentMap) {
 		this.documentMap = documentMap;
 	}
+
+	@Override
+	public boolean isBean() {
+		return false;
+	}
 }

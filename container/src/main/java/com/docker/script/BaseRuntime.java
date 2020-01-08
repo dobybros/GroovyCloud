@@ -37,8 +37,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseRuntime extends GroovyRuntime {
-	public static final String TAG = BaseRuntime.class.getSimpleName();
-	private ConcurrentHashMap<String, Object> memoryCache = new ConcurrentHashMap<>();
+    public static final String TAG = BaseRuntime.class.getSimpleName();
+    private ConcurrentHashMap<String, Object> memoryCache = new ConcurrentHashMap<>();
 
 	private MongoDBHandler mongoDBHandler;
 	//	private RedisHandler redisHandler;
@@ -48,10 +48,10 @@ public abstract class BaseRuntime extends GroovyRuntime {
 	private KafkaConfCenter kafkaConfCenter;
 	private I18nHandler i18nHandler;
 
-	private String service;
+    private String service;
 
-	private String serviceName;
-	private Integer serviceVersion;
+    private String serviceName;
+    private Integer serviceVersion;
 
 	private Properties config;
 
@@ -121,14 +121,16 @@ public abstract class BaseRuntime extends GroovyRuntime {
 			}
 		}
 
-		if (enableGroovyMVC != null && enableGroovyMVC.trim().equals("true")) {
-			GroovyServletManagerEx servletManagerEx = new GroovyServletManagerEx(this.serviceName, this.serviceVersion);
-			addClassAnnotationHandler(servletManagerEx);
-			GroovyServletDispatcher.addGroovyServletManagerEx(this.service, servletManagerEx);
-			addClassAnnotationHandler(new WebServiceAnnotationHandler());
-		} else {
-			GroovyServletDispatcher.removeGroovyServletManagerEx(this.service);
-		}
+        if (enableGroovyMVC != null && enableGroovyMVC.trim().equals("true")) {
+            GroovyServletManagerEx servletManagerEx = new GroovyServletManagerEx(this.serviceName, this.serviceVersion);
+            addClassAnnotationHandler(servletManagerEx);
+            GroovyServletDispatcher.addGroovyServletManagerEx(this.service, servletManagerEx);
+            addClassAnnotationHandler(new WebServiceAnnotationHandler());
+        } else {
+            GroovyServletDispatcher.removeGroovyServletManagerEx(this.service);
+        }
+
+
 
 		addClassAnnotationHandler(new GroovyTimerTaskHandler());
 		addClassAnnotationHandler(new GroovyRedeployMainHandler());
@@ -141,94 +143,96 @@ public abstract class BaseRuntime extends GroovyRuntime {
 	}
 
 	@Override
-	public void close() {
-		if (service != null) {
+    public void close() {
+	    if(service != null) {
 			GroovyServletDispatcher.removeGroovyServletManagerEx(service.toLowerCase());
 		}
 		try {
-			if (mongoDBHandler != null) {
+			if(mongoDBHandler != null) {
 				MongoClientHelper helper = mongoDBHandler.getMongoClientHelper();
-				if (helper != null) {
+				if(helper != null) {
 					helper.disconnect();
 				}
 			}
-		} catch (Throwable t) {
+		} catch(Throwable t) {
+		    LoggerEx.error(TAG, "Close mongo error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
 		}
 		try {
 			if (redisHost != null) {
 				CacheStorageFactory.getInstance().removeCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, redisHost);
 			}
-		} catch (Throwable t) {
+		} catch(Throwable t) {
+            LoggerEx.error(TAG, "Close redis error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
 		}
 		super.close();
 		clear();
 	}
 
-	@Override
-	public String processAnnotationString(String markParam) {
-		if (StringUtils.isNotBlank(markParam)) {
-			if (markParam.startsWith("#{") && markParam.endsWith("}")) {
-				markParam = markParam.replaceAll(" ", "");
-				String[] markParams = markParam.split("#\\{");
-				if (markParams.length == 2) {
-					markParam = markParams[1];
-					markParams = markParam.split("}");
-					if (markParams.length == 1) {
-						markParam = markParams[0];
-						markParam = getConfig().getProperty(markParam);
-					}
-				}
-			}
-		}
-		return markParam;
-	}
+    @Override
+    public String processAnnotationString(String markParam) {
+        if(StringUtils.isNotBlank(markParam)){
+            if (markParam.startsWith("#{") && markParam.endsWith("}")) {
+                markParam = markParam.replaceAll(" ", "");
+                String[] markParams = markParam.split("#\\{");
+                if (markParams.length == 2) {
+                    markParam = markParams[1];
+                    markParams = markParam.split("}");
+                    if (markParams.length == 1) {
+                        markParam = markParams[0];
+                        markParam = getConfig().getProperty(markParam);
+                    }
+                }
+            }
+        }
+        return markParam;
+    }
 
-	public Object executeBeanMethod(Object caller, String name, Object... args) throws CoreException, InvocationTargetException, IllegalAccessException {
-		GroovyBeanFactory beanFactory = (GroovyBeanFactory) getClassAnnotationHandler(GroovyBeanFactory.class);
-		if (beanFactory != null) {
-			script.groovy.object.GroovyObjectEx objectEx = beanFactory.getBean(caller.getClass());
-			if (objectEx == null)
-				return null;
-			Object obj = objectEx.getObject();
-			if (obj != null) {
-				Class<?>[] argClasses = null;
-				if (args != null && args.length > 0) {
-					argClasses = new Class[args.length];
-					for (int i = 0; i < args.length; i++) {
-						argClasses[i] = args[i].getClass();
-					}
-				}
-				Method method = null;
-				try {
-					method = obj.getClass().getMethod(name, argClasses);
-				} catch (NoSuchMethodException e) {
-					e.printStackTrace();
-					LoggerEx.error(TAG, "NoSuchMethod while executeBeanMethod " + name + " args " + Arrays.toString(args));
-				}
-				if (method != null) {
-					return method.invoke(obj, args);
-				}
-			}
-		}
-		return null;
-	}
+    public Object executeBeanMethod(Object caller, String name, Object... args) throws CoreException, InvocationTargetException, IllegalAccessException {
+        GroovyBeanFactory beanFactory = (GroovyBeanFactory) getClassAnnotationHandler(GroovyBeanFactory.class);
+        if (beanFactory != null) {
+            script.groovy.object.GroovyObjectEx objectEx = beanFactory.getBean(caller.getClass());
+            if (objectEx == null)
+                return null;
+            Object obj = objectEx.getObject();
+            if (obj != null) {
+                Class<?>[] argClasses = null;
+                if (args != null && args.length > 0) {
+                    argClasses = new Class[args.length];
+                    for (int i = 0; i < args.length; i++) {
+                        argClasses[i] = args[i].getClass();
+                    }
+                }
+                Method method = null;
+                try {
+                    method = obj.getClass().getMethod(name, argClasses);
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                    LoggerEx.error(TAG, "NoSuchMethod while executeBeanMethod " + name + " args " + Arrays.toString(args));
+                }
+                if (method != null) {
+                    return method.invoke(obj, args);
+                }
+            }
+        }
+        return null;
+    }
 
-	public <T> T getBean(Class<T> beanClass) {
-		GroovyObjectEx<T> groovyObjectEx = getBeanFactory().getBean(beanClass);
-		if (groovyObjectEx == null) return null;
+    public <T> T getBean(Class<T> beanClass) {
+        GroovyObjectEx<T> groovyObjectEx = getBeanFactory().getBean(beanClass);
+        if (groovyObjectEx == null) return null;
 
-		try {
-			return groovyObjectEx.getObject();
-		} catch (CoreException e) {
-			e.printStackTrace();
-			LoggerEx.error(TAG, "getBean failed for class " + beanClass + " error " + ExceptionUtils.getFullStackTrace(e));
-			return null;
-		}
-	}
+        try {
+            return groovyObjectEx.getObject();
+        } catch (CoreException e) {
+            e.printStackTrace();
+            LoggerEx.error(TAG, "getBean failed for class " + beanClass + " error " + ExceptionUtils.getFullStackTrace(e));
+            return null;
+        }
+    }
 
-	public MongoDBHandler getMongoDBHandler() {
-		return mongoDBHandler;
-	}
+    public MongoDBHandler getMongoDBHandler() {
+        return mongoDBHandler;
+    }
 
 	public RedisHandler getRedisHandler() {
 		if (redisHost != null) {
@@ -238,83 +242,83 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		return null;
 	}
 
-	public KafkaProducerHandler getKafkaProducerHandler() {
-		return kafkaProducerHandler;
-	}
+    public KafkaProducerHandler getKafkaProducerHandler() {
+        return kafkaProducerHandler;
+    }
 
-	public KafkaConfCenter getKafkaConfCenter() {
-		return kafkaConfCenter;
-	}
+    public KafkaConfCenter getKafkaConfCenter() {
+        return kafkaConfCenter;
+    }
 
-	public I18nHandler getI18nHandler() {
-		return i18nHandler;
-	}
+    public I18nHandler getI18nHandler() {
+        return i18nHandler;
+    }
 
-	public Object get(String key) {
-		return memoryCache.get(key);
-	}
+    public Object get(String key) {
+        return memoryCache.get(key);
+    }
 
-	public Object put(String key, Object value) {
-		return memoryCache.put(key, value);
-	}
+    public Object put(String key, Object value) {
+        return memoryCache.put(key, value);
+    }
 
-	public ConcurrentHashMap<String, Object> getMemoryCache() {
-		return memoryCache;
-	}
+    public ConcurrentHashMap<String, Object> getMemoryCache() {
+        return memoryCache;
+    }
 
-	public Object remove(String key) {
-		return memoryCache.remove(key);
-	}
+    public Object remove(String key) {
+        return memoryCache.remove(key);
+    }
 
-	public void clear() {
-		memoryCache.clear();
-	}
+    public void clear() {
+        memoryCache.clear();
+    }
 
-	public String getService() {
-		return service;
-	}
+    public String getService() {
+        return service;
+    }
 
-	public void setService(String service) {
-		this.service = service;
-	}
+    public void setService(String service) {
+        this.service = service;
+    }
 
-	public Properties getConfig() {
-		return config;
-	}
+    public Properties getConfig() {
+        return config;
+    }
 
-	public String getCacheHost(String cacheMethod) {
-		if (StringUtils.isBlank(cacheMethod)) {
-			cacheMethod = CacheStorageMethod.METHOD_REDIS;
-		}
-		if (CacheStorageMethod.METHOD_REDIS.equals(cacheMethod)) {
-			Object cacheRedisUri = getConfig().get("cache.redis.uri");
-			if (cacheRedisUri == null) {
-				return null;
-			}
-			return (String) cacheRedisUri;
-		}
-		return null;
-	}
+    public String getCacheHost(String cacheMethod) {
+        if (StringUtils.isBlank(cacheMethod)) {
+            cacheMethod = CacheStorageMethod.METHOD_REDIS;
+        }
+        if (CacheStorageMethod.METHOD_REDIS.equals(cacheMethod)) {
+            Object cacheRedisUri = getConfig().get("cache.redis.uri");
+            if (cacheRedisUri == null) {
+                return null;
+            }
+            return (String) cacheRedisUri;
+        }
+        return null;
+    }
 
-	public EhCacheHandler getEhCacheHandler() {
-		return ehCacheHandler;
-	}
+    public EhCacheHandler getEhCacheHandler() {
+        return ehCacheHandler;
+    }
 
-	public void setConfig(Properties config) {
-		this.config = config;
-	}
+    public void setConfig(Properties config) {
+        this.config = config;
+    }
 
-	public String getServiceName() {
-		return serviceName;
-	}
+    public String getServiceName() {
+        return serviceName;
+    }
 
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
-	}
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
 
-	public Integer getServiceVersion() {
-		return serviceVersion;
-	}
+    public Integer getServiceVersion() {
+        return serviceVersion;
+    }
 
 	public void setServiceVersion(Integer serviceVersion) {
 		this.serviceVersion = serviceVersion;

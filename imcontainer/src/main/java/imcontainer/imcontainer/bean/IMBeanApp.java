@@ -4,6 +4,7 @@ import com.dobybros.chat.handlers.ConsumeOfflineMessageHandler;
 import com.dobybros.chat.handlers.PingHandler;
 import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
 import com.dobybros.chat.handlers.RpcProxyContainerDuplexSender;
+import com.dobybros.chat.handlers.imextention.IMExtensionCache;
 import com.dobybros.chat.props.GlobalLansProperties;
 import com.dobybros.chat.script.annotations.gateway.GatewayGroovyRuntime;
 import com.dobybros.chat.services.impl.ConsumeQueueService;
@@ -68,9 +69,16 @@ public class IMBeanApp extends IMConfigApp {
     private ScriptManager scriptManager;
     private MessageEventHandler messageEventHandler;
     private PingHandler pingHandler;
+    private IMExtensionCache imExtensionCache;
     private ProxyContainerDuplexSender proxyContainerDuplexSender;
     private RpcProxyContainerDuplexSender rpcProxyContainerDuplexSender;
-
+    public synchronized IMExtensionCache getIMExtensionCache() {
+        if(instance.imExtensionCache == null){
+            instance.imExtensionCache = new IMExtensionCache();
+            instance.imExtensionCache.setHost(getRedisHost());
+        }
+        return instance.imExtensionCache;
+    }
     public synchronized PingHandler getPingHandler() {
         if(instance.pingHandler == null){
             instance.pingHandler = new PingHandler();
@@ -111,8 +119,9 @@ public class IMBeanApp extends IMConfigApp {
             instance.onlineServer.setPublicWsPort(instance.getPublicWsPort());
             instance.onlineServer.setStatus(1);
             instance.onlineServer.setType(Integer.valueOf(instance.getType()));
-            instance.onlineServer.setConfigPath("container.properties");
+            instance.onlineServer.setConfigPath("groovycloud.properties");
             instance.onlineServer.setIpHolder(instance.getIpHolder());
+            instance.onlineServer.setMaxUserNumber(instance.getMaxUserNumber());
         }
         return instance.onlineServer;
     }
@@ -297,7 +306,7 @@ public class IMBeanApp extends IMConfigApp {
     public synchronized GlobalLansProperties getGlobalLansProperties() {
         if(instance.globalLansProperties == null){
             instance.globalLansProperties = new GlobalLansProperties();
-            instance.globalLansProperties.setPath("container.properties");
+            instance.globalLansProperties.setPath("groovycloud.properties");
         }
         return instance.globalLansProperties;
     }

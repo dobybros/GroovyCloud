@@ -33,7 +33,7 @@ public class ServerStart {
         if (instance == null) {
             synchronized (ServerStart.class) {
                 if (instance == null) {
-                    ClassPathResource configResource = new ClassPathResource("container.properties");
+                    ClassPathResource configResource = new ClassPathResource("groovycloud.properties");
                     Properties properties = new Properties();
                     try {
                         properties.load(configResource.getInputStream());

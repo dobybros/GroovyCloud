@@ -135,7 +135,6 @@ public class RemoteServerHandler {
                     request.setSourceIp(OnlineServer.getInstance().getIp());
                     request.setSourcePort(Integer.valueOf(OnlineServer.getInstance().getRpcPort()));
                 }
-                LoggerEx.info(TAG, "The service: " + toService + " ,the version being used is " + server.getVersion());
                 if (ip != null && port != null) {
                     RPCClientAdapter clientAdapter = thisRpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     clientAdapter.addToRemoteServerFutureList(callbackFutureId);
@@ -204,7 +203,6 @@ public class RemoteServerHandler {
                     request.setSourceIp(OnlineServer.getInstance().getIp());
                     request.setSourcePort(Integer.valueOf(OnlineServer.getInstance().getRpcPort()));
                 }
-                LoggerEx.info(TAG, "The service: " + toService + " ,the version being used is " + server.getVersion());
                 if (ip != null && port != null) {
                     RPCClientAdapter clientAdapter = thisRpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     MethodResponse response = (MethodResponse) clientAdapter.call(request);
@@ -236,7 +234,7 @@ public class RemoteServerHandler {
     }
 
     private void setSortedServers(MethodRequest request) throws CoreException {
-        ConcurrentHashMap<String, RemoteServers.Server> servers = (ConcurrentHashMap<String, RemoteServers.Server>) RemoteServersManager.getInstance().getServers(toService, this.serviceStubManager.getHost());
+        ConcurrentHashMap<String, RemoteServers.Server> servers = (ConcurrentHashMap<String, RemoteServers.Server>) RemoteServersManager.getInstance().getServers(toService);
         if (servers != null && servers.size() > 0) {
             this.remoteServers.setServers(servers);
             //TODO Calculate everytime will slow down performance too.
@@ -265,7 +263,7 @@ public class RemoteServerHandler {
                 dataMap.put("args", request.getArgs());
                 Map<String, Object> headerMap = new HashMap<String, Object>();
                 headerMap.put("crossClusterToken", token);
-                Result result = ScriptHttpUtils.post(JSON.toJSONString(dataMap), this.serviceStubManager.getHost() + "/rest/discovery/call", headerMap, Result.class);
+                Result result = ScriptHttpUtils.post(JSON.toJSONString(dataMap), this.serviceStubManager.getHost() + "/base/crossClusterAccessService", headerMap, Result.class);
                 if(result != null){
                     MethodResponse response = new MethodResponse();
                     MethodMapping methodMapping = request.getServiceStubManager().getMethodMapping(request.getCrc());

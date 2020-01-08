@@ -1,5 +1,6 @@
 package com.docker.data;
 
+import chat.logs.LoggerEx;
 import com.docker.storage.mongodb.CleanDocument;
 import org.bson.Document;
 
@@ -9,6 +10,7 @@ import java.util.Map;
  * Created by wenqi on 2018/12/4
  */
 public class ServiceAnnotation {
+    private final String TAG = ServiceAnnotation.class.getSimpleName();
     public static final String TYPE = "type";
     public static final String ANNOTATIONPARAMS = "params";
     public static final String CLASSNAME = "classname";
@@ -21,11 +23,15 @@ public class ServiceAnnotation {
     private boolean async;
 
     public void fromDocument(Document document) {
-        type = document.getString(TYPE);
-        annotationParams = document.get(ANNOTATIONPARAMS, Map.class);
-        className = document.getString(CLASSNAME);
-        methodName = document.getString(METHODNAME);
-        async = document.getBoolean(ASYNC);
+        try {
+            type = document.getString(TYPE);
+            annotationParams = document.get(ANNOTATIONPARAMS, Map.class);
+            className = document.getString(CLASSNAME);
+            methodName = document.getString(METHODNAME);
+            async = document.getBoolean(ASYNC);
+        }catch (Throwable t){
+            LoggerEx.error(TAG, t.getMessage());
+        }
     }
 
     public Document toDocument() {

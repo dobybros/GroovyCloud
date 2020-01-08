@@ -193,7 +193,7 @@ public class BeanApp extends ConfigApp{
     public synchronized AutoReloadProperties getOauth2ClientProperties() {
         if(instance.oauth2ClientProperties == null){
             instance.oauth2ClientProperties = new AutoReloadProperties();
-            instance.oauth2ClientProperties.setPath("container.properties");
+            instance.oauth2ClientProperties.setPath("groovycloud.properties");
         }
         return instance.oauth2ClientProperties;
     }
@@ -244,7 +244,7 @@ public class BeanApp extends ConfigApp{
             instance.onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
             instance.onlineServer.setStatus(1);
             instance.onlineServer.setType(Integer.valueOf(instance.getType()));
-            instance.onlineServer.setConfigPath("container.properties");
+            instance.onlineServer.setConfigPath("groovycloud.properties");
             instance.onlineServer.setIpHolder(instance.getIpHolder());
         }
         return instance.onlineServer;

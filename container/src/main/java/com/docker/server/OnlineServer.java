@@ -68,6 +68,8 @@ public class OnlineServer {
 
     private Properties config;
 
+    private Long maxUserNumber;
+
     public static interface OnlineServerStartHandler {
         public void serverWillStart(OnlineServer onlineServer) throws CoreException;
 
@@ -98,6 +100,7 @@ public class OnlineServer {
         dockerStatus.setDockerName(dockerName);
         dockerStatus.setIp(ipHolder.getIp());
         dockerStatus.setType(type);
+        dockerStatus.setMaxUserNumber(maxUserNumber);
         if (rpcPort != null) {
             try {
                 dockerStatus.setRpcPort(Integer.parseInt(rpcPort));
@@ -113,7 +116,9 @@ public class OnlineServer {
         dockerStatus.setHttpPort(port);
         dockerStatus.setLanId(lanId);
         dockerStatus.setHealth(0);
-        dockerStatus.setSslRpcPort(Integer.valueOf(sslRpcPort));
+        if(sslTcpPort != null){
+            dockerStatus.setSslRpcPort(Integer.valueOf(sslRpcPort));
+        }
         if(tcpPort != null){
             dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
         }
@@ -123,10 +128,18 @@ public class OnlineServer {
         if(sslTcpPort != null){
             dockerStatus.setSslTcpPort(Integer.valueOf(sslTcpPort));
         }
-        dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
-        dockerStatus.setWsPort(Integer.valueOf(wsPort));
-        dockerStatus.setPublicWsPort(Integer.valueOf(publicWsPort));
-        dockerStatus.setRpcPort(Integer.valueOf(rpcPort));
+        if(tcpPort != null){
+            dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
+        }
+        if(wsPort != null){
+            dockerStatus.setWsPort(Integer.valueOf(wsPort));
+        }
+        if(publicWsPort != null){
+            dockerStatus.setPublicWsPort(Integer.valueOf(publicWsPort));
+        }
+        if(rpcPort != null){
+            dockerStatus.setRpcPort(Integer.valueOf(rpcPort));
+        }
         dockerStatus.setTime(ChatUtils.dateString(System.currentTimeMillis()));
         if (status == null)
             status = DockerStatus.STATUS_OK;
@@ -503,5 +516,13 @@ public class OnlineServer {
 
     public void setType(Integer type) {
         this.type = type;
+    }
+
+    public Long getMaxUserNumber() {
+        return maxUserNumber;
+    }
+
+    public void setMaxUserNumber(Long maxUserNumber) {
+        this.maxUserNumber = maxUserNumber;
     }
 }

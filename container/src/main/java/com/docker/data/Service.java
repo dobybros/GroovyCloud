@@ -13,6 +13,7 @@ public class Service {
     public static final String FIELD_SERVICE_UPLOADTIME = "uploadTime";
     public static final String FIELD_SERVICE_TYPE = "type";
     public static final String FIELD_SERVICE_SERVICEANNOTATION = "serviceAnnotations";
+    public static final String FIELD_MAXUSERNUMBER = "maxUserNumber";
 
     public static final int FIELD_SERVER_TYPE_NORMAL = 1;
     public static final int FIELD_SERVER_TYPE_DEPLOY_FAILED = 2;
@@ -22,7 +23,7 @@ public class Service {
     private Integer minVersion;
     private Long uploadTime;
     private Integer type;
-
+    private Long maxUserNumber;
     private List<ServiceAnnotation> serviceAnnotations;
 
     public String getService() {
@@ -65,12 +66,21 @@ public class Service {
         this.type = type;
     }
 
+    public Long getMaxUserNumber() {
+        return maxUserNumber;
+    }
+
+    public void setMaxUserNumber(Long maxUserNumber) {
+        this.maxUserNumber = maxUserNumber;
+    }
+
     public void fromDocument(Document dbObj) {
         service = (String) dbObj.get(FIELD_SERVICE_SERVICE);
         version = dbObj.getInteger(FIELD_SERVICE_VERSION);
         minVersion = dbObj.getInteger(FIELD_SERVICE_MINVERSION);
         uploadTime = dbObj.getLong(FIELD_SERVICE_UPLOADTIME);
         type = dbObj.getInteger(FIELD_SERVICE_TYPE);
+        maxUserNumber = dbObj.getLong(FIELD_MAXUSERNUMBER);
         List<Document> anDocs = (List<Document>) dbObj.get(FIELD_SERVICE_SERVICEANNOTATION);
         if(anDocs != null) {
             serviceAnnotations = new ArrayList<>();
@@ -89,6 +99,9 @@ public class Service {
         dbObj.put(FIELD_SERVICE_VERSION, version);
         dbObj.put(FIELD_SERVICE_UPLOADTIME, uploadTime);
         dbObj.put(FIELD_SERVICE_TYPE, type);
+        if(maxUserNumber != null){
+            dbObj.put(FIELD_MAXUSERNUMBER, maxUserNumber);
+        }
         if(serviceAnnotations != null) {
             List<Document> annotationList = new ArrayList<>();
             for(ServiceAnnotation serviceAnnotation : serviceAnnotations) {

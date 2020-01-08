@@ -12,7 +12,6 @@ import java.util.Properties;
  * @Date:2019/5/26 19:23
  */
 public class IMConfigApp extends BeanApp {
-
     private String upstreamPort;
     private String keystorePwd;
     private String keystorePath;
@@ -21,10 +20,11 @@ public class IMConfigApp extends BeanApp {
     private String upstreamWsPort;
     private String publicWsPort;
     private Boolean useProxy;
+    private Long maxUserNumber;
 
     public IMConfigApp(){
         super();
-        InputStream inStream = IMConfigApp.class.getClassLoader().getResourceAsStream("container.properties");
+        InputStream inStream = IMConfigApp.class.getClassLoader().getResourceAsStream("groovycloud.properties");
         Properties prop = new Properties();
         try {
             prop.load(inStream);
@@ -36,6 +36,10 @@ public class IMConfigApp extends BeanApp {
             upstreamWsPort = prop.getProperty("upstream-ws-port");
             publicWsPort = prop.getProperty("public-ws-port");
             useProxy = Boolean.valueOf(prop.getProperty("useProxy"));
+            String maxUserNumberStr = prop.getProperty("maxUserNumber");
+            if(maxUserNumberStr != null){
+                maxUserNumber = Long.parseLong(maxUserNumberStr);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -77,5 +81,9 @@ public class IMConfigApp extends BeanApp {
 
     public String getPublicWsPort() {
         return publicWsPort;
+    }
+
+    public Long getMaxUserNumber() {
+        return maxUserNumber;
     }
 }

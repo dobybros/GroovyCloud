@@ -11,6 +11,7 @@ import com.dobybros.gateway.open.GatewayMSGServers;
 import java.util.List;
 
 public abstract class ServiceUserSessionListener {
+    private String parentUserId;
 
     private String userId;
 
@@ -42,10 +43,17 @@ public abstract class ServiceUserSessionListener {
         return null;
     }
 
-    public IMConfig getIMConfig(){return null;}
+    public IMConfig getIMConfig() {
+        return null;
+    }
+
     @Deprecated
     public Long getMaxInactiveInterval() {
         return null;
+    }
+
+    public Boolean shouldInterceptMessageReceivedFromUsers(Message message) {
+        return false;
     }
 
     public void messageSent(Data event, Integer excludeTerminal, Integer toTerminal) {
@@ -58,17 +66,25 @@ public abstract class ServiceUserSessionListener {
         gatewayMSGServers.sendMessage(message, excludeTerminal, terminal);
     }
 
+    public void closeClusterSessions(int close) throws CoreException {
+        gatewayMSGServers.closeClusterSessions(parentUserId, service, close);
+    }
+
+    public void sendClusterMessage(Message message, List<Integer> toTerminals) throws CoreException {
+        gatewayMSGServers.sendClusterMessage(message, toTerminals);
+    }
+
     public void sendData(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {
         gatewayMSGServers.sendOutgoingData(message, excludeTerminal, terminal);
     }
 
     public void closeChannel(Integer terminal, int code) throws CoreException {
-        if(terminal != null)
+        if (terminal != null)
             gatewayMSGServers.closeUserChannel(userId, service, terminal, code);
     }
 
     public void closeSession() throws CoreException {
-        gatewayMSGServers.closeUserSession(userId, service, Channel.ChannelListener.CLOSE_SHUTDOWN );
+        gatewayMSGServers.closeUserSession(userId, service, Channel.ChannelListener.CLOSE_SHUTDOWN);
     }
 
     public boolean isSessionAlive() throws CoreException {
@@ -85,6 +101,13 @@ public abstract class ServiceUserSessionListener {
     public void pingTimeoutReceived(Integer terminal) {
     }
 
+    public String getParentUserId() {
+        return parentUserId;
+    }
+
+    public void setParentUserId(String parentUserId) {
+        this.parentUserId = parentUserId;
+    }
 
     public String getUserId() {
         return userId;

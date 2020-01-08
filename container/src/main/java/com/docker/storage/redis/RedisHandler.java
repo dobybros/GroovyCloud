@@ -454,6 +454,17 @@ public class RedisHandler {
             return jedis.set(key, value, nxxx);
         });
     }
+    public Long setNX(String key, String value) throws CoreException {
+        return doJedisExecute(jedis -> {
+            return jedis.setnx(key, value);
+        });
+    }
+    //return old value
+    public String getSet(String key, String value) throws CoreException {
+        return doJedisExecute(jedis -> {
+            return jedis.getSet(key, value);
+        });
+    }
     public Long del(String key) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.del(key);
@@ -1047,7 +1058,17 @@ public class RedisHandler {
             return jedis.hgetAll(key);
         });
     }
-
+    public <T>Map<String, T> hgetAllObject(String key, Class<T> clazz) throws CoreException {
+        Map<String, String> map = hgetAll(key);
+        if (map != null && !map.isEmpty()) {
+            Map<String, T> result = new HashMap<>();
+            for (String theKey : map.keySet()) {
+                result.put(theKey, JSON.parseObject(map.get(theKey), clazz));
+            }
+            return result;
+        }
+        return null;
+    }
     public Long hincrby(String key, String field, long value) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.hincrBy(key, field, value);

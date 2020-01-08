@@ -2,9 +2,11 @@ package com.dobybros.chat.script.annotations.handler;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import com.dobybros.chat.handlers.imextention.IMExtensionCache;
 import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionHandler;
 import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionListener;
 import com.docker.script.MyBaseRuntime;
+import com.docker.utils.GroovyCloudBean;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.GroovyRuntime;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
@@ -14,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServiceUserSessionAnnotationHandler extends ClassAnnotationHandler {
+    private IMExtensionCache imExtensionCache = (IMExtensionCache) GroovyCloudBean.getBean(GroovyCloudBean.IMEXTENSIONCACHE);
 
     public static final String TAG = ServiceUserSessionAnnotationHandler.class.getSimpleName();
 
@@ -56,6 +59,7 @@ public class ServiceUserSessionAnnotationHandler extends ClassAnnotationHandler 
                     Object obj = annotatedClass.getDeclaredConstructor().newInstance();
                     if (obj instanceof ServiceUserSessionListener) {
                         listener = (ServiceUserSessionListener)obj;
+                        listener.setParentUserId(imExtensionCache.getUserId(userId));
                         listener.setUserId(userId);
                         listener.setService(service);
                         if (getGroovyRuntime() instanceof MyBaseRuntime) {
@@ -106,5 +110,10 @@ public class ServiceUserSessionAnnotationHandler extends ClassAnnotationHandler 
 
     public void setAnnotatedClassMap(Map<String, Class<?>> annotatedClassMap) {
         this.annotatedClassMap = annotatedClassMap;
+    }
+
+    @Override
+    public boolean isBean() {
+        return false;
     }
 }

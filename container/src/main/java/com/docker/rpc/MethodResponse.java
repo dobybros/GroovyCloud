@@ -112,7 +112,11 @@ public class MethodResponse extends RPCResponse {
                                     String json = new String(data, "utf8");
                                     JSONObject jsonObj = (JSONObject) JSON.parse(json);
                                     if (jsonObj != null) {
-                                        exception = new CoreException(jsonObj.getInteger("code"), jsonObj.getString("message"));
+                                        Integer code = jsonObj.getInteger("code");
+                                        String message = jsonObj.getString("message");
+                                        if(code != null && message != null){
+                                            exception = new CoreException(code, message);
+                                        }
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
@@ -174,7 +178,7 @@ public class MethodResponse extends RPCResponse {
                     if (exception != null) {
                         JSONObject json = new JSONObject();
                         json.put("code", exception.getCode());
-                        json.put("message", ExceptionUtils.getFullStackTrace(exception));
+                        json.put("message", exception.getMessage());
                         String errorStr = json.toJSONString();//JSON.toJSONString(exception);
                         try {
                             exceptionBytes = GZipUtils.compress(errorStr.getBytes("utf8"));

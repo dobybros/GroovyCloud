@@ -128,4 +128,7 @@ public class TcpChannel extends Channel {
 	public void setPingInterval(Long pingInterval) {
 		this.pingInterval = pingInterval;
 	}
+	public String getIp(){
+		return (String) session.getAttribute(UpStreamHandler.ATTRIBUTE_IP);
+	}
 }

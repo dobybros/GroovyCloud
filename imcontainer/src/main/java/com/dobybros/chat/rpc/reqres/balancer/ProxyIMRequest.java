@@ -22,6 +22,7 @@ public class ProxyIMRequest extends RPCRequest {
     public static final Integer CONNECTSTATUS_SESSIONERROR = -1;
     public static final Integer CONNECTSTATUS_PINGTIMEOUT = -2;
     private String channelId;
+    private String channelIp;
     private String userId;
     private String service;
     private Integer terminal;
@@ -62,6 +63,7 @@ public class ProxyIMRequest extends RPCRequest {
                             sourcePort = dis.readInt();
                             sourceServer = dis.readUTF();
                             imEncodeVersion = dis.readShort();
+                            channelIp = dis.readUTF();
                             int theDataCount = dis.readInt();
                             if(theDataCount > 0){
                                 theData = new byte[theDataCount];
@@ -104,6 +106,7 @@ public class ProxyIMRequest extends RPCRequest {
                     dis.writeInt(sourcePort);
                     dis.writeUTF(sourceServer);
                     dis.writeShort(imEncodeVersion);
+                    dis.writeUTF(channelIp);
                     if(theData != null){
                         dis.writeInt(theData.length);
                         dis.write(theData);
@@ -223,7 +226,19 @@ public class ProxyIMRequest extends RPCRequest {
         this.imEncodeVersion = imEncodeVersion;
     }
 
+    public String getChannelIp() {
+        return channelIp;
+    }
+
+    public void setChannelIp(String channelIp) {
+        this.channelIp = channelIp;
+    }
+
     public boolean checkParamsNotNull(){
-        return channelId != null && userId != null && service != null && terminal != null && imEncodeVersion != null;
+        if(theType == 0){
+            return userId != null && service != null && terminal != null && imEncodeVersion != null;
+        }else {
+            return channelId != null && userId != null && service != null && terminal != null && imEncodeVersion != null;
+        }
     }
 }
