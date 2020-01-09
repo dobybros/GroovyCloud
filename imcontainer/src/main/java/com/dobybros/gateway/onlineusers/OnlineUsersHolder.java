@@ -18,7 +18,6 @@ public class OnlineUsersHolder {
     //	private EventReceivingTaskEx eventReceivingTask;
     private OnlineUserManager onlineUserManager;
     private OnlineServer onlineServer;
-    private Long totalUserNumber;
 
     public OnlineUsersHolder() {
     }
@@ -39,10 +38,8 @@ public class OnlineUsersHolder {
                             } else {
                                 map.put(service, (long) onlineServiceUser.getChannelMap().size());
                             }
-                            total += (long) onlineServiceUser.getChannelMap().size();
                         }
                     }
-                    totalUserNumber = total;
                     for (String service : serviceUserCountMap.keySet()) {
                         Long serviceOnlineUserCount = map.get(service);
                         if (serviceOnlineUserCount != null) {
@@ -141,8 +138,15 @@ public class OnlineUsersHolder {
     }
 
     public Boolean available(String service, Long serviceMaxUserNumber) {
+        long serverCountTotal = 0L;
+        for (String theService : serviceUserCountMap.keySet()){
+            LongAdder longAdder = serviceUserCountMap.get(theService);
+            if(longAdder != null){
+                serverCountTotal += longAdder.longValue();
+            }
+        }
         Long maxUserNumber = onlineServer.getMaxUserNumber();
-        if (isAvailable(totalUserNumber, maxUserNumber)) {
+        if (isAvailable(serverCountTotal, maxUserNumber)) {
             LongAdder longAdder = serviceUserCountMap.get(service);
             if (longAdder != null) {
                 Long serviceUserNumber = longAdder.longValue();

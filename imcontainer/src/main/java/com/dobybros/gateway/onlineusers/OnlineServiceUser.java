@@ -11,6 +11,7 @@ import com.dobybros.chat.channels.Channel.ChannelListener;
 import com.dobybros.chat.data.userinfo.ServerInfo;
 import com.dobybros.chat.data.userinfo.UserInfo;
 import com.dobybros.chat.errors.IMCoreErrorCodes;
+import com.dobybros.chat.open.data.Constants;
 import com.dobybros.chat.open.data.DeviceInfo;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.open.data.UserStatus;
@@ -240,7 +241,8 @@ public class OnlineServiceUser implements ChannelListener {
         }
     }
 
-    public void pushToCrossServer(Message message, List<Integer> toTerminals) {}
+    public void pushToCrossServer(Message message, List<Integer> toTerminals) {
+    }
 
     public final void pushToChannels(Data event, Integer excludeTerminal) {
         pushToChannels(event, excludeTerminal, null);
@@ -681,8 +683,12 @@ public class OnlineServiceUser implements ChannelListener {
                 }
                 boolean intercepted = false;
                 BaseRuntime runtime = scriptManager.getBaseRuntime(getServiceAndVersion());
-                if (runtime != null && runtime instanceof GatewayGroovyRuntime) {
-                    intercepted = ((GatewayGroovyRuntime) runtime).shouldInterceptMessageReceivedFromUsers(event, onlineUser.getUserId(), service);
+                if (event.getType().startsWith(Constants.MESSAGE_INTERNAL_PREFIX)) {
+                    intercepted = true;
+                } else {
+                    if (runtime != null && runtime instanceof GatewayGroovyRuntime) {
+                        intercepted = ((GatewayGroovyRuntime) runtime).shouldInterceptMessageReceivedFromUsers(event, onlineUser.getUserId(), service);
+                    }
                 }
                 if (!intercepted) {
                     OutgoingMessage out = new OutgoingMessage();

@@ -5,6 +5,7 @@ import chat.logs.LoggerEx;
 import com.alibaba.fastjson.JSON;
 import com.dobybros.chat.channels.Channel;
 import com.dobybros.chat.open.MSGServers;
+import com.dobybros.chat.open.data.Constants;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionListener;
 import com.dobybros.chat.script.annotations.handler.ServiceUserSessionAnnotationHandler;
@@ -17,6 +18,7 @@ import com.dobybros.gateway.onlineusers.OnlineUserManager;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.StringUtils;
 import script.groovy.runtime.GroovyRuntime;
+import script.memodb.ObjectId;
 
 import java.nio.charset.Charset;
 import java.util.*;
@@ -173,7 +175,7 @@ public final class GatewayMSGServers extends MSGServers {
         onlineUserManager.sendEvent(message, onlineUser);
     }
     //userId is parentId
-    public void closeClusterSessions(String userId, String service, int close) throws CoreException {
+    public void closeClusterSessions(String parentId, String userId, String service, int close) throws CoreException {
         OnlineUser onlineUser = onlineUserManager.getOnlineUser(userId);
         if (onlineUser == null)
             throw new CoreException(GatewayErrorCodes.ERROR_ONLINEUSER_NULL, "Online user " + userId + " not found while closeClusterSessions ");
@@ -183,11 +185,14 @@ public final class GatewayMSGServers extends MSGServers {
             return;
         }
         Message message = new Message();
+        message.setId(ObjectId.get().toString());
+        message.setUserId(userId);
         message.setReceiverService(service);
         message.setService(service);
-        message.setType(Message.TYPE_CLOSECLUSTERSESSION);
+        message.setType(Constants.MESSAGE_TYPE_CLOSECLUSTERSESSION);
+        message.setTime(System.currentTimeMillis());
         List<String> receiverIds = new ArrayList<>();
-        receiverIds.add(userId);
+        receiverIds.add(parentId);
         message.setReceiverIds(receiverIds);
         Map<String, Integer> contentMap = new HashMap<>();
         contentMap.put("close", close);

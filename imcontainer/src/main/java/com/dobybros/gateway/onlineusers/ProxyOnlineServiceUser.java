@@ -1,5 +1,6 @@
 package com.dobybros.gateway.onlineusers;
 
+import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ConcurrentHashSet;
 import com.alibaba.fastjson.JSONObject;
@@ -8,15 +9,15 @@ import com.dobybros.chat.channels.Channel;
 import com.dobybros.chat.data.userinfo.UserInfo;
 import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
 import com.dobybros.chat.handlers.imextention.IMExtensionCache;
+import com.dobybros.chat.open.data.Constants;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.rpc.reqres.balancer.IMProxyRequest;
 import com.dobybros.chat.script.annotations.gateway.GatewayGroovyRuntime;
 import com.dobybros.gateway.channels.data.OutgoingData;
 import com.dobybros.gateway.channels.data.OutgoingMessage;
 import com.dobybros.gateway.channels.tcp.SimulateTcpChannel;
-import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.dobybros.gateway.pack.Pack;
-import com.docker.rpc.*;
+import com.docker.rpc.BinaryCodec;
 import com.docker.rpc.remote.stub.RemoteServers;
 import com.docker.script.BaseRuntime;
 import com.docker.utils.GroovyCloudBean;
@@ -33,7 +34,7 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
     private final String TAG = ProxyOnlineServiceUser.class.getSimpleName();
     private ProxyContainerDuplexSender proxyContainerDuplexSender = (ProxyContainerDuplexSender) GroovyCloudBean.getBean(GroovyCloudBean.PROXYCONTAINERDUPLEXENDER);
     private IMExtensionCache imExtensionCache = (IMExtensionCache) GroovyCloudBean.getBean(GroovyCloudBean.IMEXTENSIONCACHE);
-    private MessageEventHandler messageEventHandler = (MessageEventHandler) GroovyCloudBean.getBean(GroovyCloudBean.MESSAGEEVENTHANDLER);
+    private OnlineUserManager onlineUserManager = (OnlineUserManager) GroovyCloudBean.getBean(GroovyCloudBean.ONLINEUSERMANAGER);
 
     private Map<String, RemoteServers.Server> serversMap = new ConcurrentHashMap<>();
     private Map<String, Set<Integer>> serverTerminaMap = new ConcurrentHashMap<>();
@@ -42,7 +43,8 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
     protected void pushToChannelsSync(Data event, Integer excludeTerminal, Integer toTerminal) {
         BaseRuntime runtime = getScriptManager().getBaseRuntime(getServiceAndVersion());
         if (runtime != null && runtime instanceof GatewayGroovyRuntime) {
-            ((GatewayGroovyRuntime) runtime).messageSent(event, excludeTerminal, toTerminal, getUserInfo().getUserId(), getService());
+            if (getUserInfo() != null)
+                ((GatewayGroovyRuntime) runtime).messageSent(event, excludeTerminal, toTerminal, getUserInfo().getUserId(), getService());
         }
         if (toTerminal != null) {
             SimulateTcpChannel channel = (SimulateTcpChannel) getChannel(toTerminal);
@@ -110,25 +112,31 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
     @Override
     public int eventReceived(Message event) {
         switch (event.getType()) {
-            case Message.TYPE_CLOSECLUSTERSESSION:
+            case Constants.MESSAGE_TYPE_CLOSECLUSTERSESSION:
                 try {
                     if (event.getData() != null) {
                         String contentStr = new String(event.getData(), Charset.defaultCharset());
                         Map contentMap = JSONObject.parseObject(contentStr);
                         if (contentMap != null) {
                             Integer close = (Integer) contentMap.get("close");
-                            userDestroyed(Objects.requireNonNullElse(close, Channel.ChannelListener.CLOSE_DESTROYED));
+                            onlineUserManager.deleteOnlineServiceUser(this, Objects.requireNonNullElse(close, Channel.ChannelListener.CLOSE_DESTROYED));
                         }
                     }
-                }catch (Throwable t){
+                } catch (Throwable t) {
                     LoggerEx.error(TAG, "Close clusterSession error, please check, errMsg: " + ExceptionUtils.getFullStackTrace(t));
-                    userDestroyed(Channel.ChannelListener.CLOSE_DESTROYED);
+                    try {
+                        onlineUserManager.deleteOnlineServiceUser(this, Objects.requireNonNullElse(Channel.ChannelListener.CLOSE_DESTROYED, Channel.ChannelListener.CLOSE_DESTROYED));
+                    } catch (CoreException e) {
+                        LoggerEx.error(TAG, "Delete online serviceuser err, errMsg: " + ExceptionUtils.getFullStackTrace(e));
+                    }
                 }
                 break;
             default:
-                BaseRuntime runtime = getScriptManager().getBaseRuntime(getServiceAndVersion());
-                if (runtime != null && runtime instanceof GatewayGroovyRuntime) {
-                    ((GatewayGroovyRuntime) runtime).messageReceivedFromUsers(event, getOnlineUser().getUserId(), getService());
+                if (!event.getType().startsWith(Constants.MESSAGE_INTERNAL_PREFIX)) {
+                    BaseRuntime runtime = getScriptManager().getBaseRuntime(getServiceAndVersion());
+                    if (runtime != null && runtime instanceof GatewayGroovyRuntime) {
+                        ((GatewayGroovyRuntime) runtime).messageReceivedFromUsers(event, getOnlineUser().getUserId(), getService());
+                    }
                 }
                 break;
         }
@@ -176,10 +184,11 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
                             newUserIds.addAll(serverMap.keySet());
                         }
                     }
+                    newUserIds.remove(message.getUserId());
                     if (!newUserIds.isEmpty()) {
                         message.setReceiverIds(newUserIds);
+                        onlineUserManager.sendEvent(message, null);
                     }
-                    messageEventHandler.broadcastEvent(message);
                 }
             }
         } catch (Throwable t) {
