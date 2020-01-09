@@ -184,6 +184,7 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
                             newUserIds.addAll(serverMap.keySet());
                         }
                     }
+                    //if send message to self userId,should use sendOutGoingData
                     newUserIds.remove(message.getUserId());
                     if (!newUserIds.isEmpty()) {
                         message.setReceiverIds(newUserIds);
