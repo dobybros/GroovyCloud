@@ -86,7 +86,6 @@ public class ServiceStubManager {
                 Field field = clazz.getField("SERVICE");
                 field.get(clazz);
             } catch (Throwable t) {
-                t.printStackTrace();
                 try {
                     Field field = clazz.getField("service");
                     field.get(clazz);
