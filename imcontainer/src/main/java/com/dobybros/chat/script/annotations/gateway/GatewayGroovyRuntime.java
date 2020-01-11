@@ -530,6 +530,7 @@ public class GatewayGroovyRuntime extends MyBaseRuntime {
             } else if (container.type == PendingMessageContainer.CHANNELNOTCREATED) {
                 synchronized (container) {
                     if (container.type == PendingMessageContainer.CHANNELNOTCREATED) {
+                        LoggerEx.info(TAG, "Received message type : " + message.getType() + ", when container.type = CHANNELNOTCREATED!");
                         if (container.pendingDatas == null) {
                             container.pendingDatas = new ArrayList<>();
                         }
