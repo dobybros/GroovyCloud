@@ -111,7 +111,11 @@ public class SimulateTcpChannel extends TcpChannel {
                         request.setChannelStatus(IMProxyRequest.CHANNELSTATUS_CLOSE);
                     }
                     sendProxy(request, null);
-                    imExtensionCache.delNewUserId(userId, service, getTerminal())
+                    try {
+                        imExtensionCache.delNewUserId(userId, service, getTerminal())
+                    }catch(Throwable t){
+                        LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(t));
+                    }
                     channelClosed(close);
                 } catch (Throwable t) {
                     t.printStackTrace();
