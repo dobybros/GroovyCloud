@@ -62,39 +62,7 @@ public abstract class ServiceUserSessionListener {
     public void messageReceivedFromUsers(Message message, String receiverId, String receiverService) {
     }
 
-    public void sendMessage(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {
-        gatewayMSGServers.sendMessage(message, excludeTerminal, terminal);
-    }
-
-    public void closeClusterSessions(int close) throws CoreException {
-        gatewayMSGServers.closeClusterSessions(parentUserId, service, close);
-    }
-
-    public void sendClusterMessage(Message message, List<Integer> toTerminals) throws CoreException {
-        gatewayMSGServers.sendClusterMessage(message, toTerminals);
-    }
-
-    public void sendData(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {
-        gatewayMSGServers.sendOutgoingData(message, excludeTerminal, terminal);
-    }
-
-    public void closeChannel(Integer terminal, int code) throws CoreException {
-        if (terminal != null)
-            gatewayMSGServers.closeUserChannel(userId, service, terminal, code);
-    }
-
-    public void closeSession() throws CoreException {
-        gatewayMSGServers.closeUserSession(userId, service, Channel.ChannelListener.CLOSE_SHUTDOWN);
-    }
-
-    public boolean isSessionAlive() throws CoreException {
-        return gatewayMSGServers.isUserSessionAlive(userId, service);
-    }
-
-    public boolean isChannelAlive(Integer terminal) throws CoreException {
-        return gatewayMSGServers.isChannelAlive(userId, service, terminal);
-    }
-
+    @Deprecated
     public void pingReceived(Integer terminal) {
     }
 
@@ -123,5 +91,44 @@ public abstract class ServiceUserSessionListener {
 
     public void setService(String service) {
         this.service = service;
+    }
+    public void sendMessage(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {
+        gatewayMSGServers.sendMessage(message, excludeTerminal, terminal);
+    }
+
+    public void closeClusterSessions(int close) throws CoreException {
+        gatewayMSGServers.closeClusterSessions(parentUserId, userId, service, close);
+    }
+
+    /**
+     * message's receiverIds is parentUserId
+     *
+     * @param message
+     * @param toTerminals
+     * @throws CoreException
+     */
+    public void sendClusterMessage(Message message, List<Integer> toTerminals) throws CoreException {
+        gatewayMSGServers.sendClusterMessage(message, toTerminals);
+    }
+
+    public void sendData(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {
+        gatewayMSGServers.sendOutgoingData(message, excludeTerminal, terminal);
+    }
+
+    public void closeChannel(Integer terminal, int code) throws CoreException {
+        if (terminal != null)
+            gatewayMSGServers.closeUserChannel(userId, service, terminal, code);
+    }
+
+    public void closeSession() throws CoreException {
+        gatewayMSGServers.closeUserSession(userId, service, Channel.ChannelListener.CLOSE_SHUTDOWN);
+    }
+
+    public boolean isSessionAlive() throws CoreException {
+        return gatewayMSGServers.isUserSessionAlive(userId, service);
+    }
+
+    public boolean isChannelAlive(Integer terminal) throws CoreException {
+        return gatewayMSGServers.isChannelAlive(userId, service, terminal);
     }
 }

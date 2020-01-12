@@ -143,6 +143,8 @@ public class IMExtensionCache {
     }
 
     private Boolean isNewUserId(String userId) {
+        if(userId == null)
+            return false;
         return userId.startsWith(SESSION_PREFIX_NEWUSER + SYMBOL);
     }
 

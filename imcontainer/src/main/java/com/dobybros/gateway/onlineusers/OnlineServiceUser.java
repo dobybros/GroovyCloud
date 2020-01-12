@@ -11,6 +11,7 @@ import com.dobybros.chat.channels.Channel.ChannelListener;
 import com.dobybros.chat.data.userinfo.ServerInfo;
 import com.dobybros.chat.data.userinfo.UserInfo;
 import com.dobybros.chat.errors.IMCoreErrorCodes;
+import com.dobybros.chat.open.data.Constants;
 import com.dobybros.chat.open.data.DeviceInfo;
 import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.open.data.UserStatus;
@@ -45,6 +46,7 @@ public class OnlineServiceUser implements ChannelListener {
     private Integer serviceVersion;
     private OnlineUser onlineUser;
     private boolean mobileQuiet = false;
+    private Long maxUserNumber;
     protected long noChannelTime = System.currentTimeMillis();
     //	protected ConcurrentHashMap<String, PushInfo> waitClientACKMessageMap;
     protected FreezableQueue waitClientACKMessageQueue;
@@ -239,7 +241,8 @@ public class OnlineServiceUser implements ChannelListener {
         }
     }
 
-    public void pushToCrossServer(Message message, List<Integer> toTerminals) {}
+    public void pushToCrossServer(Message message, List<Integer> toTerminals) {
+    }
 
     public final void pushToChannels(Data event, Integer excludeTerminal) {
         pushToChannels(event, excludeTerminal, null);
@@ -287,6 +290,7 @@ public class OnlineServiceUser implements ChannelListener {
 			channelMap = new ConcurrentHashMap<>();
 		}*/
         Channel oldChannel = channelMap.put(channel.getTerminal(), channel);
+        onlineUser.getOnlineUseManager().getOnlineUsersHolder().addServiceUserCount(service);
         return oldChannel;
     }
 
@@ -330,7 +334,7 @@ public class OnlineServiceUser implements ChannelListener {
             terminals.add(channel.getTerminal());
             deleteDevice(terminals);
         }
-
+        onlineUser.getOnlineUseManager().getOnlineUsersHolder().decrementServiceUserCount(service);
         //TODO 根据closeType判断是否需要发送登出的事件, CLOSE_KICKED. 用sendResult发出事件
         if (channelMap != null && channelMap.containsValue(channel)) {
             channel = channelMap.remove(channel.getTerminal());
@@ -475,7 +479,7 @@ public class OnlineServiceUser implements ChannelListener {
         if (sessionId == null)
             sessionId = ObjectId.get().toString();
         activeTime = System.currentTimeMillis();
-
+        onlineUser.getOnlineUseManager().getOnlineUsersHolder().initServiceUserCount(service);
         BaseRuntime runtime = scriptManager.getBaseRuntime(getServiceAndVersion());
         if (runtime != null && runtime instanceof GatewayGroovyRuntime) {
             ((GatewayGroovyRuntime) runtime).sessionCreated(userInfo.getUserId(), service);
@@ -679,10 +683,14 @@ public class OnlineServiceUser implements ChannelListener {
                 }
                 boolean intercepted = false;
                 BaseRuntime runtime = scriptManager.getBaseRuntime(getServiceAndVersion());
-                if (runtime != null && runtime instanceof GatewayGroovyRuntime) {
-                    intercepted = ((GatewayGroovyRuntime) runtime).shouldInterceptMessageReceivedFromUsers(event, onlineUser.getUserId(), service);
+                if (event.getType().startsWith(Constants.MESSAGE_INTERNAL_PREFIX)) {
+                    intercepted = true;
+                } else {
+                    if (runtime != null && runtime instanceof GatewayGroovyRuntime) {
+                        intercepted = ((GatewayGroovyRuntime) runtime).shouldInterceptMessageReceivedFromUsers(event, onlineUser.getUserId(), service);
+                    }
                 }
-                if (intercepted) {
+                if (!intercepted) {
                     OutgoingMessage out = new OutgoingMessage();
                     out.fromMessage(event);
                     pushToChannels(out, null);
@@ -1001,4 +1009,11 @@ public class OnlineServiceUser implements ChannelListener {
         return noChannelTime;
     }
 
+    public Long getMaxUserNumber() {
+        return maxUserNumber;
+    }
+
+    public void setMaxUserNumber(Long maxUserNumber) {
+        this.maxUserNumber = maxUserNumber;
+    }
 }
