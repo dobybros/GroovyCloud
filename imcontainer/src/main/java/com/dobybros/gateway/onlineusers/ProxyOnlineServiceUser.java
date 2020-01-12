@@ -47,8 +47,6 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
         if (toTerminal != null) {
             SimulateTcpChannel channel = (SimulateTcpChannel) getChannel(toTerminal);
             if (channel != null) {
-                channel.setUserId(getUserInfo().getUserId());
-                channel.setService(getServiceAndVersion());
                 channel.send(event);
             }
         } else {
