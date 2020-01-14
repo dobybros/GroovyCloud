@@ -1,6 +1,8 @@
 package com.docker.utils;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.DefaultJwtBuilder;
 
@@ -30,6 +32,9 @@ public class JWTUtils {
                 .signWith(SignatureAlgorithm.HS256, secretkey + key)
                 .compact();
         return token;
+    }
+    public static Claims getClaims(String key, String token){
+       return Jwts.parser().setSigningKey(JWTUtils.secretkey + key).parseClaimsJws(token).getBody();
     }
 }
 

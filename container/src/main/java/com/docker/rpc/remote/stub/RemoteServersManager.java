@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Description：
  */
 public class RemoteServersManager {
-    private static RemoteServersManager instance;
+    private static volatile RemoteServersManager instance;
     private final String TAG = RemoteServersManager.class.getSimpleName();
     private List<String> crossRemoteHostList = new ArrayList<>();
     private Map<String, Map<String, Map<String, RemoteServers.Server>>> remoteServersMap = new ConcurrentHashMap<>();
@@ -338,7 +338,11 @@ public class RemoteServersManager {
 
     public synchronized static RemoteServersManager getInstance(ServiceVersionServiceImpl serviceVersionService, DockerStatusServiceImpl dockerStatusService) {
         if (instance == null) {
-            instance = new RemoteServersManager(serviceVersionService, dockerStatusService);
+            synchronized (RemoteServersManager.class) {
+                if (instance == null) {
+                    instance = new RemoteServersManager(serviceVersionService, dockerStatusService);
+                }
+            }
         } else {
             instance.setServiceVersionService(serviceVersionService);
             instance.setDockerStatusService(dockerStatusService);

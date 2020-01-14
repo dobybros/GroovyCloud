@@ -87,7 +87,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                         result.setMsg("Token is null when Cross-cluster!!!");
                     }
                     try {
-                        Jwts.parser().setSigningKey(JWTUtils.secretkey + "crossClusterToken").parseClaimsJws(token).getBody();
+                        JWTUtils.getClaims("crossClusterToken", token);
                     } catch (Throwable e) {
                         LoggerEx.error(TAG, "Jwt expired or not found when Cross-cluster, please check!!!err: " + ExceptionUtils.getFullStackTrace(e));
                         result.setMsg("Jwt expired or not found when Cross-cluster, please check!!!");

@@ -20,7 +20,7 @@ public class StorageManager {
     private GlobalLansProperties globalLansProperties;
     private Properties storageProperties;
     private Properties sdockerProperties;
-    private static StorageManager instance;
+    private static volatile StorageManager instance;
     private OnlineServer onlineServer = (OnlineServer) SpringContextUtil.getBean("onlineServer");
     private LansService lansService = (LansService) SpringContextUtil.getBean("lansService");
 //	private RMIServerImpl rpcServer = (RMIServerImpl) SpringContextUtil.getBean("rpcServer");

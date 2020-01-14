@@ -14,7 +14,7 @@ import java.util.Properties;
  */
 public class RPCClientAdapterMapFactory {
     private static final String TAG = RPCClientAdapterMapFactory.class.getSimpleName();
-    private static RPCClientAdapterMapFactory instance;
+    private static volatile RPCClientAdapterMapFactory instance;
     private RPCClientAdapterMap rpcClientAdapterMap;
     private RPCClientAdapterMap rpcClientAdapterMapSsl;
 
@@ -46,7 +46,11 @@ public class RPCClientAdapterMapFactory {
 
     public static synchronized RPCClientAdapterMapFactory getInstance(){
         if(instance == null){
-            instance = new RPCClientAdapterMapFactory();
+            synchronized (RPCClientAdapterMapFactory.class){
+                if(instance == null){
+                    instance = new RPCClientAdapterMapFactory();
+                }
+            }
         }
         return instance;
     }

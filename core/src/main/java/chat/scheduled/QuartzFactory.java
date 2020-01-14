@@ -18,7 +18,7 @@ import java.util.Date;
 public class QuartzFactory {
     private static final String TAG = QuartzFactory.class.getSimpleName();
     private SchedulerFactory schedulerFactory;
-    private static QuartzFactory instance;
+    private static volatile QuartzFactory instance;
 
     public void addJob(TimerTaskEx task) throws CoreException{
         try {
@@ -192,11 +192,15 @@ public class QuartzFactory {
         return schedulerFactory;
     }
 
-    public synchronized static QuartzFactory getInstance() {
+    public static QuartzFactory getInstance() {
         if (instance == null) {
-            instance = new QuartzFactory();
-            instance.setSchedulerFactory(new StdSchedulerFactory());
-            LoggerEx.warn(TAG, "Initial quartz success");
+            synchronized (QuartzFactory.class){
+                if(instance == null){
+                    instance = new QuartzFactory();
+                    instance.setSchedulerFactory(new StdSchedulerFactory());
+                    LoggerEx.info(TAG, "Initial quartz success");
+                }
+            }
         }
         return instance;
     }

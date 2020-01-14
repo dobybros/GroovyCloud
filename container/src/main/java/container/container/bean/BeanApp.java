@@ -42,7 +42,7 @@ import java.util.Map;
 
 public class BeanApp extends ConfigApp{
     private static final String TAG = BeanApp.class.getSimpleName();
-    private static BeanApp instance;
+    private static volatile BeanApp instance;
     private SpringContextUtil springContextUtil;
     private PlainSocketFactory plainSocketFactory;
     private SSLSocketFactory sslSocketFactory;
@@ -453,7 +453,7 @@ public class BeanApp extends ConfigApp{
         return instance.fileAdapter;
     }
 
-    public synchronized static BeanApp getInstance() {
+    public static BeanApp getInstance() {
         if (instance == null) {
             synchronized (BeanApp.class) {
                 if (instance == null) {

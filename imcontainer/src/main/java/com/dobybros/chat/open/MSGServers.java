@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class MSGServers {
 	private static final String TAG = MSGServers.class.getSimpleName();
-	protected static MSGServers instance;
+	protected static volatile MSGServers instance;
 
 	
 	/**

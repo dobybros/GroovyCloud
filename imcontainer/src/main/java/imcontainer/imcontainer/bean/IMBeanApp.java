@@ -43,7 +43,7 @@ import java.util.Map;
  * @Date:2019/5/26 15:41
  */
 public class IMBeanApp extends IMConfigApp {
-    private static IMBeanApp instance;
+    private static volatile IMBeanApp instance;
     private GlobalLansProperties globalLansProperties;
     private UpStreamHandler upstreamHandler;
     private ProtocolCodecFilter tcpCodecFilter;
@@ -342,7 +342,7 @@ public class IMBeanApp extends IMConfigApp {
         }
         return instance.tcpFilterChainBuilder;
     }
-    public synchronized static IMBeanApp getInstance(){
+    public static IMBeanApp getInstance(){
         if(instance == null){
             synchronized (IMBeanApp.class){
                 if (instance == null){

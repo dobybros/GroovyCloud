@@ -14,7 +14,7 @@ import java.net.InetSocketAddress;
  * @date 2019/11/12
  */
 public class ProxyBeanApp extends IMBeanApp {
-    private static ProxyBeanApp instance;
+    private static volatile ProxyBeanApp instance;
     private ProxyUpStreamHandler proxyUpStreamHandler;
     private ProxyAnnotationHandler proxyAnnotationHandler;
     private NioSocketAcceptorEx wsIoAcceptor;
@@ -82,7 +82,7 @@ public class ProxyBeanApp extends IMBeanApp {
         return instance.proxyAnnotationHandler;
     }
 
-    public synchronized static ProxyBeanApp getInstance() {
+    public static ProxyBeanApp getInstance() {
         if (instance == null) {
             synchronized (ProxyBeanApp.class) {
                 if (instance == null) {
