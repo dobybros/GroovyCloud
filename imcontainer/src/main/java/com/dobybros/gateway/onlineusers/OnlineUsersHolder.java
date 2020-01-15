@@ -52,7 +52,7 @@ public class OnlineUsersHolder {
                     }
                 }
             }
-        }, 10000L, 60000L);
+        }, 10000L, 600000L);
     }
 
     public void destroy() {
