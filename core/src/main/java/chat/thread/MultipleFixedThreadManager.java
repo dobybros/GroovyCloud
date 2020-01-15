@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class MultipleFixedThreadManager {
     private final String TAG = MultipleFixedThreadManager.class.getSimpleName();
-    private static MultipleFixedThreadManager instance;
+    private static volatile MultipleFixedThreadManager instance;
     private Map<Object, SpecifyThreads> specifyThreadsMap = new ConcurrentHashMap<>();
 
     public void execute(ThreadPoolExecutor threadPoolExecutor, Integer countThreads, Runnable t, Object key, List<FixedThreadListener> fixedThreadListeners) {
