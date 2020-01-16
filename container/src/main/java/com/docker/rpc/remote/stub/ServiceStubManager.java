@@ -53,6 +53,7 @@ public class ServiceStubManager {
         this.host = host;
     }
     public void init(){
+        LoggerEx.info(TAG, "ServiceStubManager will init");
         if(this.lanType != null && this.lanType.equals(Lan.TYPE_http)){
             if (this.host == null) {
                 throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
@@ -258,6 +259,7 @@ public class ServiceStubManager {
         this.lanType = lanType;
     }
     private void handle(){
+        LoggerEx.info(TAG, "RemoteServersManager.instance: " + (RemoteServersManager.getRemoteServersManager() == null));
         if(RemoteServersManager.getRemoteServersManager() == null){
             ServiceVersionServiceImpl serviceVersionService = (ServiceVersionServiceImpl) GroovyCloudBean.getBean(GroovyCloudBean.SERVICEVERSIONSERVICE);
             DockerStatusServiceImpl dockerStatusService = (DockerStatusServiceImpl)GroovyCloudBean.getBean(GroovyCloudBean.DOCKERSTATUSSERVICE);
@@ -267,6 +269,7 @@ public class ServiceStubManager {
                 try {
                     properties.load(configResource.getInputStream());
                     String mongoHost = properties.getProperty("database.host");
+                    LoggerEx.info(TAG, "Groovycloud.properties, mongoHost: " + mongoHost);
                     if(mongoHost == null){
                         LoggerEx.error(TAG, "Cant find config:database.host");
                         throw new CoreException(CoreErrorCodes.ERROR_GROOVYCLOUDCONFIG_ILLEGAL, "Cant find config:database.host");
@@ -302,6 +305,7 @@ public class ServiceStubManager {
             }
             if(serviceVersionService != null && dockerStatusService != null){
                 RemoteServersManager.getInstance(serviceVersionService, dockerStatusService).init();
+                LoggerEx.info(TAG, "RemoteServersManager init success");
             }else {
                 LoggerEx.error(TAG, "serviceVersionService or dockerStatusService is null, cant init RemoteServersManager");
             }
