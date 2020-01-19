@@ -1109,7 +1109,7 @@ public class RedisHandler {
         }
         return null;
     }
-    public Integer zrem(String key, String... member) throws CoreException {
+    public Long zrem(String key, String... member) throws CoreException {
         if (key != null && member != null) {
             return doJedisExecute(jedis -> {
                 return jedis.zrem(key, member);
