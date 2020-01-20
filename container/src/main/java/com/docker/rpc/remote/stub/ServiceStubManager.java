@@ -53,7 +53,6 @@ public class ServiceStubManager {
         this.host = host;
     }
     public void init(){
-        LoggerEx.info(TAG, "ServiceStubManager will init");
         if(this.lanType != null && this.lanType.equals(Lan.TYPE_http)){
             if (this.host == null) {
                 throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
@@ -259,7 +258,6 @@ public class ServiceStubManager {
         this.lanType = lanType;
     }
     private void handle(){
-        LoggerEx.info(TAG, "RemoteServersManager.instance: " + (RemoteServersManager.getRemoteServersManager() == null));
         if(RemoteServersManager.getRemoteServersManager() == null){
             ServiceVersionServiceImpl serviceVersionService = (ServiceVersionServiceImpl) GroovyCloudBean.getBean(GroovyCloudBean.SERVICEVERSIONSERVICE);
             DockerStatusServiceImpl dockerStatusService = (DockerStatusServiceImpl)GroovyCloudBean.getBean(GroovyCloudBean.DOCKERSTATUSSERVICE);

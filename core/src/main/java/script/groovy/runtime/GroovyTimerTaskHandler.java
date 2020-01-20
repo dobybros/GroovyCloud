@@ -1,20 +1,18 @@
 package script.groovy.runtime;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.IncompleteAnnotationException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import org.apache.commons.lang.StringUtils;
-import script.groovy.annotation.TimerTask;
-import script.groovy.object.GroovyObjectEx;
 import chat.logs.LoggerEx;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import script.groovy.annotation.TimerTask;
+import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
+
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GroovyTimerTaskHandler extends ClassAnnotationHandler {
 
@@ -107,7 +105,7 @@ public class GroovyTimerTaskHandler extends ClassAnnotationHandler {
                 groovyObj.invokeRootMethod("main");
             } catch (Throwable t) {
                 t.printStackTrace();
-                LoggerEx.error(TAG, "Execute execute main for " + groovyObj + " failed, " + t.getMessage());
+                LoggerEx.error(TAG, "Execute execute main for " + groovyObj.getGroovyPath() + " failed, " + ExceptionUtils.getFullStackTrace(t));
             }
         }
     }
