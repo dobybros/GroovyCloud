@@ -37,14 +37,20 @@ public class MinaSessionContext implements SessionContext {
     @Override
     public void close() {
         if (!isClosing()) {
-            session.close();
+//            session.close();
+            session.closeNow();
         }
     }
 
     @Override
     public void close(boolean immediately) {
         if (!isClosing()) {
-            session.close(immediately);
+//            session.close(immediately);
+            if (immediately) {
+                session.closeNow();
+            } else {
+                session.closeOnFlush();
+            }
         }
     }
 
