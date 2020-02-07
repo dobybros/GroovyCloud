@@ -475,7 +475,7 @@ public class ScriptManager implements ShutdownListener {
         isShutdown = true;
         Collection<String> keys = scriptRuntimeMap.keySet();
         for (String key : keys) {
-            BaseRuntime runtime = scriptRuntimeMap.remove(key);
+            BaseRuntime runtime = scriptRuntimeMap.get(key);
             if (runtime != null) {
                 LoggerEx.info(TAG, "Service " + key + " is going to be removed, because of shutdown");
                 try {
@@ -484,6 +484,8 @@ public class ScriptManager implements ShutdownListener {
                 } catch (Throwable t) {
                     t.printStackTrace();
                     LoggerEx.info(TAG, "Service " + key + " remove failed, " + ExceptionUtils.getFullStackTrace(t));
+                } finally {
+                    scriptRuntimeMap.remove(key);
                 }
             }
         }
