@@ -56,7 +56,6 @@ public abstract class BaseRuntime extends GroovyRuntime {
 	private Properties config;
 
 	public void prepare(String service, Properties properties, String rootPath) {
-		LoggerEx.info(TAG, "prepare service: " + service + " properties: " + properties + " rootPath: " + rootPath);
 		this.service = service.toLowerCase();
 		this.config = properties;
 		String enableGroovyMVC = null;

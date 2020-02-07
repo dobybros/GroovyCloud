@@ -49,7 +49,6 @@ public class RemoteServersManager {
             public void execute() {
                 remoteServersMap = getServiceServers();
                 serviceMaxVersionMap = getServiceMaxVersion();
-                LoggerEx.info(TAG, "RemoteServersManager init again");
             }
         };
         timerTaskEx.execute();

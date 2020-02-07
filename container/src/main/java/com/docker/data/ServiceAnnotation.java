@@ -1,6 +1,5 @@
 package com.docker.data;
 
-import chat.logs.LoggerEx;
 import com.docker.storage.mongodb.CleanDocument;
 import org.bson.Document;
 
@@ -20,17 +19,16 @@ public class ServiceAnnotation {
     private Map<String, Object> annotationParams;
     private String className;
     private String methodName;
-    private boolean async;
+    private boolean async = false;
 
     public void fromDocument(Document document) {
-        try {
-            type = document.getString(TYPE);
-            annotationParams = document.get(ANNOTATIONPARAMS, Map.class);
-            className = document.getString(CLASSNAME);
-            methodName = document.getString(METHODNAME);
+
+        type = document.getString(TYPE);
+        annotationParams = document.get(ANNOTATIONPARAMS, Map.class);
+        className = document.getString(CLASSNAME);
+        methodName = document.getString(METHODNAME);
+        if(document.get(ASYNC) != null){
             async = document.getBoolean(ASYNC);
-        }catch (Throwable t){
-            LoggerEx.error(TAG, t.getMessage());
         }
     }
 
