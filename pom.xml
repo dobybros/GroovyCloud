@@ -12,7 +12,7 @@
 	<artifactId>GroovyCloud</artifactId>
 	<version>1.0</version>
 	<packaging>pom</packaging>
-	<description>Demo project for Spring Boot</description>
+	<name>GroovyCloud</name>
 	<modules>
 		<module>core</module>
 		<module>mongodbconnector</module>
