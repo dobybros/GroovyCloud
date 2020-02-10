@@ -7,6 +7,7 @@ import com.dobybros.chat.tasks.OfflineMessageSavingTask;
 import com.dobybros.chat.tasks.RPCMessageSendingTask;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.onlineserver.OnlineServerWithStatus;
+import com.docker.rpc.QueueSimplexListener;
 import com.docker.script.ScriptManager;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
@@ -95,5 +96,9 @@ public class CommonBean {
     @Bean(initMethod = "init")
     public IMExtensionCache imExtensionCache(){
         return instance.getIMExtensionCache();
+    }
+    @Bean(destroyMethod = "shutdown")
+    public QueueSimplexListener queueSimplexListener(){
+        return instance.getQueueSimplexListener();
     }
 }

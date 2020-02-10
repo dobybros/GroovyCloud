@@ -1,6 +1,7 @@
 package imcontainer.imcontainer.bean;
 
 import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
+import com.dobybros.chat.handlers.QueueProxyContainerDuplexSender;
 import com.dobybros.chat.handlers.RpcProxyContainerDuplexSender;
 import com.dobybros.gateway.channels.tcp.UpStreamAnnotationHandler;
 import com.dobybros.gateway.channels.tcp.UpStreamHandler;
@@ -119,5 +120,9 @@ public class TcpBean {
     @Bean
     public RpcProxyContainerDuplexSender rpcProxyContainerDuplexSender(){
         return instance.getRpcProxyContainerDuplexSender();
+    }
+    @Bean
+    public QueueProxyContainerDuplexSender queueProxyContainerDuplexSender(){
+        return instance.getQueueProxyContainerDuplexSender();
     }
 }

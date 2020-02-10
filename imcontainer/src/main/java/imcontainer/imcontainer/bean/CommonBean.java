@@ -3,6 +3,7 @@ package imcontainer.imcontainer.bean;
 import chat.utils.IPHolder;
 import com.dobybros.chat.handlers.ConsumeOfflineMessageHandler;
 import com.dobybros.chat.handlers.PingHandler;
+import com.docker.rpc.QueueSimplexListener;
 import com.dobybros.chat.handlers.imextention.IMExtensionCache;
 import com.dobybros.chat.tasks.OfflineMessageSavingTask;
 import com.dobybros.chat.tasks.RPCMessageSendingTask;
@@ -89,5 +90,9 @@ public class CommonBean {
     @Bean(initMethod = "init")
     public IMExtensionCache imExtensionCache(){
         return instance.getIMExtensionCache();
+    }
+    @Bean(destroyMethod = "shutdown")
+    public QueueSimplexListener queueSimplexListener(){
+        return instance.getQueueSimplexListener();
     }
 }

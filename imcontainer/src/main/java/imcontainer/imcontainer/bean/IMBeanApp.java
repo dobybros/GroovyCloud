@@ -1,9 +1,6 @@
 package imcontainer.imcontainer.bean;
 
-import com.dobybros.chat.handlers.ConsumeOfflineMessageHandler;
-import com.dobybros.chat.handlers.PingHandler;
-import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
-import com.dobybros.chat.handlers.RpcProxyContainerDuplexSender;
+import com.dobybros.chat.handlers.*;
 import com.dobybros.chat.handlers.imextention.IMExtensionCache;
 import com.dobybros.chat.props.GlobalLansProperties;
 import com.dobybros.chat.script.annotations.gateway.GatewayGroovyRuntime;
@@ -72,6 +69,8 @@ public class IMBeanApp extends IMConfigApp {
     private IMExtensionCache imExtensionCache;
     private ProxyContainerDuplexSender proxyContainerDuplexSender;
     private RpcProxyContainerDuplexSender rpcProxyContainerDuplexSender;
+    private QueueProxyContainerDuplexSender queueProxyContainerDuplexSender;
+
     public synchronized IMExtensionCache getIMExtensionCache() {
         if(instance.imExtensionCache == null){
             instance.imExtensionCache = new IMExtensionCache();
@@ -164,6 +163,12 @@ public class IMBeanApp extends IMConfigApp {
             instance.rpcProxyContainerDuplexSender = new RpcProxyContainerDuplexSender();
         }
         return instance.rpcProxyContainerDuplexSender;
+    }
+    public synchronized QueueProxyContainerDuplexSender getQueueProxyContainerDuplexSender() {
+        if (instance.queueProxyContainerDuplexSender == null) {
+            instance.queueProxyContainerDuplexSender = new QueueProxyContainerDuplexSender();
+        }
+        return instance.queueProxyContainerDuplexSender;
     }
     public synchronized OfflineMessageSavingTask getOfflineMessageSavingTask() {
         if(instance.offlineMessageSavingTask == null){

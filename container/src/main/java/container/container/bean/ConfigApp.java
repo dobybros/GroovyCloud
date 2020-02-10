@@ -26,6 +26,14 @@ public class ConfigApp {
     private String gridUsername;
     private String gridPassword;
 
+    private String kafkaServers;
+    private String kafkaProducerKeySerializer;
+    private String kafkaProducerValueSerializer;
+    private String kafkaProducerRetries;
+    private String kafkaProducerLingerMs;
+    private String kafkaConsumerKeySerializer;
+    private String kafkaConsumerValueSerializer;
+
     private String ipPrefix;
     private String ethPrefix;
     private String type;
@@ -66,6 +74,13 @@ public class ConfigApp {
             gridDbName = prop.getProperty("gridfs.files.dbname");
             gridUsername = prop.getProperty("gridfs.username");
             gridPassword = prop.getProperty("gridfs.password");
+            kafkaServers = prop.getProperty("bootstrap.servers");
+            kafkaProducerKeySerializer = prop.getProperty("producer.key.serializer");
+            kafkaProducerValueSerializer = prop.getProperty("producer.value.serializer");
+            kafkaProducerRetries = prop.getProperty("retries");
+            kafkaProducerLingerMs = prop.getProperty("linger.ms");
+            kafkaConsumerKeySerializer = prop.getProperty("consumer.key.serializer");
+            kafkaConsumerValueSerializer = prop.getProperty("consumer.value.serializer");
             ipPrefix = prop.getProperty("server.ip.prefix");
             ethPrefix = prop.getProperty("server.eth.prefix");
             type = prop.getProperty("type");
@@ -145,6 +160,34 @@ public class ConfigApp {
 
     public String getGridPassword() {
         return gridPassword;
+    }
+
+    public String getKafkaServers() {
+        return kafkaServers;
+    }
+
+    public String getKafkaProducerKeySerializer() {
+        return kafkaProducerKeySerializer;
+    }
+
+    public String getKafkaProducerValueSerializer() {
+        return kafkaProducerValueSerializer;
+    }
+
+    public String getKafkaProducerRetries() {
+        return kafkaProducerRetries;
+    }
+
+    public String getKafkaProducerLingerMs() {
+        return kafkaProducerLingerMs;
+    }
+
+    public String getKafkaConsumerKeySerializer() {
+        return kafkaConsumerKeySerializer;
+    }
+
+    public String getKafkaConsumerValueSerializer() {
+        return kafkaConsumerValueSerializer;
     }
 
     public String getIpPrefix() {

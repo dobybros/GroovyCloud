@@ -1,10 +1,10 @@
 package container.container.bean;
 
-import chat.logs.LoggerEx;
 import chat.utils.IPHolder;
 import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.http.MyHttpParameters;
 import com.docker.onlineserver.OnlineServerWithStatus;
+import com.docker.rpc.QueueSimplexListener;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.rpc.impl.RMIServerImplWrapper;
@@ -18,7 +18,6 @@ import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -27,6 +26,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import script.filter.JsonFilterFactory;
 import script.groovy.servlets.RequestPermissionHandler;
+
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,7 +81,27 @@ public class BeanApp extends ConfigApp{
     private ServiceVersionServiceImpl serviceVersionService;
     private ScheduledTaskServiceImpl scheduledTaskService;
     private ScheduledTaskDAO scheduledTaskDAO;
-
+    private QueueSimplexListener queueSimplexListener;
+    public synchronized QueueSimplexListener getQueueSimplexListener() {
+        if(instance.queueSimplexListener == null){
+            try {
+                Class<?> queueSimplexListenerClass = Class.forName("com.docker.rpc.queue.KafkaSimplexListener");
+                instance.queueSimplexListener = (QueueSimplexListener) queueSimplexListenerClass.getDeclaredConstructor().newInstance();
+                Map<String, String> config = new HashMap<>();
+                config.put("bootstrap.servers", instance.getKafkaServers());
+                config.put("producer.key.serializer", instance.getKafkaProducerKeySerializer());
+                config.put("producer.value.serializer", instance.getKafkaProducerValueSerializer());
+                config.put("retries", instance.getKafkaProducerRetries());
+                config.put("linger.ms", instance.getKafkaProducerLingerMs());
+                config.put("consumer.key.serializer", instance.getKafkaConsumerKeySerializer());
+                config.put("consumer.value.serializer", instance.getKafkaConsumerValueSerializer());
+                instance.queueSimplexListener.setConfig(config);
+            }catch (Throwable t){
+                t.printStackTrace();
+            }
+        }
+        return instance.queueSimplexListener;
+    }
     public synchronized ScheduledTaskServiceImpl getScheduledTaskService() {
         if (instance.scheduledTaskService == null) {
             instance.scheduledTaskService = new ScheduledTaskServiceImpl();

@@ -4,6 +4,6 @@ import com.docker.rpc.RPCRequest;
 import com.docker.rpc.RPCResponse;
 
 public class RPCEntity {
-    Class<? extends RPCRequest> requestClass;
-    Class<? extends RPCResponse> responseClass;
+    public Class<? extends RPCRequest> requestClass;
+    public Class<? extends RPCResponse> responseClass;
 }

@@ -6,8 +6,6 @@ import com.docker.errors.CoreErrorCodes;
 import com.docker.rpc.*;
 import com.docker.rpc.annotations.RPCServerHandler;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.GroovyBeanFactory;
@@ -138,5 +136,22 @@ public class RMIServerImplWrapper extends ClassAnnotationHandler {
 	public void setRmiServerHandler(RMIServerHandler rmiServerHandler) {
 		this.rmiServerHandler = rmiServerHandler;
 	}
+
+	public Map<String, GroovyObjectEx<RPCServerAdapter>> getServerAdapterMap() {
+		return serverAdapterMap;
+	}
+
+	public RPCServerMethodInvocation getServerMethodInvocation() {
+		return serverMethodInvocation;
+	}
+
+	public void setServerAdapterMap(Map<String, GroovyObjectEx<RPCServerAdapter>> serverAdapterMap) {
+		this.serverAdapterMap = serverAdapterMap;
+	}
+
+	public void setServerMethodInvocation(RPCServerMethodInvocation serverMethodInvocation) {
+		this.serverMethodInvocation = serverMethodInvocation;
+	}
+
 }
 
