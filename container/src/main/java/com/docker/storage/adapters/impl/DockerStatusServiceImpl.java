@@ -283,7 +283,7 @@ public class DockerStatusServiceImpl implements DockerStatusService {
                                         services.add(serviceTemp);
                                         serviceNames.add(serviceTemp.getService());
                                     }
-                                    break;
+//                                    break;
                                 }
                             } else if (types != null) {
                                 if (types.contains(serviceAnnotation.getString("type")))
@@ -291,14 +291,14 @@ public class DockerStatusServiceImpl implements DockerStatusService {
                                         services.add(serviceTemp);
                                         serviceNames.add(serviceTemp.getService());
                                     }
-                                break;
+//                                break;
                             } else {
                                 if (serviceAnnotation.getJSONObject("params").getString("id") == id)
                                     if (!serviceNames.contains(serviceTemp.getService())) {
                                         services.add(serviceTemp);
                                         serviceNames.add(serviceTemp.getService());
                                     }
-                                break;
+//                                break;
                             }
                         }
                     }

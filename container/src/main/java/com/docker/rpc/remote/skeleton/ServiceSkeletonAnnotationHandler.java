@@ -269,7 +269,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 methodMap.put(value, mm);
                 RpcCacheManager.getInstance().putCrcMethodMap(value, service + "_" + clazz.getSimpleName() + "_" + method.getName());
                 //TODO DTS
-                Annotation[] annotations = method.getDeclaredAnnotations();
+                List<Annotation> annotations = ReflectionUtil.getMethodDeclaredAnnotations(clazz, method);//method.getDeclaredAnnotations();
                 for (Annotation annotation : annotations) {
                     boolean isExists = extraAnnotations.contains(annotation.annotationType());
                     if (isExists) {

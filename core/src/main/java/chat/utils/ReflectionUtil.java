@@ -8,6 +8,7 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.zip.CRC32;
@@ -514,4 +515,37 @@ public class ReflectionUtil {
         }
         return null;
     }
+
+	public static List<Annotation> getMethodDeclaredAnnotations(Class<?> clazz, Method method) {
+        ArrayList<Annotation> list = new ArrayList<>();
+        Annotation[] anntations = method.getDeclaredAnnotations();
+        if(anntations != null)
+            list.addAll(List.of(anntations));
+        Class<?>[] parentInterfaces = clazz.getInterfaces();
+        Class<?> superClass = clazz.getSuperclass();
+        if(parentInterfaces != null) {
+            for(Class<?> c : parentInterfaces) {
+                try {
+                    Method m = c.getMethod(method.getName(), method.getParameterTypes());
+                    if(m == null) continue;
+                    Annotation[] annotations = m.getDeclaredAnnotations();
+                    if(annotations != null)
+                        list.addAll(List.of(annotations));
+                } catch (NoSuchMethodException e) {
+                }
+            }
+        }
+        if(superClass != null) {
+            try {
+                Method m = superClass.getMethod(method.getName(), method.getParameterTypes());
+                if(m != null) {
+                    Annotation[] annotations = m.getDeclaredAnnotations();
+                    if(annotations != null)
+                        list.addAll(List.of(annotations));
+                }
+            } catch (NoSuchMethodException e) {
+            }
+        }
+        return list;
+	}
 }
