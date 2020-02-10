@@ -150,7 +150,10 @@ public abstract class OnlineUserManager {
     }
 
     public OnlineUser getOnlineUser(String userId) throws CoreException {
-        return onlineUserHolder.getOnlineUser(userId);
+        if(onlineUserHolder != null){
+            return onlineUserHolder.getOnlineUser(userId);
+        }
+        return null;
     }
 
     public OnlineUser addOnlineServiceUser(UserInfo user, String preSessionId) throws CoreException {
