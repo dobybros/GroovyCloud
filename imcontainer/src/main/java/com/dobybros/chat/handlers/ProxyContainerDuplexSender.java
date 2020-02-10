@@ -96,7 +96,7 @@ public class ProxyContainerDuplexSender {
                             serviceTypeMap = new ConcurrentHashMap<>();
                             Map<String, Object> params = serviceAnnotationDocument.getAnnotationParams();
                             Integer type = (Integer) params.get("type");
-                            String[] contentTypes = (String[]) params.get("contentType");
+                            List<String> contentTypes =  (List<String>) params.get("contentType");
                             if(type != null && contentTypes != null){
                                 for (String contentType : contentTypes){
                                     Integer typeOld = serviceTypeMap.get(contentType);
