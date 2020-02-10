@@ -13,6 +13,7 @@ import com.dobybros.chat.utils.SingleThreadQueue;
 import com.dobybros.chat.utils.SingleThreadQueue.Handler;
 import com.dobybros.gateway.errors.GatewayErrorCodes;
 import com.docker.onlineserver.OnlineServerWithStatus;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import javax.annotation.Resource;
 import java.util.Collection;
@@ -53,7 +54,7 @@ public abstract class OnlineUserManager {
                     Collection<OnlineServiceUser> values = serviceUserMap.values();
                     for (OnlineServiceUser serviceUser : values) {
                         long noChannelTime = serviceUser.getNoChannelTime();
-                        if(noChannelTime != -1){
+                        if (noChannelTime != -1) {
                             if (/*!user.keepOnline() && */System.currentTimeMillis() - noChannelTime > maxNoChannelTimeout) {
                                 try {
                                     UserInfo info = serviceUser.getUserInfo();
@@ -150,7 +151,7 @@ public abstract class OnlineUserManager {
     }
 
     public OnlineUser getOnlineUser(String userId) throws CoreException {
-        if(onlineUserHolder != null){
+        if (onlineUserHolder != null) {
             return onlineUserHolder.getOnlineUser(userId);
         }
         return null;
@@ -197,6 +198,19 @@ public abstract class OnlineUserManager {
             }
         }
         return onlineUser;
+    }
+
+    public void shutdown() {
+        if (onlineUserHolder != null) {
+            for (String userId : onlineUserHolder.onlineUserIds()) {
+                try {
+                    deleteOnlineUser(userId);
+                    LoggerEx.info(TAG, "Close user success, userId: " + userId);
+                } catch (CoreException e) {
+                    LoggerEx.error(TAG, "Close user onlineUser err," + userId + "errMsg: " + ExceptionUtils.getFullStackTrace(e));
+                }
+            }
+        }
     }
 
     public OnlineUser deleteOnlineUser(String userId) throws CoreException {

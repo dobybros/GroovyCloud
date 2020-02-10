@@ -73,7 +73,7 @@ public class CommonBean {
         return instance.getScriptManager();
     }
 
-    @Bean
+    @Bean(destroyMethod = "shutdown")
     public OnlineUserManagerImpl onlineUserManager() {
         return instance.getOnlineUserManager();
     }

@@ -86,6 +86,7 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
                 for (RemoteServers.Server server : serversMap.values()) {
                     try {
                         proxyContainerDuplexSender.sendProxy(request, contentType, server, null);
+                        LoggerEx.info(TAG, "Send to server success, serverName: " + server.getServer() + ",serverIp: " + server.getIp() +"serverRpcPort: " + server.getRpcPort());
                     } catch (Throwable t) {
                         this.exceptionCaught(t);
                         serversMap.remove(server.getServer());
@@ -200,7 +201,10 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
         Set<Integer> terminals = serverTerminaMap.get(server.getServer());
         if (terminals == null) {
             terminals = new ConcurrentHashSet<>();
-            serverTerminaMap.putIfAbsent(server.getServer(), terminals);
+            Set<Integer> oldTerminals = serverTerminaMap.putIfAbsent(server.getServer(), terminals);
+            if(oldTerminals != null){
+                terminals = oldTerminals;
+            }
         }
         terminals.add(terminal);
     }
