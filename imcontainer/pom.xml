@@ -73,7 +73,7 @@
 				</executions>
 			</plugin>
 		</plugins>
-		<finalName>imcontainer</finalName>
+		<finalName>imcontainer-1.0</finalName>
 	</build>
 
 </project>

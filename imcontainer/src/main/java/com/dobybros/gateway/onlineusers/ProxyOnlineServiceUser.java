@@ -145,6 +145,7 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
     @Override
     public synchronized void userDestroyed(int close) {
         UserInfo userInfo = getUserInfo();
+        LoggerEx.info(TAG, "UserDestroyed UserInfo is " + ((userInfo == null) ? "null" : userInfo.toString()) + ",service: " + getService());
         if (userInfo != null) {
             try {
                 super.userDestroyed(close);

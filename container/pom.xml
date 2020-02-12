@@ -71,7 +71,7 @@
 				</executions>
 			</plugin>
 		</plugins>
-		<finalName>container</finalName>
+		<finalName>container-1.0</finalName>
 	</build>
 
 </project>

@@ -259,7 +259,7 @@ public class GroovyRuntime extends ScriptRuntime {
                                 LoggerEx.fatal(TAG,
                                         "Handle annotated classes failed, "
                                                 + values + " the handler " + annotationHandler
-                                                + " is ignored!");
+                                                + " is ignored!errMsg: " + ExceptionUtils.getFullStackTrace(t));
                             }
                         }
                     }

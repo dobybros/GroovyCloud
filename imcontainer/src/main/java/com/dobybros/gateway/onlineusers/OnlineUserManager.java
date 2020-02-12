@@ -201,6 +201,7 @@ public abstract class OnlineUserManager {
     }
 
     public void shutdown() {
+        LoggerEx.info(TAG, "I will shutdown!!!");
         if (onlineUserHolder != null) {
             for (String userId : onlineUserHolder.onlineUserIds()) {
                 try {
