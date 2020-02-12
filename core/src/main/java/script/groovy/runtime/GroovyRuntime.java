@@ -3,6 +3,7 @@ package script.groovy.runtime;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import chat.utils.ReflectionUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
@@ -242,7 +243,8 @@ public class GroovyRuntime extends ScriptRuntime {
                             Map<String, Class<?>> values = handlerMap.get(annotationHandler);
                             if(values != null){
                                 for (Class<?> c : values.values()){
-                                    beanFactory.getClassBean(c);
+                                    if(ReflectionUtil.canBeInitiated(c))
+                                        beanFactory.getClassBean(c);
                                 }
                             }
                         }
