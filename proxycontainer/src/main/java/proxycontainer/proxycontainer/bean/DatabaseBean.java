@@ -4,6 +4,7 @@ import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.storage.adapters.impl.*;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
+import com.docker.storage.redis.RedisSubscribeHandler;
 import imcontainer.imcontainer.bean.IMBeanApp;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -99,5 +100,9 @@ public class DatabaseBean{
     @Bean
     public MongoHelper scheduledTaskHelper(){
         return instance.getScheduledTaskHelper();
+    }
+    @Bean(destroyMethod = "shutdown")
+    public RedisSubscribeHandler redisSubscribeHandler(){
+        return instance.getRedisSubscribeHandler();
     }
 }

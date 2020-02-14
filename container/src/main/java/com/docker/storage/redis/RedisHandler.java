@@ -39,7 +39,7 @@ public class RedisHandler {
     private final String TAG = RedisHandler.class.getSimpleName();
 
     private ShardedJedisPool pool = null;
-
+    private Boolean isSubscribe = false;
     private JedisCluster cluster = null;
     private PipelineBase pipeline = null;
     private Map<String, Method> pipelineMethodMap = null;
@@ -88,6 +88,7 @@ public class RedisHandler {
             cluster = new JedisCluster(nodes, config);
         }
         pipelineMethodMap = new HashMap<>();
+//        new Thread(this::subscribe).start();
         LoggerEx.info(TAG, "Jedis Cluster connected, " + hosts);
         return this;
     }
@@ -126,6 +127,7 @@ public class RedisHandler {
                 JedisClusterPipeline clusterPipeline = (JedisClusterPipeline) pipeline;
                 clusterPipeline.close();
             }
+            SubscribeListener.getInstance().punsubscribe();
         } catch (Exception e) {
             LoggerEx.info(TAG, "Jedis Cluster closed exception, " + hosts);
         }
@@ -449,22 +451,26 @@ public class RedisHandler {
         }
 */
     }
+
     public String set(String key, String value, String nxxx) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.set(key, value, nxxx);
         });
     }
+
     public Long setNX(String key, String value) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.setnx(key, value);
         });
     }
+
     //return old value
     public String getSet(String key, String value) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.getSet(key, value);
         });
     }
+
     public Long del(String key) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.del(key);
@@ -558,6 +564,7 @@ public class RedisHandler {
         }
         return null;
     }
+
     public <T> T getObject(String key, Type type) throws CoreException {
         String json = doJedisExecute(jedis -> {
             return jedis.get(key);
@@ -572,6 +579,7 @@ public class RedisHandler {
         }
         return null;
     }
+
     public Long delObject(String prefix, String key) throws CoreException {
         return del(prefix + "_" + key);
     }
@@ -686,7 +694,11 @@ public class RedisHandler {
         }
 */
     }
-
+    public Long lrem(String key, long l, String value) throws CoreException{
+        return doJedisExecute(jedis -> {
+            return jedis.lrem(key, l, value);
+        });
+    }
     /**
      * 将一个对象从列表头部取出
      *
@@ -1058,7 +1070,8 @@ public class RedisHandler {
             return jedis.hgetAll(key);
         });
     }
-    public <T>Map<String, T> hgetAllObject(String key, Class<T> clazz) throws CoreException {
+
+    public <T> Map<String, T> hgetAllObject(String key, Class<T> clazz) throws CoreException {
         Map<String, String> map = hgetAll(key);
         if (map != null && !map.isEmpty()) {
             Map<String, T> result = new HashMap<>();
@@ -1069,21 +1082,25 @@ public class RedisHandler {
         }
         return null;
     }
+
     public Long hincrby(String key, String field, long value) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.hincrBy(key, field, value);
         });
     }
+
     public Long sadd(String key, String... members) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.sadd(key, members);
         });
     }
+
     public Set<String> smembers(String key) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.smembers(key);
         });
     }
+
     // sortedSet
     public Integer zadd(String key, double score, String member) throws CoreException {
         if (key != null && member != null) {
@@ -1093,6 +1110,7 @@ public class RedisHandler {
         }
         return null;
     }
+
     public Set<String> zrangebyscoreWithoutScore(String key, double minScore, double maxScore) throws CoreException {
         if (key != null) {
             return doJedisExecute(jedis -> {
@@ -1101,6 +1119,7 @@ public class RedisHandler {
         }
         return null;
     }
+
     public Set<Tuple> zrangebyscoreWithScore(String key, double minScore, double maxScore) throws CoreException {
         if (key != null) {
             return doJedisExecute(jedis -> {
@@ -1109,6 +1128,7 @@ public class RedisHandler {
         }
         return null;
     }
+
     public Long zrem(String key, String... member) throws CoreException {
         if (key != null && member != null) {
             return doJedisExecute(jedis -> {
@@ -1118,23 +1138,44 @@ public class RedisHandler {
         return null;
     }
 
+    public void subscribe() {
+        if (!isSubscribe) {
+            isSubscribe = true;
+            JedisCommands jedis = getJedis();
+            if (jedis instanceof ShardedJedis) {
+                Jedis[] jedisArray = new Jedis[]{};
+                jedisArray = ((ShardedJedis) jedis).getAllShards().toArray(jedisArray);
+                Jedis theJedis = jedisArray[0];
+                theJedis.psubscribe(SubscribeListener.getInstance(), "__keyevent@*__:expired");
+            } else if (jedis instanceof JedisCluster) {
+                ((JedisCluster) jedis).psubscribe(SubscribeListener.getInstance(), "__keyevent@*__:expired");
+            }
+        }
+    }
+
     private <V> V doJedisExecute(JedisExcutor executor) throws CoreException {
         JedisCommands jedis = null;
         try {
-            if (type == TYPE_SHARD) {
-                jedis = pool.getResource();
-            } else if (type == TYPE_CLUSTER) {
-                jedis = cluster;
-            }
+            jedis = getJedis();
             return (V) executor.execute(jedis);
         } catch (Throwable e) {
             e.printStackTrace();
-            throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed."+e.getMessage());
+            throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed." + e.getMessage());
         } finally {
             if (jedis != null && jedis instanceof ShardedJedis) {
                 ((ShardedJedis) jedis).close();
             }
         }
+    }
+
+    private JedisCommands getJedis() {
+        JedisCommands jedis = null;
+        if (type == TYPE_SHARD) {
+            jedis = pool.getResource();
+        } else if (type == TYPE_CLUSTER) {
+            jedis = cluster;
+        }
+        return jedis;
     }
 
     // hash
@@ -1153,7 +1194,7 @@ public class RedisHandler {
             }
         }, RedisContants.PIPELINE_SYNC_AND_RETURN_ALL);
         if (result instanceof List)
-            return (List)result;
+            return (List) result;
         return null;
     }
 
@@ -1181,7 +1222,7 @@ public class RedisHandler {
             LoggerEx.error(TAG, "invokePipelineMethod: " + methodName + ", args: " + args + " error, eMsg: " + t.getMessage());
             if (t instanceof JedisMovedDataException && pipeline instanceof JedisClusterPipeline) {
                 LoggerEx.error(TAG, "Have occurred JedisMovedDataException, will refresh cluster!");
-                JedisClusterPipeline clusterPipeline = (JedisClusterPipeline)pipeline;
+                JedisClusterPipeline clusterPipeline = (JedisClusterPipeline) pipeline;
                 clusterPipeline.refreshCluster();
             }
             if (needTryAgain != null && needTryAgain)

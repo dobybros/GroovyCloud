@@ -15,6 +15,7 @@ import com.docker.storage.ehcache.EhCacheHandler;
 import com.docker.storage.kafka.KafkaConfCenter;
 import com.docker.storage.kafka.KafkaProducerHandler;
 import com.docker.storage.redis.RedisHandler;
+import com.docker.utils.GroovyCloudBean;
 import com.docker.utils.SpringContextUtil;
 import connectors.mongodb.MongoClientHelper;
 import connectors.mongodb.annotations.handlers.MongoCollectionAnnotationHolder;
@@ -33,7 +34,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseRuntime extends GroovyRuntime {
@@ -61,7 +63,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		String enableGroovyMVC = null;
 		addClassAnnotationHandler(new GroovyBeanFactory());
 		if (properties != null) {
-			Object rpcServerHandler = SpringContextUtil.getBean("dockerRpcServer");
+			Object rpcServerHandler = GroovyCloudBean.getBean("dockerRpcServer");
 			if (rpcServerHandler != null && rpcServerHandler instanceof ClassAnnotationHandler)
 				addClassAnnotationHandler((ClassAnnotationHandler) rpcServerHandler);
 			Object rpcServerSslHandler = SpringContextUtil.getBean("dockerRpcServerSsl");
@@ -70,7 +72,9 @@ public abstract class BaseRuntime extends GroovyRuntime {
 			Object upStreamAnnotationHandler = SpringContextUtil.getBean("upStreamAnnotationHandler");
 			if (upStreamAnnotationHandler != null && upStreamAnnotationHandler instanceof ClassAnnotationHandler)
 				addClassAnnotationHandler((ClassAnnotationHandler) upStreamAnnotationHandler);
-
+			Object redisSubscribeHandler = GroovyCloudBean.getBean(GroovyCloudBean.REDISSUBSCRIBEHANDLER);
+            if (redisSubscribeHandler != null && redisSubscribeHandler instanceof ClassAnnotationHandler)
+                addClassAnnotationHandler((ClassAnnotationHandler) redisSubscribeHandler);
 			enableGroovyMVC = properties.getProperty("web.groovymvc.enable");
 			String mongodbHost = properties.getProperty("db.mongodb.uri");
 			if (mongodbHost != null) {

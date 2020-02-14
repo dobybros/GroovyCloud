@@ -13,6 +13,7 @@ public class GroovyCloudBean {
     public static final String ONLINEUSERMANAGER = "onlineUserManager";
     public static final String MESSAGEEVENTHANDLER = "messageEventHandler";
     public static final String PROXYCONTAINERDUPLEXENDER = "proxyContainerDuplexSender";
+    public static final String REDISSUBSCRIBEHANDLER = "redisSubscribeHandler";
     public static Object getBean(String name) throws BeansException {
         return SpringContextUtil.getBean(name);
     }

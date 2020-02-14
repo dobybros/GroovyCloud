@@ -1,6 +1,5 @@
 package container.container.bean;
 
-import chat.logs.LoggerEx;
 import chat.utils.IPHolder;
 import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.http.MyHttpParameters;
@@ -16,9 +15,9 @@ import com.docker.storage.adapters.impl.ServersServiceImpl;
 import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
+import com.docker.storage.redis.RedisSubscribeHandler;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -27,6 +26,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import script.filter.JsonFilterFactory;
 import script.groovy.servlets.RequestPermissionHandler;
+
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,7 +81,13 @@ public class BeanApp extends ConfigApp{
     private ServiceVersionServiceImpl serviceVersionService;
     private ScheduledTaskServiceImpl scheduledTaskService;
     private ScheduledTaskDAO scheduledTaskDAO;
-
+    private RedisSubscribeHandler redisSubscribeHandler;
+    public synchronized RedisSubscribeHandler getRedisSubscribeHandler() {
+        if (instance.redisSubscribeHandler == null) {
+            instance.redisSubscribeHandler = new RedisSubscribeHandler();
+        }
+        return instance.redisSubscribeHandler;
+    }
     public synchronized ScheduledTaskServiceImpl getScheduledTaskService() {
         if (instance.scheduledTaskService == null) {
             instance.scheduledTaskService = new ScheduledTaskServiceImpl();
