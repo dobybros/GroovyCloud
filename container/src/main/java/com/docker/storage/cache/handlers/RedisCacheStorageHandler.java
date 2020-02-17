@@ -22,20 +22,20 @@ public class RedisCacheStorageHandler extends CacheStorageAdapter {
 
     @Override
     public Object addCacheData(String prefix, String key, Object value, Long expired) throws CoreException {
-        if (key != null && value != null)
+        if (prefix != null && key != null && value != null)
             return redisHandler.setObject(prefix,key, value, RedisHandler.NXXX, RedisHandler.EXPX, expired);
         return null;
     }
 
     @Override
     public void deleteCacheData(String prefix, String key) throws CoreException {
-        if (key != null)
+        if (prefix != null && key != null)
             redisHandler.expire(prefix,key, 0L);
     }
 
     @Override
     public <T> T getCacheData(String prefix, String key, Class<T> clazz) throws CoreException {
-        if (key != null && clazz != null) {
+        if (prefix != null && key != null && clazz != null) {
             return redisHandler.getObject(prefix,key, clazz);
         }
         return null;
@@ -43,8 +43,8 @@ public class RedisCacheStorageHandler extends CacheStorageAdapter {
 
     @Override
     public <T> T getCacheData(String prefix, String key, Type type) throws CoreException {
-        if (key != null && type != null) {
-            return redisHandler.getObject(key, type);
+        if (prefix != null && key != null && type != null) {
+            return redisHandler.getObject(prefix, key, type);
         }
         return null;
     }
