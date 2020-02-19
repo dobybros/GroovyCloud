@@ -29,6 +29,7 @@ public class RedisSubscribeHandler extends ClassAnnotationHandler {
     }
     public void shutdown(){
         redisSubscribeMap.clear();
+        MyRedisPubSubAdapter.getInstance().shutdown();
     }
     @Override
     public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, MyGroovyClassLoader classLoader) {

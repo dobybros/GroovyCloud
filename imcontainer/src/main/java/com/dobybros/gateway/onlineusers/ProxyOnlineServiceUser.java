@@ -86,7 +86,6 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
                 for (RemoteServers.Server server : serversMap.values()) {
                     try {
                         proxyContainerDuplexSender.sendProxy(request, contentType, server, null);
-                        LoggerEx.info(TAG, "Send to server success, serverName: " + server.getServer() + ",serverIp: " + server.getIp() +"serverRpcPort: " + server.getRpcPort());
                     } catch (Throwable t) {
                         this.exceptionCaught(t);
                         serversMap.remove(server.getServer());
@@ -152,6 +151,7 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
             } finally {
                 try {
                     imExtensionCache.delUserServer(userInfo.getUserId(), getService());
+                    LoggerEx.info(TAG, "Delete user server success, userInfo : " + ((userInfo == null) ? "null" : userInfo.toString()) + ",service: " + getService());
                 } catch (Throwable t) {
                     LoggerEx.error(TAG, "Del user server error, " + "userId: " + userInfo.getUserId() + ",service: " + getService());
                 }

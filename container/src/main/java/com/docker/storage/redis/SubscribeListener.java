@@ -1,6 +1,7 @@
 package com.docker.storage.redis;
 
 import chat.logs.LoggerEx;
+import chat.main.ServerStart;
 import com.docker.utils.GroovyCloudBean;
 import redis.clients.jedis.JedisPubSub;
 
@@ -18,8 +19,8 @@ public class SubscribeListener extends JedisPubSub {
 
     @Override
     public void onPMessage(String pattern, String channel, String message) {
-        LoggerEx.info(TAG, "Redis JedisPubSub, message: " + message);
-        redisSubscribeHandler.redisCallback(message);
+        LoggerEx.info(TAG, "Redis JedisPubSub channel: " + channel +",message: " + message);
+        ServerStart.getInstance().getThreadPool().execute(() -> redisSubscribeHandler.redisCallback(message));
     }
 
 //
@@ -68,12 +69,11 @@ public class SubscribeListener extends JedisPubSub {
 //        super.psubscribe(patterns);
 //    }
 //
-//    @Override
+    @Override
     public void punsubscribe() {
         super.punsubscribe();
     }
-//
-//    @Override
+    @Override
     public void punsubscribe(String... patterns) {
         super.punsubscribe(patterns);
     }

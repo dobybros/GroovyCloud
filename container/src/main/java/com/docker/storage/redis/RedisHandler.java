@@ -45,6 +45,7 @@ public class RedisHandler {
     private Map<String, Method> pipelineMethodMap = null;
     private String hosts;
     private Integer type = TYPE_SHARD;
+    private String[] subscribeChannels = {"__keyevent@0__:expired", "__keyevent@1__:expired", "__keyevent@2__:expired", "__keyevent@3__:expired", "__keyevent@4__:expired", "__keyevent@5__:expired", "__keyevent@6__:expired", "__keyevent@7__:expired", "__keyevent@8__:expired", "__keyevent@9__:expired", "__keyevent@10__:expired", "__keyevent@11__:expired", "__keyevent@12__:expired", "__keyevent@13__:expired", "__keyevent@14__:expired", "__keyevent@15__:expired"};
 
     public RedisHandler(String hosts) {
         this.hosts = hosts;
@@ -85,10 +86,11 @@ public class RedisHandler {
                     nodes.add(new HostAndPort(splitedHost[0], Integer.parseInt(splitedHost[1])));
                 }
             }
+            MyRedisPubSubAdapter.getInstance().setHostAndPorts(nodes);
             cluster = new JedisCluster(nodes, config);
         }
         pipelineMethodMap = new HashMap<>();
-//        new Thread(this::subscribe).start();
+        new Thread(this::subscribe).start();
         LoggerEx.info(TAG, "Jedis Cluster connected, " + hosts);
         return this;
     }
@@ -117,17 +119,25 @@ public class RedisHandler {
     public void disconnect() {
         try {
             if (pool != null && pool.isClosed()) {
-                pool.close();
+                try {
+                    pool.close();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+
                 LoggerEx.info(TAG, "JedisPool closed, " + hosts);
             }
             if (cluster != null) {
-                cluster.close();
+                try {
+                    cluster.close();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
             }
             if (pipeline != null && pipeline instanceof JedisClusterPipeline) {
                 JedisClusterPipeline clusterPipeline = (JedisClusterPipeline) pipeline;
                 clusterPipeline.close();
             }
-            SubscribeListener.getInstance().punsubscribe();
         } catch (Exception e) {
             LoggerEx.info(TAG, "Jedis Cluster closed exception, " + hosts);
         }
@@ -694,11 +704,13 @@ public class RedisHandler {
         }
 */
     }
-    public Long lrem(String key, long l, String value) throws CoreException{
+
+    public Long lrem(String key, long l, String value) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.lrem(key, l, value);
         });
     }
+
     /**
      * 将一个对象从列表头部取出
      *
@@ -1146,9 +1158,14 @@ public class RedisHandler {
                 Jedis[] jedisArray = new Jedis[]{};
                 jedisArray = ((ShardedJedis) jedis).getAllShards().toArray(jedisArray);
                 Jedis theJedis = jedisArray[0];
-                theJedis.psubscribe(SubscribeListener.getInstance(), "__keyevent@*__:expired");
+                try {
+                    SubscribeListener.getInstance().punsubscribe(subscribeChannels);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+                theJedis.psubscribe(SubscribeListener.getInstance(), subscribeChannels);
             } else if (jedis instanceof JedisCluster) {
-                ((JedisCluster) jedis).psubscribe(SubscribeListener.getInstance(), "__keyevent@*__:expired");
+                MyRedisPubSubAdapter.getInstance().psubscribe(subscribeChannels);
             }
         }
     }
@@ -1176,6 +1193,25 @@ public class RedisHandler {
             jedis = cluster;
         }
         return jedis;
+    }
+
+    public void expireByPipeline(String prefix, List<String> keys, long expire) {
+        invokePipelineMethod(true, new PipelineExcutor() {
+            @Override
+            public void execute(PipelineBase pipelineBase) {
+                if (!keys.isEmpty()) {
+                    if (!StringUtils.isBlank(prefix)) {
+                        for (String key : keys) {
+                            pipelineBase.pexpire(prefix + "_" + key, expire);
+                        }
+                    } else {
+                        for (String key : keys) {
+                            pipelineBase.pexpire(key, expire);
+                        }
+                    }
+                }
+            }
+        }, RedisContants.PIPELINE_SYNC);
     }
 
     // hash

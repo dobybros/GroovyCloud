@@ -92,9 +92,8 @@ public class InitContainer implements CommandLineRunner{
         ipHolder.init();
         oauth2ClientProperties.init();
         onlineServer.start();
-        scriptManager.init();
         onlineUserManager.init();
-//        rpcServerAdapter.serverStart();
+        scriptManager.init();
         dockerRpcServerAdapter.serverStart();
         dockerRpcServerAdapterSsl.serverStart();
         pingHandler.init();
