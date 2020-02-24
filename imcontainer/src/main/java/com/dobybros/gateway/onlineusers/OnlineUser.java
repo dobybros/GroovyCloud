@@ -10,6 +10,7 @@ import com.dobybros.chat.storage.adapters.StorageManager;
 import com.dobybros.chat.storage.adapters.UserInfoAdapter;
 import com.dobybros.chat.tasks.OfflineMessageSavingTask;
 import com.dobybros.gateway.channels.tcp.TcpChannel;
+import com.dobybros.gateway.utils.FreezableQueue;
 import com.docker.onlineserver.OnlineServerWithStatus;
 import org.apache.commons.lang.StringUtils;
 import script.memodb.ObjectId;
@@ -248,7 +249,8 @@ public class OnlineUser {
 				unreadCount = 0;
 			builder.append("unread: ").append(unreadCount);
 			builder.append(", ");
-			builder.append("isFrozen: ").append(serviceUser.getWaitClientACKMessageQueue().isFrozen());
+			FreezableQueue freezableQueue = serviceUser.getWaitClientACKMessageQueue();
+			builder.append("isFrozen: ").append(freezableQueue != null ? freezableQueue.isFrozen() : "freezableQueue not initialized");
 			builder.append("||||");
 		}
 		return builder.toString();

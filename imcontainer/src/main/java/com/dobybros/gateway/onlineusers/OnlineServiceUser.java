@@ -11,10 +11,7 @@ import com.dobybros.chat.channels.Channel.ChannelListener;
 import com.dobybros.chat.data.userinfo.ServerInfo;
 import com.dobybros.chat.data.userinfo.UserInfo;
 import com.dobybros.chat.errors.IMCoreErrorCodes;
-import com.dobybros.chat.open.data.Constants;
-import com.dobybros.chat.open.data.DeviceInfo;
-import com.dobybros.chat.open.data.Message;
-import com.dobybros.chat.open.data.UserStatus;
+import com.dobybros.chat.open.data.*;
 import com.dobybros.chat.script.annotations.gateway.GatewayGroovyRuntime;
 import com.dobybros.chat.storage.adapters.StorageManager;
 import com.dobybros.chat.storage.adapters.UserInPresenceAdapter;
@@ -33,6 +30,7 @@ import com.docker.script.BaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.server.OnlineServer;
 import com.docker.utils.SpringContextUtil;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import script.memodb.ObjectId;
 
@@ -82,6 +80,7 @@ public class OnlineServiceUser implements ChannelListener {
     protected RunnableEx eventReceivingThread;
 
     protected SingleThreadQueue<PushInfo> acuEventQueue;
+    private IMServerConfig serverConfig;
 
     public Integer getUnreadCount() {
         return userInfo.getOfflineUnreadCount();
@@ -92,6 +91,10 @@ public class OnlineServiceUser implements ChannelListener {
     }
 
     public OnlineServiceUser() {
+    }
+
+    public IMServerConfig getServerConfig() {
+        return serverConfig;
     }
 
     public String userInfo(Integer terminal) {
@@ -119,6 +122,8 @@ public class OnlineServiceUser implements ChannelListener {
 //	public abstract boolean keepOnline(); 
     public void initOnlineUser() {
         if (status < STATUS_INITED) {
+            if(serverConfig == null)
+                serverConfig = IMServerConfig.forRoom();
             acuEventQueue = new SingleThreadQueue<>(userInfo() + " event receiving thread. sid " + sessionId, eventQueue, ServerStart.getInstance().getGatewayThreadPoolExecutor(), new BulkHandler<PushInfo>() {
                 public boolean bulkHandle(ArrayList<PushInfo> pushInfoList) {
                     pushToChannelsSync(pushInfoList);
@@ -147,14 +152,18 @@ public class OnlineServiceUser implements ChannelListener {
                     return status >= STATUS_INITED && status < STATUS_DESTROYED;
                 }
             });
-            waitClientACKMessageQueue = new FreezableQueue();
-            waitClientACKMessageQueue.setAcuEventQueue(acuEventQueue);
-            waitClientACKMessageQueue.setOfflineMessageSavingTask(onlineUser.getOfflineMessageSavingTask());
-            waitClientACKMessageQueue.setOnlineUser(this);
+            if(serverConfig.isNeedOfflineMessages()) {
+                waitClientACKMessageQueue = new FreezableQueue();
+                waitClientACKMessageQueue.setAcuEventQueue(acuEventQueue);
+                waitClientACKMessageQueue.setOfflineMessageSavingTask(onlineUser.getOfflineMessageSavingTask());
+                waitClientACKMessageQueue.setOnlineUser(this);
+            }
 
-            //初始化最近消息map
-            recentTopicMap = new RecentTopicMap();
-            recentTopicMap.init();
+            if(serverConfig.isFilterDuplicatedRecentMessages()) {
+                //初始化最近消息map
+                recentTopicMap = new RecentTopicMap();
+                recentTopicMap.init();
+            }
 
             init();
             status = STATUS_INITED;
@@ -211,7 +220,8 @@ public class OnlineServiceUser implements ChannelListener {
                     Integer excludeTerminal = pushInfo.getExcludeTerminal();
                     if (channelMap != null && outData != null) {
                         if (outData.getType() == Pack.TYPE_OUT_OUTGOINGMESSAGE && true == ((OutgoingMessage) outData).getNeedAck()) //ResultEvent don't need client ACK ，no need save offline message don't need ACK
-                            waitClientACKMessageQueue.add(pushInfo);
+                            if(waitClientACKMessageQueue != null )
+                                waitClientACKMessageQueue.add(pushInfo);
                         pushToChannelsSync(outData, pushInfo.getExcludeTerminal(), pushInfo.getToTerminal());
                     }
                 }
@@ -328,11 +338,13 @@ public class OnlineServiceUser implements ChannelListener {
 //			channel.send(resultEvent);
 //		}
 
-        // 如果关闭通道的方式是kick、切换、登出，删除presence上的device
-        if (close == ChannelListener.CLOSE_KICKED || close == ChannelListener.CLOSE_SWITCHCHANNEL || close == ChannelListener.CLOSE_LOGOUT) {
-            List<Integer> terminals = new ArrayList<>();
-            terminals.add(channel.getTerminal());
-            deleteDevice(terminals);
+        if(serverConfig != null && serverConfig.isNeedDeviceInfo()) {
+            // 如果关闭通道的方式是kick、切换、登出，删除presence上的device
+            if (close == ChannelListener.CLOSE_KICKED || close == ChannelListener.CLOSE_SWITCHCHANNEL || close == ChannelListener.CLOSE_LOGOUT) {
+                List<Integer> terminals = new ArrayList<>();
+                terminals.add(channel.getTerminal());
+                deleteDevice(terminals);
+            }
         }
         onlineUser.getOnlineUseManager().getOnlineUsersHolder().decrementServiceUserCount(service);
         //TODO 根据closeType判断是否需要发送登出的事件, CLOSE_KICKED. 用sendResult发出事件
@@ -450,7 +462,7 @@ public class OnlineServiceUser implements ChannelListener {
         buffer.append("|sid: ");
         buffer.append(sessionId);
         buffer.append("|waitMsgMap: ");
-        buffer.append(waitClientACKMessageQueue.description());
+        buffer.append(waitClientACKMessageQueue != null ? waitClientACKMessageQueue.description() : "waitClientACKMessageQueue is not initialized");
         buffer.append("\r\n");
 
         buffer.append("chanels: ");
@@ -482,6 +494,16 @@ public class OnlineServiceUser implements ChannelListener {
         onlineUser.getOnlineUseManager().getOnlineUsersHolder().initServiceUserCount(service);
         BaseRuntime runtime = scriptManager.getBaseRuntime(getServiceAndVersion());
         if (runtime != null && runtime instanceof GatewayGroovyRuntime) {
+            Properties configProps = runtime.getConfig();
+            if(configProps != null) {
+                String value = configProps.getProperty("service.session.type");
+                if(!StringUtils.isBlank(value) && value.equals("im")) {//another value will be "room"
+                    serverConfig = IMServerConfig.forIM();
+                } else {
+                    serverConfig = IMServerConfig.forRoom();
+                }
+                LoggerEx.info(TAG, "IMServerConfig " + JSON.toJSONString(serverConfig));
+            }
             ((GatewayGroovyRuntime) runtime).sessionCreated(userInfo.getUserId(), service);
         }
     }
@@ -652,7 +674,7 @@ public class OnlineServiceUser implements ChannelListener {
         long time = System.currentTimeMillis();
         try {
             if (event != null) {//处于冻结状态下就不会将消息推倒终端。 但是需要处理APN消息推送。
-                boolean isFrozen = waitClientACKMessageQueue.isFrozen();
+                boolean isFrozen = waitClientACKMessageQueue != null && waitClientACKMessageQueue.isFrozen();
                 if (isFrozen)
                     return OnlineUser.RECEIVED_FROZEN;
 
@@ -667,14 +689,16 @@ public class OnlineServiceUser implements ChannelListener {
                             //Business layer decide how to handle with those offline devices. not here.
 //							DeviceInfo latestDevice = userInfo.getLatestLoginDevice();
                             UserStatus userStatus = new UserStatus();
-                            if (userInfo.getOfflineUnreadCount() == null)
-                                this.setUnreadCount(0);
-                            this.setUnreadCount(userInfo.getOfflineUnreadCount() + 1);
+                            if(serverConfig != null && serverConfig.isNeedDeviceInfo()) {
+                                if (userInfo.getOfflineUnreadCount() == null)
+                                    this.setUnreadCount(0);
+                                this.setUnreadCount(userInfo.getOfflineUnreadCount() + 1);
+                            }
                             userStatus.setOfflineUnreadCount(userInfo.getOfflineUnreadCount());
                             userStatus.setService(userInfo.getService());
                             userStatus.setUserId(userInfo.getUserId());
                             userStatus.setLanId(OnlineServer.getInstance().getLanId());
-                            userStatus.setDeviceInfoMap(new HashMap<>(userInfo.getDevices()));
+                            userStatus.setDeviceInfoMap(userInfo.getDevices() != null ? new HashMap<>(userInfo.getDevices()) : new HashMap<>());
                             Map<String, UserStatus> map = new HashMap<>();
                             map.put(userStatus.getUserId(), userStatus);
                             ((GatewayGroovyRuntime) runtime).messageNotReceived(event, map);
@@ -838,7 +862,7 @@ public class OnlineServiceUser implements ChannelListener {
 
     public Data sendTopic(Message topic, boolean needTcpResult, TopicSendHandler topicSendHandler) {
         Result resultEvent;
-        if (topic.getClientId() != null) {
+        if (recentTopicMap != null && topic.getClientId() != null) {
             resultEvent = recentTopicMap.getExistEvent(topic.getClientId());
             if (resultEvent != null) {
                 pushToChannels(resultEvent, null);
@@ -895,7 +919,7 @@ public class OnlineServiceUser implements ChannelListener {
         }
         if (needTcpResult)
             pushToChannels(resultEvent, null);
-        if (errorResultEvent == null) {
+        if (recentTopicMap != null && errorResultEvent == null) {
             recentTopicMap.add(resultEvent);
         }
         return resultEvent;
