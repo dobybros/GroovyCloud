@@ -168,6 +168,10 @@ public class SimulateTcpChannel extends TcpChannel {
         this.userId = userId;
     }
 
+    RemoteServers.Server getServer() {
+        return server
+    }
+
     public void setServer(RemoteServers.Server server) {
         this.server = server;
     }

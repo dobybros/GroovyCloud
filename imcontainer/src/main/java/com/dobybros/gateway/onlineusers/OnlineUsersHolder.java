@@ -184,4 +184,12 @@ public class OnlineUsersHolder {
         }
         return true;
     }
+
+    public ConcurrentHashMap<String, OnlineUser> getOnlineUserMap() {
+        return onlineUserMap;
+    }
+
+    public ConcurrentHashMap<String, LongAdder> getServiceUserCountMap() {
+        return serviceUserCountMap;
+    }
 }

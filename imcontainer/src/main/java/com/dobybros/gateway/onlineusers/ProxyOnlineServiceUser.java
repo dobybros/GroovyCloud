@@ -94,7 +94,16 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
                             for (Integer terminal : terminals) {
                                 Channel channel = getChannel(terminal);
                                 if (channel != null) {
-                                    this.removeChannel(channel, CLOSE_ERROR);
+                                    if (channel instanceof SimulateTcpChannel) {
+                                        SimulateTcpChannel simulateTcpChannel = (SimulateTcpChannel) channel;
+                                        if (simulateTcpChannel.getServer() == null) {
+                                            this.removeChannel(simulateTcpChannel, CLOSE_ERROR);
+                                        } else {
+                                            if (simulateTcpChannel.getServer().getServer().equals(server.getServer())) {
+                                                this.removeChannel(simulateTcpChannel, CLOSE_ERROR);
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -208,5 +217,13 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
             }
         }
         terminals.add(terminal);
+    }
+
+    public Map<String, RemoteServers.Server> getServersMap() {
+        return serversMap;
+    }
+
+    public Map<String, Set<Integer>> getServerTerminaMap() {
+        return serverTerminaMap;
     }
 }

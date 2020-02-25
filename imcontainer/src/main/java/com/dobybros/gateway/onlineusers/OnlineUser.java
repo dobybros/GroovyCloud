@@ -33,7 +33,6 @@ public class OnlineUser {
 		userInfoAdapter = StorageManager.getInstance().getStorageAdapter(UserInfoAdapter.class);
 		offlineMessageAdapter = StorageManager.getInstance().getStorageAdapter(OfflineMessageAdapter.class);
 	}
-	
 	/**
 	 * Need prepare session id in this method.
 	 */
@@ -254,5 +253,13 @@ public class OnlineUser {
 			builder.append("||||");
 		}
 		return builder.toString();
+	}
+
+	public void setUserInfoAdapter(UserInfoAdapter userInfoAdapter) {
+		this.userInfoAdapter = userInfoAdapter;
+	}
+
+	public void setOfflineMessageAdapter(OfflineMessageAdapter offlineMessageAdapter) {
+		this.offlineMessageAdapter = offlineMessageAdapter;
 	}
 }
