@@ -6,13 +6,10 @@ import com.docker.errors.CoreErrorCodes;
 import com.docker.rpc.*;
 import com.docker.rpc.annotations.RPCServerHandler;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import script.groovy.object.GroovyObjectEx;
-import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.ClassAnnotationGlobalHandler;
 import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
-import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 import java.lang.annotation.Annotation;
 import java.rmi.RemoteException;
@@ -20,7 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class RMIServerImplWrapper extends ClassAnnotationHandler {
+public class RMIServerImplWrapper extends ClassAnnotationGlobalHandler {
 	RMIServerHandler rmiServerHandler;
 	//Server
 	Map<String, GroovyObjectEx<RPCServerAdapter>> serverAdapterMap;
@@ -92,13 +89,12 @@ public class RMIServerImplWrapper extends ClassAnnotationHandler {
 
 	@Override
 	public Class<? extends Annotation> handleAnnotationClass(GroovyRuntime groovyRuntime) {
-//		this.groovyRuntime = groovyRuntime;
 		return RPCServerHandler.class;
 	}
 
 	@Override
 	public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap,
-									   MyGroovyClassLoader classLoader) {
+									   GroovyRuntime groovyRuntime) {
 		if (annotatedClassMap != null && !annotatedClassMap.isEmpty()) {
 			StringBuilder uriLogs = new StringBuilder(
 					"\r\n---------------------------------------\r\n");
@@ -114,9 +110,9 @@ public class RMIServerImplWrapper extends ClassAnnotationHandler {
 					// Handle RequestIntercepting
 					RPCServerHandler requestIntercepting = groovyClass.getAnnotation(RPCServerHandler.class);
 					if (requestIntercepting != null) {
-						String rpcType = getGroovyRuntime().processAnnotationString(requestIntercepting.rpcType());
+						String rpcType = groovyRuntime.processAnnotationString(requestIntercepting.rpcType());
 						if (!StringUtils.isBlank(rpcType)) {
-							GroovyObjectEx<RPCServerAdapter> serverAdapter = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
+							GroovyObjectEx<RPCServerAdapter> serverAdapter = ((GroovyBeanFactory)groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 							if (serverAdapter != null) {
 								uriLogs.append("RPCServerHandler " + rpcType + "#" + groovyClass + "\r\n");
 								newServerAdapterMap.put(rpcType, serverAdapter);
@@ -129,6 +125,11 @@ public class RMIServerImplWrapper extends ClassAnnotationHandler {
 			uriLogs.append("---------------------------------------");
 			LoggerEx.info(TAG, uriLogs.toString());
 		}
+	}
+
+	@Override
+	public Object getKey() {
+		return RMIServerImplWrapper.class;
 	}
 
 	public RMIServerHandler getRmiServerHandler() {

@@ -26,7 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GroovyRuntime extends ScriptRuntime {
     private static final String TAG = GroovyRuntime.class.getSimpleName();
     private ArrayList<ClassAnnotationHandler> annotationHandlers = new ArrayList<>();
+    private ArrayList<ClassAnnotationGlobalHandler> annotationGlobalHandlers = new ArrayList<>();
     private ConcurrentHashMap<Object, ClassAnnotationHandler> annotationHandlerMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Object, ClassAnnotationGlobalHandler> annotationGlobalHandlerMap = new ConcurrentHashMap<>();
     private GroovyBeanFactory beanFactory;
     private List<FieldInjectionListener> fieldInjectionListeners;
     private List<String> libPaths;
@@ -104,6 +106,15 @@ public class GroovyRuntime extends ScriptRuntime {
         start();
     }
 
+    public boolean addClassAnnotationGlobalHandler(ClassAnnotationGlobalHandler handler) {
+        if (handler != null && !annotationGlobalHandlers.contains(handler)) {
+            boolean bool = annotationGlobalHandlers.add(handler);
+            annotationGlobalHandlerMap.put(handler.getKey(), handler);
+            return bool;
+        }
+
+        return false;
+    }
     public boolean addClassAnnotationHandler(ClassAnnotationHandler handler) {
         if (handler != null && !annotationHandlers.contains(handler)) {
             boolean bool = annotationHandlers.add(handler);
@@ -123,7 +134,14 @@ public class GroovyRuntime extends ScriptRuntime {
         }
         return false;
     }
-
+    public boolean removeClassAnnotationGlobalHandler(ClassAnnotationGlobalHandler handler) {
+        if (handler != null) {
+            boolean bool = annotationGlobalHandlers.remove(handler);
+            annotationGlobalHandlerMap.remove(handler.getKey(), handler);
+            return bool;
+        }
+        return false;
+    }
     private void closeLibClassloader(URLClassLoader oldLibClassLoader) {
         if (libClassLoader != null) {
             try {
@@ -189,7 +207,8 @@ public class GroovyRuntime extends ScriptRuntime {
         groovyObjectExProxyClass = runtimeBootListener.getClassLoader().parseClass(proxyClassStr,
                 "/script/groovy/runtime/GroovyObjectExProxy.groovy");
 
-        final Map<ClassAnnotationHandler, Map<String, Class<?>>> handlerMap = new LinkedHashMap<ClassAnnotationHandler, Map<String, Class<?>>>();
+        final Map<ClassAnnotationHandler, Map<String, Class<?>>> handlerMap = new ConcurrentHashMap<>();
+        final Map<ClassAnnotationGlobalHandler, Map<String, Class<?>>> handlerGlobalMap = new ConcurrentHashMap<>();
         Class[] loadedClasses = runtimeBootListener.getLoadedClasses();
         if (loadedClasses != null) {
             cachedClasses = new HashMap<>();
@@ -222,60 +241,100 @@ public class GroovyRuntime extends ScriptRuntime {
                         }
                     }
                 }
-            }
-        }
-
-        if (handlerMap != null && !handlerMap.isEmpty()) {
-            Thread handlerThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Collection<ClassAnnotationHandler> handlers = annotationHandlers;
-                    for (ClassAnnotationHandler annotationHandler : handlers) {
-                        if (annotationHandler.getGroovyRuntime() == null)
-                            annotationHandler.setGroovyRuntime(GroovyRuntime.this);
-                        if (annotationHandler instanceof GroovyBeanFactory) {
-                            beanFactory = (GroovyBeanFactory) annotationHandler;
-                            break;
-                        }
-                    }
-                    for (ClassAnnotationHandler annotationHandler : handlers) {
-                        if(annotationHandler.isBean()){
-                            Map<String, Class<?>> values = handlerMap.get(annotationHandler);
-                            if(values != null){
-                                for (Class<?> c : values.values()){
-                                    if(ReflectionUtil.canBeInitiated(c))
-                                        beanFactory.getClassBean(c);
+                if (annotationGlobalHandlers != null) {
+                    Collection<ClassAnnotationGlobalHandler> handlers = annotationGlobalHandlers;
+                    for (ClassAnnotationGlobalHandler handler : handlers) {
+//						ClassAnnotationHandler handler = annotationHandlers.get(i);
+//						handler.setGroovyRuntime(this);
+                        Class<? extends Annotation> annotationClass = handler
+                                .handleAnnotationClass(this);
+                        if (annotationClass != null) {
+                            Annotation annotation = clazz
+                                    .getAnnotation(annotationClass);
+                            if (annotation != null) {
+                                Map<String, Class<?>> classes = handlerGlobalMap
+                                        .get(handler);
+                                if (classes == null) {
+                                    classes = new HashMap<>();
+                                    handlerGlobalMap.put(handler, classes);
                                 }
-                            }
-                        }
-                    }
 
-                    for (ClassAnnotationHandler annotationHandler : handlers) {
-                        Map<String, Class<?>> values = handlerMap.get(annotationHandler);
-                        if (values != null) {
-                            try {
-                                annotationHandler.handleAnnotatedClasses(values,
-                                        runtimeBootListener.getClassLoader());
-                            } catch (Throwable t) {
-                                t.printStackTrace();
-                                LoggerEx.fatal(TAG,
-                                        "Handle annotated classes failed, "
-                                                + values + " the handler " + annotationHandler
-                                                + " is ignored!errMsg: " + ExceptionUtils.getFullStackTrace(t));
+                                //XXX the key original is groovy path, not absolute.
+                                classes.put(clazz.getName(), clazz);
                             }
                         }
                     }
                 }
-            });
-            handlerThread.setName(GroovyRuntime.class.getSimpleName());
-            handlerThread.start();
-            try {
-                handlerThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         }
-        LoggerEx.info(TAG, "Reload groovy scripts");
+
+        if (handlerMap != null && !handlerMap.isEmpty()) {
+            Collection<ClassAnnotationHandler> handlers = annotationHandlers;
+            for (ClassAnnotationHandler annotationHandler : handlers) {
+                if (annotationHandler.getGroovyRuntime() == null)
+                    annotationHandler.setGroovyRuntime(GroovyRuntime.this);
+                if (annotationHandler instanceof GroovyBeanFactory) {
+                    beanFactory = (GroovyBeanFactory) annotationHandler;
+                    break;
+                }
+            }
+            for (ClassAnnotationHandler annotationHandler : handlers) {
+                if(annotationHandler.isBean()){
+                    Map<String, Class<?>> values = handlerMap.get(annotationHandler);
+                    if(values != null){
+                        for (Class<?> c : values.values()){
+                            if(ReflectionUtil.canBeInitiated(c))
+                                beanFactory.getClassBean(c);
+                        }
+                    }
+                }
+            }
+
+            for (ClassAnnotationHandler annotationHandler : handlers) {
+                Map<String, Class<?>> values = handlerMap.get(annotationHandler);
+                if (values != null) {
+                    try {
+                        annotationHandler.handleAnnotatedClasses(values,
+                                runtimeBootListener.getClassLoader());
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        LoggerEx.fatal(TAG,
+                                "Handle annotated classes failed, "
+                                        + values + " the handler " + annotationHandler
+                                        + " is ignored!errMsg: " + ExceptionUtils.getFullStackTrace(t));
+                    }
+                }
+            }
+        }
+        if (handlerGlobalMap != null && !handlerGlobalMap.isEmpty()) {
+            Collection<ClassAnnotationGlobalHandler> handlers = annotationGlobalHandlers;
+            for (ClassAnnotationGlobalHandler annotationHandler : handlers) {
+                if(annotationHandler.isBean()){
+                    Map<String, Class<?>> values = handlerGlobalMap.get(annotationHandler);
+                    if(values != null){
+                        for (Class<?> c : values.values()){
+                            if(ReflectionUtil.canBeInitiated(c))
+                                beanFactory.getClassBean(c);
+                        }
+                    }
+                }
+            }
+
+            for (ClassAnnotationGlobalHandler annotationHandler : handlers) {
+                Map<String, Class<?>> values = handlerGlobalMap.get(annotationHandler);
+                if (values != null) {
+                    try {
+                        annotationHandler.handleAnnotatedClasses(values, this);
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        LoggerEx.fatal(TAG,
+                                "Handle annotated classes failed, "
+                                        + values + " the handler " + annotationHandler
+                                        + " is ignored!errMsg: " + ExceptionUtils.getFullStackTrace(t));
+                    }
+                }
+            }
+        }
     }
 
     public String processAnnotationString(String str) {

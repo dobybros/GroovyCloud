@@ -102,7 +102,7 @@ public class ServerStart {
     //业务使用
     public ThreadPoolExecutor getThreadPool() {
         if (threadPoolExecutor == null) {
-            threadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)), new CloudThreadFactory());
+            threadPoolExecutor = new ThreadPoolExecutor(Integer.valueOf(coreSize), Integer.valueOf(maximumPoolSize), Integer.valueOf(keepAliveTime), TimeUnit.SECONDS, new TaskQueue(Integer.valueOf(queueCapacity)), new CloudThreadFactory("Normal"));
         }
         return threadPoolExecutor;
     }

@@ -6,6 +6,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ClassFieldsHolder {
 	public static abstract class FieldIdentifier {
@@ -18,7 +19,7 @@ public class ClassFieldsHolder {
 		}
 	}
 
-	public static class FieldEx extends HashMap<String, Object>{
+	public static class FieldEx extends ConcurrentHashMap<String, Object> {
 		private Field field;
 		public FieldEx(Field field) {
 			this.field = field;

@@ -5,17 +5,16 @@ import com.dobybros.chat.annotation.MessageReceived;
 import com.dobybros.chat.binary.data.Data;
 import com.dobybros.gateway.channels.msgs.MessageReceivedListener;
 import script.groovy.object.GroovyObjectEx;
-import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.ClassAnnotationGlobalHandler;
 import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
-import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class UpStreamAnnotationHandler extends ClassAnnotationHandler {
+public class UpStreamAnnotationHandler extends ClassAnnotationGlobalHandler {
 	private static final String TAG = UpStreamAnnotationHandler.class.getSimpleName();
 	private Map<Byte, GroovyObjectEx<MessageReceivedListener>> messageReceivedMap;
 
@@ -35,14 +34,13 @@ public class UpStreamAnnotationHandler extends ClassAnnotationHandler {
 
 	@Override
 	public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap,
-			MyGroovyClassLoader classLoader) {
+			GroovyRuntime groovyRuntime) {
 		if (annotatedClassMap != null && !annotatedClassMap.isEmpty()) {
 			StringBuilder uriLogs = new StringBuilder(
 					"\r\n---------------------------------------\r\n");
 
 			Map<Byte, GroovyObjectEx<MessageReceivedListener>> newMessageReceivedMap = new ConcurrentHashMap<>();
 			Set<String> keys = annotatedClassMap.keySet();
-			GroovyRuntime groovyRuntime = getGroovyRuntime();
 			for (String key : keys) {
 				Class<?> groovyClass = annotatedClassMap.get(key);
 				if (groovyClass != null) {
@@ -51,7 +49,7 @@ public class UpStreamAnnotationHandler extends ClassAnnotationHandler {
 						Class<? extends Data> dataClass = messageReceivedAnnotation.dataClass();
 						Byte type = (byte)messageReceivedAnnotation.type();
 						if (dataClass != null && type != null) {
-							GroovyObjectEx<MessageReceivedListener> messageReceivedObj = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
+							GroovyObjectEx<MessageReceivedListener> messageReceivedObj = ((GroovyBeanFactory)groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 							if (messageReceivedObj != null) {
 								uriLogs.append("MessageReceivedListener " + dataClass + "#" + groovyClass + "\r\n");
 								newMessageReceivedMap.put(type, messageReceivedObj);

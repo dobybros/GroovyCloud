@@ -3,10 +3,9 @@ package com.proxy.im;
 import chat.logs.LoggerEx;
 import com.proxy.annotation.ProxyMessageReceived;
 import script.groovy.object.GroovyObjectEx;
-import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.ClassAnnotationGlobalHandler;
 import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
-import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -14,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ProxyUpStreamAnnotationHandler extends ClassAnnotationHandler {
+public class ProxyUpStreamAnnotationHandler extends ClassAnnotationGlobalHandler {
     private static final String TAG = ProxyUpStreamAnnotationHandler.class.getSimpleName();
     private List<GroovyObjectEx<ProxyMessageReceivedListener>> proxyMessageReceivedListeners = new ArrayList<>();
 
@@ -34,7 +33,7 @@ public class ProxyUpStreamAnnotationHandler extends ClassAnnotationHandler {
 
     @Override
     public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap,
-                                       MyGroovyClassLoader classLoader) {
+                                       GroovyRuntime groovyRuntime) {
         if (annotatedClassMap != null && !annotatedClassMap.isEmpty()) {
             StringBuilder uriLogs = new StringBuilder(
                     "\r\n---------------------------------------\r\n");
@@ -46,7 +45,7 @@ public class ProxyUpStreamAnnotationHandler extends ClassAnnotationHandler {
                 if (groovyClass != null) {
                     ProxyMessageReceived messageReceivedAnnotation = groovyClass.getAnnotation(ProxyMessageReceived.class);
                     if (messageReceivedAnnotation != null) {
-                        GroovyObjectEx<ProxyMessageReceivedListener> messageReceivedObj = ((GroovyBeanFactory) getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
+                        GroovyObjectEx<ProxyMessageReceivedListener> messageReceivedObj = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
                         if (messageReceivedObj != null) {
                             uriLogs.append("MessageReceivedListener " + groovyClass + "\r\n");
                             newProxyMessageReceivedListeners.add(messageReceivedObj);

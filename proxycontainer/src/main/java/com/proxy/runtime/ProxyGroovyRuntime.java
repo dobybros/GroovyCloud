@@ -18,11 +18,11 @@ public class ProxyGroovyRuntime extends MyBaseRuntime {
         super.prepare(service, properties, localScriptPath);
         ProxyAnnotationHandler proxyAnnotationHandler = (ProxyAnnotationHandler) SpringContextUtil.getBean("proxyAnnotationHandler");
         if(proxyAnnotationHandler != null){
-            addClassAnnotationHandler(proxyAnnotationHandler);
+            addClassAnnotationGlobalHandler(proxyAnnotationHandler);
         }
         ProxyUpStreamAnnotationHandler proxyUpStreamAnnotationHandler = (ProxyUpStreamAnnotationHandler)SpringContextUtil.getBean("proxyUpStreamAnnotationHandler");
         if(proxyUpStreamAnnotationHandler != null){
-            addClassAnnotationHandler(proxyUpStreamAnnotationHandler);
+            addClassAnnotationGlobalHandler(proxyUpStreamAnnotationHandler);
         }
     }
 }

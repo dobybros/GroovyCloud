@@ -16,7 +16,6 @@ import com.docker.storage.kafka.KafkaConfCenter;
 import com.docker.storage.kafka.KafkaProducerHandler;
 import com.docker.storage.redis.RedisHandler;
 import com.docker.utils.GroovyCloudBean;
-import com.docker.utils.SpringContextUtil;
 import connectors.mongodb.MongoClientHelper;
 import connectors.mongodb.annotations.handlers.MongoCollectionAnnotationHolder;
 import connectors.mongodb.annotations.handlers.MongoDBHandler;
@@ -63,18 +62,6 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		String enableGroovyMVC = null;
 		addClassAnnotationHandler(new GroovyBeanFactory());
 		if (properties != null) {
-			Object rpcServerHandler = GroovyCloudBean.getBean("dockerRpcServer");
-			if (rpcServerHandler != null && rpcServerHandler instanceof ClassAnnotationHandler)
-				addClassAnnotationHandler((ClassAnnotationHandler) rpcServerHandler);
-			Object rpcServerSslHandler = SpringContextUtil.getBean("dockerRpcServerSsl");
-			if (rpcServerSslHandler != null && rpcServerSslHandler instanceof ClassAnnotationHandler)
-				addClassAnnotationHandler((ClassAnnotationHandler) rpcServerSslHandler);
-			Object upStreamAnnotationHandler = SpringContextUtil.getBean("upStreamAnnotationHandler");
-			if (upStreamAnnotationHandler != null && upStreamAnnotationHandler instanceof ClassAnnotationHandler)
-				addClassAnnotationHandler((ClassAnnotationHandler) upStreamAnnotationHandler);
-			Object redisSubscribeHandler = GroovyCloudBean.getBean(GroovyCloudBean.REDISSUBSCRIBEHANDLER);
-            if (redisSubscribeHandler != null && redisSubscribeHandler instanceof ClassAnnotationHandler)
-                addClassAnnotationHandler((ClassAnnotationHandler) redisSubscribeHandler);
 			enableGroovyMVC = properties.getProperty("web.groovymvc.enable");
 			String mongodbHost = properties.getProperty("db.mongodb.uri");
 			if (mongodbHost != null) {
@@ -142,7 +129,18 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		addClassAnnotationHandler(new RequestPermissionHandler());
 		addClassAnnotationHandler(new CacheAnnotationHandler());
 		addClassAnnotationHandler(new ServiceMemoryHandler());
-
+        Object rpcServerHandler = GroovyCloudBean.getBean("dockerRpcServer");
+        if (rpcServerHandler != null && rpcServerHandler instanceof ClassAnnotationGlobalHandler)
+            addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) rpcServerHandler);
+        Object rpcServerSslHandler = GroovyCloudBean.getBean("dockerRpcServerSsl");
+        if (rpcServerSslHandler != null && rpcServerSslHandler instanceof ClassAnnotationGlobalHandler)
+            addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) rpcServerSslHandler);
+        Object upStreamAnnotationHandler = GroovyCloudBean.getBean("upStreamAnnotationHandler");
+        if (upStreamAnnotationHandler != null && upStreamAnnotationHandler instanceof ClassAnnotationGlobalHandler)
+            addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) upStreamAnnotationHandler);
+        Object redisSubscribeHandler = GroovyCloudBean.getBean(GroovyCloudBean.REDISSUBSCRIBEHANDLER);
+        if (redisSubscribeHandler != null && redisSubscribeHandler instanceof ClassAnnotationGlobalHandler)
+            addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) redisSubscribeHandler);
 	}
 
 	@Override

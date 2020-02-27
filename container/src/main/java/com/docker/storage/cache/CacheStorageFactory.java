@@ -1,14 +1,11 @@
 package com.docker.storage.cache;
 
-import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.docker.storage.cache.handlers.CacheStorageAdapter;
 import com.docker.storage.cache.handlers.RedisCacheStorageHandler;
-import com.docker.storage.redis.RedisHandler;
 import org.apache.commons.lang.StringUtils;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,7 +31,10 @@ public class CacheStorageFactory {
             }else{
                 CacheStorageAdapter cacheStorageAdapter = createCacheStorage(cacheMethod,null);
                 if(cacheStorageAdapter != null){
-                    localCacheAdapterMap.putIfAbsent(cacheMethod,cacheStorageAdapter);
+                    CacheStorageAdapter cacheStorageAdapterOld = localCacheAdapterMap.putIfAbsent(cacheMethod,cacheStorageAdapter);
+                    if(cacheStorageAdapterOld != null){
+                        cacheStorageAdapter = cacheStorageAdapterOld;
+                    }
                 }
                 return cacheStorageAdapter;
             }
@@ -45,7 +45,10 @@ public class CacheStorageFactory {
                 CacheStorageAdapter cacheStorageAdapter = cacheStorageAdapterMap.get(host);
                 if (cacheStorageAdapter == null) { //创建cacheStorageAdapter
                     cacheStorageAdapter = createCacheStorage(cacheMethod, host);
-                    cacheStorageAdapterMap.putIfAbsent(host, cacheStorageAdapter);
+                    CacheStorageAdapter cacheStorageAdapterOld = cacheStorageAdapterMap.putIfAbsent(host, cacheStorageAdapter);
+                    if(cacheStorageAdapterOld != null){
+                        cacheStorageAdapter = cacheStorageAdapterOld;
+                    }
                     return cacheStorageAdapter;
                 } else {
                     return cacheStorageAdapter;
@@ -54,7 +57,10 @@ public class CacheStorageFactory {
                 cacheStorageAdapterMap = new ConcurrentHashMap<>();
                 CacheStorageAdapter cacheStorageAdapter = createCacheStorage(cacheMethod, host);
                 if (cacheStorageAdapter != null) {
-                    cacheStorageAdapterMap.putIfAbsent(host, cacheStorageAdapter);
+                    CacheStorageAdapter cacheStorageAdapterOld = cacheStorageAdapterMap.putIfAbsent(host, cacheStorageAdapter);
+                    if(cacheStorageAdapterOld != null){
+                        cacheStorageAdapter = cacheStorageAdapterOld;
+                    }
                 }
                 cacheAdapterMap.putIfAbsent(cacheMethod, cacheStorageAdapterMap);
                 return cacheStorageAdapter;
@@ -64,7 +70,10 @@ public class CacheStorageFactory {
             Map<String, CacheStorageAdapter> cacheStorageAdapterMap = new ConcurrentHashMap<>();
             cacheAdapterMap.putIfAbsent(cacheMethod, cacheStorageAdapterMap);
             CacheStorageAdapter cacheStorageAdapter = createCacheStorage(cacheMethod, host);
-            cacheStorageAdapterMap.putIfAbsent(host, cacheStorageAdapter);
+            CacheStorageAdapter cacheStorageAdapterOld = cacheStorageAdapterMap.putIfAbsent(host, cacheStorageAdapter);
+            if(cacheStorageAdapterOld != null){
+                cacheStorageAdapter = cacheStorageAdapterOld;
+            }
             return cacheStorageAdapter;
         }
     }

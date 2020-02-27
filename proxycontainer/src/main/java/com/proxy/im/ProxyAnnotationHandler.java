@@ -3,10 +3,9 @@ package com.proxy.im;
 import chat.logs.LoggerEx;
 import com.proxy.annotation.ProxySessionListener;
 import script.groovy.object.GroovyObjectEx;
-import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.ClassAnnotationGlobalHandler;
 import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
-import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -18,7 +17,7 @@ import java.util.Set;
  * @author lick
  * @date 2019/11/12
  */
-public class ProxyAnnotationHandler extends ClassAnnotationHandler {
+public class ProxyAnnotationHandler extends ClassAnnotationGlobalHandler {
     private final String TAG = ProxyAnnotationHandler.class.getSimpleName();
     private List<GroovyObjectEx<com.proxy.im.ProxySessionListener>> tcpListeners = new ArrayList<>();
 
@@ -28,7 +27,7 @@ public class ProxyAnnotationHandler extends ClassAnnotationHandler {
     }
 
     @Override
-    public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, MyGroovyClassLoader classLoader) {
+    public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, GroovyRuntime groovyRuntime) {
         if (annotatedClassMap != null && !annotatedClassMap.isEmpty()) {
             StringBuilder uriLogs = new StringBuilder(
                     "\r\n---------------------------------------\r\n");
@@ -40,7 +39,7 @@ public class ProxyAnnotationHandler extends ClassAnnotationHandler {
                 if (groovyClass != null) {
                     ProxySessionListener messageReceivedAnnotation = groovyClass.getAnnotation(ProxySessionListener.class);
                     if (messageReceivedAnnotation != null) {
-                        GroovyObjectEx<com.proxy.im.ProxySessionListener> messageReceivedObj = ((GroovyBeanFactory) getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
+                        GroovyObjectEx<com.proxy.im.ProxySessionListener> messageReceivedObj = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
                         if (messageReceivedObj != null) {
                             uriLogs.append("TcpListener " + "#" + groovyClass + "\r\n");
                             newTcpList.add(messageReceivedObj);

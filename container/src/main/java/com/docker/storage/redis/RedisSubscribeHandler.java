@@ -6,20 +6,21 @@ import chat.utils.ConcurrentHashSet;
 import com.docker.storage.redis.annotation.RedisSubscribe;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import script.groovy.object.GroovyObjectEx;
-import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.ClassAnnotationGlobalHandler;
 import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
-import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 import java.lang.annotation.Annotation;
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by lick on 2020/2/13.
  * Description：
  */
-public class RedisSubscribeHandler extends ClassAnnotationHandler {
+public class RedisSubscribeHandler extends ClassAnnotationGlobalHandler {
     private final String TAG = RedisSubscribeHandler.class.getSimpleName();
     private Map<String, Set<GroovyObjectEx>> redisSubscribeMap = new ConcurrentHashMap<>();
 
@@ -32,7 +33,7 @@ public class RedisSubscribeHandler extends ClassAnnotationHandler {
         MyRedisPubSubAdapter.getInstance().shutdown();
     }
     @Override
-    public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, MyGroovyClassLoader classLoader) {
+    public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, GroovyRuntime groovyRuntime) {
         if (annotatedClassMap != null) {
             Collection<Class<?>> values = annotatedClassMap.values();
             for (Class<?> groovyClass : values) {
@@ -48,7 +49,7 @@ public class RedisSubscribeHandler extends ClassAnnotationHandler {
                                 groovyObjectExes = groovyObjectExesOld;
                             }
                         }
-                        GroovyObjectEx<?> groovyObj = ((GroovyBeanFactory) getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
+                        GroovyObjectEx<?> groovyObj = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
                         if (!groovyObjectExes.contains(groovyObj)) {
                             for (GroovyObjectEx groovyObjectEx : groovyObjectExes){
                                 if(groovyObjectEx.getGroovyPath().equals(groovyObj.getGroovyPath())){
