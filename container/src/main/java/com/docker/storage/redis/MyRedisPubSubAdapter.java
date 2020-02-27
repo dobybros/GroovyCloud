@@ -29,20 +29,21 @@ public class MyRedisPubSubAdapter extends RedisPubSubAdapter {
     private NodeSelectionPubSubAsyncCommands<String, String> commands;
 
     private MyRedisPubSubAdapter() {
-
+        clusterGrooveAdapter = new ClusterGrooveAdapter();
     }
 
     void setHostAndPorts(Set<HostAndPort> hostAndPorts) {
-        this.hostAndPorts = hostAndPorts;
-        if (hostAndPorts != null) {
-            List<RedisURI> redisURIS = new ArrayList<>();
-            for (HostAndPort hostAndPort : hostAndPorts) {
-                RedisURI redisURI = RedisURI.create(hostAndPort.getHost(), hostAndPort.getPort());
-                redisURIS.add(redisURI);
-            }
-            if (!redisURIS.isEmpty()) {
-                redisClusterClient = RedisClusterClient.create(redisURIS);
-                clusterGrooveAdapter = new ClusterGrooveAdapter();
+        if (redisClusterClient == null) {
+            this.hostAndPorts = hostAndPorts;
+            if (hostAndPorts != null) {
+                List<RedisURI> redisURIS = new ArrayList<>();
+                for (HostAndPort hostAndPort : hostAndPorts) {
+                    RedisURI redisURI = RedisURI.create(hostAndPort.getHost(), hostAndPort.getPort());
+                    redisURIS.add(redisURI);
+                }
+                if (!redisURIS.isEmpty()) {
+                    redisClusterClient = RedisClusterClient.create(redisURIS);
+                }
             }
         }
     }
@@ -68,21 +69,23 @@ public class MyRedisPubSubAdapter extends RedisPubSubAdapter {
     }
 
     void psubscribe(String[] subscribeChannels) {
-        // 异步订阅
-        pubSubConnection = redisClusterClient.connectPubSub();
-        pubSubConnection.setNodeMessagePropagation(true);
-        pubSubConnection.addListener(clusterGrooveAdapter);
-        PubSubAsyncNodeSelection<String, String> masters = pubSubConnection.async().masters();
-        commands = masters.commands();
-        try {
-            commands.punsubscribe(subscribeChannels);
-        } catch (Throwable t) {
-            t.printStackTrace();
+        if(commands == null){
+            // 异步订阅
+            pubSubConnection = redisClusterClient.connectPubSub();
+            pubSubConnection.setNodeMessagePropagation(true);
+            pubSubConnection.addListener(clusterGrooveAdapter);
+            PubSubAsyncNodeSelection<String, String> masters = pubSubConnection.async().masters();
+            commands = masters.commands();
+            try {
+                commands.punsubscribe(subscribeChannels);
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+            commands.psubscribe(subscribeChannels);
         }
-        commands.psubscribe(subscribeChannels);
     }
 
-    private static class ClusterGrooveAdapter extends RedisClusterPubSubAdapter {
+    private class ClusterGrooveAdapter extends RedisClusterPubSubAdapter {
         private final String TAG = ClusterGrooveAdapter.class.getSimpleName();
         private RedisSubscribeHandler redisSubscribeHandler = (RedisSubscribeHandler) GroovyCloudBean.getBean(GroovyCloudBean.REDISSUBSCRIBEHANDLER);
 
