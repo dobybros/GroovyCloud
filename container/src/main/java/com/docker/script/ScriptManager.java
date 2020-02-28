@@ -65,7 +65,6 @@ public class ScriptManager implements ShutdownListener {
     boolean isShutdown = false;
     boolean isLoaded = false;
     private final String versionSeperator = "_v";
-    private final String zipFile = "groovy.zip";
 
     public static final String SERVICE_NOTFOUND = "servicenotfound";
     public static final Boolean DELETELOCAL = false;
@@ -88,13 +87,12 @@ public class ScriptManager implements ShutdownListener {
                         synchronized (ScriptManager.this) {
                             if (!isShutdown && !isLoaded)
                                 reload();
-
                         }
                     }
                 }
             }, 5000L, 10000L);
         } else {
-            long time =System.currentTimeMillis();
+            Long time = System.currentTimeMillis();
             reload();
             LoggerEx.info(TAG, "Reload server spend time: " + (System.currentTimeMillis() - time));
         }
@@ -144,92 +142,16 @@ public class ScriptManager implements ShutdownListener {
         try {
             isLoaded = true;
             List<String> serviceVersionFinalList = getServiceVersions();
-            if (serviceVersionFinalList != null) {
-                Set<CompileEntity> compileEntities = new ConcurrentHashSet<>();
+            if (serviceVersionFinalList != null && !serviceVersionFinalList.isEmpty()) {
                 Set<String> remoteServices = new ConcurrentHashSet<>();
-                CountDownLatch fileEntityCountDown = new CountDownLatch(serviceVersionFinalList.size());
+                CountDownLatch scriptCountDownLatch = new CountDownLatch(serviceVersionFinalList.size());
                 for (String theServiceVersion : serviceVersionFinalList) {
                     ServerStart.getInstance().getThreadPool().execute(() -> {
-                        try {
-                            FileEntity fileEntity = fileAdapter.getFileEntity(new PathEx(remotePath + theServiceVersion + "/" + zipFile));
-                            if (fileEntity != null) {
-                                boolean createRuntime = false;
-                                String localScriptPath = null;
-                                String serverTypePath = "/" + serverType + "/";
-                                remoteServices.add(theServiceVersion);
-                                BaseRuntime runtime = scriptRuntimeMap.get(theServiceVersion);
-                                boolean needRedeploy = false;
-                                //之前已经解析过了，如果有新的groovy.zip生成
-                                if (runtime != null && (runtime.getVersion() == null || runtime.getVersion() < fileEntity.getLastModificationTime())) {
-                                    needRedeploy = true;
-                                    try {
-                                        runtime.close();
-                                        scriptRuntimeMap.remove(theServiceVersion);
-                                        LoggerEx.error(TAG, "Runtime " + runtime + " service " + theServiceVersion + " closed because of deployment");
-                                    } catch (Throwable t) {
-                                        t.printStackTrace();
-                                        LoggerEx.error(TAG, "close runtime " + runtime + " service " + theServiceVersion + " failed, " + ExceptionUtils.getFullStackTrace(t));
-                                    } finally {
-                                        runtime = null;
-                                    }
-                                }
-                                if (runtime == null) {
-                                    createRuntime = true;
-                                    needRedeploy = true;
-                                    if (baseRuntimeClass != null) {
-                                        runtime = (BaseRuntime) baseRuntimeClass.newInstance();
-                                    } else {
-                                        runtime = new MyBaseRuntime();
-                                    }
-                                    beanFactory.autowireBean(runtime);
-                                    RuntimeBootListener bootListener = null;
-                                    if (runtimeBootClass != null) { //script.groovy.runtime.GroovyBooter
-                                        Class<?> bootClass = Class.forName(runtimeBootClass);
-                                        bootListener = (RuntimeBootListener) bootClass.newInstance();
-                                        bootListener.setGroovyRuntime(runtime);
-                                    }
-                                    runtime.setRuntimeBootListener(bootListener);
-                                    if (runtime != null) {
-                                        localScriptPath = localPath + serverTypePath + theServiceVersion + "/" + zipFile.split("\\.")[0];
-                                        runtime.setPath(localScriptPath + "/");
-                                    }
-                                }
-                                if (runtime != null && needRedeploy) {
-                                    CompileEntity compileEntity = new CompileEntity();
-                                    compileEntity.baseRuntime = runtime;
-                                    compileEntity.serverTypePath = serverTypePath;
-                                    compileEntity.createRuntime = createRuntime;
-                                    compileEntity.serviceVersion = theServiceVersion;
-                                    compileEntity.fileEntity = fileEntity;
-                                    compileEntity.localScriptPath = localScriptPath;
-                                    compileEntities.add(compileEntity);
-                                }
-                                fileEntityCountDown.countDown();
-                            } else {
-                                LoggerEx.error(TAG, "Failed get groovy.zip, service is " + theServiceVersion);
-                                throw new CoreException(ChatErrorCodes.ERROR_NO_GROOVYFILE, "Failed get groovy.zip, service is " + theServiceVersion);
-                            }
-                        } catch (Throwable t) {
-                            if (killProcess) {
-                                System.exit(1);
-                            } else {
-                                t.printStackTrace();
-                                LoggerEx.error(TAG, "err: " + ExceptionUtils.getFullStackTrace(t));
-                            }
-                        }
+                        complieService(theServiceVersion, remoteServices);
+                        scriptCountDownLatch.countDown();
                     });
                 }
-                fileEntityCountDown.await();
-                if (!compileEntities.isEmpty()) {
-                    CountDownLatch compileCountDown = new CountDownLatch(compileEntities.size());
-                    for (CompileEntity compileEntity : compileEntities) {
-                        ServerStart.getInstance().getThreadPool().execute(() -> {
-                            compile(compileEntity);
-                            compileCountDown.countDown();
-                        });
-                    }
-                    compileCountDown.await();
-                }
+                scriptCountDownLatch.await();
                 Collection<String> keys = scriptRuntimeMap.keySet();
                 for (String key : keys) {
                     if (!remoteServices.contains(key)) {
@@ -268,125 +190,178 @@ public class ScriptManager implements ShutdownListener {
 
     }
 
-    private void compile(CompileEntity compileEntity) {
+    private void complieService(String theServiceVersion, Set<String> remoteServices) {
+        String zipFile = "groovy.zip";
         try {
-            File localZipFile = new File(localPath + compileEntity.serverTypePath + compileEntity.serviceVersion + "/" + zipFile);
-            FileUtils.deleteQuietly(localZipFile);
-            OutputStream zipOs = FileUtils.openOutputStream(localZipFile);
-            fileAdapter.readFile(new PathEx(compileEntity.fileEntity.getAbsolutePath()), zipOs);
-            IOUtils.closeQuietly(zipOs);
-
-            String n = localZipFile.getName();
-            n = n.substring(0, n.length() - ".zip".length());
-            String localScriptPath = localPath + compileEntity.serverTypePath + compileEntity.serviceVersion + "/" + n;
-            FileUtils.deleteDirectory(new File(localScriptPath));
-            CRC32 crc = new CRC32();
-            crc.update(zipFile.getBytes());
-            long valuePwd = crc.getValue();
-            unzip(localZipFile, localScriptPath, String.valueOf(valuePwd));
-
-            Service theService = null;
-            if (compileEntity.createRuntime) {
-                String propertiesPath = localScriptPath + "/config.properties";
-                Properties properties = new Properties();
-                File propertiesFile = new File(propertiesPath);
-                if (propertiesFile.exists() && propertiesFile.isFile()) {
-                    InputStream is = FileUtils.openInputStream(propertiesFile);
-                    InputStreamReader reader = new InputStreamReader(is, "utf-8");
-                    properties.load(reader);
-                    reader.close();
-                    IOUtils.closeQuietly(is);
-                }
-                Integer version = getServiceVersion(compileEntity.serviceVersion);
-                String serviceName = getServiceName(compileEntity.serviceVersion);
-
-                compileEntity.baseRuntime.setServiceName(serviceName);
-                compileEntity.baseRuntime.setServiceVersion(version);
-
-                try {
-                    if (serversService != null) {
-                        Document configDoc = serversService.getServerConfig(serviceName);
-                        if (configDoc != null) {
-                            Set<String> keys = configDoc.keySet();
-                            for (String key : keys) {
-                                properties.put(key.replaceAll("_", "."), configDoc.getString(key));
-                            }
-                        }
-                        LoggerEx.info(TAG, "Read service: " + serviceName + ", merge config: " + properties);
-                    } else {
-                        LoggerEx.info(TAG, "serversService is null, will not read config from database for service " + serviceName);
-                    }
-                } catch (Throwable t) {
-                    LoggerEx.error(TAG, "Read server " + serviceName + " config failed, " + ExceptionUtils.getFullStackTrace(t));
-                }
-                //触发serviceVersions
-                compileEntity.baseRuntime.prepare(compileEntity.serviceVersion, properties, localScriptPath);
-
-                theService = new Service();
-                theService.setService(serviceName);
-                theService.setVersion(version);
-                theService.setUploadTime(compileEntity.fileEntity.getLastModificationTime());
-                if (properties.get(Service.FIELD_MAXUSERNUMBER) != null) {
-                    theService.setMaxUserNumber(Long.valueOf((String) properties.get(Service.FIELD_MAXUSERNUMBER)));
-                }
-                if (dockerStatusService != null) {
-                    //Aplomb delete service first before add, fixed the duplicated service bug.
-                    dockerStatusService.deleteService(OnlineServer.getInstance().getServer(), theService.getService(), theService.getVersion());
-                }
-
-                scriptRuntimeMap.put(compileEntity.serviceVersion, compileEntity.baseRuntime);
-                //使用新的容器是因为防止删除的一瞬间， 获取为空的问题， 因此采用新容器更换的办法。
-            } else {
-                Integer version = getServiceVersion(compileEntity.serviceVersion);
-                String serviceName = getServiceName(compileEntity.serviceVersion);
-                if (dockerStatusService != null)
-                    dockerStatusService.updateServiceUpdateTime(OnlineServer.getInstance().getServer(), serviceName, version, compileEntity.fileEntity.getLastModificationTime());
-            }
-            try {
-                compileEntity.baseRuntime.setVersion(compileEntity.fileEntity.getLastModificationTime());
-                compileEntity.baseRuntime.start();
-                Collection<ClassAnnotationHandler> handlers = compileEntity.baseRuntime.getAnnotationHandlers();
-                if (handlers != null && theService != null) {
-                    for (ClassAnnotationHandler handler : handlers) {
-                        if (handler instanceof ClassAnnotationHandlerEx)
-                            ((ClassAnnotationHandlerEx) handler).configService(theService);
-                    }
-                }
-                theService.setType(Service.FIELD_SERVER_TYPE_NORMAL);
-            } catch (Throwable t) {
-                LoggerEx.error(TAG, "Redeploy service " + compileEntity.serviceVersion + " failed, " + ExceptionUtils.getFullStackTrace(t));
-                theService.setType(Service.FIELD_SERVER_TYPE_DEPLOY_FAILED);
-                throw t;
-            } finally {
-                if (theService != null && dockerStatusService != null) {
-                    dockerStatusService.addService(OnlineServer.getInstance().getServer(), theService);
-                }
-                if (DELETELOCAL) {
-                    String servicePath = compileEntity.serverTypePath + compileEntity.serviceVersion;
-                    File localFile = new File(localPath + servicePath);
-                    File temp = null;
-                    Collection<File> filelist = FileUtils.listFiles(localFile, new String[]{"groovy", "zip"}, true);
+            FileEntity fileEntity = fileAdapter.getFileEntity(new PathEx(remotePath + theServiceVersion + "/" + zipFile));
+            if (fileEntity != null) {
+                boolean createRuntime = false;
+                String service = theServiceVersion;
+                String localScriptPath = null;
+                String serverTypePath = "/" + serverType + "/";
+                remoteServices.add(service);
+                BaseRuntime runtime = scriptRuntimeMap.get(service);
+                boolean needRedeploy = false;
+                //之前已经解析过了，如果有新的groovy.zip生成
+                if (runtime != null && (runtime.getVersion() == null || runtime.getVersion() < fileEntity.getLastModificationTime())) {
+                    needRedeploy = true;
                     try {
-
-                        if (filelist != null) {
-                            for (File file1 : filelist) {
-                                file1.delete();
-                            }
-                        }
-                        LoggerEx.info(TAG, "delete localFile: " + localFile + " success");
-                    } catch (Exception e) {
-                        LoggerEx.error(TAG, "delete file failed");
-                        throw e;
+                        runtime.close();
+                        scriptRuntimeMap.remove(service);
+                        LoggerEx.error(TAG, "Runtime " + runtime + " service " + service + " closed because of deployment");
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        LoggerEx.error(TAG, "close runtime " + runtime + " service " + service + " failed, " + ExceptionUtils.getFullStackTrace(t));
+                    } finally {
+                        runtime = null;
                     }
                 }
+                if (runtime == null) {
+                    createRuntime = true;
+                    needRedeploy = true;
+                    if (baseRuntimeClass != null) {
+                        runtime = (BaseRuntime) baseRuntimeClass.newInstance();
+                    } else {
+                        runtime = new MyBaseRuntime();
+                    }
+                    beanFactory.autowireBean(runtime);
+                    RuntimeBootListener bootListener = null;
+                    if (runtimeBootClass != null) { //script.groovy.runtime.GroovyBooter
+                        Class<?> bootClass = Class.forName(runtimeBootClass);
+                        bootListener = (RuntimeBootListener) bootClass.getDeclaredConstructor().newInstance();
+                        bootListener.setGroovyRuntime(runtime);
+                    }
+                    runtime.setRuntimeBootListener(bootListener);
+                    if (runtime != null) {
+                        localScriptPath = localPath + serverTypePath + service + "/" + zipFile.split("\\.")[0];
+                        runtime.setPath(localScriptPath + "/");
+                    }
+                }
+
+                if (runtime != null && needRedeploy) {
+                    File localZipFile = new File(localPath + serverTypePath + theServiceVersion + "/" + zipFile);
+                    FileUtils.deleteQuietly(localZipFile);
+                    OutputStream zipOs = FileUtils.openOutputStream(localZipFile);
+                    fileAdapter.readFile(new PathEx(fileEntity.getAbsolutePath()), zipOs);
+                    IOUtils.closeQuietly(zipOs);
+
+                    String n = localZipFile.getName();
+                    n = n.substring(0, n.length() - ".zip".length());
+                    localScriptPath = localPath + serverTypePath + service + "/" + n;
+                    FileUtils.deleteDirectory(new File(localScriptPath));
+                    CRC32 crc = new CRC32();
+                    crc.update(zipFile.getBytes());
+                    long valuePwd = crc.getValue();
+                    unzip(localZipFile, localScriptPath, String.valueOf(valuePwd));
+
+                    Service theService = null;
+                    if (createRuntime) {
+                        String propertiesPath = localScriptPath + "/config.properties";
+                        Properties properties = new Properties();
+                        File propertiesFile = new File(propertiesPath);
+                        if (propertiesFile.exists() && propertiesFile.isFile()) {
+                            InputStream is = FileUtils.openInputStream(propertiesFile);
+                            InputStreamReader reader = new InputStreamReader(is, "utf-8");
+                            properties.load(reader);
+                            reader.close();
+                            IOUtils.closeQuietly(is);
+                        }
+                        Integer version = getServiceVersion(service);
+                        String serviceName = getServiceName(service);
+
+                        runtime.setServiceName(serviceName);
+                        runtime.setServiceVersion(version);
+
+                        try {
+                            if (serversService != null) {
+                                Document configDoc = serversService.getServerConfig(serviceName);
+                                if (configDoc != null) {
+                                    Set<String> keys = configDoc.keySet();
+                                    for (String key : keys) {
+                                        properties.put(key.replaceAll("_", "."), configDoc.getString(key));
+                                    }
+                                }
+                                LoggerEx.info(TAG, "Read service: " + serviceName + ", merge config: " + properties);
+                            } else {
+                                LoggerEx.info(TAG, "serversService is null, will not read config from database for service " + serviceName);
+                            }
+                        } catch (Throwable t) {
+                            LoggerEx.error(TAG, "Read server " + serviceName + " config failed, " + ExceptionUtils.getFullStackTrace(t));
+                        }
+                        //触发serviceVersions
+                        runtime.prepare(service, properties, localScriptPath);
+
+                        theService = new Service();
+                        theService.setService(serviceName);
+                        theService.setVersion(version);
+                        theService.setUploadTime(fileEntity.getLastModificationTime());
+                        if (properties.get(Service.FIELD_MAXUSERNUMBER) != null) {
+                            theService.setMaxUserNumber(Long.valueOf((String) properties.get(Service.FIELD_MAXUSERNUMBER)));
+                        }
+                        if (dockerStatusService != null) {
+                            //Aplomb delete service first before add, fixed the duplicated service bug.
+                            dockerStatusService.deleteService(OnlineServer.getInstance().getServer(), theService.getService(), theService.getVersion());
+                        }
+
+                        scriptRuntimeMap.put(service, runtime);
+                        //使用新的容器是因为防止删除的一瞬间， 获取为空的问题， 因此采用新容器更换的办法。
+                    } else {
+                        Integer version = getServiceVersion(service);
+                        String serviceName = getServiceName(service);
+                        if (dockerStatusService != null)
+                            dockerStatusService.updateServiceUpdateTime(OnlineServer.getInstance().getServer(), serviceName, version, fileEntity.getLastModificationTime());
+                    }
+                    try {
+                        runtime.setVersion(fileEntity.getLastModificationTime());
+                        runtime.start();
+                        Collection<ClassAnnotationHandler> handlers = runtime.getAnnotationHandlers();
+                        if (handlers != null && theService != null) {
+                            for (ClassAnnotationHandler handler : handlers) {
+                                if (handler instanceof ClassAnnotationHandlerEx)
+                                    ((ClassAnnotationHandlerEx) handler).configService(theService);
+                            }
+                        }
+                        theService.setType(Service.FIELD_SERVER_TYPE_NORMAL);
+                    } catch (Throwable t) {
+                        LoggerEx.error(TAG, "Redeploy service " + service + " failed, " + ExceptionUtils.getFullStackTrace(t));
+                        theService.setType(Service.FIELD_SERVER_TYPE_DEPLOY_FAILED);
+                        throw t;
+                    } finally {
+                        if (theService != null && dockerStatusService != null) {
+                            dockerStatusService.addService(OnlineServer.getInstance().getServer(), theService);
+                        }
+                        if (DELETELOCAL) {
+                            String servicePath = serverTypePath + service;
+                            File localFile = new File(localPath + servicePath);
+                            File temp = null;
+                            Collection<File> filelist = FileUtils.listFiles(localFile, new String[]{"groovy", "zip"}, true);
+                            try {
+
+                                if (filelist != null) {
+                                    for (File file1 : filelist) {
+                                        file1.delete();
+                                    }
+                                }
+                                LoggerEx.info(TAG, "delete localFile: " + localFile + " success");
+                            } catch (Exception e) {
+                                LoggerEx.error(TAG, "delete file failed");
+                                throw e;
+                            }
+                        }
+                        LoggerEx.info(TAG, "=====Notice!!! The service: " + theServiceVersion + " has being redeployed====");
+                    }
+                }
+            } else {
+                LoggerEx.error(TAG, "Failed get groovy.zip, service is " + theServiceVersion);
+                throw new CoreException(ChatErrorCodes.ERROR_NO_GROOVYFILE, "Failed get groovy.zip, service is " + theServiceVersion);
             }
-            LoggerEx.info(TAG, "=====Notice!!! The service: " + compileEntity.serviceVersion + " has being redeployed====");
-        } catch (Throwable t) {
+        } catch (Throwable e) {
             if (killProcess) {
+                LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(e));
                 System.exit(1);
             } else {
-                t.printStackTrace();
-                LoggerEx.error(TAG, "err: " + ExceptionUtils.getFullStackTrace(t));
+                e.printStackTrace();
+                LoggerEx.error(TAG, "err: " + e);
             }
         }
     }
@@ -597,14 +572,5 @@ public class ScriptManager implements ShutdownListener {
 
     public Map<String, Integer> getDefalutServiceVersionMap() {
         return defalutServiceVersionMap;
-    }
-
-    private class CompileEntity {
-        String serverTypePath;
-        String serviceVersion;
-        boolean createRuntime;
-        String localScriptPath;
-        FileEntity fileEntity;
-        BaseRuntime baseRuntime;
     }
 }

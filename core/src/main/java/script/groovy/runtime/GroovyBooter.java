@@ -5,7 +5,6 @@ import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
-import groovy.lang.GroovyObject;
 import groovy.lang.GroovySystem;
 import groovy.lang.MetaClassRegistry;
 import org.apache.commons.exec.CommandLine;
@@ -18,15 +17,15 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.codehaus.groovy.control.CompilerConfiguration;
-import script.groovy.runtime.classloader.ClassHolder;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -77,7 +76,6 @@ public class GroovyBooter implements RuntimeBootListener {
         boolean deploySuccessfully = false;
         ByteArrayOutputStream baos = null;
         List<File> compileFirstFiles = new ArrayList<>();
-        final Map<ClassAnnotationHandler, Map<String, Class<?>>> handlerMap = new LinkedHashMap<ClassAnnotationHandler, Map<String, Class<?>>>();
         try {
             File importPath = new File(path + "/config/imports.groovy");
             StringBuilder importBuilder = null;
@@ -95,7 +93,6 @@ public class GroovyBooter implements RuntimeBootListener {
                     int exitValue = executor.execute(cmdLine);
                     final String result = baos.toString().trim();
                     LoggerEx.info(TAG, "import log " + result);
-                    LoggerEx.info(TAG, "Imported " + FilenameUtils.separatorsToUnix(importPath.getAbsolutePath()));
 
                     importBuilder = new StringBuilder(content);
                     importBuilder.append("\r\n");
@@ -174,11 +171,9 @@ public class GroovyBooter implements RuntimeBootListener {
 
                 FileUtils.writeStringToFile(importPath, importBuilder.toString(), "utf8");
             }
-
             for (File file : compileFirstFiles) {
                 newClassLoader.parseClass(file);
             }
-
             deploySuccessfully = true;
         } catch (Throwable t) {
             t.printStackTrace();
@@ -226,9 +221,6 @@ public class GroovyBooter implements RuntimeBootListener {
                 long version = latestVersion.incrementAndGet();
                 newClassLoader.setVersion(version);
                 classLoader = newClassLoader;
-
-                LoggerEx.info(TAG, "Reload groovy scripts, current version is "
-                        + version);
             } else {
                 if (newClassLoader != null) {
                     try {
