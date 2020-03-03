@@ -1113,6 +1113,12 @@ public class RedisHandler {
         });
     }
 
+    public Long srem(String key, String... members) throws CoreException {
+        return doJedisExecute(jedis -> {
+            return jedis.srem(key, members);
+        });
+    }
+
     // sortedSet
     public Integer zadd(String key, double score, String member) throws CoreException {
         if (key != null && member != null) {
