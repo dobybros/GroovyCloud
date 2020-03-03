@@ -7,6 +7,7 @@ import com.dobybros.chat.props.GlobalLansProperties;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.onlineserver.OnlineServerWithStatus;
+import com.docker.rpc.QueueSimplexListener;
 import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.script.ScriptManager;
 import com.docker.storage.mongodb.MongoHelper;
@@ -69,6 +70,8 @@ public class InitContainer implements CommandLineRunner{
     OnlineUserManagerImpl onlineUserManager;
     @Autowired
     ProxyContainerDuplexSender proxyContainerDuplexSender;
+    @Autowired
+    QueueSimplexListener queueSimplexListener;
 
     @Override
     public void run(String... args) throws Exception {
@@ -98,5 +101,6 @@ public class InitContainer implements CommandLineRunner{
         dockerRpcServerAdapter.serverStart();
         dockerRpcServerAdapterSsl.serverStart();
         proxyContainerDuplexSender.init();
+        queueSimplexListener.init();
     }
 }
