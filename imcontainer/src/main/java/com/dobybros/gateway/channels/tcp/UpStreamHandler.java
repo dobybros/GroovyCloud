@@ -129,12 +129,12 @@ public class UpStreamHandler extends IoHandlerAdapter {
 				coreException = (CoreException) t;
 			if(coreException == null)
 				coreException = new CoreException(GatewayErrorCodes.ERROR_TCPCHANNEL_UNKNOWN, "Unknown error occured while receiving message from tcp channel, channel " + session + " message " + message + " error " + t.getMessage());
-			if(coreException.getCode() >= GatewayErrorCodes.TCPCHANNEL_CLOSE_START && coreException.getCode() < GatewayErrorCodes.TCPCHANNEL_CLOSE_END){
+			if(coreException.getCode() <= GatewayErrorCodes.TCPCHANNEL_CLOSE_START && coreException.getCode() > GatewayErrorCodes.TCPCHANNEL_CLOSE_END){
 				boolean closeSuccess = closeUserChannel(session, ChannelListener.CLOSE_ERROR, null);
 				if(!closeSuccess){
 					session.close(false);
 				}
-			} else if(coreException.getCode() >= GatewayErrorCodes.TCPCHANNEL_CLOSE_IMMEDIATELY_START && coreException.getCode() < GatewayErrorCodes.TCPCHANNEL_CLOSE_IMMEDIATELY_END){
+			} else if(coreException.getCode() <= GatewayErrorCodes.TCPCHANNEL_CLOSE_IMMEDIATELY_START && coreException.getCode() > GatewayErrorCodes.TCPCHANNEL_CLOSE_IMMEDIATELY_END){
 				boolean closeSuccess = closeUserChannel(session, ChannelListener.CLOSE_ERROR, null);
 				if(!closeSuccess){
 					session.close(true);
