@@ -200,6 +200,12 @@ public final class GatewayMSGServers extends MSGServers {
         serviceUser.pushToCrossServer(message, null);
     }
 
+    /**
+     * 发给除了发送人所在房间以外的其他所有房间，包括自己机器和别的机器
+     * @param message
+     * @param toTerminals
+     * @throws CoreException
+     */
     public void sendClusterMessage(Message message, List<Integer> toTerminals) throws CoreException {
         OnlineUser onlineUser = onlineUserManager.getOnlineUser(message.getUserId());
         if (onlineUser == null)
@@ -214,6 +220,13 @@ public final class GatewayMSGServers extends MSGServers {
         }
     }
 
+    /**
+     * 发给发送人自己房间
+     * @param message
+     * @param excludeTerminal
+     * @param toTerminal
+     * @throws CoreException
+     */
     public void sendOutgoingData(Message message, Integer excludeTerminal, Integer toTerminal) throws CoreException {
         OnlineUser onlineUser = onlineUserManager.getOnlineUser(message.getUserId());
         if (onlineUser == null)
