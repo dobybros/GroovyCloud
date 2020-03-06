@@ -1138,6 +1138,15 @@ public class RedisHandler {
         return null;
     }
 
+    public Set<String> zrangePagination(String key, Integer offset, Integer limit) throws CoreException{
+        if (key != null) {
+            return doJedisExecute(jedis -> {
+                return jedis.zrange(key, offset, offset + limit - 1);
+            });
+        }
+        return null;
+    }
+
     public Set<Tuple> zrangebyscoreWithScore(String key, double minScore, double maxScore) throws CoreException {
         if (key != null) {
             return doJedisExecute(jedis -> {
@@ -1202,38 +1211,79 @@ public class RedisHandler {
     }
 
     public void expireByPipeline(String prefix, List<String> keys, long expire) {
-        invokePipelineMethod(true, new PipelineExcutor() {
-            @Override
-            public void execute(PipelineBase pipelineBase) {
-                if (!keys.isEmpty()) {
-                    if (!StringUtils.isBlank(prefix)) {
-                        for (String key : keys) {
-                            pipelineBase.pexpire(prefix + "_" + key, expire);
-                        }
-                    } else {
-                        for (String key : keys) {
-                            pipelineBase.pexpire(key, expire);
-                        }
+        invokePipelineMethod(true, pipelineBase -> {
+            if (!keys.isEmpty()) {
+                if (!StringUtils.isBlank(prefix)) {
+                    for (String key : keys) {
+                        pipelineBase.pexpire(prefix + "_" + key, expire);
+                    }
+                } else {
+                    for (String key : keys) {
+                        pipelineBase.pexpire(key, expire);
                     }
                 }
             }
         }, RedisContants.PIPELINE_SYNC);
     }
 
+    public void hsetByPipeline(List<String> keys, String field, String value) {
+        invokePipelineMethod(true, pipelineBase -> {
+            if (!keys.isEmpty()) {
+                for (String key : keys) {
+                    pipelineBase.hset(key, field, value);
+                }
+            }
+        }, RedisContants.PIPELINE_SYNC);
+    }
+    public <T>List<T> hgetObjectByPipeline(final String key, final List<String> fileds, Class<T> clazz) throws CoreException {
+        Object result = invokePipelineMethod(true, pipelineBase -> {
+            for (String field : fileds) {
+                pipelineBase.hget(key, field);
+            }
+        }, RedisContants.PIPELINE_SYNC_AND_RETURN_ALL);
+        if (result instanceof List){
+            List<T> list = new ArrayList<>();
+            List<String> theResult = (List)result;
+            for (String o : theResult){
+                list.add(JSON.parseObject(o, clazz));
+            }
+            return list;
+        }
+        return null;
+    }
+
+    public void hdelByPipeline(List<String> keys, String[] fields) {
+        invokePipelineMethod(true, pipelineBase -> {
+            if (!keys.isEmpty()) {
+                for (String key : keys) {
+                    pipelineBase.hdel(key, fields);
+                }
+            }
+        }, RedisContants.PIPELINE_SYNC);
+    }
+
+    public List<Long> hlenByPipeline(final List<String> keys) throws CoreException {
+        Object result = invokePipelineMethod(true, pipelineBase -> {
+            for (String key : keys) {
+                pipelineBase.hlen(key);
+            }
+        }, RedisContants.PIPELINE_SYNC_AND_RETURN_ALL);
+        if (result instanceof List)
+            return (List) result;
+        return null;
+    }
+
     // hash
     public List<Object> hgetAllByPipeline(final List<String> keys, final String prefixKey) throws CoreException {
-        Object result = invokePipelineMethod(true, new PipelineExcutor() {
-            @Override
-            public void execute(PipelineBase pipelineBase) {
-                if (StringUtils.isBlank(prefixKey))
-                    for (String key : keys) {
-                        pipelineBase.hgetAll(key);
-                    }
-                else
-                    for (String key : keys) {
-                        pipelineBase.hgetAll(prefixKey + key);
-                    }
-            }
+        Object result = invokePipelineMethod(true, pipelineBase -> {
+            if (StringUtils.isBlank(prefixKey))
+                for (String key : keys) {
+                    pipelineBase.hgetAll(key);
+                }
+            else
+                for (String key : keys) {
+                    pipelineBase.hgetAll(prefixKey + key);
+                }
         }, RedisContants.PIPELINE_SYNC_AND_RETURN_ALL);
         if (result instanceof List)
             return (List) result;

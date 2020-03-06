@@ -19,7 +19,7 @@ public class GatewayErrorCodes {
 	public static final int ERROR_TCPCHANNEL_UNKNOWN = TCPCHANNEL_CLOSE_IMMEDIATELY_START - 6;
 	public static final int ERROR_TCPCHANNEL_NOLONGER_ONLINE = TCPCHANNEL_CLOSE_IMMEDIATELY_START - 7;
 	public static final int TCPCHANNEL_CLOSE_IMMEDIATELY_END = -51999;
-	
+
 	public static final int GATEWAY_ERROR_START = -52000;
 	public static final int ERROR_ILLEGAL_PARAMETER = GATEWAY_ERROR_START - 1;
 	public static final int ERROR_TERMINAL_ILLEGAL = GATEWAY_ERROR_START - 2;
@@ -68,7 +68,7 @@ public class GatewayErrorCodes {
 	public static final int ERROR_CONTACTGROUP_NAME_NULL = GATEWAY_ERROR_START - 45;
 	public static final int ERROR_CONTACTGROUP_NOUSER = GATEWAY_ERROR_START - 46;
 	public static final int ERROR_CONTACTGROUP_TYPE_ILLEGAL = GATEWAY_ERROR_START - 47;
-	public static final int ERROR_USERLOCATION_ADD_FAILED = GATEWAY_ERROR_START - 48;	
+	public static final int ERROR_USERLOCATION_ADD_FAILED = GATEWAY_ERROR_START - 48;
 	public static final int ERROR_LOCATION_QUERY_FAILED = GATEWAY_ERROR_START - 49;
 	public static final int ERROR_OFFSET_VALUE_WRONG = GATEWAY_ERROR_START - 50;
 	public static final int ERROR_LONGITUDE_VALUE_WRONG = GATEWAY_ERROR_START - 51;
@@ -216,5 +216,5 @@ public class GatewayErrorCodes {
 	public static final int ERROR_SERVER_ISFULL = GATEWAY_ERROR_START - 193;
 
 	public static final int TALENTCHAT_ERROR_END = -54999;
-	
+
 }
