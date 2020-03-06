@@ -15,6 +15,7 @@ import com.docker.storage.ehcache.EhCacheHandler;
 import com.docker.storage.kafka.KafkaConfCenter;
 import com.docker.storage.kafka.KafkaProducerHandler;
 import com.docker.storage.redis.RedisHandler;
+import com.docker.storage.redis.RedisListenerHandler;
 import com.docker.utils.GroovyCloudBean;
 import connectors.mongodb.MongoClientHelper;
 import connectors.mongodb.annotations.handlers.MongoCollectionAnnotationHolder;
@@ -129,6 +130,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		addClassAnnotationHandler(new RequestPermissionHandler());
 		addClassAnnotationHandler(new CacheAnnotationHandler());
 		addClassAnnotationHandler(new ServiceMemoryHandler());
+		addClassAnnotationHandler(new RedisListenerHandler());
         Object rpcServerHandler = GroovyCloudBean.getBean("dockerRpcServer");
         if (rpcServerHandler != null && rpcServerHandler instanceof ClassAnnotationGlobalHandler)
             addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) rpcServerHandler);
