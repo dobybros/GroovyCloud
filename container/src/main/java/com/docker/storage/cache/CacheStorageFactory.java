@@ -4,6 +4,7 @@ import chat.logs.LoggerEx;
 import com.docker.storage.cache.handlers.CacheStorageAdapter;
 import com.docker.storage.cache.handlers.RedisCacheStorageHandler;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.lang.reflect.Constructor;
 import java.util.Map;
@@ -92,6 +93,22 @@ public class CacheStorageFactory {
                         if (result) {
                             redisCacheStorageHandler.disconnect();
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    public void releaseAllCacheStorageAdapter(String cacheMethod){
+        if(StringUtils.equals(cacheMethod,CacheStorageMethod.METHOD_REDIS)){
+            Map<String, CacheStorageAdapter> cacheStorageAdapterMap = cacheAdapterMap.get(cacheMethod);
+            if(cacheStorageAdapterMap != null){
+                for (String host : cacheStorageAdapterMap.keySet()){
+                    try {
+                        removeCacheStorageAdapter(cacheMethod, host);
+                        LoggerEx.info(TAG, "Close " + cacheMethod + " success, host: " + host);
+                    }catch (Throwable t){
+                        LoggerEx.error(TAG, "Close redis error, redisHost: "+ host + ",errMsg: " + ExceptionUtils.getFullStackTrace(t));
                     }
                 }
             }

@@ -15,6 +15,7 @@ import com.docker.storage.ehcache.EhCacheHandler;
 import com.docker.storage.kafka.KafkaConfCenter;
 import com.docker.storage.kafka.KafkaProducerHandler;
 import com.docker.storage.redis.RedisHandler;
+import com.docker.storage.redis.RedisListenerHandler;
 import com.docker.utils.GroovyCloudBean;
 import connectors.mongodb.MongoClientHelper;
 import connectors.mongodb.annotations.handlers.MongoCollectionAnnotationHolder;
@@ -129,6 +130,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		addClassAnnotationHandler(new RequestPermissionHandler());
 		addClassAnnotationHandler(new CacheAnnotationHandler());
 		addClassAnnotationHandler(new ServiceMemoryHandler());
+		addClassAnnotationHandler(new RedisListenerHandler());
         Object rpcServerHandler = GroovyCloudBean.getBean("dockerRpcServer");
         if (rpcServerHandler != null && rpcServerHandler instanceof ClassAnnotationGlobalHandler)
             addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) rpcServerHandler);
@@ -158,13 +160,13 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		} catch(Throwable t) {
 		    LoggerEx.error(TAG, "Close mongo error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
 		}
-		try {
-			if (redisHost != null) {
-				CacheStorageFactory.getInstance().removeCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, redisHost);
-			}
-		} catch(Throwable t) {
-            LoggerEx.error(TAG, "Close redis error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
-		}
+//		try {
+//			if (redisHost != null) {
+//				CacheStorageFactory.getInstance().removeCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, redisHost);
+//			}
+//		} catch(Throwable t) {
+//            LoggerEx.error(TAG, "Close redis error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
+//		}
 		super.close();
 		clear();
 	}
@@ -325,4 +327,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		this.serviceVersion = serviceVersion;
 	}
 
+    public String getRedisHost() {
+        return redisHost;
+    }
 }

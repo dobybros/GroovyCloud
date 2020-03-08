@@ -213,5 +213,4 @@ public class GatewayErrorCodes {
 	public static final int ERROR_SERVER_ISFULL = GATEWAY_ERROR_START + 193;
 
 	public static final int TALENTCHAT_ERROR_END = 2000;
-
 }
