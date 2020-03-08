@@ -20,7 +20,6 @@ import java.util.Set;
 public class RedisListenerHandler extends ClassAnnotationHandler {
     @Override
     public void handlerShutdown() {
-
     }
 
     @Override
@@ -41,7 +40,7 @@ public class RedisListenerHandler extends ClassAnnotationHandler {
                         GroovyObjectEx<com.docker.storage.redis.MyRedisListener> redisListenerObj = ((GroovyBeanFactory) classLoader.getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
                         if (redisListenerObj != null) {
                             try {
-                                redisListenerObj.getObject().redisHandler = ((BaseRuntime)classLoader.getGroovyRuntime()).getRedisHandler();
+                                redisListenerObj.getObject().redisHandler = ((BaseRuntime) classLoader.getGroovyRuntime()).getRedisHandler();
                             } catch (CoreException e) {
                                 e.printStackTrace();
                             }

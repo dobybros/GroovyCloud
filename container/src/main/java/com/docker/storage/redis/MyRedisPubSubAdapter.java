@@ -1,5 +1,6 @@
 package com.docker.storage.redis;
 
+import chat.logs.LoggerEx;
 import chat.main.ServerStart;
 import com.docker.utils.GroovyCloudBean;
 import io.lettuce.core.RedisURI;
@@ -32,7 +33,7 @@ public class MyRedisPubSubAdapter extends RedisPubSubAdapter {
         clusterGrooveAdapter = new ClusterGrooveAdapter();
     }
 
-    void setHostAndPorts(Set<HostAndPort> hostAndPorts) {
+    private void setHostAndPorts(Set<HostAndPort> hostAndPorts) {
         if (redisClusterClient == null) {
             this.hostAndPorts = hostAndPorts;
             if (hostAndPorts != null) {
@@ -68,8 +69,9 @@ public class MyRedisPubSubAdapter extends RedisPubSubAdapter {
         }
     }
 
-    void psubscribe(String[] subscribeChannels) {
-        if(commands == null){
+    void psubscribe(String[] subscribeChannels, Set<HostAndPort> redisNodes) {
+        setHostAndPorts(redisNodes);
+        if (commands == null) {
             // 异步订阅
             pubSubConnection = redisClusterClient.connectPubSub();
             pubSubConnection.setNodeMessagePropagation(true);
@@ -91,11 +93,13 @@ public class MyRedisPubSubAdapter extends RedisPubSubAdapter {
 
         @Override
         public void message(RedisClusterNode node, Object channel, Object message) {
+            LoggerEx.info(TAG, "Message has expired, message: " + message.toString());
             ServerStart.getInstance().getThreadPool().execute(() -> redisSubscribeHandler.redisCallback((String) message));
         }
 
         @Override
         public void message(RedisClusterNode node, Object pattern, Object channel, Object message) {
+            LoggerEx.info(TAG, "Message has expired, message: " + message.toString());
             ServerStart.getInstance().getThreadPool().execute(() -> redisSubscribeHandler.redisCallback((String) message));
         }
 

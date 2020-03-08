@@ -45,7 +45,9 @@ public class RedisHandler {
     private Map<String, Method> pipelineMethodMap = null;
     private String hosts;
     private Integer type = TYPE_SHARD;
+    private Set<HostAndPort> redisNodes = new HashSet<>();
     private String[] subscribeChannels = {"__keyevent@0__:expired", "__keyevent@1__:expired", "__keyevent@2__:expired", "__keyevent@3__:expired", "__keyevent@4__:expired", "__keyevent@5__:expired", "__keyevent@6__:expired", "__keyevent@7__:expired", "__keyevent@8__:expired", "__keyevent@9__:expired", "__keyevent@10__:expired", "__keyevent@11__:expired", "__keyevent@12__:expired", "__keyevent@13__:expired", "__keyevent@14__:expired", "__keyevent@15__:expired"};
+    private final int[] subscribeLock = new int[0];
 
     public RedisHandler(String hosts) {
         this.hosts = hosts;
@@ -62,7 +64,6 @@ public class RedisHandler {
         config.setTestOnBorrow(true);// 在borrow一个jedis实例时，是否进行有效性检查。为true，则得到的jedis实例均是可用的
 
         String[] detechedStrs = detachHosts(hosts);
-
         if (type == TYPE_SHARD) {
             String[] strArray = hosts.split(",");// redis.properties中必须包含redis.pool字段，指定redis地址。如果有多个，用逗号分隔。
             List<JedisShardInfo> shardJedis = new ArrayList<JedisShardInfo>();
@@ -86,11 +87,10 @@ public class RedisHandler {
                     nodes.add(new HostAndPort(splitedHost[0], Integer.parseInt(splitedHost[1])));
                 }
             }
-            MyRedisPubSubAdapter.getInstance().setHostAndPorts(nodes);
+            redisNodes = nodes;
             cluster = new JedisCluster(nodes, config);
         }
         pipelineMethodMap = new HashMap<>();
-        new Thread(this::subscribe).start();
         LoggerEx.info(TAG, "Jedis Cluster connected, " + hosts);
         return this;
     }
@@ -1119,8 +1119,9 @@ public class RedisHandler {
         });
     }
 
+
     // sortedSet
-    public Integer zadd(String key, double score, String member) throws CoreException {
+    public Long zadd(String key, double score, String member) throws CoreException {
         if (key != null && member != null) {
             return doJedisExecute(jedis -> {
                 return jedis.zadd(key, score, member);
@@ -1138,10 +1139,19 @@ public class RedisHandler {
         return null;
     }
 
-    public Set<String> zrangePagination(String key, Integer offset, Integer limit) throws CoreException{
+    public Long zremrangebyrank(String key, long start, long end) throws CoreException {
         if (key != null) {
             return doJedisExecute(jedis -> {
-                return jedis.zrange(key, offset, offset + limit - 1);
+                return jedis.zremrangeByRank(key, start, end);
+            });
+        }
+        return null;
+    }
+
+    public Set<String> zrange(String key, Integer start, Integer end) throws CoreException {
+        if (key != null) {
+            return doJedisExecute(jedis -> {
+                return jedis.zrange(key, start, end);
             });
         }
         return null;
@@ -1165,23 +1175,29 @@ public class RedisHandler {
         return null;
     }
 
-    public void subscribe() {
+    void subscribe() {
+        boolean canExecute = false;
         if (!isSubscribe) {
-            isSubscribe = true;
-            JedisCommands jedis = getJedis();
-            if (jedis instanceof ShardedJedis) {
-                Jedis[] jedisArray = new Jedis[]{};
-                jedisArray = ((ShardedJedis) jedis).getAllShards().toArray(jedisArray);
-                Jedis theJedis = jedisArray[0];
-                try {
-                    SubscribeListener.getInstance().punsubscribe(subscribeChannels);
-                } catch (Throwable t) {
-                    t.printStackTrace();
+            synchronized (subscribeLock) {
+                if (!isSubscribe) {
+                    isSubscribe = true;
+                    canExecute = true;
                 }
-                theJedis.psubscribe(SubscribeListener.getInstance(), subscribeChannels);
-            } else if (jedis instanceof JedisCluster) {
-                MyRedisPubSubAdapter.getInstance().psubscribe(subscribeChannels);
             }
+        }
+        if (canExecute) {
+            new Thread(() -> {
+                JedisCommands jedis = getJedis();
+                if (jedis instanceof ShardedJedis) {
+                    Jedis[] jedisArray = new Jedis[]{};
+                    jedisArray = ((ShardedJedis) jedis).getAllShards().toArray(jedisArray);
+                    Jedis theJedis = jedisArray[0];
+                    theJedis.psubscribe(SubscribeListener.getInstance(), subscribeChannels);
+                } else if (jedis instanceof JedisCluster) {
+                    MyRedisPubSubAdapter.getInstance().psubscribe(subscribeChannels, redisNodes);
+                }
+            }).start();
+
         }
     }
 
@@ -1235,16 +1251,17 @@ public class RedisHandler {
             }
         }, RedisContants.PIPELINE_SYNC);
     }
-    public <T>List<T> hgetObjectByPipeline(final String key, final List<String> fileds, Class<T> clazz) throws CoreException {
+
+    public <T> List<T> hgetObjectByPipeline(final String key, final List<String> fileds, Class<T> clazz) throws CoreException {
         Object result = invokePipelineMethod(true, pipelineBase -> {
             for (String field : fileds) {
                 pipelineBase.hget(key, field);
             }
         }, RedisContants.PIPELINE_SYNC_AND_RETURN_ALL);
-        if (result instanceof List){
+        if (result instanceof List) {
             List<T> list = new ArrayList<>();
-            List<String> theResult = (List)result;
-            for (String o : theResult){
+            List<String> theResult = (List) result;
+            for (String o : theResult) {
                 list.add(JSON.parseObject(o, clazz));
             }
             return list;

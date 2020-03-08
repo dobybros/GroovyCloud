@@ -160,13 +160,13 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		} catch(Throwable t) {
 		    LoggerEx.error(TAG, "Close mongo error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
 		}
-		try {
-			if (redisHost != null) {
-				CacheStorageFactory.getInstance().removeCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, redisHost);
-			}
-		} catch(Throwable t) {
-            LoggerEx.error(TAG, "Close redis error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
-		}
+//		try {
+//			if (redisHost != null) {
+//				CacheStorageFactory.getInstance().removeCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, redisHost);
+//			}
+//		} catch(Throwable t) {
+//            LoggerEx.error(TAG, "Close redis error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
+//		}
 		super.close();
 		clear();
 	}
@@ -327,4 +327,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		this.serviceVersion = serviceVersion;
 	}
 
+    public String getRedisHost() {
+        return redisHost;
+    }
 }

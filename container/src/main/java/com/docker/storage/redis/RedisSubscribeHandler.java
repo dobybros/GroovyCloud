@@ -3,6 +3,7 @@ package com.docker.storage.redis;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ConcurrentHashSet;
+import com.docker.script.BaseRuntime;
 import com.docker.storage.redis.annotation.RedisSubscribe;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import script.groovy.object.GroovyObjectEx;
@@ -57,6 +58,7 @@ public class RedisSubscribeHandler extends ClassAnnotationGlobalHandler {
                                 }
                             }
                             groovyObjectExes.add(groovyObj);
+                            ((BaseRuntime)groovyRuntime).getRedisHandler().subscribe();
                         }
                     }
                 }

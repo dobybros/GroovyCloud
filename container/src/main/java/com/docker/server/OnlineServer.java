@@ -10,6 +10,8 @@ import com.docker.data.DockerStatus;
 import com.docker.errors.CoreErrorCodes;
 import com.docker.storage.adapters.DockerStatusService;
 import com.docker.storage.adapters.SDockersService;
+import com.docker.storage.cache.CacheStorageFactory;
+import com.docker.storage.cache.CacheStorageMethod;
 import com.docker.tasks.Task;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -315,6 +317,7 @@ public class OnlineServer {
                 }
             }
         }
+        CacheStorageFactory.getInstance().releaseAllCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS);
 //        if (shutdownList != null) {
 //            LoggerEx.info(TAG, "Deleted shutdownListener " + shutdownList + " size " + shutdownList.size());
 //            for (ShutdownListener shutdownListener : shutdownList) {
