@@ -1,6 +1,5 @@
 package com.docker.storage.redis;
 
-import chat.logs.LoggerEx;
 import chat.main.ServerStart;
 import com.docker.utils.GroovyCloudBean;
 import io.lettuce.core.RedisURI;
@@ -93,13 +92,11 @@ public class MyRedisPubSubAdapter extends RedisPubSubAdapter {
 
         @Override
         public void message(RedisClusterNode node, Object channel, Object message) {
-            LoggerEx.info(TAG, "Message has expired, message: " + message.toString());
             ServerStart.getInstance().getThreadPool().execute(() -> redisSubscribeHandler.redisCallback((String) message));
         }
 
         @Override
         public void message(RedisClusterNode node, Object pattern, Object channel, Object message) {
-            LoggerEx.info(TAG, "Message has expired, message: " + message.toString());
             ServerStart.getInstance().getThreadPool().execute(() -> redisSubscribeHandler.redisCallback((String) message));
         }
 
