@@ -39,6 +39,7 @@ public class OnlineServer {
     private String serverType;
     private Integer type;
     private String dockerName;
+    private String scaleInstanceId;
     private IPHolder ipHolder;
     private SDockersService sdockersService;
 
@@ -90,7 +91,7 @@ public class OnlineServer {
     }
 
     public String getIp() {
-        if(ipHolder != null)
+        if (ipHolder != null)
             return ipHolder.getIp();
         return null;
     }
@@ -117,29 +118,33 @@ public class OnlineServer {
         }
         dockerStatus.setHttpPort(port);
         dockerStatus.setLanId(lanId);
-        dockerStatus.setHealth(0);
-        if(sslTcpPort != null){
+        if (scaleInstanceId != null) {
+            dockerStatus.setHealth(DockerStatus.HEALTH_MAX);
+        } else {
+            dockerStatus.setHealth(DockerStatus.HEALTH_MIN);
+        }
+        if (sslTcpPort != null) {
             dockerStatus.setSslRpcPort(Integer.valueOf(sslRpcPort));
         }
-        if(tcpPort != null){
+        if (tcpPort != null) {
             dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
         }
-        if(wsPort != null){
+        if (wsPort != null) {
             dockerStatus.setWsPort(Integer.valueOf(wsPort));
         }
-        if(sslTcpPort != null){
+        if (sslTcpPort != null) {
             dockerStatus.setSslTcpPort(Integer.valueOf(sslTcpPort));
         }
-        if(tcpPort != null){
+        if (tcpPort != null) {
             dockerStatus.setTcpPort(Integer.valueOf(tcpPort));
         }
-        if(wsPort != null){
+        if (wsPort != null) {
             dockerStatus.setWsPort(Integer.valueOf(wsPort));
         }
-        if(publicWsPort != null){
+        if (publicWsPort != null) {
             dockerStatus.setPublicWsPort(Integer.valueOf(publicWsPort));
         }
-        if(rpcPort != null){
+        if (rpcPort != null) {
             dockerStatus.setRpcPort(Integer.valueOf(rpcPort));
         }
         dockerStatus.setTime(ChatUtils.dateString(System.currentTimeMillis()));
@@ -511,6 +516,14 @@ public class OnlineServer {
 
     public void setDockerName(String dockerName) {
         this.dockerName = dockerName;
+    }
+
+    public void setScaleInstanceId(String scaleInstanceId) {
+        this.scaleInstanceId = scaleInstanceId;
+    }
+
+    public String getScaleInstanceId() {
+        return scaleInstanceId;
     }
 
     public Integer getType() {

@@ -24,6 +24,7 @@ public class GroovyServletManagerEx extends GroovyServletManager {
     public static final String BASE_MEMORY_BASE = "base";//底层内存
     public static final String BASE_CROSSCLUSTERACCESSSERVICE = "crossClusterAccessService";//call service cross cluster
     public static final String BASE_CROSSCLUSTERCREATETOKEN = "crossClusterCreateToken";//call service cross cluster
+    public static final String BASE_SCALE = "scale";//call service cross cluster
     private String service;
     private Integer serviceVersion;
     public GroovyServletManagerEx(String service, Integer serviceVersion) {

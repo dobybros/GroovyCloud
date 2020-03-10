@@ -117,6 +117,7 @@ public class DockerStatus extends DataObject {
 	 */
 	private Integer health;
 	public static final int HEALTH_MAX = 100;
+	public static final int HEALTH_MIN = 0;
 
 	/**
 	 * 其他字段，例如gateway的sslRpcPort、tcpPort、webSocketPort、rpcPort

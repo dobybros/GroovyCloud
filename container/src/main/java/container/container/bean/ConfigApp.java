@@ -46,6 +46,7 @@ public class ConfigApp {
     private String killProcess;
     private String fileBucket;
     private String dockerName;
+    private String scaleInstanceId;
 
     public ConfigApp(){
         InputStream inStream = ConfigApp.class.getClassLoader().getResourceAsStream("groovycloud.properties");
@@ -85,6 +86,7 @@ public class ConfigApp {
             hotDeployment = prop.getProperty("hotDeployment");
             killProcess = prop.getProperty("killProcess");
             dockerName = prop.getProperty("docker.name");
+            scaleInstanceId = prop.getProperty("scale.instanceId");
             redisHost = prop.getProperty("db.redis.uri");
             apppProp.load(appInStream);
             serverPort = apppProp.getProperty("server.port");
@@ -218,6 +220,10 @@ public class ConfigApp {
 
     public String getDockerName() {
         return dockerName;
+    }
+
+    public String getScaleInstanceId() {
+        return scaleInstanceId;
     }
 
     public String getKillProcess() {

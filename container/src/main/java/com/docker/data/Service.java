@@ -1,5 +1,6 @@
 package com.docker.data;
 
+import com.docker.server.OnlineServer;
 import com.docker.storage.mongodb.CleanDocument;
 import org.bson.Document;
 
@@ -14,6 +15,7 @@ public class Service {
     public static final String FIELD_SERVICE_TYPE = "type";
     public static final String FIELD_SERVICE_SERVICEANNOTATION = "serviceAnnotations";
     public static final String FIELD_MAXUSERNUMBER = "maxUserNumber";
+    public static final String FIELD_SCALEENABLE = "scaleEnable";
 
     public static final int FIELD_SERVER_TYPE_NORMAL = 1;
     public static final int FIELD_SERVER_TYPE_DEPLOY_FAILED = 2;
@@ -24,6 +26,7 @@ public class Service {
     private Long uploadTime;
     private Integer type;
     private Long maxUserNumber;
+    private boolean scaleEnable;
     private List<ServiceAnnotation> serviceAnnotations;
 
     public String getService() {
@@ -74,6 +77,14 @@ public class Service {
         this.maxUserNumber = maxUserNumber;
     }
 
+    public boolean isScaleEnable() {
+        return scaleEnable;
+    }
+
+    public void setScaleEnable(boolean scaleEnable) {
+        this.scaleEnable = scaleEnable;
+    }
+
     public void fromDocument(Document dbObj) {
         service = (String) dbObj.get(FIELD_SERVICE_SERVICE);
         version = dbObj.getInteger(FIELD_SERVICE_VERSION);
@@ -81,10 +92,11 @@ public class Service {
         uploadTime = dbObj.getLong(FIELD_SERVICE_UPLOADTIME);
         type = dbObj.getInteger(FIELD_SERVICE_TYPE);
         maxUserNumber = dbObj.getLong(FIELD_MAXUSERNUMBER);
+        scaleEnable = dbObj.getBoolean(FIELD_SCALEENABLE);
         List<Document> anDocs = (List<Document>) dbObj.get(FIELD_SERVICE_SERVICEANNOTATION);
-        if(anDocs != null) {
+        if (anDocs != null) {
             serviceAnnotations = new ArrayList<>();
-            for(Document doc : anDocs) {
+            for (Document doc : anDocs) {
                 ServiceAnnotation serviceAnnotation = new ServiceAnnotation();
                 serviceAnnotation.fromDocument(doc);
                 serviceAnnotations.add(serviceAnnotation);
@@ -99,12 +111,18 @@ public class Service {
         dbObj.put(FIELD_SERVICE_VERSION, version);
         dbObj.put(FIELD_SERVICE_UPLOADTIME, uploadTime);
         dbObj.put(FIELD_SERVICE_TYPE, type);
-        if(maxUserNumber != null){
+        if (maxUserNumber != null) {
             dbObj.put(FIELD_MAXUSERNUMBER, maxUserNumber);
         }
-        if(serviceAnnotations != null) {
+        if (OnlineServer.getInstance().getScaleInstanceId() != null) {
+            scaleEnable = false;
+        } else {
+            scaleEnable = true;
+        }
+        dbObj.put(FIELD_SCALEENABLE, scaleEnable);
+        if (serviceAnnotations != null) {
             List<Document> annotationList = new ArrayList<>();
-            for(ServiceAnnotation serviceAnnotation : serviceAnnotations) {
+            for (ServiceAnnotation serviceAnnotation : serviceAnnotations) {
                 Document anDoc = serviceAnnotation.toDocument();
                 annotationList.add(anDoc);
             }
@@ -113,12 +131,12 @@ public class Service {
         return dbObj;
     }
 
-    public List<ServiceAnnotation> getServiceAnnotations(){
+    public List<ServiceAnnotation> getServiceAnnotations() {
         return serviceAnnotations;
     }
 
     public void appendServiceAnnotation(List<ServiceAnnotation> annotations) {
-        if(serviceAnnotations == null)
+        if (serviceAnnotations == null)
             serviceAnnotations = new ArrayList<>();
         serviceAnnotations.addAll(annotations);
     }

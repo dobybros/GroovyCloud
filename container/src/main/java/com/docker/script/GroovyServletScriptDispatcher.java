@@ -7,14 +7,16 @@ import chat.scheduled.QuartzFactory;
 import chat.utils.ChatUtils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.docker.data.ScheduleTask;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.servlet.GroovyServletManagerEx;
 import com.docker.storage.adapters.impl.ScheduledTaskServiceImpl;
+import com.docker.utils.GroovyCloudBean;
 import com.docker.utils.JWTUtils;
 import com.docker.utils.SpringContextUtil;
-import io.jsonwebtoken.Jwts;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -41,9 +43,9 @@ import java.util.Map;
 @WebServlet(urlPatterns = "/base", asyncSupported = true)
 public class GroovyServletScriptDispatcher extends HttpServlet {
     private static final String TAG = GroovyServletManager.class.getSimpleName();
-    ScriptManager scriptManager = (ScriptManager) SpringContextUtil.getBean("scriptManager");
-
+    ScriptManager scriptManager = null;
     public void handle(HttpServletRequest request, HttpServletResponse response) {
+        scriptManager = (ScriptManager) GroovyCloudBean.getBean(GroovyCloudBean.SCRIPTMANAGER);
         try {
             String uri = request.getRequestURI();
             LoggerEx.info(TAG, "RequestURI " + uri + " method " + request.getMethod() + " from " + request.getRemoteAddr());
@@ -59,17 +61,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                         //get base memory
                     } else {
                         String service = uriStrs[2];
-                        String serviceVersion = null;
-                        if (!service.contains("_v")) {
-                            Integer version = scriptManager.getDefalutServiceVersionMap().get(service);
-                            if (version != null) {
-                                serviceVersion = service + "_v" + version;
-                            } else {
-                                LoggerEx.error(TAG, "The service not load, version is null");
-                            }
-                        } else {
-                            serviceVersion = service;
-                        }
+                        String serviceVersion = getServiceVersion(service);
                         if (serviceVersion != null) {
                             List list = handlerService(serviceVersion);
                             result.setData(list);
@@ -111,9 +103,50 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                             }
                         }
                     }
-                } else if(uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERCREATETOKEN)){
+                } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERCREATETOKEN)) {
                     String token = JWTUtils.createToken("crossClusterToken", null, 10800000L);//3小时
                     result.setData(token);
+                }
+            } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_SCALE)) {
+                String token = request.getHeader("key");
+                if(StringUtils.isBlank(token) || !token.equals("FSDdfFDWfR324fs98DSF*@#")){
+                    LoggerEx.error(TAG, "key is null when scale!!!");
+                    result.setCode(4001);
+                    result.setMsg("key is null when scale!!!");
+                }else {
+                    if(uriStrs.length > 3){
+                        JSONObject jsonObject = null;
+                        String requestStr = IOUtils.toString(request.getInputStream(), Charset.defaultCharset());
+                        if(requestStr != null){
+                            jsonObject = JSON.parseObject(requestStr);
+                        }
+                        String service = uriStrs[2];
+                        String serviceVersion = getServiceVersion(service);
+                        if (serviceVersion != null) {
+                            GroovyRuntime groovyRuntime = getGroovyRuntime(serviceVersion);
+                            if (groovyRuntime != null) {
+                                ServiceScaleHandler serviceScaleHandler = (ServiceScaleHandler) groovyRuntime.getClassAnnotationHandler(ServiceScaleHandler.class);
+                                if (serviceScaleHandler != null) {
+                                    String methodName = uriStrs[3];
+                                    if(uriStrs.length > 4){
+                                        for (int i = 4; i < uriStrs.length; i++) {
+                                            methodName += captureName(uriStrs[i]);
+                                        }
+                                    }
+                                    Object resultObject = null;
+                                    try {
+                                        resultObject = serviceScaleHandler.invoke(methodName, jsonObject);
+                                    }catch (CoreException e){
+                                        result.setCode(e.getCode());
+                                        result.setMsg(e.getMessage());
+                                    }
+                                    if(result.getMsg() == null){
+                                        result.setData(resultObject);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             respond(response, result);
@@ -127,27 +160,52 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
             }
         }
     }
+    private String captureName(String name) {
+        char[] cs = name.toCharArray();
+        cs[0] -= 32;
+        return String.valueOf(cs);
+    }
+    private String getServiceVersion(String service) {
+        String serviceVersion = null;
+        if (!service.contains("_v")) {
+            Integer version = scriptManager.getDefalutServiceVersionMap().get(service);
+            if (version != null) {
+                serviceVersion = service + "_v" + version;
+            } else {
+                LoggerEx.error(TAG, "The service not load, version is null");
+            }
+        } else {
+            serviceVersion = service;
+        }
+        return serviceVersion;
+    }
 
     private List handlerService(String service) {
-        GroovyServletManager groovyServletManager = GroovyServletDispatcher.getGroovyServletManagerEx(service);
+        GroovyRuntime groovyRuntime = getGroovyRuntime(service);
+        if (groovyRuntime != null) {
+            ServiceMemoryHandler classAnnotationHandler = (ServiceMemoryHandler) groovyRuntime.getClassAnnotationHandler(ServiceMemoryHandler.class);
+            if (classAnnotationHandler != null) {
+                List list = classAnnotationHandler.getMemory();
+                if (list == null) {
+                    list = new ArrayList();
+                }
+                Map<String, Object> baserunTimeMap = ((BaseRuntime) groovyRuntime).getMemoryCache();
+                if (!baserunTimeMap.isEmpty()) {
+                    for (String key : baserunTimeMap.keySet()) {
+                        list.add(baserunTimeMap.get(key));
+                    }
+                }
+                return list;
+            }
+        }
+        return null;
+    }
+
+    private GroovyRuntime getGroovyRuntime(String serviceVersion) {
+        GroovyServletManager groovyServletManager = GroovyServletDispatcher.getGroovyServletManagerEx(serviceVersion);
         if (groovyServletManager != null) {
             GroovyRuntime groovyRuntime = groovyServletManager.getGroovyRuntime();
-            if (groovyRuntime != null) {
-                ServiceMemoryHandler classAnnotationHandler = (ServiceMemoryHandler) groovyRuntime.getClassAnnotationHandler(ServiceMemoryHandler.class);
-                if (classAnnotationHandler != null) {
-                    List list = classAnnotationHandler.getMemory();
-                    if (list == null) {
-                        list = new ArrayList();
-                    }
-                    Map<String, Object> baserunTimeMap = ((BaseRuntime) groovyRuntime).getMemoryCache();
-                    if (!baserunTimeMap.isEmpty()) {
-                        for (String key : baserunTimeMap.keySet()) {
-                            list.add(baserunTimeMap.get(key));
-                        }
-                    }
-                    return list;
-                }
-            }
+            return groovyRuntime;
         }
         return null;
     }

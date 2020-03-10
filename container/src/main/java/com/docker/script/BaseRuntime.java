@@ -131,6 +131,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		addClassAnnotationHandler(new CacheAnnotationHandler());
 		addClassAnnotationHandler(new ServiceMemoryHandler());
 		addClassAnnotationHandler(new RedisListenerHandler());
+		addClassAnnotationHandler(new ServiceScaleHandler());
         Object rpcServerHandler = GroovyCloudBean.getBean("dockerRpcServer");
         if (rpcServerHandler != null && rpcServerHandler instanceof ClassAnnotationGlobalHandler)
             addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) rpcServerHandler);

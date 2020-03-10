@@ -19,6 +19,7 @@ import com.docker.onlineserver.OnlineServerWithStatus;
 import com.docker.script.ScriptManager;
 import com.docker.tasks.Task;
 import container.container.bean.BeanApp;
+import org.apache.commons.lang.StringUtils;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.ssl.KeyStoreFactory;
@@ -118,6 +119,9 @@ public class IMBeanApp extends IMConfigApp {
             instance.onlineServer.setSslTcpPort(instance.getUpstreamSslPort());
             instance.onlineServer.setPublicWsPort(instance.getPublicWsPort());
             instance.onlineServer.setStatus(1);
+            if(StringUtils.isNotBlank(instance.getScaleInstanceId())){
+                instance.onlineServer.setScaleInstanceId(instance.getScaleInstanceId());
+            }
             instance.onlineServer.setType(Integer.valueOf(instance.getType()));
             instance.onlineServer.setConfigPath("groovycloud.properties");
             instance.onlineServer.setIpHolder(instance.getIpHolder());

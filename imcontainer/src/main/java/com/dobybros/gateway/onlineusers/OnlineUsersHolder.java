@@ -137,11 +137,19 @@ public class OnlineUsersHolder {
         return null;
     }
 
+    public Long getServiceUserNumber(String service) {
+        LongAdder longAdder = serviceUserCountMap.get(service);
+        if (longAdder == null) {
+            return 0L;
+        }
+        return longAdder.longValue();
+    }
+
     public Boolean available(String service, Long serviceMaxUserNumber) {
         long serverCountTotal = 0L;
-        for (String theService : serviceUserCountMap.keySet()){
+        for (String theService : serviceUserCountMap.keySet()) {
             LongAdder longAdder = serviceUserCountMap.get(theService);
-            if(longAdder != null){
+            if (longAdder != null) {
                 serverCountTotal += longAdder.longValue();
             }
         }

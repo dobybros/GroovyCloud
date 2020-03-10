@@ -25,4 +25,6 @@ public interface CoreErrorCodes {
 	public static final int ERROR_LOCK_CAN_NOT_FOUND = ERROR_LOCK + 1;
 	public static final int ERROR_LOCK_VERIFY_FIELD = ERROR_LOCK + 2;
 
+
+
 }

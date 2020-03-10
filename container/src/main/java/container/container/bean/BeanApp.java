@@ -18,6 +18,7 @@ import com.docker.storage.mongodb.daos.*;
 import com.docker.storage.redis.RedisSubscribeHandler;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -249,6 +250,9 @@ public class BeanApp extends ConfigApp{
             instance.onlineServer.setRpcSslJksPwd(instance.getRpcSslJksPwd());
             instance.onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
             instance.onlineServer.setStatus(1);
+            if(StringUtils.isNotBlank(instance.getScaleInstanceId())){
+                instance.onlineServer.setScaleInstanceId(instance.getScaleInstanceId());
+            }
             instance.onlineServer.setType(Integer.valueOf(instance.getType()));
             instance.onlineServer.setConfigPath("groovycloud.properties");
             instance.onlineServer.setIpHolder(instance.getIpHolder());

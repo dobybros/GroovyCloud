@@ -95,7 +95,18 @@ public class DockerStatusServiceImpl implements DockerStatusService {
             throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_UPDATE_FAILED, "Update service " + serviceName + ", version " + serviceVersion + " to server " + server + " failed, " + e.getMessage());
         }
     }
-
+    @Override
+    public void updateServiceScaleEnable(String server, String serviceName, Integer serviceVersion, boolean scaleEnable) throws CoreException {
+        try {
+            Bson query1 = Filters.eq(DockerStatus.FIELD_DOCKERSTATUS_SERVER, server);
+            Bson query21 = Filters.eq(Service.FIELD_SERVICE_SERVICE, serviceName);
+            Bson query22 = Filters.eq(Service.FIELD_SERVICE_VERSION, serviceVersion);
+            Bson query2 = Filters.elemMatch(DockerStatus.FIELD_DOCKERSTATUS_SERVICES, Filters.and(query21, query22));
+            dockerStatusDAO.updateOne(Filters.and(query1, query2), Updates.set(DockerStatus.FIELD_DOCKERSTATUS_SERVICES + ".$." + Service.FIELD_SCALEENABLE, scaleEnable), false);
+        } catch (DBException e) {
+            throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_UPDATE_FAILED, "Update service " + serviceName + ", version " + serviceVersion + " to server " + server + " failed, " + e.getMessage());
+        }
+    }
     @Override
     public void updateServiceType(String server, String serviceName, Integer serviceVersion, Integer type) throws CoreException {
         try {
