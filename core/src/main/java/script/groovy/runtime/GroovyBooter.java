@@ -110,6 +110,8 @@ public class GroovyBooter implements RuntimeBootListener {
                 importBuilder.append("\r\n");
                 LoggerEx.info(TAG, "Generates imports " + FilenameUtils.separatorsToUnix(importPath.getAbsolutePath()));
             }
+            File loggerPath = new File(path + "/chat/logs/LoggerEx.groovy");
+            compileFirstFiles.add(loggerPath);
             compileFirstFiles.add(importPath);
 //            StringBuilder importBuilder = new StringBuilder(FileUtils.readFileToString(importPath, "utf8"));
 

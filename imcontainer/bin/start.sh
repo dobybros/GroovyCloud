@@ -2,7 +2,7 @@
 cd `dirname $0`
  BIN_DIR=`pwd`
 cd ..
-JAR_NAME='imcontainer.jar'
+JAR_NAME='imcontainer-1.0.jar'
 #最大堆大小(64)
 xmx64='2000m'
 #初始堆大小(64)
@@ -18,11 +18,14 @@ rmiThreads='200'
 DEPLOY_DIR=`pwd`
 CONF_DIR=$DEPLOY_DIR/conf
 LOGS_DIR=$DEPLOY_DIR/logs
+GCLOGS_DIR=$DEPLOY_DIR/gc
 if [ ! -d $LOGS_DIR ]; then
   mkdir $LOGS_DIR
 fi
-LIB_DIR=$DEPLOY_DIR/lib
-LIB_JARS=`ls $LIB_DIR|grep .jar|awk '{print "'$LIB_DIR'/"$0}'|tr "\n" ":"`
+if [ ! -d $GCLOGS_DIR ]; then
+  mkdir $GCLOGS_DIR
+fi
+GCLOGS_LOG=$GCLOGS_DIR/gc.log
 JAVA_OPTS=" -Djava.awt.headless=true -Djava.net.preferIPv4Stack=true -Duser.timezone=Asia/Shanghai -Dfile.encoding=utf-8"
 JAVA_DEBUG_OPTS=""
 if [ "-x$1" = "-x--debug" ]; then
@@ -34,7 +37,7 @@ if [ "$1" = "jmx" ]; then
  fi
  JAVA_MEM_OPTS=""
  BITS=`java -version 2>&1 | grep -i 64-bit`
- JAVA_MEM_OPTS=" -server --add-exports java.base/jdk.internal.ref=ALL-UNNAMED -Dsun.rmi.transport.tcp.maxConnectionThreads=$rmiThreads -Xmx$xmx64 -Xms$xms64 -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=$G1NewSizePercent -XX:G1MaxNewSizePercent=$G1MaxNewSizePercent -XX:MaxGCPauseMillis=$MaxGCPauseMillis -Djava.awt.headless=true"
+ JAVA_MEM_OPTS=" -server --add-exports java.base/jdk.internal.ref=ALL-UNNAMED -Dsun.rmi.transport.tcp.maxConnectionThreads=$rmiThreads -Xmx$xmx64 -Xms$xms64 -verbose:gc -XX:+HeapDumpOnOutOfMemoryError -Xlog:gc*:$GCLOGS_LOG -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=$G1NewSizePercent -XX:G1MaxNewSizePercent=$G1MaxNewSizePercent -XX:MaxGCPauseMillis=$MaxGCPauseMillis -Djava.awt.headless=true"
 CONFIG_FILES=" -Xbootclasspath/a:$CONF_DIR"
  nohup java $JAVA_OPTS $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS $CONFIG_FILES -jar $DEPLOY_DIR/$JAR_NAME &>/dev/null 2>&1 &
 

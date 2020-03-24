@@ -1,4 +1,4 @@
-set JAR_NAME=container.jar
+set JAR_NAME=proxycontainer-1.0.jar
 set xmx64=2000m
 set xms64=2000m
 set G1NewSizePercent=80

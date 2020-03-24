@@ -50,5 +50,118 @@ public class ScriptUtils {
             e.printStackTrace();
             LoggerEx.error(TAG, "write ServiceStubProxy.groovy file on " + (path + "/script/groovy/runtime/ServiceStubProxy.groovy") + " failed, " + ExceptionUtils.getFullStackTrace(e));
         }
+        String loggerCode = "package chat.logs;\n" +
+                "\n" +
+                "import chat.utils.ChatUtils;\n" +
+                "import org.slf4j.Logger;\n" +
+                "import org.slf4j.LoggerFactory;\n" +
+                "import script.groovy.runtime.GroovyRuntime;\n" +
+                "\n" +
+                "public class LoggerEx {\n" +
+                "    private static Logger logger = LoggerFactory.getLogger(\"\");\n" +
+                "    private static LogListenerEx logListener;\n" +
+                "    private LoggerEx() {\n" +
+                "    }\n" +
+                "    public interface LogListenerEx {\n" +
+                "        public void debug(String log);\n" +
+                "\n" +
+                "        public void info(String log);\n" +
+                "\n" +
+                "        public void warn(String log);\n" +
+                "\n" +
+                "        public void error(String log);\n" +
+                "\n" +
+                "        public void fatal(String log);\n" +
+                "    }\n" +
+                "    public static String getClassTag(Class<?> clazz) {\n" +
+                "        return clazz.getSimpleName();\n" +
+                "    }\n" +
+                "    public static void debug(String tag, String msg) {\n" +
+                "        String log = getLogMsg(tag, msg);\n" +
+                "        if (logListener != null)\n" +
+                "            logListener.debug(log);\n" +
+                "        else\n" +
+                "            logger.debug(log);\n" +
+                "    }\n" +
+                "    public static void info(String tag, String msg) {\n" +
+                "        String log = getLogMsg(tag, msg);\n" +
+                "        if (logListener != null)\n" +
+                "            logListener.info(log);\n" +
+                "        else\n" +
+                "            logger.info(log);\n" +
+                "    }\n" +
+                "    public static void info(String tag, String msg, Long spendTime) {\n" +
+                "        String log = getLogMsg(tag, msg, spendTime);\n" +
+                "        if (logListener != null)\n" +
+                "            logListener.info(log);\n" +
+                "        else\n" +
+                "            logger.info(log);\n" +
+                "    }\n" +
+                "    public static void warn(String tag, String msg) {\n" +
+                "        String log = getLogMsg(tag, msg);\n" +
+                "        if (logListener != null)\n" +
+                "            logListener.warn(log);\n" +
+                "        else\n" +
+                "            logger.warn(log);\n" +
+                "    }\n" +
+                "    public static void error(String tag, String msg) {\n" +
+                "        String log = getLogMsg(tag, msg);\n" +
+                "        if (logListener != null)\n" +
+                "            logListener.error(log);\n" +
+                "        else\n" +
+                "            logger.error(log);\n" +
+                "    }\n" +
+                "    public static void fatal(String tag, String msg) {\n" +
+                "        String log = getLogMsg(tag, msg);\n" +
+                "        if (logListener != null)\n" +
+                "            logListener.fatal(log);\n" +
+                "        else\n" +
+                "            logger.error(log);\n" +
+                "    }\n" +
+                "    private static String getLogMsg(String tag, String msg) {\n" +
+                "        StringBuilder builder = new StringBuilder();\n" +
+                "        com.docker.script.MyBaseRuntime baseRuntime = (com.docker.script.MyBaseRuntime) GroovyRuntime.getCurrentGroovyRuntime(chat.logs.LoggerEx.class.getClassLoader());\n" +
+                "        String serviceName = null;\n" +
+                "        if(baseRuntime != null){\n" +
+                "            serviceName = baseRuntime.getServiceName();\n" +
+                "        }\n" +
+                "        builder.append(\"\\$\\$time:: \" + ChatUtils.dateString()).\n" +
+                "                append(\" \\$\\$tag:: \" + tag).\n" +
+                "                append(\" \").\n" +
+                "                append(\"[\" + msg + \"]\");\n" +
+                "        if(serviceName != null){\n" +
+                "            builder.append(\" \\$\\$serviceName:: \" + serviceName);\n" +
+                "        }\n" +
+                "        return builder.toString();\n" +
+                "    }\n" +
+                "    private static String getLogMsg(String tag, String msg, Long spendTime) {\n" +
+                "        StringBuilder builder = new StringBuilder();\n" +
+                "        com.docker.script.MyBaseRuntime baseRuntime = (com.docker.script.MyBaseRuntime) GroovyRuntime.getCurrentGroovyRuntime(chat.logs.LoggerEx.class.getClassLoader());\n" +
+                "        String serviceName = null;\n" +
+                "        if(baseRuntime != null){\n" +
+                "            serviceName = baseRuntime.getServiceName();\n" +
+                "        }\n" +
+                "        builder.append(\"\\$\\$time:: \" + ChatUtils.dateString()).\n" +
+                "                append(\" \\$\\$tag:: \" + tag).\n" +
+                "                append(\" [\" + msg + \"]\").\n" +
+                "                append(\" \\$\\$spendTime:: \" + spendTime);\n" +
+                "        if(serviceName != null){\n" +
+                "            builder.append(\" \\$\\$serviceName:: \" + serviceName);\n" +
+                "        }\n" +
+                "        return builder.toString();\n" +
+                "    }\n" +
+                "    public static LogListenerEx getLogListener() {\n" +
+                "        return logListener;\n" +
+                "    }\n" +
+                "    public static void setLogListener(LogListenerEx logListener) {\n" +
+                "        LoggerEx.logListener = logListener;\n" +
+                "    }\n" +
+                "}";
+        try {
+            FileUtils.writeStringToFile(new File(path + "/chat/logs/LoggerEx.groovy"), loggerCode, "utf8");
+        } catch (IOException e) {
+            e.printStackTrace();
+            LoggerEx.error(TAG, "write ServiceStubProxy.groovy file on " + (path + "/script/groovy/runtime/ServiceStubProxy.groovy") + " failed, " + ExceptionUtils.getFullStackTrace(e));
+        }
     }
 }

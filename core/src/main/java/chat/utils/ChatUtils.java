@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 public class ChatUtils {
-	static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSSS");
+	static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
 	static {
 		sdf.setTimeZone(TimeZone.getTimeZone("GMT+8")); 
 	}

@@ -1,17 +1,14 @@
 package script.groovy.servlets;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
+import chat.logs.LoggerEx;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import chat.errors.CoreException;
-import chat.logs.LoggerEx;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
 @WebServlet(urlPatterns = "/", asyncSupported = true)
 public class GroovyServletDispatcher extends HttpServlet {
     /**
@@ -39,10 +36,10 @@ public class GroovyServletDispatcher extends HttpServlet {
     }
 
     public void servletDispatch(HttpServletRequest request, HttpServletResponse response) {
+        long time = System.currentTimeMillis();
         try {
             RequestHolder holder = null;
             String uri = request.getRequestURI();
-            LoggerEx.info(TAG, "RequestURI " + uri + " method " + request.getMethod() + " from " + request.getRemoteAddr());
             if (uri.startsWith("/")) {
                 uri = uri.substring(1);
             }
@@ -73,6 +70,7 @@ public class GroovyServletDispatcher extends HttpServlet {
             } else {
                 holder.handleRequest();
             }
+            LoggerEx.info(TAG, "RequestURI " + uri + " method " + request.getMethod() + " from " + request.getRemoteAddr(), System.currentTimeMillis() - time);
         } catch (Throwable e) {
             e.printStackTrace();
             LoggerEx.error(TAG, "Request url " + request.getRequestURL().toString() + " occur error " + ExceptionUtils.getFullStackTrace(e));

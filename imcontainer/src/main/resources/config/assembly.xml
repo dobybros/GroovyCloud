@@ -30,10 +30,10 @@
         </includes>
     </fileSet>
 </fileSets>
-    <dependencySets>
-        <dependencySet>
-            <!-- 将工程的依赖包打包到lib目录下。 -->
-            <outputDirectory>lib</outputDirectory>
-        </dependencySet>
-    </dependencySets>
+<!--    <dependencySets>-->
+<!--        <dependencySet>-->
+<!--            &lt;!&ndash; 将工程的依赖包打包到lib目录下。 &ndash;&gt;-->
+<!--            <outputDirectory>lib</outputDirectory>-->
+<!--        </dependencySet>-->
+<!--    </dependencySets>-->
 </assembly>

@@ -41,6 +41,7 @@
 							<addClasspath>true</addClasspath>
 							<mainClass>imcontainer.imcontainer.IMContainerApplication</mainClass>
 							<classpathPrefix>/home/aculearn/disk/lib/groovycloud-libs/</classpathPrefix>
+<!--							<classpathPrefix>/home/lick/temp/groovycloud-libs</classpathPrefix>-->
 						</manifest>
 <!--						<manifestEntries>-->
 <!--							<Class-Path>lib/cloudcore-0.0.1-SNAPSHOT.jar lib/core-0.0.1-SNAPSHOT.jar lib/mongodbconnector-0.0.1-SNAPSHOT.jar</Class-Path>-->

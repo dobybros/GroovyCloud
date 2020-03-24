@@ -14,7 +14,8 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <!-- 日志格式 -->
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>[%thread] %level %logger{36} - %msg%n</pattern>
+<!--            <pattern>[%thread] %-5level %logger{36} - %msg%n</pattern>-->
         </encoder>
     </appender>
 
@@ -31,9 +32,10 @@
             <!--<Pattern>
                 %d{yyyy-MM-dd HH:mm:ss} -%msg%n
             </Pattern>-->
-            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>[%thread] %level %logger{35} - %msg%n</pattern>
         </layout>
     </appender>
+
     <appender name="ANALYTICS-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/analytics.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -42,7 +44,7 @@
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>[%thread] %level %logger{35} - %msg%n</pattern>
         </encoder>
     </appender>
     <logger name="analytics" level="INFO" additivity="false">

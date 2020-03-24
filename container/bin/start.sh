@@ -2,7 +2,7 @@
 cd `dirname $0`
  BIN_DIR=`pwd`
 cd ..
-JAR_NAME='container.jar'
+JAR_NAME='container-1.0.jar'
 #最大堆大小(64)
 xmx64='2000m'
 #初始堆大小(64)

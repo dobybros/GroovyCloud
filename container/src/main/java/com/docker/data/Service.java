@@ -91,8 +91,12 @@ public class Service {
         minVersion = dbObj.getInteger(FIELD_SERVICE_MINVERSION);
         uploadTime = dbObj.getLong(FIELD_SERVICE_UPLOADTIME);
         type = dbObj.getInteger(FIELD_SERVICE_TYPE);
-        maxUserNumber = dbObj.getLong(FIELD_MAXUSERNUMBER);
-        scaleEnable = dbObj.getBoolean(FIELD_SCALEENABLE);
+        try {
+            maxUserNumber = dbObj.getLong(FIELD_MAXUSERNUMBER);
+        }catch (Throwable t){}
+        try {
+            scaleEnable = dbObj.getBoolean(FIELD_SCALEENABLE);
+        }catch (Throwable t){}
         List<Document> anDocs = (List<Document>) dbObj.get(FIELD_SERVICE_SERVICEANNOTATION);
         if (anDocs != null) {
             serviceAnnotations = new ArrayList<>();

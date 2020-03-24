@@ -6,6 +6,7 @@ import com.dobybros.chat.open.data.Message;
 import com.dobybros.chat.script.annotations.handler.ServiceUserSessionAnnotationHandler;
 import com.dobybros.chat.utils.SingleThreadQueue;
 import com.dobybros.gateway.onlineusers.OnlineUser;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import script.groovy.object.GroovyObjectEx;
 
 public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
@@ -25,7 +26,7 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                         sessionListener.getObject().channelClosed(gwUserParams.userId, gwUserParams.service, gwUserParams.terminal, gwUserParams.close);
                     } catch (Throwable t) {
                         t.printStackTrace();
-                        LoggerEx.error(TAG, "Handle channel " + gwUserParams.terminal + " closed by " + gwUserParams.userId + " failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "Handle channel " + gwUserParams.terminal + " closed by " + gwUserParams.userId + " failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                     runtime.channelCreatedMessage.remove(gwUserParams.terminal);
                 } else {
@@ -38,7 +39,7 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                                     listener.channelClosed(gwUserParams.terminal, gwUserParams.close);
                                 } catch (Throwable t) {
                                     t.printStackTrace();
-                                    LoggerEx.error(TAG, "Handle channel " + gwUserParams.terminal + " closed by " + gwUserParams.userId + "@" + gwUserParams.service + " failed, " + t.getMessage());
+                                    LoggerEx.error(TAG, "Handle channel " + gwUserParams.terminal + " closed by " + gwUserParams.userId + "@" + gwUserParams.service + " failed, " + ExceptionUtils.getFullStackTrace(t));
                                 }
                         }
                     }
@@ -50,7 +51,7 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                         sessionListener.getObject().channelCreated(gwUserParams.userId, gwUserParams.service, gwUserParams.terminal);
                     } catch (Throwable t) {
                         t.printStackTrace();
-                        LoggerEx.error(TAG, "Handle channel " + gwUserParams.terminal + " created by " + gwUserParams.userId + " failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "Handle channel " + gwUserParams.terminal + " created by " + gwUserParams.userId + " failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                 } else {
                     if (runtime != null) {
@@ -62,7 +63,7 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                                     listener.channelCreated(gwUserParams.terminal);
                                 } catch (Throwable t) {
                                     t.printStackTrace();
-                                    LoggerEx.error(TAG, "Handle channel " + gwUserParams.terminal + " created by " + gwUserParams.userId + "@" + gwUserParams.service + " failed, " + t.getMessage());
+                                    LoggerEx.error(TAG, "Handle channel " + gwUserParams.terminal + " created by " + gwUserParams.userId + "@" + gwUserParams.service + " failed, " + ExceptionUtils.getFullStackTrace(t));
                                 }
                         }
                     }
@@ -80,7 +81,7 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                                         runtime.messageReceived((Message) message, gwUserParams.terminal, onlineUser, container.needTcpResult);
                                     } catch (Throwable t) {
                                         t.printStackTrace();
-                                        LoggerEx.error(TAG, "Handle message " + gwUserParams.terminal + " created by " + gwUserParams.userId + " failed, " + t.getMessage());
+                                        LoggerEx.error(TAG, "Handle message " + gwUserParams.terminal + " created by " + gwUserParams.userId + " failed, " + ExceptionUtils.getFullStackTrace(t));
                                     }
                                 }
                             }
@@ -90,7 +91,7 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                                         runtime.dataReceived((Message) data, gwUserParams.terminal, onlineUser);
                                     } catch (Throwable t) {
                                         t.printStackTrace();
-                                        LoggerEx.error(TAG, "Handle message " + gwUserParams.terminal + " created by " + gwUserParams.userId + " failed, " + t.getMessage());
+                                        LoggerEx.error(TAG, "Handle message " + gwUserParams.terminal + " created by " + gwUserParams.userId + " failed, " + ExceptionUtils.getFullStackTrace(t));
                                     }
                                 }
                             }
@@ -107,7 +108,7 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                         sessionListener.getObject().sessionClosed(gwUserParams.userId, gwUserParams.service, gwUserParams.close);
                     } catch (Throwable t) {
                         t.printStackTrace();
-                        LoggerEx.error(TAG, "Handle session " + gwUserParams.userId + " service " + gwUserParams.service + " close failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "Handle session " + gwUserParams.userId + " service " + gwUserParams.service + " close failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                 } else {
                     if (runtime != null) {
@@ -119,13 +120,13 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                                     listener.sessionClosed(gwUserParams.close);
                                 } catch (Throwable t) {
                                     t.printStackTrace();
-                                    LoggerEx.error(TAG, "Handle session " + gwUserParams.userId + "@" + gwUserParams.service + " close failed, " + t.getMessage());
+                                    LoggerEx.error(TAG, "Handle session " + gwUserParams.userId + "@" + gwUserParams.service + " close failed, " + ExceptionUtils.getFullStackTrace(t));
                                 }
                                 try {
                                     handler.removeListeners(gwUserParams.userId, gwUserParams.service);
                                 } catch (Throwable t) {
                                     t.printStackTrace();
-                                    LoggerEx.error(TAG, "Handle session " + gwUserParams.userId + "@" + gwUserParams.service + " close failed, " + t.getMessage());
+                                    LoggerEx.error(TAG, "Handle session " + gwUserParams.userId + "@" + gwUserParams.service + " close failed, " + ExceptionUtils.getFullStackTrace(t));
                                 }
                             }
                         }
@@ -138,7 +139,7 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                         sessionListener.getObject().sessionCreated(gwUserParams.userId, gwUserParams.service);
                     } catch (Throwable t) {
                         t.printStackTrace();
-                        LoggerEx.error(TAG, "Handle session " + gwUserParams.userId + " service " + gwUserParams.service + " sessionCreated failed, " + t.getMessage());
+                        LoggerEx.error(TAG, "Handle session " + gwUserParams.userId + " service " + gwUserParams.service + " sessionCreated failed, " + ExceptionUtils.getFullStackTrace(t));
                     }
                 } else {
                     if (runtime != null) {
@@ -150,7 +151,7 @@ public class GWUserHandler extends SingleThreadQueue.Handler<GWUserParams> {
                                     listener.sessionCreated();
                                 } catch (Throwable t) {
                                     t.printStackTrace();
-                                    LoggerEx.error(TAG, "Handle session " + gwUserParams.userId + "@" + gwUserParams.service + " created failed, " + t.getMessage());
+                                    LoggerEx.error(TAG, "Handle session " + gwUserParams.userId + "@" + gwUserParams.service + " created failed, " + ExceptionUtils.getFullStackTrace(t));
                                 }
                         }
                     }

@@ -41,7 +41,7 @@ public class AnalyticsLogger {
         builder.append("$$time:: " + ChatUtils.dateString()).
                 append(" $$tag:: " + tag).
                 append(" ").
-                append(msg);
+                append("[" + msg + "]");
         return builder.toString();
     }
 }
