@@ -44,6 +44,8 @@ import java.util.Map;
 public class GroovyServletScriptDispatcher extends HttpServlet {
     private static final String TAG = GroovyServletManager.class.getSimpleName();
     ScriptManager scriptManager = null;
+    private String key = "FSDdfFDWfR324fs98DSF*@#";
+
     public void handle(HttpServletRequest request, HttpServletResponse response) {
         scriptManager = (ScriptManager) GroovyCloudBean.getBean(GroovyCloudBean.SCRIPTMANAGER);
         try {
@@ -72,52 +74,18 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                 } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_TIMER)) {
                     List list = handleTimer();
                     result.setData(list);
-                } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERACCESSSERVICE)) {
-                    String token = request.getHeader("crossClusterToken");
-                    if (token == null) {
-                        LoggerEx.error(TAG, "Token is null when Cross-cluster!!!");
-                        result.setMsg("Token is null when Cross-cluster!!!");
-                    }
-                    try {
-                        JWTUtils.getClaims("crossClusterToken", token);
-                    } catch (Throwable e) {
-                        LoggerEx.error(TAG, "Jwt expired or not found when Cross-cluster, please check!!!err: " + ExceptionUtils.getFullStackTrace(e));
-                        result.setMsg("Jwt expired or not found when Cross-cluster, please check!!!");
-                    }
-                    if (result.getMsg() == null) {
-                        String requestStr = IOUtils.toString(request.getInputStream(), Charset.defaultCharset());
-                        CallServiceParams callServiceParams = JSON.parseObject(requestStr, CallServiceParams.class);
-                        if (callServiceParams != null && callServiceParams.checkParamsNotNull()) {
-                            Object[] objects = null;
-                            if (callServiceParams.args != null) {
-                                objects = new Object[callServiceParams.args.size()];
-                                int i = 0;
-                                for (Object o : callServiceParams.args) {
-                                    objects[i] = o;
-                                    i++;
-                                }
-                            }
-                            Object o = new ServiceStubManager().call(callServiceParams.service, callServiceParams.className, callServiceParams.methodName, objects);
-                            if (o != null) {
-                                result.setData(o);
-                            }
-                        }
-                    }
-                } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERCREATETOKEN)) {
-                    String token = JWTUtils.createToken("crossClusterToken", null, 10800000L);//3小时
-                    result.setData(token);
                 }
             } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_SCALE)) {
                 String token = request.getHeader("key");
-                if(StringUtils.isBlank(token) || !token.equals("FSDdfFDWfR324fs98DSF*@#")){
+                if (StringUtils.isBlank(token) || !token.equals(key)) {
                     LoggerEx.error(TAG, "key is null when scale!!!");
                     result.setCode(4001);
                     result.setMsg("key is null when scale!!!");
-                }else {
-                    if(uriStrs.length > 3){
+                } else {
+                    if (uriStrs.length > 3) {
                         JSONObject jsonObject = null;
                         String requestStr = IOUtils.toString(request.getInputStream(), Charset.defaultCharset());
-                        if(requestStr != null){
+                        if (requestStr != null) {
                             jsonObject = JSON.parseObject(requestStr);
                         }
                         String service = uriStrs[2];
@@ -128,7 +96,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                                 ServiceScaleHandler serviceScaleHandler = (ServiceScaleHandler) groovyRuntime.getClassAnnotationHandler(ServiceScaleHandler.class);
                                 if (serviceScaleHandler != null) {
                                     String methodName = uriStrs[3];
-                                    if(uriStrs.length > 4){
+                                    if (uriStrs.length > 4) {
                                         for (int i = 4; i < uriStrs.length; i++) {
                                             methodName += captureName(uriStrs[i]);
                                         }
@@ -136,17 +104,67 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                                     Object resultObject = null;
                                     try {
                                         resultObject = serviceScaleHandler.invoke(methodName, jsonObject);
-                                    }catch (CoreException e){
+                                    } catch (CoreException e) {
                                         result.setCode(e.getCode());
                                         result.setMsg(e.getMessage());
                                     }
-                                    if(result.getMsg() == null){
+                                    if (result.getMsg() == null) {
                                         result.setData(resultObject);
                                     }
                                 }
                             }
                         }
                     }
+                }
+            } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERACCESSSERVICE)) {
+                String token = request.getHeader("crossClusterToken");
+                if (token == null) {
+                    LoggerEx.error(TAG, "Token is null when Cross-cluster!!!");
+                    result.setMsg("Token is null when Cross-cluster!!!");
+                }
+                try {
+                    JWTUtils.getClaims("crossClusterToken", token);
+                } catch (Throwable e) {
+                    LoggerEx.error(TAG, "Jwt expired or not found when Cross-cluster, please check!!!err: " + ExceptionUtils.getFullStackTrace(e));
+                    result.setMsg("Jwt expired or not found when Cross-cluster, please check!!!");
+                }
+                if (result.getMsg() == null) {
+                    String requestStr = IOUtils.toString(request.getInputStream(), Charset.defaultCharset());
+                    JSONObject params = JSON.parseObject(requestStr);
+                    String serviceName = params.getString("service");
+                    String className = params.getString("className");
+                    String methodName = params.getString("methodName");
+                    JSONArray args = params.getJSONArray("args");
+                    if (StringUtils.isNotBlank(serviceName) && StringUtils.isNotBlank(className) && StringUtils.isNotBlank(methodName)) {
+                        Object[] objects = null;
+                        if (args != null) {
+                            objects = new Object[args.size()];
+                            int i = 0;
+                            for (Object o : args) {
+                                objects[i] = o;
+                                i++;
+                            }
+                        }
+                        try {
+                            Object o = new ServiceStubManager().call(serviceName, className, methodName, objects);
+                            if (o != null) {
+                                result.setData(o);
+                            }
+                        } catch (Throwable t) {
+                            LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(t));
+                            throw t;
+                        }
+                    }
+                }
+            } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERCREATETOKEN)) {
+                String internalToken = request.getHeader("key");
+                if (StringUtils.isBlank(internalToken) || !internalToken.equals(key)) {
+                    LoggerEx.error(TAG, "key is null when get crossToken!!!");
+                    result.setCode(4001);
+                    result.setMsg("key is null when get crossToken!!!");
+                } else {
+                    String token = JWTUtils.createToken("crossClusterToken", null, 10800000L);//3小时
+                    result.setData(token);
                 }
             }
             respond(response, result);
@@ -160,11 +178,13 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
             }
         }
     }
+
     private String captureName(String name) {
         char[] cs = name.toCharArray();
         cs[0] -= 32;
         return String.valueOf(cs);
     }
+
     private String getServiceVersion(String service) {
         String serviceVersion = null;
         if (!service.contains("_v")) {
