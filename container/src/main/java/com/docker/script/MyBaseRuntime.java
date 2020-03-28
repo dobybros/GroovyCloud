@@ -89,7 +89,7 @@ public class MyBaseRuntime extends BaseRuntime {
                     if (lan.getType() == null) {
                         manager.setLanType(Lan.TYPE_http);
                     } else {
-                        manager.setLanType(lan.getType());
+                        manager.setLanType(Integer.valueOf(lan.getType()));
                     }
                     manager.setUsePublicDomain(true);
                     manager.init();
