@@ -259,8 +259,8 @@ public class RemoteServerHandler {
             if(serviceClassMethods.length == 3){
                 Map<String, Object> dataMap = new HashMap<String, Object>();
                 dataMap.put("service", serviceClassMethods[0]);
-                dataMap.put("class", serviceClassMethods[1]);
-                dataMap.put("method", serviceClassMethods[2]);
+                dataMap.put("className", serviceClassMethods[1]);
+                dataMap.put("methodName", serviceClassMethods[2]);
                 dataMap.put("args", request.getArgs());
                 Map<String, Object> headerMap = new HashMap<String, Object>();
                 headerMap.put("crossClusterToken", token);

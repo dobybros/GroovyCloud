@@ -16,6 +16,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import script.groovy.servlets.grayreleased.GrayReleased;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,7 +63,9 @@ public class RemoteServersManager {
             TimerTaskEx taskEx = new TimerTaskEx("RefreshRemoteTokenWhenCross") {
                 @Override
                 public void execute() {
-                    RemoteTokenResult remoteTokenResult = (RemoteTokenResult) ScriptHttpUtils.get(host + "/base/crossClusterCreateToken", RemoteTokenResult.class);
+                    Map header = new HashMap();
+                    header.put("key", "FSDdfFDWfR324fs98DSF*@#");
+                    RemoteTokenResult remoteTokenResult = (RemoteTokenResult) ScriptHttpUtils.post(null, host + "/base/crossClusterCreateToken", header, RemoteTokenResult.class);
                     if (remoteTokenResult != null) {
                         String jwtToken = remoteTokenResult.getData();
                         if (jwtToken != null) {
@@ -74,7 +77,9 @@ public class RemoteServersManager {
                         TimerEx.schedule(new TimerTaskEx("RefreshRemoteTokenWhenCrossFailedRetry") {
                             @Override
                             public void execute() {
-                                RemoteTokenResult remoteTokenResult = (RemoteTokenResult) ScriptHttpUtils.get(host + "/rest/discovery/accessToken", RemoteTokenResult.class);
+                                Map header = new HashMap();
+                                header.put("key", "FSDdfFDWfR324fs98DSF*@#");
+                                RemoteTokenResult remoteTokenResult = (RemoteTokenResult) ScriptHttpUtils.post(null, host + "/base/crossClusterCreateToken", header, RemoteTokenResult.class);
                                 if (remoteTokenResult != null) {
                                     String jwtToken = remoteTokenResult.getData();
                                     if (jwtToken != null) {
