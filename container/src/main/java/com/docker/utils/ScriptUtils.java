@@ -59,6 +59,7 @@ public class ScriptUtils {
                 "\n" +
                 "public class LoggerEx {\n" +
                 "    private static Logger logger = LoggerFactory.getLogger(\"\");\n" +
+                "    private static String LEVEL_FATAL = \"FATAL\";\n" +
                 "    private static LogListenerEx logListener;\n" +
                 "    private LoggerEx() {\n" +
                 "    }\n" +
@@ -112,7 +113,7 @@ public class ScriptUtils {
                 "            logger.error(log);\n" +
                 "    }\n" +
                 "    public static void fatal(String tag, String msg) {\n" +
-                "        String log = getLogMsg(tag, msg);\n" +
+                "        String log = getLogMsgFatal(tag, msg);\n" +
                 "        if (logListener != null)\n" +
                 "            logListener.fatal(log);\n" +
                 "        else\n" +
@@ -134,6 +135,23 @@ public class ScriptUtils {
                 "        }\n" +
                 "        return builder.toString();\n" +
                 "    }\n" +
+                "   private static String getLogMsgFatal(String tag, String msg) {\n" +
+                "        StringBuilder builder = new StringBuilder();\n" +
+                "        com.docker.script.MyBaseRuntime baseRuntime = (com.docker.script.MyBaseRuntime) GroovyRuntime.getCurrentGroovyRuntime(chat.logs.LoggerEx.class.getClassLoader());\n" +
+                "        String serviceName = null;\n" +
+                "        if (baseRuntime != null) {\n" +
+                "            serviceName = baseRuntime.getServiceName();\n" +
+                "        }\n" +
+                "        builder.append(LEVEL_FATAL).\n" +
+                "                append(\" \\$\\$time:: \" + ChatUtils.dateString()).\n" +
+                "                append(\" \\$\\$tag:: \" + tag).\n" +
+                "                append(\" \").\n" +
+                "                append(\"[\" + msg + \"]\");\n" +
+                "        if (serviceName != null) {\n" +
+                "            builder.append(\" \\$\\$serviceName:: \" + serviceName);\n" +
+                "        }\n" +
+                "        return builder.toString();\n" +
+                "       }\n" +
                 "    private static String getLogMsg(String tag, String msg, Long spendTime) {\n" +
                 "        StringBuilder builder = new StringBuilder();\n" +
                 "        com.docker.script.MyBaseRuntime baseRuntime = (com.docker.script.MyBaseRuntime) GroovyRuntime.getCurrentGroovyRuntime(chat.logs.LoggerEx.class.getClassLoader());\n" +
