@@ -68,6 +68,8 @@ public class ScriptManager implements ShutdownListener {
 
     public static final String SERVICE_NOTFOUND = "servicenotfound";
     public static final Boolean DELETELOCAL = false;
+    private final int compileOnceNumber = 5;
+    private final boolean compileAllService = true;
 
     private String runtimeBootClass;
 
@@ -144,14 +146,38 @@ public class ScriptManager implements ShutdownListener {
             List<String> serviceVersionFinalList = getServiceVersions();
             if (serviceVersionFinalList != null && !serviceVersionFinalList.isEmpty()) {
                 Set<String> remoteServices = new ConcurrentHashSet<>();
-                CountDownLatch scriptCountDownLatch = new CountDownLatch(serviceVersionFinalList.size());
-                for (String theServiceVersion : serviceVersionFinalList) {
-                    ServerStart.getInstance().getThreadPool().execute(() -> {
-                        complieService(theServiceVersion, remoteServices);
-                        scriptCountDownLatch.countDown();
-                    });
+                if (!compileAllService) {
+                    while (!serviceVersionFinalList.isEmpty()) {
+                        List<String> serviceVersionList = new ArrayList<>();
+                        for (int i = 0; i < serviceVersionFinalList.size(); i++) {
+                            if (serviceVersionList.size() < compileOnceNumber) {
+                                serviceVersionList.add(serviceVersionFinalList.remove(i));
+                            } else {
+                                break;
+                            }
+                        }
+                        if (!serviceVersionList.isEmpty()) {
+                            CountDownLatch scriptCountDownLatch = new CountDownLatch(serviceVersionList.size());
+                            for (String theServiceVersion : serviceVersionList) {
+                                ServerStart.getInstance().getThreadPool().execute(() -> {
+                                    complieService(theServiceVersion, remoteServices);
+                                    scriptCountDownLatch.countDown();
+                                });
+                            }
+                            scriptCountDownLatch.await();
+                        }
+                    }
+                } else {
+                    CountDownLatch scriptCountDownLatch = new CountDownLatch(serviceVersionFinalList.size());
+                    for (String theServiceVersion : serviceVersionFinalList) {
+                        ServerStart.getInstance().getThreadPool().execute(() -> {
+                            complieService(theServiceVersion, remoteServices);
+                            scriptCountDownLatch.countDown();
+                        });
+                    }
+                    scriptCountDownLatch.await();
                 }
-                scriptCountDownLatch.await();
+
                 Collection<String> keys = scriptRuntimeMap.keySet();
                 for (String key : keys) {
                     if (!remoteServices.contains(key)) {
