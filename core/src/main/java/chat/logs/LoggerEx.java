@@ -52,7 +52,13 @@ public class LoggerEx {
         else
             logger.info(log);
     }
-
+    public static void info(String tag, String msg, String data) {
+        String log = getLogMsg(tag, msg, data);
+        if (logListener != null)
+            logListener.info(log);
+        else
+            logger.info(log);
+    }
     public static void warn(String tag, String msg) {
         String log = getLogMsg(tag, msg);
         if (logListener != null)
@@ -105,7 +111,15 @@ public class LoggerEx {
 
         return builder.toString();
     }
+    private static String getLogMsg(String tag, String msg, String data) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("$$time:: " + ChatUtils.dateString()).
+                append(" $$tag:: " + tag).
+                append(" [" + msg + "]").
+                append(" $$data:: " + data);
 
+        return builder.toString();
+    }
     public static LogListener getLogListener() {
         return logListener;
     }

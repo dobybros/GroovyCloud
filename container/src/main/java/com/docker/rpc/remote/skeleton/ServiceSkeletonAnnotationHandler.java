@@ -2,7 +2,6 @@ package com.docker.rpc.remote.skeleton;
 
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
-import chat.logs.AnalyticsLogger;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
 import com.alibaba.fastjson.JSON;
@@ -111,6 +110,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
     public class SkelectonMethodMapping extends MethodMapping {
         private GroovyObjectEx<RemoteService> remoteService;
         private List<RpcServerInterceptor> rpcServerInterceptors;
+
         public SkelectonMethodMapping(Method method) {
             super(method);
         }
@@ -128,7 +128,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 System.arraycopy(rawArgs, 0, args, 0, parameterTypes.length);
             } else {
                 args = new Object[parameterTypes.length];
-                if(rawArgs != null)
+                if (rawArgs != null)
                     System.arraycopy(rawArgs, 0, args, 0, rawArgs.length);
             }
             return args;
@@ -167,7 +167,7 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 } else {
                     exception = new CoreException(ChatErrorCodes.ERROR_METHODMAPPING_INVOKE_UNKNOWNERROR, t.getMessage());
                 }
-                LoggerEx.error(TAG, "invoke MethodRequest " + request.toString() + " error, " + ExceptionUtils.getFullStackTrace(t));
+                exception.log(TAG, "invoke MethodRequest " + request.toString() + " error, " + ExceptionUtils.getFullStackTrace(t));
             } finally {
                 String ip = OnlineServer.getInstance().getIp();
                 Tracker.trackerThreadLocal.remove();
@@ -182,10 +182,10 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
             if (returnObj != null)
                 response.setReturnTmpStr(JSON.toJSONString(returnObj));
 //            builder.append(" $$returnobj:: " + response.getReturnTmpStr());
-            if (error)
-                AnalyticsLogger.error(TAG, builder.toString());
-            else
-                AnalyticsLogger.info(TAG, builder.toString());
+//            if (error)
+//                AnalyticsLogger.error(TAG, builder.toString());
+//            else
+//                AnalyticsLogger.info(TAG, builder.toString());
             return response;
         }
 
@@ -257,8 +257,8 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                 mm.setReturnClass(returnType);
                 if (method.getGenericReturnType().getTypeName().contains(CompletableFuture.class.getTypeName())) {
                     mm.setAsync(true);
-                    if(concurrentLimit != -1){
-                        RpcServerInterceptor concurrentLimitRpcServerInterceptor = new ConcurrentLimitRpcServerInterceptor(concurrentLimit, queueSize,  clazz.getName() +"-" + method.getName());
+                    if (concurrentLimit != -1) {
+                        RpcServerInterceptor concurrentLimitRpcServerInterceptor = new ConcurrentLimitRpcServerInterceptor(concurrentLimit, queueSize, clazz.getName() + "-" + method.getName());
                         List<RpcServerInterceptor> rpcServerInterceptors = new ArrayList<>();
                         rpcServerInterceptors.add(concurrentLimitRpcServerInterceptor);
                         mm.setRpcServerInterceptors(rpcServerInterceptors);
@@ -335,19 +335,19 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
                         String[] strs = (String[]) annotationValue;
                         for (int i = 0; i < strs.length; i++) {
                             String markParam = getGroovyRuntime().processAnnotationString(strs[i]);
-                            if(markParam != null){
+                            if (markParam != null) {
                                 list.add(markParam);
                             }
                         }
                         annotationValue = list;
                         annotationParams.put(annotationKey, annotationValue);
-                    }catch (Throwable t){
+                    } catch (Throwable t) {
                         t.printStackTrace();
                         LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(t));
                     }
-                }else if(annotationValue instanceof String){
+                } else if (annotationValue instanceof String) {
                     annotationParams.put(annotationKey, getGroovyRuntime().processAnnotationString((String) annotationValue));
-                }else {
+                } else {
                     annotationParams.put(annotationKey, annotationValue);
                 }
         }
@@ -355,13 +355,14 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
         serviceAnnotation.setClassName(method.getDeclaringClass().getSimpleName());
         serviceAnnotation.setMethodName(method.getName());
         serviceAnnotation.setType(annotation.annotationType().getSimpleName());
-        if (method.getGenericReturnType().getTypeName().contains(CompletableFuture.class.getTypeName())){
+        if (method.getGenericReturnType().getTypeName().contains(CompletableFuture.class.getTypeName())) {
             serviceAnnotation.setAsync(true);
-        }else {
+        } else {
             serviceAnnotation.setAsync(false);
         }
         return serviceAnnotation;
     }
+
     @Override
     public void configService(com.docker.data.Service theService) {
         theService.appendServiceAnnotation(annotationList);

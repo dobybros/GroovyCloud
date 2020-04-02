@@ -16,7 +16,7 @@ public abstract class RequestIntercepter {
 		try {
 			invoke(holder);
 		} catch (Throwable t) {
-			t.printStackTrace();
+//			t.printStackTrace();
 			try {
 				invokeError(t, holder);
 			} catch (Throwable t1) {

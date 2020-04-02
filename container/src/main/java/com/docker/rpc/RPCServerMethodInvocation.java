@@ -2,15 +2,10 @@ package com.docker.rpc;
 
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
-import chat.logs.LoggerEx;
-import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.skeleton.ServiceSkeletonAnnotationHandler;
 import com.docker.script.BaseRuntime;
 import com.docker.script.ScriptManager;
 import com.docker.utils.SpringContextUtil;
-
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Created by aplomb on 17-5-16.
@@ -23,7 +18,6 @@ public class RPCServerMethodInvocation extends RPCServerAdapter<MethodRequest, M
     public MethodResponse onCall(MethodRequest request) throws CoreException {
         ServiceSkeletonAnnotationHandler.SkelectonMethodMapping methodMapping = getMethodMapping(request);
         MethodResponse response = methodMapping.invoke(request);
-        LoggerEx.info(TAG, "Successfully call Method " + methodMapping.getMethod().getName() + "#" + methodMapping.getRemoteService().getGroovyClass().getSimpleName() + " crc " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " return " + response.getReturnObject() + " exception " + response.getException());
         return response;
     }
 

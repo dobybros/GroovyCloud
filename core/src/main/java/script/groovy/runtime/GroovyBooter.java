@@ -125,7 +125,7 @@ public class GroovyBooter implements RuntimeBootListener {
                     String absolutePath = FilenameUtils.separatorsToUnix(file.getAbsolutePath());
                     int pathPos = absolutePath.indexOf(path);
                     if (pathPos < 0 || absolutePath.endsWith("config/imports.groovy")) {
-                        LoggerEx.warn(TAG, "Find path " + path + " in file " + absolutePath + " failed, " + pathPos + ". Ignore...");
+                        LoggerEx.info(TAG, "Find path " + path + " in file " + absolutePath + " failed, " + pathPos + ". Ignore...");
                         continue;
                     }
                     String key = absolutePath.substring(pathPos + path.length());
