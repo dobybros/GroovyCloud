@@ -8,6 +8,9 @@ import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
+import java.net.http.WebSocket;
+import java.util.Map;
+
 /**
  * Decodes incoming buffers in a manner that makes the sender transparent to the 
  * decoders further up in the filter chain. If the sender is a native client then
@@ -71,13 +74,16 @@ public abstract class WebSocketDecoder extends CumulativeProtocolDecoder{
         
         try{
             String payLoadMsg = new String(in.array());
-            String socketKey = WebSocketUtils.getClientWSRequestKey(payLoadMsg);
-            if(socketKey.length() <= 0){
+            Map<String, String> socketMap = WebSocketUtils.getClientWSRequestKey(payLoadMsg);
+            if(socketMap == null || socketMap.isEmpty() || socketMap.get("sec-websocket-key") == ""){
                 return false;
             }
-            String challengeAccept = WebSocketUtils.getWebSocketKeyChallengeResponse(socketKey);            
+            String challengeAccept = WebSocketUtils.getWebSocketKeyChallengeResponse(socketMap.get("sec-websocket-key"));
             WebSocketHandShakeResponse wsResponse = WebSocketUtils.buildWSHandshakeResponse(challengeAccept);
             session.setAttribute(WebSocketUtils.SessionAttribute, true);
+            if( socketMap.get("x-real-ip") != ""){
+                session.setAttribute(WebSocketUtils.ATTRIBUTE_IP,  socketMap.get("x-real-ip"));
+            }
 //            synchronized (session) {
                 session.write(wsResponse);
 //            }
