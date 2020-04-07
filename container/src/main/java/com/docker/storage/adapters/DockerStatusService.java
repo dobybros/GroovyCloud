@@ -54,4 +54,6 @@ public interface DockerStatusService {
     List<Service> getServiceAnnotation(List<String> types, String id) throws CoreException;
 
     List<DockerStatus> getDockerStatusesByType(Integer type) throws CoreException;
+
+    List<DockerStatus> getDockerStatusesByIp(String ip) throws CoreException;
 }

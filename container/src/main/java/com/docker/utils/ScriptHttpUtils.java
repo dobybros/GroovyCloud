@@ -12,12 +12,18 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContexts;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Map;
 
 /**
@@ -29,9 +35,14 @@ public class ScriptHttpUtils {
     public static Result post(String data, String url, Map headers, Class c) {
         HttpPost post = null;
         CloseableHttpResponse response = null;
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpClient httpClient = null;
         Throwable t = null;
         try {
+            if(url.startsWith("https")){
+                httpClient = createSSLClientDefault();
+            }else {
+                httpClient = HttpClients.createDefault();
+            }
             RequestConfig requestConfig = RequestConfig.custom()
                     // 设置连接超时时间(单位毫秒)
                     .setConnectTimeout(5000)
@@ -89,12 +100,33 @@ public class ScriptHttpUtils {
         }
         return null;
     }
+    private static CloseableHttpClient createSSLClientDefault() throws Throwable{
+        SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, new TrustStrategy() {
+
+            @Override
+            public boolean isTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                return true;
+            }
+
+        }).build();
+
+        //创建httpClient
+        CloseableHttpClient client = HttpClients.custom().setSslcontext(sslContext).
+                setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
+        return client;
+
+    }
 
     public static Result get(String url, Class c) {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpClient httpClient = null;
         HttpGet get = new HttpGet(url);
         CloseableHttpResponse response = null;
         try {
+            if(url.startsWith("https")){
+                httpClient = createSSLClientDefault();
+            }else {
+                httpClient = HttpClients.createDefault();
+            }
             RequestConfig requestConfig = RequestConfig.custom()
                     // 设置连接超时时间(单位毫秒)
                     .setConnectTimeout(5000)
@@ -119,7 +151,7 @@ public class ScriptHttpUtils {
             }else {
                 throw new CoreException(ChatErrorCodes.ERROR_GET_FAILED, "Connect to server failed, url: " + url);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LoggerEx.error(TAG, "Http get failed, the url is unavailable,url: " + url + ", err: " + ExceptionUtils.getFullStackTrace(e));
             e.printStackTrace();
         } finally {

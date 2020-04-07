@@ -344,4 +344,27 @@ public class DockerStatusServiceImpl implements DockerStatusService {
 			throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_QUERY_FAILED, "Query server present server by type failed, " + e.getMessage());
 		}
 	}
+
+    @Override
+    public List<DockerStatus> getDockerStatusesByIp(String ip) throws CoreException {
+        try {
+            List<DockerStatus> dockerStatuses = new ArrayList<>();
+            Document query = new Document();
+            if (ip != null) {
+                query.append(DockerStatus.FIELD_DOCKERSTATUS_IP, ip);
+            }
+            FindIterable<Document> iterable = dockerStatusDAO.query(query);
+            MongoCursor<Document> cursor = iterable.iterator();
+            while (cursor.hasNext()) {
+                Document doc = cursor.next();
+                DockerStatus dockerStatus = new DockerStatus();
+                dockerStatus.fromDocument(doc);
+                dockerStatuses.add(dockerStatus);
+            }
+            return dockerStatuses;
+        } catch (DBException e) {
+            e.printStackTrace();
+            throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_QUERY_FAILED, "Query server present server by type failed, " + e.getMessage());
+        }
+    }
 }
