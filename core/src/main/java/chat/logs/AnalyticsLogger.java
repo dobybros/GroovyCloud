@@ -26,7 +26,6 @@ public class AnalyticsLogger {
     public static void error(String tag, String msg) {
         String log = getLogMsg(tag, msg);
         analytics.error(log);
-        System.out.println(log);
     }
 
     public static void fatal(String tag, String msg) {

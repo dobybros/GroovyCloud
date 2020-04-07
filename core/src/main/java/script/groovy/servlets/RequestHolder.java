@@ -2,11 +2,9 @@ package script.groovy.servlets;
 
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
-import chat.logs.AnalyticsLogger;
 import chat.logs.LoggerEx;
 import chat.main.ServerStart;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.GroovyRuntime;
 import script.groovy.servlets.GroovyServletManager.PermissionIntercepter;
@@ -294,7 +292,12 @@ public class RequestHolder {
 //            builder.append(" $$returnobj:: " + (returnObj != null ? JSON.toJSONString(returnObj) : returnObj));
             return returnObj;
         } catch (Throwable t) {
-            error = true; LoggerEx.error(TAG, "servletObj " + servletObj + " invoke method " + groovyMethod + " failed, " + ExceptionUtils.getFullStackTrace(t));
+            error = true;
+            if(t.getCause() instanceof CoreException){
+                ((CoreException) t.getCause()).log(TAG, "servletObj " + servletObj + " invoke method " + groovyMethod + " failed, " + t.getMessage());
+            }else {
+                LoggerEx.error(TAG, "servletObj " + servletObj + " invoke method " + groovyMethod + " failed, " + t.getMessage());
+            }
             builder.append(" $$error:: " + t.getClass() + " $$errorMsg:: " + t.getMessage());
             throw t;
         } finally {
@@ -302,10 +305,10 @@ public class RequestHolder {
             invokeTokes = System.currentTimeMillis() - time;
             builder.append(" $$takes:: " + invokeTokes);
             Tracker.trackerThreadLocal.remove();
-            if (error)
-                AnalyticsLogger.error(TAG, builder.toString());
-            else
-                AnalyticsLogger.info(TAG, builder.toString());
+//            if (error)
+//                AnalyticsLogger.error(TAG, builder.toString());
+//            else
+//                AnalyticsLogger.info(TAG, builder.toString());
         }
     }
 

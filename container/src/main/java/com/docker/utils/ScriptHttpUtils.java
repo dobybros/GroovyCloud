@@ -30,6 +30,7 @@ public class ScriptHttpUtils {
         HttpPost post = null;
         CloseableHttpResponse response = null;
         CloseableHttpClient httpClient = HttpClients.createDefault();
+        Throwable t = null;
         try {
             RequestConfig requestConfig = RequestConfig.custom()
                     // 设置连接超时时间(单位毫秒)
@@ -72,7 +73,8 @@ public class ScriptHttpUtils {
                 throw new CoreException(ChatErrorCodes.ERROR_POST_FAILED, "Connect to server http failed, " + code);
             }
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            t = e;
             LoggerEx.error(TAG, "Http post failed, err: " + ExceptionUtils.getFullStackTrace(e));
             e.printStackTrace();
         } finally {

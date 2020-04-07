@@ -22,10 +22,10 @@ import script.groovy.runtime.classloader.MyGroovyClassLoader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -75,7 +75,7 @@ public class GroovyBooter implements RuntimeBootListener {
         MyGroovyClassLoader oldClassLoader = classLoader;
         boolean deploySuccessfully = false;
         ByteArrayOutputStream baos = null;
-        List<File> compileFirstFiles = new ArrayList<>();
+        List<File> compileFirstFiles = new CopyOnWriteArrayList<>();
         try {
             File importPath = new File(path + "/config/imports.groovy");
             StringBuilder importBuilder = null;
@@ -125,7 +125,7 @@ public class GroovyBooter implements RuntimeBootListener {
                     String absolutePath = FilenameUtils.separatorsToUnix(file.getAbsolutePath());
                     int pathPos = absolutePath.indexOf(path);
                     if (pathPos < 0 || absolutePath.endsWith("config/imports.groovy")) {
-                        LoggerEx.warn(TAG, "Find path " + path + " in file " + absolutePath + " failed, " + pathPos + ". Ignore...");
+                        LoggerEx.info(TAG, "Find path " + path + " in file " + absolutePath + " failed, " + pathPos + ". Ignore...");
                         continue;
                     }
                     String key = absolutePath.substring(pathPos + path.length());
