@@ -7,6 +7,7 @@ import chat.main.ServerStart;
 import chat.utils.ConcurrentHashSet;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
+import com.docker.data.DataObject;
 import com.docker.data.Service;
 import com.docker.data.ServiceVersion;
 import com.docker.file.adapters.GridFSFileHandler;
@@ -34,6 +35,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -293,38 +295,30 @@ public class ScriptManager implements ShutdownListener {
 
                     Service theService = null;
                     if (createRuntime) {
-                        String propertiesPath = localScriptPath + "/config.properties";
-                        Properties properties = new Properties();
-                        File propertiesFile = new File(propertiesPath);
-                        if (propertiesFile.exists() && propertiesFile.isFile()) {
-                            InputStream is = FileUtils.openInputStream(propertiesFile);
-                            InputStreamReader reader = new InputStreamReader(is, "utf-8");
-                            properties.load(reader);
-                            reader.close();
-                            IOUtils.closeQuietly(is);
-                        }
                         Integer version = getServiceVersion(service);
                         String serviceName = getServiceName(service);
-
                         runtime.setServiceName(serviceName);
                         runtime.setServiceVersion(version);
-
-                        try {
-                            if (serversService != null) {
-                                Document configDoc = serversService.getServerConfig(service);
-                                if (configDoc != null) {
-                                    Set<String> keys = configDoc.keySet();
-                                    for (String key : keys) {
-                                        properties.put(key.replaceAll("_", "."), configDoc.getString(key));
-                                    }
-                                }
-                                LoggerEx.info(TAG, "Read service: " + service + ", merge config: " + properties);
-                            } else {
-                                LoggerEx.info(TAG, "serversService is null, will not read config from database for service " + serviceName);
-                            }
-                        } catch (Throwable t) {
-                            LoggerEx.error(TAG, "Read server " + serviceName + " config failed, " + ExceptionUtils.getFullStackTrace(t));
-                        }
+//<<<<<<< HEAD
+//
+//                        try {
+//                            if (serversService != null) {
+//                                Document configDoc = serversService.getServerConfig(service);
+//                                if (configDoc != null) {
+//                                    Set<String> keys = configDoc.keySet();
+//                                    for (String key : keys) {
+//                                        properties.put(key.replaceAll("_", "."), configDoc.getString(key));
+//                                    }
+//                                }
+//                                LoggerEx.info(TAG, "Read service: " + service + ", merge config: " + properties);
+//                            } else {
+//                                LoggerEx.info(TAG, "serversService is null, will not read config from database for service " + serviceName);
+//                            }
+//                        } catch (Throwable t) {
+//                            LoggerEx.error(TAG, "Read server " + serviceName + " config failed, " + ExceptionUtils.getFullStackTrace(t));
+//                        }
+//=======
+                        Properties properties = prepareServiceProperties(localScriptPath, service);
                         //触发serviceVersions
                         runtime.prepare(service, properties, localScriptPath);
 
@@ -402,7 +396,66 @@ public class ScriptManager implements ShutdownListener {
             }
         }
     }
+    private Properties prepareServiceProperties(String localScriptPath, String serviceName) throws Throwable{
+        String propertiesPath = localScriptPath + "/config.properties";
+        Properties properties = new Properties();
+        File propertiesFile = new File(propertiesPath);
+        if (propertiesFile.exists() && propertiesFile.isFile()) {
+            InputStream is = FileUtils.openInputStream(propertiesFile);
+            InputStreamReader reader = new InputStreamReader(is, Charset.defaultCharset());
+            properties.load(reader);
+            reader.close();
+            IOUtils.closeQuietly(is);
+        }
 
+        try {
+            if (serversService != null) {
+                Document configDoc = serversService.getServerConfig(serviceName);
+                if (configDoc != null) {
+                    String configDependencies = configDoc.getString("config_dependencies");
+                    Map<String, Object> configDependencyMap = null;
+                    if (configDependencies != null) {
+                        String[] theConfigDependencies = configDependencies.split(",");
+                        if (theConfigDependencies.length > 0) {
+                            configDependencyMap = new ConcurrentHashMap<>();
+                            for (int i = theConfigDependencies.length - 1; i >= 0; i--) {
+                                Document configDependencyDoc = serversService.getServerConfig(theConfigDependencies[i]);
+                                if (configDependencyDoc != null) {
+                                    configDependencyMap.putAll(configDependencyDoc);
+                                }
+                            }
+                        }
+                    }
+                    if (configDependencyMap == null) {
+                        configDependencyMap = configDoc;
+                    } else {
+                        configDependencyMap.putAll(configDoc);
+                    }
+                    configDependencyMap.remove(DataObject.FIELD_ID);
+                    Set<String> keys = configDependencyMap.keySet();
+                    for (String key : keys) {
+                        properties.put(key.replaceAll("_", "."), configDependencyMap.get(key));
+                    }
+                }
+                if (!properties.isEmpty()) {
+                    for (Object key : properties.keySet()){
+                        Object value = properties.get(key);
+                        if(value instanceof String){
+                            if(StringUtils.isBlank((String) value)){
+                                properties.remove(key);
+                            }
+                        }
+                    }
+                }
+                LoggerEx.info(TAG, "Read service: " + serviceName + ", merge config: " + properties);
+            } else {
+                LoggerEx.info(TAG, "serversService is null, will not read config from database for service " + serviceName);
+            }
+        } catch (Throwable t) {
+            LoggerEx.error(TAG, "Read server " + serviceName + " config failed, " + ExceptionUtils.getFullStackTrace(t));
+        }
+        return properties;
+    }
     public BaseRuntime getBaseRuntime(String service) {
         if (service == null) return null;
         if (!service.contains(versionSeperator)) {
