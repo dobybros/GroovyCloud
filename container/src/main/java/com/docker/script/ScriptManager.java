@@ -153,7 +153,7 @@ public class ScriptManager implements ShutdownListener {
                     testStatus = 0;
                 }
             }
-            LoggerEx.info(TAG, "Reload again", "gwsfusignal_statistics", "peerId: 7vf8d9s7v8f9ds" + testCount.toString() + " ||| status: " + testStatus.toString());
+//            LoggerEx.info(TAG, "Reload again", "gwsfusignal_statistics", "peerId: 7vf8d9s7v8f9ds" + testCount.toString() + " ||| status: " + testStatus.toString());
             testCount++;
             isLoaded = true;
             List<String> serviceVersionFinalList = getServiceVersions();
@@ -299,25 +299,6 @@ public class ScriptManager implements ShutdownListener {
                         String serviceName = getServiceName(service);
                         runtime.setServiceName(serviceName);
                         runtime.setServiceVersion(version);
-//<<<<<<< HEAD
-//
-//                        try {
-//                            if (serversService != null) {
-//                                Document configDoc = serversService.getServerConfig(service);
-//                                if (configDoc != null) {
-//                                    Set<String> keys = configDoc.keySet();
-//                                    for (String key : keys) {
-//                                        properties.put(key.replaceAll("_", "."), configDoc.getString(key));
-//                                    }
-//                                }
-//                                LoggerEx.info(TAG, "Read service: " + service + ", merge config: " + properties);
-//                            } else {
-//                                LoggerEx.info(TAG, "serversService is null, will not read config from database for service " + serviceName);
-//                            }
-//                        } catch (Throwable t) {
-//                            LoggerEx.error(TAG, "Read server " + serviceName + " config failed, " + ExceptionUtils.getFullStackTrace(t));
-//                        }
-//=======
                         Properties properties = prepareServiceProperties(localScriptPath, service);
                         //触发serviceVersions
                         runtime.prepare(service, properties, localScriptPath);
