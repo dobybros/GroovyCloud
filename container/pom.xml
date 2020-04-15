@@ -38,15 +38,15 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <mainClass>container.container.ContainerApplication</mainClass>
-<!--                            <classpathPrefix>/home/aculearn/disk/lib/groovycloud-libs/</classpathPrefix>-->
-                            <classpathPrefix>lib/</classpathPrefix>  <!--used for windows -->
+                            <classpathPrefix>/home/aculearn/disk/lib/groovycloud-libs/</classpathPrefix>
+<!--                            <classpathPrefix>lib/</classpathPrefix>  &lt;!&ndash;used for windows &ndash;&gt;-->
                         </manifest>
                         <!--						<manifestEntries>-->
                         <!--							<Class-Path>lib/cloudcore-0.0.1-SNAPSHOT.jar lib/core-0.0.1-SNAPSHOT.jar lib/mongodbconnector-0.0.1-SNAPSHOT.jar</Class-Path>-->
                         <!--						</manifestEntries>-->
                     </archive>
                     <excludes>
-                        <exclude>**/*.xml</exclude>
+                        <exclude>**/*.xml </exclude>
                         <exclude>**/*.properties</exclude>
                     </excludes>
                 </configuration>

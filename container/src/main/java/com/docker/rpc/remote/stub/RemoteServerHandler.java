@@ -266,7 +266,7 @@ public class RemoteServerHandler {
                 headerMap.put("crossClusterToken", token);
                 long time = System.currentTimeMillis();
                 Result result = ScriptHttpUtils.post(JSON.toJSONString(dataMap), this.serviceStubManager.getHost() + "/base/crossClusterAccessService", headerMap, Result.class);
-                if (result != null) {
+                if (result != null && result.success()) {
                     LoggerEx.info(TAG, "Call remote server success, requestParams: " + dataMap.toString() + ",serverHost: " + this.serviceStubManager.getHost(), System.currentTimeMillis() - time);
                     MethodResponse response = new MethodResponse();
                     MethodMapping methodMapping = request.getServiceStubManager().getMethodMapping(request.getCrc());
@@ -276,6 +276,13 @@ public class RemoteServerHandler {
                         response.setReturnObject(JSON.parseObject(JSON.toJSONString(result.getData()), methodMapping.getGenericReturnClass()));
                     }
                     return response;
+                } else {
+                    LoggerEx.error(TAG, "Accss remote server failed,essMsg: " + (result == null ? "null" : result.toString()));
+                    if(result != null){
+                        MethodResponse response = new MethodResponse();
+                        response.setException(new CoreException(result.getCode(), result.getMsg()));
+                        return response;
+                    }
                 }
 //                else {
 //                    throw new CoreException(ChatErrorCodes.ERROR_REMOTE_RPC_FAILED, "Call remote rpc failed, requestParams: " + dataMap.toString());

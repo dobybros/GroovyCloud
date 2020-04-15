@@ -66,12 +66,13 @@ public class RemoteServersManager {
                     Map header = new HashMap();
                     header.put("key", "FSDdfFDWfR324fs98DSF*@#");
                     RemoteTokenResult remoteTokenResult = (RemoteTokenResult) ScriptHttpUtils.post(null, host + "/base/crossClusterCreateToken", header, RemoteTokenResult.class);
-                    if (remoteTokenResult != null) {
+                    if (remoteTokenResult != null && remoteTokenResult.success()) {
                         String jwtToken = remoteTokenResult.getData();
                         if (jwtToken != null) {
                             remoteServersTokenMap.put(host, jwtToken);
                         }
                     } else {
+                        LoggerEx.error(TAG, "Get crossClusterCreateToken errMsg: " + (remoteTokenResult == null ? "null" : remoteTokenResult.toString()));
                         remoteServersTokenMap.remove(host);
                         this.cancel();
                         TimerEx.schedule(new TimerTaskEx("RefreshRemoteTokenWhenCrossFailedRetry") {
@@ -80,7 +81,7 @@ public class RemoteServersManager {
                                 Map header = new HashMap();
                                 header.put("key", "FSDdfFDWfR324fs98DSF*@#");
                                 RemoteTokenResult remoteTokenResult = (RemoteTokenResult) ScriptHttpUtils.post(null, host + "/base/crossClusterCreateToken", header, RemoteTokenResult.class);
-                                if (remoteTokenResult != null) {
+                                if (remoteTokenResult != null && remoteTokenResult.success()) {
                                     String jwtToken = remoteTokenResult.getData();
                                     if (jwtToken != null) {
                                         remoteServersTokenMap.put(host, jwtToken);
@@ -90,6 +91,8 @@ public class RemoteServersManager {
                                             LoggerEx.info(TAG, "RemoteServer host has reset to available, host: " + host);
                                         }
                                     }
+                                }else {
+                                    LoggerEx.error(TAG, "Get retry crossClusterCreateToken errMsg: " + (remoteTokenResult == null ? "null" : remoteTokenResult.toString()));
                                 }
                             }
                         }, 60000L, 60000L);

@@ -9,13 +9,11 @@ import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.rpc.impl.RMIServerImplWrapper;
 import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
-import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
-import com.docker.storage.adapters.impl.ScheduledTaskServiceImpl;
-import com.docker.storage.adapters.impl.ServersServiceImpl;
-import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
+import com.docker.storage.adapters.impl.*;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import com.docker.storage.redis.RedisSubscribeHandler;
+import com.docker.tasks.RepairTaskHandler;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.StringUtils;
@@ -56,6 +54,7 @@ public class BeanApp extends ConfigApp{
     private MongoHelper logsHelper;
     private MongoHelper configHelper;
     private MongoHelper scheduledTaskHelper;
+    private MongoHelper repairHelper;
     private DockerStatusDAO dockerStatusDAO;
     private ServersDAO serversDAO;
     private LansDAO lansDAO;
@@ -81,8 +80,17 @@ public class BeanApp extends ConfigApp{
     private ServersServiceImpl serversService;
     private ServiceVersionServiceImpl serviceVersionService;
     private ScheduledTaskServiceImpl scheduledTaskService;
+    private RepairServiceImpl repairService;
     private ScheduledTaskDAO scheduledTaskDAO;
+    private RepairDAO repairDAO;
     private RedisSubscribeHandler redisSubscribeHandler;
+    private RepairTaskHandler repairTaskHandler;
+    public synchronized RepairTaskHandler getRepairTaskHandler() {
+        if (instance.repairTaskHandler == null) {
+            instance.repairTaskHandler = new RepairTaskHandler();
+        }
+        return instance.repairTaskHandler;
+    }
     public synchronized RedisSubscribeHandler getRedisSubscribeHandler() {
         if (instance.redisSubscribeHandler == null) {
             instance.redisSubscribeHandler = new RedisSubscribeHandler();
@@ -97,12 +105,27 @@ public class BeanApp extends ConfigApp{
         return instance.scheduledTaskService;
     }
 
+    public synchronized RepairServiceImpl getRepairService() {
+        if (instance.repairService == null) {
+            instance.repairService = new RepairServiceImpl();
+        }
+        return instance.repairService;
+    }
+
     public synchronized ScheduledTaskDAO getScheduledTaskDAO() {
         if (instance.scheduledTaskDAO == null) {
             instance.scheduledTaskDAO = new ScheduledTaskDAO();
             instance.scheduledTaskDAO.setMongoHelper(instance.getScheduledTaskHelper());
         }
         return instance.scheduledTaskDAO;
+    }
+
+    public synchronized RepairDAO getRepairDAO() {
+        if (instance.repairDAO == null) {
+            instance.repairDAO = new RepairDAO();
+            instance.repairDAO.setMongoHelper(instance.getRepairHelper());
+        }
+        return instance.repairDAO;
     }
 
     public synchronized ServiceVersionServiceImpl getServiceVersionService() {
@@ -392,6 +415,17 @@ public class BeanApp extends ConfigApp{
             instance.scheduledTaskHelper.setPassword(instance.getMongoPassword());
         }
         return instance.scheduledTaskHelper;
+    }
+    public synchronized MongoHelper getRepairHelper() {
+        if (instance.repairHelper == null) {
+            instance.repairHelper = new MongoHelper();
+            instance.repairHelper.setHost(instance.getMongoHost());
+            instance.repairHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
+            instance.repairHelper.setDbName("extras");
+            instance.repairHelper.setUsername(instance.getMongoUsername());
+            instance.repairHelper.setPassword(instance.getMongoPassword());
+        }
+        return instance.repairHelper;
     }
 
     public synchronized MongoHelper getLogsHelper() {

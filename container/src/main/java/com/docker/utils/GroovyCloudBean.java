@@ -15,6 +15,8 @@ public class GroovyCloudBean {
     public static final String PROXYCONTAINERDUPLEXENDER = "proxyContainerDuplexSender";
     public static final String REDISSUBSCRIBEHANDLER = "redisSubscribeHandler";
     public static final String SCRIPTMANAGER = "scriptManager";
+    public static final String REPAIRSERVICE = "repairService";
+    public static final String REPAIRTASKHANDLER = "repairTaskHandler";
     public static Object getBean(String name) throws BeansException {
         return SpringContextUtil.getBean(name);
     }

@@ -104,4 +104,17 @@ public class DatabaseBean{
     public RedisSubscribeHandler redisSubscribeHandler(){
         return instance.getRedisSubscribeHandler();
     }
+    @Bean
+    public MongoHelper repairHelper(){
+        return instance.getRepairHelper();
+    }
+    @Bean
+    public RepairDAO repairDAO(){
+        return instance.getRepairDAO();
+    }
+
+    @Bean
+    public RepairServiceImpl repairService(){
+        return instance.getRepairService();
+    }
 }

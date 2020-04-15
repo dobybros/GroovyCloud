@@ -44,6 +44,10 @@ public class InitContainer implements CommandLineRunner{
     @Autowired
     SDockerDAO sDockerDAO;
     @Autowired
+    MongoHelper repairHelper;
+    @Autowired
+    RepairDAO repairDAO;
+    @Autowired
     MongoHelper logsHelper;
     @Autowired
     MongoHelper gridfsHelper;
@@ -81,6 +85,8 @@ public class InitContainer implements CommandLineRunner{
         dockerStatusDAO.init();
         serviceVersionDAO.init();
         serversDAO.init();
+        repairHelper.init();
+        repairDAO.init();
         lansDAO.init();
         sDockerDAO.init();
         scheduledTaskDAO.init();

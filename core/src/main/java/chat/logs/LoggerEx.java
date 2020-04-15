@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 
 public class LoggerEx {
     private static Logger logger = LoggerFactory.getLogger("");
-    private static String LEVEL_FATAL = "FATAL";
+    private static final String LEVEL_FATAL = "FATAL";
 
     private static LogListener logListener;
 
@@ -52,8 +52,8 @@ public class LoggerEx {
         else
             logger.info(log);
     }
-    public static void info(String tag, String msg, String data) {
-        String log = getLogMsg(tag, msg, data);
+    public static void info(String tag, String msg, String dataType, String data) {
+        String log = getLogMsg(tag, msg, dataType, data);
         if (logListener != null)
             logListener.info(log);
         else
@@ -111,11 +111,12 @@ public class LoggerEx {
 
         return builder.toString();
     }
-    private static String getLogMsg(String tag, String msg, String data) {
+    private static String getLogMsg(String tag, String msg,String dataType, String data) {
         StringBuilder builder = new StringBuilder();
         builder.append("$$time:: " + ChatUtils.dateString()).
                 append(" $$tag:: " + tag).
                 append(" [" + msg + "]").
+                append(" $$dataType:: " + dataType).
                 append(" $$data:: " + data);
 
         return builder.toString();

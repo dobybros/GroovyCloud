@@ -28,4 +28,15 @@ public class Result<T> {
     public void setMsg(String msg) {
         this.msg = msg;
     }
+    public boolean success(){
+        return code == 1;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "code=" + code +
+                ", msg='" + msg +
+                '}';
+    }
 }

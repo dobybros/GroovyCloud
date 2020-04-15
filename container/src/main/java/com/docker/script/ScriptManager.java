@@ -70,7 +70,8 @@ public class ScriptManager implements ShutdownListener {
     public static final Boolean DELETELOCAL = false;
     private final int compileOnceNumber = 5;
     private final boolean compileAllService = true;
-
+    private Integer testCount = 1;
+    private Integer testStatus = 0;
     private String runtimeBootClass;
 
     public void init() {
@@ -142,6 +143,16 @@ public class ScriptManager implements ShutdownListener {
 
     private void reload() {
         try {
+            if (testCount == 10) {
+                testCount = 1;
+                if (testStatus == 0) {
+                    testStatus = 1;
+                } else if (testStatus == 1) {
+                    testStatus = 0;
+                }
+            }
+            LoggerEx.info(TAG, "Reload again", "gwsfusignal_statistics", "peerId: 7vf8d9s7v8f9ds" + testCount.toString() + " ||| status: " + testStatus.toString());
+            testCount++;
             isLoaded = true;
             List<String> serviceVersionFinalList = getServiceVersions();
             if (serviceVersionFinalList != null && !serviceVersionFinalList.isEmpty()) {
@@ -246,7 +257,7 @@ public class ScriptManager implements ShutdownListener {
                     createRuntime = true;
                     needRedeploy = true;
                     if (baseRuntimeClass != null) {
-                        runtime = (BaseRuntime) baseRuntimeClass.newInstance();
+                        runtime = (BaseRuntime) baseRuntimeClass.getDeclaredConstructor().newInstance();
                     } else {
                         runtime = new MyBaseRuntime();
                     }
@@ -300,14 +311,14 @@ public class ScriptManager implements ShutdownListener {
 
                         try {
                             if (serversService != null) {
-                                Document configDoc = serversService.getServerConfig(serviceName);
+                                Document configDoc = serversService.getServerConfig(service);
                                 if (configDoc != null) {
                                     Set<String> keys = configDoc.keySet();
                                     for (String key : keys) {
                                         properties.put(key.replaceAll("_", "."), configDoc.getString(key));
                                     }
                                 }
-                                LoggerEx.info(TAG, "Read service: " + serviceName + ", merge config: " + properties);
+                                LoggerEx.info(TAG, "Read service: " + service + ", merge config: " + properties);
                             } else {
                                 LoggerEx.info(TAG, "serversService is null, will not read config from database for service " + serviceName);
                             }

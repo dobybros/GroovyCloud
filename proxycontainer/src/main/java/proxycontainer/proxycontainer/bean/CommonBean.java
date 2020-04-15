@@ -8,6 +8,7 @@ import com.dobybros.chat.tasks.RPCMessageSendingTask;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.onlineserver.OnlineServerWithStatus;
 import com.docker.script.ScriptManager;
+import com.docker.tasks.RepairTaskHandler;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
 import org.springframework.context.annotation.Bean;
@@ -96,4 +97,6 @@ public class CommonBean {
     public IMExtensionCache imExtensionCache(){
         return instance.getIMExtensionCache();
     }
+    @Bean
+    public RepairTaskHandler repairTaskHandler(){return instance.getRepairTaskHandler();}
 }

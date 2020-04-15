@@ -3,6 +3,7 @@ package container.container.bean;
 import chat.utils.IPHolder;
 import com.docker.onlineserver.OnlineServerWithStatus;
 import com.docker.script.ScriptManager;
+import com.docker.tasks.RepairTaskHandler;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
 import org.springframework.context.annotation.Bean;
@@ -56,5 +57,6 @@ public class CommonBean {
     public OnlineServerWithStatus onlineServer() {
         return instance.getOnlineServer();
     }
-
+    @Bean
+    public RepairTaskHandler repairTaskHandler(){return instance.getRepairTaskHandler();}
 }

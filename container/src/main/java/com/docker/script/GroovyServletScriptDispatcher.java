@@ -12,6 +12,7 @@ import com.docker.data.ScheduleTask;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.servlet.GroovyServletManagerEx;
 import com.docker.storage.adapters.impl.ScheduledTaskServiceImpl;
+import com.docker.tasks.RepairTaskHandler;
 import com.docker.utils.GroovyCloudBean;
 import com.docker.utils.JWTUtils;
 import com.docker.utils.SpringContextUtil;
@@ -74,14 +75,27 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                 } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_TIMER)) {
                     List list = handleTimer();
                     result.setData(list);
+                }else if(uriStrs[1].equals(GroovyServletManagerEx.BASE_REPAIR)){
+                    if(internalFilter(request, result).getCode() == 1){
+                        String repairId = uriStrs[2];
+                        RepairTaskHandler repairTaskHandler = (RepairTaskHandler) GroovyCloudBean.getBean(GroovyCloudBean.REPAIRTASKHANDLER);
+                        try {
+                            Object resultObj = repairTaskHandler.execute(repairId);
+                            if(resultObj != null){
+                                if(resultObj instanceof String){
+                                    result.setData(resultObj);
+                                }else {
+                                    result.setData(JSON.toJSONString(resultObj));
+                                }
+                            }
+                        }catch (CoreException e){
+                            e.printStackTrace();
+                            result.setMsg(e.toString());
+                        }
+                    }
                 }
             } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_SCALE)) {
-                String token = request.getHeader("key");
-                if (StringUtils.isBlank(token) || !token.equals(key)) {
-                    LoggerEx.error(TAG, "key is null when scale!!!");
-                    result.setCode(4001);
-                    result.setMsg("key is null when scale!!!");
-                } else {
+                if (internalFilter(request, result).getCode() == 1) {
                     if (uriStrs.length > 3) {
                         JSONObject jsonObject = null;
                         String requestStr = IOUtils.toString(request.getInputStream(), Charset.defaultCharset());
@@ -157,12 +171,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                     }
                 }
             } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERCREATETOKEN)) {
-                String internalToken = request.getHeader("key");
-                if (StringUtils.isBlank(internalToken) || !internalToken.equals(key)) {
-                    LoggerEx.error(TAG, "key is null when get crossToken!!!");
-                    result.setCode(4001);
-                    result.setMsg("key is null when get crossToken!!!");
-                } else {
+                if (internalFilter(request, result).getCode() == 1) {
                     String token = JWTUtils.createToken("crossClusterToken", null, 10800000L);//3小时
                     result.setData(token);
                 }
@@ -183,6 +192,16 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
         char[] cs = name.toCharArray();
         cs[0] -= 32;
         return String.valueOf(cs);
+    }
+
+    public Result internalFilter(HttpServletRequest request, Result result) {
+        String internalToken = request.getHeader("key");
+        if (StringUtils.isBlank(internalToken) || !internalToken.equals(key)) {
+            LoggerEx.error(TAG, "Cant find key in header!!!");
+            result.setCode(4001);
+            result.setMsg("Cant find key in header!!!");
+        }
+        return result;
     }
 
     private String getServiceVersion(String service) {
