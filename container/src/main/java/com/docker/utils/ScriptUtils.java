@@ -98,6 +98,13 @@ public class ScriptUtils {
                 "        else\n" +
                 "            logger.info(log);\n" +
                 "    }\n" +
+                "    public static void info(String tag, String msg, String dataType, String data) {\n" +
+                "        String log = getLogMsg(tag, msg, dataType, data);\n" +
+                "        if (logListener != null)\n" +
+                "            logListener.info(log);\n" +
+                "        else\n" +
+                "            logger.info(log);\n" +
+                "    }\n" +
                 "    public static void warn(String tag, String msg) {\n" +
                 "        String log = getLogMsg(tag, msg);\n" +
                 "        if (logListener != null)\n" +
@@ -166,6 +173,16 @@ public class ScriptUtils {
                 "        if(serviceName != null){\n" +
                 "            builder.append(\" \\$\\$serviceName:: \" + serviceName);\n" +
                 "        }\n" +
+                "        return builder.toString();\n" +
+                "    }\n" +
+                "private static String getLogMsg(String tag, String msg,String dataType, String data) {\n" +
+                "        StringBuilder builder = new StringBuilder();\n" +
+                "        builder.append(\"\\$\\$time:: \" + ChatUtils.dateString()).\n" +
+                "                append(\" \\$\\$tag:: \" + tag).\n" +
+                "                append(\" [\" + msg + \"]\").\n" +
+                "                append(\" \\$\\$dataType:: \" + dataType).\n" +
+                "                append(\" \\$\\$data:: \" + data);\n" +
+                "\n" +
                 "        return builder.toString();\n" +
                 "    }\n" +
                 "    public static LogListenerEx getLogListener() {\n" +

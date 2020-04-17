@@ -3,6 +3,8 @@ package com.docker.storage.cache;
 import chat.logs.LoggerEx;
 import com.docker.storage.cache.handlers.CacheStorageAdapter;
 import com.docker.storage.cache.handlers.RedisCacheStorageHandler;
+import com.docker.storage.redis.RedisListenerHandler;
+import com.docker.utils.GroovyCloudBean;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
@@ -88,11 +90,34 @@ public class CacheStorageFactory {
                 CacheStorageAdapter cacheStorageAdapter = cacheStorageAdapterMap.get(host);
                 if (cacheStorageAdapter != null) {
                     if(StringUtils.equals(cacheMethod,CacheStorageMethod.METHOD_REDIS)){
-                        RedisCacheStorageHandler redisCacheStorageHandler = (RedisCacheStorageHandler)cacheStorageAdapter;
-                        boolean result =  cacheStorageAdapterMap.remove(host, cacheStorageAdapter);
-                        if (result) {
+                        RedisCacheStorageHandler redisCacheStorageHandler =  (RedisCacheStorageHandler)cacheStorageAdapterMap.remove(host);
+                        if (redisCacheStorageHandler != null) {
                             redisCacheStorageHandler.disconnect();
                         }
+                        RedisListenerHandler redisListenerHandler = (RedisListenerHandler) GroovyCloudBean.getBean(GroovyCloudBean.REDISLISTENERHANDLER);
+                        redisListenerHandler.setRedisHandler();
+                    }
+                }
+            }
+        }
+    }
+    public void reloadCacheStorageAdapter(String cacheMethod, String host) {
+        if (StringUtils.isBlank(cacheMethod)) {
+            cacheMethod = CacheStorageAdapter.DEFAULT_CACHE_METHOD;
+        }
+        if (host != null) {
+            Map<String, CacheStorageAdapter> cacheStorageAdapterMap = cacheAdapterMap.get(cacheMethod);
+            if (cacheStorageAdapterMap != null) {
+                CacheStorageAdapter cacheStorageAdapter = cacheStorageAdapterMap.get(host);
+                if (cacheStorageAdapter != null) {
+                    if(StringUtils.equals(cacheMethod,CacheStorageMethod.METHOD_REDIS)){
+                        RedisCacheStorageHandler redisCacheStorageHandler =  (RedisCacheStorageHandler)cacheStorageAdapterMap.remove(host);
+                        LoggerEx.warn(TAG, "Will remove redisCacheStorageHandler, hosts: " + host);
+                        if (redisCacheStorageHandler != null) {
+                            redisCacheStorageHandler.disconnect();
+                        }
+                        RedisListenerHandler redisListenerHandler = (RedisListenerHandler) GroovyCloudBean.getBean(GroovyCloudBean.REDISLISTENERHANDLER);
+                        redisListenerHandler.setRedisHandler();
                     }
                 }
             }
@@ -131,9 +156,11 @@ public class CacheStorageFactory {
         try {
             if(host != null){
                 constructor = clazz.getConstructor(String.class);
+                LoggerEx.info(TAG, "Get new cacheStorage, host: " + host);
                 return (CacheStorageAdapter) constructor.newInstance(host);
             }else{
                 constructor = clazz.getConstructor();
+                LoggerEx.info(TAG, "Get new cacheStorage");
                 return (CacheStorageAdapter) constructor.newInstance();
             }
         } catch (NoSuchMethodException e1) {

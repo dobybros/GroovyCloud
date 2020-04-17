@@ -5,15 +5,20 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 public abstract class ClassAnnotationGlobalHandler {
-	public abstract Class<? extends Annotation> handleAnnotationClass(GroovyRuntime groovyRuntime);
+    public abstract Class<? extends Annotation> handleAnnotationClass(GroovyRuntime groovyRuntime);
 
-	public abstract void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, GroovyRuntime groovyRuntime);
+    public abstract void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, GroovyRuntime groovyRuntime);
 
-	public boolean isBean() {return true;}
+    public abstract void handleAnnotatedClassesInjectBean(GroovyRuntime groovyRuntime);
 
-	public Object getKey() {
-		return this.getClass();
-	}
+    public boolean isBean() {
+        return true;
+    }
 
-	public void handlerShutdown() {}
+    public Object getKey() {
+        return this.getClass();
+    }
+
+    public void handlerShutdown() {
+    }
 }

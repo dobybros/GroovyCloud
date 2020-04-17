@@ -5,6 +5,8 @@ import chat.logs.LoggerEx;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.docker.errors.CoreErrorCodes;
+import com.docker.storage.cache.CacheStorageFactory;
+import com.docker.storage.cache.CacheStorageMethod;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import redis.clients.jedis.*;
@@ -54,7 +56,7 @@ public class RedisHandler {
     }
 
     public RedisHandler connect() {
-        disconnect();
+//        disconnect();
 
         LoggerEx.info(TAG, "JedisPool initializing...");
         JedisPoolConfig config = new JedisPoolConfig();
@@ -134,10 +136,12 @@ public class RedisHandler {
                     t.printStackTrace();
                 }
             }
+            LoggerEx.info(TAG, "Jedis Cluster closed, " + hosts);
             if (pipeline != null && pipeline instanceof JedisClusterPipeline) {
                 JedisClusterPipeline clusterPipeline = (JedisClusterPipeline) pipeline;
                 clusterPipeline.close();
             }
+            LoggerEx.info(TAG, "Jedis pipeline closed, " + hosts);
         } catch (Exception e) {
             LoggerEx.info(TAG, "Jedis Cluster closed exception, " + hosts);
         }
@@ -1207,6 +1211,10 @@ public class RedisHandler {
             jedis = getJedis();
             return (V) executor.execute(jedis);
         } catch (Throwable e) {
+            if(e.getMessage().contains("Could not get a resource from the pool")){
+                CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
+            }
+            LoggerEx.fatal(TAG, "Redis execute err, pleaseCheck, errMsg: " + e.getMessage());
             e.printStackTrace();
             throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed." + e.getMessage());
         } finally {
@@ -1328,7 +1336,10 @@ public class RedisHandler {
             }
         } catch (Throwable t) {
             t.printStackTrace();
-            LoggerEx.error(TAG, "invokePipelineMethod: " + methodName + ", args: " + args + " error, eMsg: " + t.getMessage());
+            if(t.getMessage().contains("Could not get a resource from the pool")){
+                CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
+            }
+            LoggerEx.fatal(TAG, "invokePipelineMethod: " + methodName + ", args: " + args + " error, eMsg: " + t.getMessage());
             if (t instanceof JedisMovedDataException && pipeline instanceof JedisClusterPipeline) {
                 LoggerEx.error(TAG, "Have occurred JedisMovedDataException, will refresh cluster!");
                 JedisClusterPipeline clusterPipeline = (JedisClusterPipeline) pipeline;

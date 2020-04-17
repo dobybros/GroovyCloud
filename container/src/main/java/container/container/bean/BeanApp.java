@@ -12,6 +12,7 @@ import com.docker.script.ScriptManager;
 import com.docker.storage.adapters.impl.*;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
+import com.docker.storage.redis.RedisListenerHandler;
 import com.docker.storage.redis.RedisSubscribeHandler;
 import com.docker.tasks.RepairTaskHandler;
 import com.docker.utils.AutoReloadProperties;
@@ -85,6 +86,7 @@ public class BeanApp extends ConfigApp{
     private RepairDAO repairDAO;
     private RedisSubscribeHandler redisSubscribeHandler;
     private RepairTaskHandler repairTaskHandler;
+    private RedisListenerHandler redisListenerHandler;
     public synchronized RepairTaskHandler getRepairTaskHandler() {
         if (instance.repairTaskHandler == null) {
             instance.repairTaskHandler = new RepairTaskHandler();
@@ -104,7 +106,12 @@ public class BeanApp extends ConfigApp{
         }
         return instance.scheduledTaskService;
     }
-
+    public synchronized RedisListenerHandler getRedisListenerHandler() {
+        if (instance.redisListenerHandler == null) {
+            instance.redisListenerHandler = new RedisListenerHandler();
+        }
+        return instance.redisListenerHandler;
+    }
     public synchronized RepairServiceImpl getRepairService() {
         if (instance.repairService == null) {
             instance.repairService = new RepairServiceImpl();

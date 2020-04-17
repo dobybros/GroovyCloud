@@ -32,6 +32,17 @@ public class RepairTaskHandler extends ClassAnnotationGlobalHandler {
     }
 
     @Override
+    public void handleAnnotatedClassesInjectBean(GroovyRuntime groovyRuntime) {
+        for (GroovyObjectEx groovyObjectEx : groovyObjectExMap.values()) {
+            try {
+                groovyObjectEx = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyObjectEx.getGroovyClass());
+            }catch (CoreException e){
+                LoggerEx.error(TAG, e.getMessage());
+            }
+        }
+    }
+
+    @Override
     public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, GroovyRuntime groovyRuntime) {
         if (annotatedClassMap != null) {
             Collection<Class<?>> values = annotatedClassMap.values();

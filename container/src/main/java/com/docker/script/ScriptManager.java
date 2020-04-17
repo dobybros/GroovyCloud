@@ -145,17 +145,17 @@ public class ScriptManager implements ShutdownListener {
 
     private void reload() {
         try {
-            if (testCount == 10) {
-                testCount = 1;
-                if (testStatus == 0) {
-                    testStatus = 1;
-                } else if (testStatus == 1) {
-                    testStatus = 0;
-                }
-            }
+//            if (testCount == 10) {
+//                testCount = 1;
+//                if (testStatus == 0) {
+//                    testStatus = 1;
+//                } else if (testStatus == 1) {
+//                    testStatus = 0;
+//                }
+//            }
 //            LoggerEx.info(TAG, "Reload again", "gwsfusignal_statistics", "peerId: 7vf8d9s7v8f9ds" + testCount.toString() + " ||| status: " + testStatus.toString());
-            testCount++;
-            isLoaded = true;
+//            testCount++;
+//            isLoaded = true;
             List<String> serviceVersionFinalList = getServiceVersions();
             if (serviceVersionFinalList != null && !serviceVersionFinalList.isEmpty()) {
                 Set<String> remoteServices = new ConcurrentHashSet<>();

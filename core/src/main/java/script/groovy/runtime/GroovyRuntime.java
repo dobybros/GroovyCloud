@@ -267,17 +267,45 @@ public class GroovyRuntime extends ScriptRuntime {
                 }
             }
         }
-
-        if (handlerMap != null && !handlerMap.isEmpty()) {
-            Collection<ClassAnnotationHandler> handlers = annotationHandlers;
-            for (ClassAnnotationHandler annotationHandler : handlers) {
-                if (annotationHandler.getGroovyRuntime() == null)
-                    annotationHandler.setGroovyRuntime(GroovyRuntime.this);
-                if (annotationHandler instanceof GroovyBeanFactory) {
-                    beanFactory = (GroovyBeanFactory) annotationHandler;
-                    break;
+        for (ClassAnnotationHandler annotationHandler : annotationHandlers) {
+            if (annotationHandler.getGroovyRuntime() == null)
+                annotationHandler.setGroovyRuntime(GroovyRuntime.this);
+            if (annotationHandler instanceof GroovyBeanFactory) {
+                beanFactory = (GroovyBeanFactory) annotationHandler;
+                break;
+            }
+        }
+        if (handlerGlobalMap != null && !handlerGlobalMap.isEmpty()) {
+            Collection<ClassAnnotationGlobalHandler> handlers = annotationGlobalHandlers;
+            for (ClassAnnotationGlobalHandler annotationHandler : handlers) {
+                if(annotationHandler.isBean()){
+                    Map<String, Class<?>> values = handlerGlobalMap.get(annotationHandler);
+                    if(values != null){
+                        for (Class<?> c : values.values()){
+                            if(ReflectionUtil.canBeInitiated(c))
+                                beanFactory.getClassBean(c);
+                        }
+                    }
                 }
             }
+
+            for (ClassAnnotationGlobalHandler annotationHandler : handlers) {
+                Map<String, Class<?>> values = handlerGlobalMap.get(annotationHandler);
+                if (values != null) {
+                    try {
+                        annotationHandler.handleAnnotatedClasses(values, this);
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        LoggerEx.fatal(TAG,
+                                "Handle annotated classes failed, "
+                                        + values + " the handler " + annotationHandler
+                                        + " is ignored!errMsg: " + ExceptionUtils.getFullStackTrace(t));
+                    }
+                }
+            }
+        }
+        if (handlerMap != null && !handlerMap.isEmpty()) {
+            Collection<ClassAnnotationHandler> handlers = annotationHandlers;
             for (ClassAnnotationHandler annotationHandler : handlers) {
                 if(annotationHandler.isBean()){
                     Map<String, Class<?>> values = handlerMap.get(annotationHandler);
@@ -305,26 +333,11 @@ public class GroovyRuntime extends ScriptRuntime {
                     }
                 }
             }
-        }
-        if (handlerGlobalMap != null && !handlerGlobalMap.isEmpty()) {
-            Collection<ClassAnnotationGlobalHandler> handlers = annotationGlobalHandlers;
-            for (ClassAnnotationGlobalHandler annotationHandler : handlers) {
-                if(annotationHandler.isBean()){
-                    Map<String, Class<?>> values = handlerGlobalMap.get(annotationHandler);
-                    if(values != null){
-                        for (Class<?> c : values.values()){
-                            if(ReflectionUtil.canBeInitiated(c))
-                                beanFactory.getClassBean(c);
-                        }
-                    }
-                }
-            }
-
-            for (ClassAnnotationGlobalHandler annotationHandler : handlers) {
+            for (ClassAnnotationGlobalHandler annotationHandler : annotationGlobalHandlers) {
                 Map<String, Class<?>> values = handlerGlobalMap.get(annotationHandler);
                 if (values != null) {
                     try {
-                        annotationHandler.handleAnnotatedClasses(values, this);
+                       annotationHandler.handleAnnotatedClassesInjectBean(this);
                     } catch (Throwable t) {
                         t.printStackTrace();
                         LoggerEx.fatal(TAG,

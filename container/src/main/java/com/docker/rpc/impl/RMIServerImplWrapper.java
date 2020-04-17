@@ -43,6 +43,19 @@ public class RMIServerImplWrapper extends ClassAnnotationGlobalHandler {
 		return server;
 	}
 
+	@Override
+	public void handleAnnotatedClassesInjectBean(GroovyRuntime groovyRuntime) {
+		if(serverAdapterMap != null){
+			for (GroovyObjectEx<RPCServerAdapter> groovyObjectEx : serverAdapterMap.values()) {
+				try {
+					groovyObjectEx = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyObjectEx.getGroovyClass());
+				}catch (CoreException e){
+					LoggerEx.error(TAG, e.getMessage());
+				}
+			}
+		}
+	}
+
 	public void initClient(RMIServer server) {
 		this.server = server;
 	}
