@@ -60,7 +60,8 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		this.service = service.toLowerCase();
 		this.config = properties;
 		String enableGroovyMVC = null;
-		addClassAnnotationHandler(new GroovyBeanFactory());
+		GroovyBeanFactory beanFactory = new GroovyBeanFactory();
+		addClassAnnotationHandler(beanFactory);
 		if (properties != null) {
 			enableGroovyMVC = properties.getProperty("web.groovymvc.enable");
 			String mongodbHost = properties.getProperty("db.mongodb.uri");

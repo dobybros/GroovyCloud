@@ -9,6 +9,7 @@ import com.docker.script.ScriptManager;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import com.docker.utils.AutoReloadProperties;
+import com.docker.utils.GroovyCloudBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -62,6 +63,7 @@ public class InitContainer implements CommandLineRunner{
 
     @Override
     public void run(String... args) throws Exception {
+        GroovyCloudBean.map();
         TypeUtils.compatibleWithJavaBean = true;
         System.setProperty("es.set.netty.runtime.available.processors", "false");
         dockerStatusHelper.init();

@@ -171,5 +171,4 @@ public class GroovyBeanFactory extends ClassAnnotationHandler {
 
 		GroovyObjectEx.fillGroovyObjects(beanMap.values(), getGroovyRuntime());
 	}
-
 }

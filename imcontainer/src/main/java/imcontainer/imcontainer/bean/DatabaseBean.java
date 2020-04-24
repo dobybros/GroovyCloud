@@ -6,6 +6,7 @@ import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import com.docker.storage.redis.RedisListenerHandler;
 import com.docker.storage.redis.RedisSubscribeHandler;
+import com.docker.storage.zookeeper.ZookeeperFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -142,5 +143,10 @@ public class DatabaseBean {
     @Bean
     public RedisListenerHandler redisListenerHandler() {
         return instance.getRedisListenerHandler();
+    }
+
+    @Bean(destroyMethod = "disconnect")
+    public ZookeeperFactory zkFactory() {
+        return instance.getZookeeperFactory();
     }
 }

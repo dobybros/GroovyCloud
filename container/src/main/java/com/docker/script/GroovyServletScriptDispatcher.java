@@ -45,6 +45,7 @@ import java.util.Map;
 public class GroovyServletScriptDispatcher extends HttpServlet {
     private static final String TAG = GroovyServletManager.class.getSimpleName();
     ScriptManager scriptManager = null;
+    private ServiceStubManager serviceStubManager = null;
     private String key = "FSDdfFDWfR324fs98DSF*@#";
 
     public void handle(HttpServletRequest request, HttpServletResponse response) {
@@ -160,7 +161,10 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                             }
                         }
                         try {
-                            Object o = new ServiceStubManager().call(serviceName, className, methodName, objects);
+                            if(serviceStubManager == null){
+                                serviceStubManager = new ServiceStubManager();
+                            }
+                            Object o = serviceStubManager.call(serviceName, className, methodName, objects);
                             if (o != null) {
                                 result.setData(o);
                             }
