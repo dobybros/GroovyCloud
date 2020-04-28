@@ -1213,9 +1213,9 @@ public class RedisHandler {
             if (e.getMessage().contains("Could not get a resource from the pool")) {
                 CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
             }
-            LoggerEx.fatal(TAG, "Redis execute err, pleaseCheck, errMsg: " + e.getMessage());
+            LoggerEx.fatal(TAG, "Redis execute err, pleaseCheck,host:"+ hosts +" ,errMsg: " + e.getMessage());
             e.printStackTrace();
-            throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed." + e.getMessage());
+            throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed. host: " + hosts + ",errMsg:" + e.getMessage());
         } finally {
             if (jedis != null && jedis instanceof ShardedJedis) {
                 ((ShardedJedis) jedis).close();

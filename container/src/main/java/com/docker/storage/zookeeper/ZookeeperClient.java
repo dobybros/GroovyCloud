@@ -19,6 +19,7 @@ import org.apache.curator.utils.EnsurePath;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.server.quorum.flexible.QuorumVerifier;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -241,6 +242,12 @@ public class ZookeeperClient {
         TreeCache treeCacheOld = treeCacheMap.putIfAbsent(path, treeCache);
         return treeCacheOld == null;
     }
+    public void closeTreeCache(String path){
+        TreeCache treeCache = treeCacheMap.remove(path);
+        if(treeCache != null){
+            treeCache.close();
+        }
+    }
     public boolean checkPathChildrenCache(String path) {
         return pathChildrenCacheMap.containsKey(path);
     }
@@ -249,6 +256,12 @@ public class ZookeeperClient {
         PathChildrenCache pathChildrenCacheOld = pathChildrenCacheMap.putIfAbsent(path, pathChildrenCache);
         return pathChildrenCacheOld == null;
     }
+    public void closePathChildrenCache(String path) throws IOException{
+        PathChildrenCache pathChildrenCacheOld = pathChildrenCacheMap.remove(path);
+        if(pathChildrenCacheOld != null){
+            pathChildrenCacheOld.close();
+        }
+    }
     public boolean checkNodeCache(String path) {
         return nodeCacheMap.containsKey(path);
     }
@@ -256,5 +269,11 @@ public class ZookeeperClient {
     public boolean addNodeCache(String path, NodeCache nodeCache) {
         NodeCache nodeCacheOld = nodeCacheMap.putIfAbsent(path, nodeCache);
         return nodeCacheOld == null;
+    }
+    public void closeNodeCache(String path) throws IOException {
+        NodeCache nodeCache = nodeCacheMap.remove(path);
+        if(nodeCache != null){
+            nodeCache.close();
+        }
     }
 }
