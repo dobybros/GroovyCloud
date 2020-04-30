@@ -363,6 +363,10 @@ public class ServiceSkeletonAnnotationHandler extends ClassAnnotationHandlerEx {
         return serviceAnnotation;
     }
 
+    public ConcurrentHashMap<Long, SkelectonMethodMapping> getMethodMap() {
+        return methodMap;
+    }
+
     @Override
     public void configService(com.docker.data.Service theService) {
         theService.appendServiceAnnotation(annotationList);
