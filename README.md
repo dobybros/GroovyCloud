@@ -9,11 +9,13 @@
 >>Microservices
 - [Bean](https://github.com/dobybros/GroovyCloud/blob/master/explanation/common/bean.md)
 - [GroovyMVC](https://github.com/dobybros/GroovyCloud/blob/master/explanation/common/restInterface.md)
-- [service](https://github.com/dobybros/GroovyCloud/blob/master/explanation/common/service.md)
+- [RemotesService](https://github.com/dobybros/GroovyCloud/blob/master/explanation/common/service.md)
+- [config](https://github.com/dobybros/GroovyCloud/blob/master/explanation/common/config.md)
+- [others](https://github.com/dobybros/GroovyCloud/blob/master/explanation/common/others.md)
 >> timer
 - [Stand-alone timer](https://github.com/dobybros/GroovyCloud/blob/master/explanation/timer/timer.md)
 - [Distributed timer](https://github.com/dobybros/GroovyCloud/blob/master/explanation/timer/scheduleTask.md)
->> tools
+>> mid tools
 - [kafka](https://github.com/dobybros/GroovyCloud/blob/master/explanation/tools/kafka.md)
 - [mongodb](https://github.com/dobybros/GroovyCloud/blob/master/explanation/tools/mongo.md)
 - [redis](https://github.com/dobybros/GroovyCloud/blob/master/explanation/tools/redis.md)
