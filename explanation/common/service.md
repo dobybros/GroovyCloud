@@ -70,3 +70,34 @@ TCRecordService tcRecordService
     type:0为rpc 1为http，目前只支持http
 }
 ```
+### 3.@RedeployMain，加在类上
+##### 3.1 介绍
+当重启一个微服务service,会先调用这个注解的类的main方法，类中必须加上main方法，启动执行的逻辑就放在main方法里；关闭这个service时会调用
+这个类的shutdown方法
+#### 3.2 举例
+```$xslt
+@script.groovy.annotation.RedeployMain
+class RedeployMain {
+    public void main() {
+       
+    }
+
+    public void shutdown() {
+        
+    }
+}
+```
+### 4.@ConfigProperty，该注解加在属性上
+##### 4.1 介绍
+每一个微服务service都有一个config.properties(字段名称如果是多个单词组成，必须是.分隔，比如room.count)，在代码中拿到config.properties的字段，就通过注解
+@ConfigProperty
+##### 4.2 使用举例
+```$xslt
+class ClassroomVerifyController {
+    @ConfigProperty(name = "test.ip")
+    private String testIp
+    }
+```
+##### 4.2.1参数说明
+> 参数
+- name:config.properties中的字段名称
