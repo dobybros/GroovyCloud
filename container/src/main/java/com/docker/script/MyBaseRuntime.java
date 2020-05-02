@@ -164,13 +164,13 @@ public class MyBaseRuntime extends BaseRuntime {
 
         serviceStubManager = new ServiceStubManager(service);
         serviceStubManager.init();
-        String libs = properties.getProperty("libs");
-        if (libs != null) {
-            String[] libArray = libs.split(",");
-            for (String lib : libArray) {
-                addLibPath(lib);
-            }
-        }
+//        String libs = properties.getProperty("libs");
+//        if (libs != null) {
+//            String[] libArray = libs.split(",");
+//            for (String lib : libArray) {
+//                addLibPath(lib);
+//            }
+//        }
     }
 
     ClassHolder serviceStubProxyClass = null;

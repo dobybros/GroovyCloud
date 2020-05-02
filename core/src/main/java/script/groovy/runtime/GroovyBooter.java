@@ -129,26 +129,29 @@ public class GroovyBooter implements RuntimeBootListener {
                         continue;
                     }
                     String key = absolutePath.substring(pathPos + path.length());
-                    List<String> libPaths = groovyRuntime.getLibPath();
+//                    List<String> libPaths = groovyRuntime.getLibPath();
                     boolean ignore = false;
-                    if (libPaths != null) {
-                        for (String libPath : libPaths) {
-                            if (key.startsWith(libPath)) {
-                                ignore = true;
-//                            LoggerEx.info(TAG, "Ignore lib classes " + key + " while parsing. hit lib " + libPath);
-                                break;
-                            }
-                        }
-                    } else {
+//                    if (libPaths != null) {
+//                        for (String libPath : libPaths) {
+//                            if (key.startsWith(libPath)) {
+//                                ignore = true;
+////                            LoggerEx.info(TAG, "Ignore lib classes " + key + " while parsing. hit lib " + libPath);
+//                                break;
+//                            }
+//                        }
+//                    } else {
                         //读取文件信息
                         String[] libGroovyFiles = null;
-                        try {
-                            String libGroovyFilesStr = FileUtils.readFileToString(new File(path + "coregroovyfiles"), "utf-8");
-                            if (libGroovyFilesStr != null) {
-                                libGroovyFiles = libGroovyFilesStr.split("\r\n");
+                        File coreFile = new File(path + "coregroovyfiles");
+                        if(coreFile.exists()){
+                            try {
+                                String libGroovyFilesStr = FileUtils.readFileToString(coreFile, "utf-8");
+                                if (libGroovyFilesStr != null) {
+                                    libGroovyFiles = libGroovyFilesStr.split("\r\n");
+                                }
+                            } catch (Throwable throwable) {
+                                LoggerEx.warn(TAG, "Read core groovy path failed, reason is " + ExceptionUtils.getFullStackTrace(throwable));
                             }
-                        } catch (Throwable throwable) {
-                            LoggerEx.warn(TAG, "Read core groovy path failed, reason is " + ExceptionUtils.getFullStackTrace(throwable));
                         }
                         if (libGroovyFiles != null) {
                             List libGroovyFilesList = Arrays.asList(libGroovyFiles);
@@ -158,7 +161,7 @@ public class GroovyBooter implements RuntimeBootListener {
 //                                break;
                             }
                         }
-                    }
+//                    }
                     if (ignore)
                         continue;
                     int pos = key.lastIndexOf(".");
