@@ -6,7 +6,7 @@ com.docker.storage.zookeeper.ZookeeperClient zookeeperClient
 接下来就可以调用zookeeperClient的方法来使用zookeeper了
 ### 2.说明
 #### 2.1参数说明
-db.zk.host为zookeeper的地址，集群使用逗号隔开
+db.zk.host为zookeeper的地址从config中获取的，获取方式见[config](https://github.com/dobybros/GroovyCloud/blob/master/explanation/common/config.md)，集群使用逗号隔开
 
 ### 3.举例
 ```$xslt
