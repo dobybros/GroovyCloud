@@ -1,4 +1,4 @@
-### 1.@RedisListener，加在类上
+### 1.@RedisListener(同时有bean的作用)，加在类上
 ##### 1.1介绍
 RedisListener使用的是config.properties中db.redis.uri属性所对应的
 redis地址，集群用逗号隔开；需要继承MyRedisListener拿到RedisHandler，然后操作redis
@@ -24,7 +24,7 @@ class ConvertRedis extends MyRedisListener{
 }
 ```
 
-### 2.@RedisSubscribe，加在类上
+### 2.@RedisSubscribe(同时有bean的作用)，加在类上
 ##### 2.1介绍
 存入String到redis以后，过期时会通知业务系统，业务系统需要在这个类上加方法public void redisCallback(String key)，具体回调逻辑写在这个方法中
 ##### 2.2举例

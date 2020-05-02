@@ -6,6 +6,8 @@
 - It has a lot of middle-ware services! Save a lot of time! 
 >Instructions for use
 
+>>Unified instructions
+- []
 >>Microservices
 - [Bean](https://github.com/dobybros/GroovyCloud/blob/master/explanation/common/bean.md)
 - [GroovyMVC](https://github.com/dobybros/GroovyCloud/blob/master/explanation/common/restInterface.md)

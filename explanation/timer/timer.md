@@ -1,4 +1,4 @@
-### 1.@TimerTask,加在类上
+### 1.@TimerTask(同时有bean的作用),加在类上
 ##### 1.1 介绍
 该注解是用于单机定时器，只会回调到所在Groovycloud的微服务上，类中必须加上main方法，定时回调的逻辑写在main方法中<br/>
 如果使用分布式定时任务，请前往[Distributed timer](https://github.com/dobybros/GroovyCloud/blob/master/explanation/timer/scheduleTask.md)

@@ -1,4 +1,4 @@
-#### 1.@ControllerMapping
+#### 1.@ControllerMapping(同时有bean的作用)
 ControllerMapping标注在类级别上，标注此注解的类会在项目启动时被扫描，并且实例化成为一个bean，这样就可以处理HTPP请求了。
 
 ```
