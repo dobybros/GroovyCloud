@@ -13,11 +13,14 @@ import com.docker.script.annotations.ServiceNotFoundListener;
 import com.docker.script.i18n.I18nHandler;
 import com.docker.server.OnlineServer;
 import com.docker.storage.adapters.LansService;
+import com.docker.storage.zookeeper.ZookeeperFactory;
+import com.docker.utils.GroovyCloudBean;
 import com.docker.utils.ScriptUtils;
 import groovy.lang.GroovyObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import script.groovy.annotation.JavaBean;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.FieldInjectionListener;
@@ -27,6 +30,7 @@ import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -280,6 +284,61 @@ public class MyBaseRuntime extends BaseRuntime {
                 }
             }
         });
+        baseRuntime.addFieldInjectionListener(new FieldInjectionListener<JavaBean>() {
+            public Class<JavaBean> annotationClass() {
+                return JavaBean.class;
+            }
+
+            @Override
+            public void inject(JavaBean annotation, Field field, Object obj) {
+                if (!field.isAccessible()) {
+                    field.setAccessible(true);
+                }
+                Class fromBeanClass = annotation.fromBeanClass();
+                if (!fromBeanClass.equals(JavaBean.class)) {
+                    String methodName = getMethodName(fromBeanClass, annotation.methodName());
+                    String[] params = annotation.params();
+                    Object o = GroovyCloudBean.getBean(fromBeanClass);
+                    Class[] classes = new Class[params.length];
+                    String[] paramsConfig = new String[params.length];
+                    for (int i = 0; i < params.length; i++) {
+                        classes[i] = String.class;
+                        paramsConfig[i] = processAnnotationString(params[i]);
+                    }
+                    try {
+                        Method method = o.getClass().getMethod(methodName, classes);
+                        if (method != null) {
+                            Object result = method.invoke(o, paramsConfig);
+                            if(result != null){
+                                try {
+                                    field.set(obj, TypeUtils.cast(result, field.getType(), ParserConfig.getGlobalInstance()));
+                                } catch (Throwable e) {
+                                    e.printStackTrace();
+                                    LoggerEx.error(TAG, "Set field " + field.getName() + " for javaBean key " + fromBeanClass.getSimpleName() + " class " + field.getType() + " in class " + obj.getClass());
+                                }
+                            }
+                        }
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        LoggerEx.warn(TAG, t.getMessage());
+                    }
+                }else {
+                    Class beanClass = annotation.beanClass();
+                    if(!beanClass.equals(JavaBean.class)){
+                        Object o = GroovyCloudBean.getBean(beanClass);
+                        try {
+                            field.set(obj, TypeUtils.cast(o, field.getType(), ParserConfig.getGlobalInstance()));
+                        } catch (Throwable e) {
+                            e.printStackTrace();
+                            LoggerEx.error(TAG, "Set field " + field.getName() + " for javaBean key " + beanClass.getSimpleName() + " class " + field.getType() + " in class " + obj.getClass());
+                        }
+                    }else {
+                        LoggerEx.error(TAG, "JavaBean's beanClass or fromBeanClass is not illegal");
+                    }
+
+                }
+            }
+        });
     }
 
     public BaseRuntime getRuntimeWhenNotFound(String service) {
@@ -300,7 +359,14 @@ public class MyBaseRuntime extends BaseRuntime {
         }
         return null;
     }
-
+    private String getMethodName(Class c, String methodName){
+        if(StringUtils.isBlank(methodName)){
+            if(c.equals(ZookeeperFactory.class)){
+                methodName = "client";
+            }
+        }
+        return methodName;
+    }
     public void injectBean(Object obj) {
         if (obj instanceof GroovyObject) {
             try {

@@ -170,9 +170,8 @@ public class RedisHandler {
             }
         } catch (Exception e) {
             return false;
-        } finally {
-            return true;
         }
+        return true;
     }
 
     public String getHosts() {
@@ -1211,12 +1210,12 @@ public class RedisHandler {
             jedis = getJedis();
             return (V) executor.execute(jedis);
         } catch (Throwable e) {
-            if(e.getMessage().contains("Could not get a resource from the pool")){
+            if (e.getMessage().contains("Could not get a resource from the pool")) {
                 CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
             }
-            LoggerEx.fatal(TAG, "Redis execute err, pleaseCheck, errMsg: " + e.getMessage());
+            LoggerEx.fatal(TAG, "Redis execute err, pleaseCheck,host:"+ hosts +" ,errMsg: " + e.getMessage());
             e.printStackTrace();
-            throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed." + e.getMessage());
+            throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed. host: " + hosts + ",errMsg:" + e.getMessage());
         } finally {
             if (jedis != null && jedis instanceof ShardedJedis) {
                 ((ShardedJedis) jedis).close();
@@ -1336,7 +1335,7 @@ public class RedisHandler {
             }
         } catch (Throwable t) {
             t.printStackTrace();
-            if(t.getMessage().contains("Could not get a resource from the pool")){
+            if (t.getMessage().contains("Could not get a resource from the pool")) {
                 CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
             }
             LoggerEx.fatal(TAG, "invokePipelineMethod: " + methodName + ", args: " + args + " error, eMsg: " + t.getMessage());

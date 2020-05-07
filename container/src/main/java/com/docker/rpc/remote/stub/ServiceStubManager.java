@@ -55,7 +55,7 @@ public class ServiceStubManager {
     public void init(){
         if(this.lanType != null && this.lanType.equals(Lan.TYPE_http)){
             if (this.host == null) {
-                throw new NullPointerException("Discovery host is null, ServiceStubManager initialize failed!");
+                throw new NullPointerException("Remote host is null, ServiceStubManager initialize failed!");
             }
             if (!this.host.startsWith("http")) {
                 this.host = "http://" + this.host;

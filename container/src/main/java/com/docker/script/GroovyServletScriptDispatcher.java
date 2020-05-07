@@ -15,6 +15,7 @@ import com.docker.storage.adapters.impl.ScheduledTaskServiceImpl;
 import com.docker.tasks.RepairTaskHandler;
 import com.docker.utils.GroovyCloudBean;
 import com.docker.utils.JWTUtils;
+import com.docker.utils.RequestUtils;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -45,6 +46,7 @@ import java.util.Map;
 public class GroovyServletScriptDispatcher extends HttpServlet {
     private static final String TAG = GroovyServletManager.class.getSimpleName();
     ScriptManager scriptManager = null;
+    private ServiceStubManager serviceStubManager = null;
     private String key = "FSDdfFDWfR324fs98DSF*@#";
 
     public void handle(HttpServletRequest request, HttpServletResponse response) {
@@ -160,7 +162,10 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                             }
                         }
                         try {
-                            Object o = new ServiceStubManager().call(serviceName, className, methodName, objects);
+                            if(serviceStubManager == null){
+                                serviceStubManager = new ServiceStubManager();
+                            }
+                            Object o = serviceStubManager.call(serviceName, className, methodName, objects);
                             if (o != null) {
                                 result.setData(o);
                             }
@@ -174,6 +179,13 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                 if (internalFilter(request, result).getCode() == 1) {
                     String token = JWTUtils.createToken("crossClusterToken", null, 10800000L);//3小时
                     result.setData(token);
+                }
+            }else if(uriStrs[1].equals(GroovyServletManagerEx.BASE_PARAMS)){
+                if (internalFilter(request, result).getCode() == 1) {
+                    String publicIP = RequestUtils.getRemoteIp(request);
+                    Map map = new HashMap();
+                    map.put("publicIp", publicIP);
+                    result.setData(map);
                 }
             }
             respond(response, result);

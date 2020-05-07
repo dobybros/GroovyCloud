@@ -14,6 +14,7 @@ import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import com.docker.storage.redis.RedisListenerHandler;
 import com.docker.storage.redis.RedisSubscribeHandler;
+import com.docker.storage.zookeeper.ZookeeperFactory;
 import com.docker.tasks.RepairTaskHandler;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
@@ -87,6 +88,13 @@ public class BeanApp extends ConfigApp{
     private RedisSubscribeHandler redisSubscribeHandler;
     private RepairTaskHandler repairTaskHandler;
     private RedisListenerHandler redisListenerHandler;
+    private ZookeeperFactory zookeeperFactory;
+    public synchronized ZookeeperFactory getZookeeperFactory() {
+        if (instance.zookeeperFactory == null) {
+            instance.zookeeperFactory = new ZookeeperFactory();
+        }
+        return instance.zookeeperFactory;
+    }
     public synchronized RepairTaskHandler getRepairTaskHandler() {
         if (instance.repairTaskHandler == null) {
             instance.repairTaskHandler = new RepairTaskHandler();
