@@ -148,6 +148,9 @@ public abstract class BaseRuntime extends GroovyRuntime {
         Object redisListenerHandler = GroovyCloudBean.getBean(GroovyCloudBean.REDISLISTENERHANDLER);
         if (redisListenerHandler != null && redisListenerHandler instanceof ClassAnnotationGlobalHandler)
             addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) redisListenerHandler);
+        Object repairTaskHandler = GroovyCloudBean.getBean(GroovyCloudBean.REPAIRTASKHANDLER);
+        if (repairTaskHandler != null && repairTaskHandler instanceof ClassAnnotationGlobalHandler)
+            addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) repairTaskHandler);
 	}
 
 	@Override
