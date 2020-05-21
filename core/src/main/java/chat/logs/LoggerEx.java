@@ -1,6 +1,7 @@
 package chat.logs;
 
 import chat.utils.ChatUtils;
+import chat.utils.PropertiesContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +53,7 @@ public class LoggerEx {
         else
             logger.info(log);
     }
+
     public static void info(String tag, String msg, String dataType, String data) {
         String log = getLogMsg(tag, msg, dataType, data);
         if (logListener != null)
@@ -59,6 +61,7 @@ public class LoggerEx {
         else
             logger.info(log);
     }
+
     public static void warn(String tag, String msg) {
         String log = getLogMsg(tag, msg);
         if (logListener != null)
@@ -88,7 +91,9 @@ public class LoggerEx {
         builder.append("$$time:: " + ChatUtils.dateString()).
                 append(" $$tag:: " + tag).
                 append(" ").
-                append("[" + msg + "]");
+                append("[" + msg + "]").
+                append(" $$env:: " + PropertiesContainer.getInstance().getProperty("lan.id"));
+
         return builder.toString();
     }
 
@@ -98,7 +103,8 @@ public class LoggerEx {
                 append(" $$time:: " + ChatUtils.dateString()).
                 append(" $$tag:: " + tag).
                 append(" ").
-                append("[" + msg + "]");
+                append("[" + msg + "]").
+                append(" $$env:: " + PropertiesContainer.getInstance().getProperty("lan.id"));
         return builder.toString();
     }
 
@@ -107,20 +113,24 @@ public class LoggerEx {
         builder.append("$$time:: " + ChatUtils.dateString()).
                 append(" $$tag:: " + tag).
                 append(" [" + msg + "]").
+                append(" $$env:: " + PropertiesContainer.getInstance().getProperty("lan.id")).
                 append(" $$spendTime:: " + spendTime);
 
         return builder.toString();
     }
-    private static String getLogMsg(String tag, String msg,String dataType, String data) {
+
+    private static String getLogMsg(String tag, String msg, String dataType, String data) {
         StringBuilder builder = new StringBuilder();
         builder.append("$$time:: " + ChatUtils.dateString()).
                 append(" $$tag:: " + tag).
                 append(" [" + msg + "]").
+                append(" $$env:: " + PropertiesContainer.getInstance().getProperty("lan.id")).
                 append(" $$dataType:: " + dataType).
                 append(" $$data:: " + data);
 
         return builder.toString();
     }
+
     public static LogListener getLogListener() {
         return logListener;
     }

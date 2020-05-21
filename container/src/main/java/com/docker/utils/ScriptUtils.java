@@ -136,7 +136,8 @@ public class ScriptUtils {
                 "        builder.append(\"\\$\\$time:: \" + ChatUtils.dateString()).\n" +
                 "                append(\" \\$\\$tag:: \" + tag).\n" +
                 "                append(\" \").\n" +
-                "                append(\"[\" + msg + \"]\");\n" +
+                "                append(\"[\" + msg + \"]\").\n" +
+                "                append(\" \\$\\$env:: \" + chat.utils.PropertiesContainer.getInstance().getProperty(\"lan.id\"));\n" +
                 "        if(serviceName != null){\n" +
                 "            builder.append(\" \\$\\$serviceName:: \" + serviceName);\n" +
                 "        }\n" +
@@ -153,7 +154,8 @@ public class ScriptUtils {
                 "                append(\" \\$\\$time:: \" + ChatUtils.dateString()).\n" +
                 "                append(\" \\$\\$tag:: \" + tag).\n" +
                 "                append(\" \").\n" +
-                "                append(\"[\" + msg + \"]\");\n" +
+                "                append(\"[\" + msg + \"]\").\n" +
+                "                append(\" \\$\\$env:: \" + chat.utils.PropertiesContainer.getInstance().getProperty(\"lan.id\"));\n" +
                 "        if (serviceName != null) {\n" +
                 "            builder.append(\" \\$\\$serviceName:: \" + serviceName);\n" +
                 "        }\n" +
@@ -169,6 +171,7 @@ public class ScriptUtils {
                 "        builder.append(\"\\$\\$time:: \" + ChatUtils.dateString()).\n" +
                 "                append(\" \\$\\$tag:: \" + tag).\n" +
                 "                append(\" [\" + msg + \"]\").\n" +
+                "                append(\" \\$\\$env:: \" + chat.utils.PropertiesContainer.getInstance().getProperty(\"lan.id\")).\n" +
                 "                append(\" \\$\\$spendTime:: \" + spendTime);\n" +
                 "        if(serviceName != null){\n" +
                 "            builder.append(\" \\$\\$serviceName:: \" + serviceName);\n" +
@@ -180,6 +183,7 @@ public class ScriptUtils {
                 "        builder.append(\"\\$\\$time:: \" + ChatUtils.dateString()).\n" +
                 "                append(\" \\$\\$tag:: \" + tag).\n" +
                 "                append(\" [\" + msg + \"]\").\n" +
+                "                append(\" \\$\\$env:: \" + chat.utils.PropertiesContainer.getInstance().getProperty(\"lan.id\")).\n" +
                 "                append(\" \\$\\$dataType:: \" + dataType).\n" +
                 "                append(\" \\$\\$data:: \" + data);\n" +
                 "\n" +

@@ -1,13 +1,16 @@
 package com.docker.script;
 
+import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.json.Result;
 import chat.logs.LoggerEx;
+import chat.main.ServerStart;
 import chat.scheduled.QuartzFactory;
 import chat.utils.ChatUtils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.docker.data.RepairData;
 import com.docker.data.ScheduleTask;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.servlet.GroovyServletManagerEx;
@@ -41,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @WebServlet(urlPatterns = "/base", asyncSupported = true)
 public class GroovyServletScriptDispatcher extends HttpServlet {
@@ -77,23 +81,46 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                 } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_TIMER)) {
                     List list = handleTimer();
                     result.setData(list);
-                }else if(uriStrs[1].equals(GroovyServletManagerEx.BASE_REPAIR)){
-                    if(internalFilter(request, result).getCode() == 1){
+                } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_REPAIR)) {
+                    if (internalFilter(request, result).getCode() == 1) {
                         String repairId = uriStrs[2];
                         RepairTaskHandler repairTaskHandler = (RepairTaskHandler) GroovyCloudBean.getBean(GroovyCloudBean.REPAIRTASKHANDLER);
-                        try {
-                            Object resultObj = repairTaskHandler.execute(repairId);
-                            if(resultObj != null){
-                                if(resultObj instanceof String){
-                                    result.setData(resultObj);
-                                }else {
-                                    result.setData(JSON.toJSONString(resultObj));
-                                }
+                        CompletableFuture repairFuture = CompletableFuture.supplyAsync(() -> {
+                            try {
+                                Object resultObj = repairTaskHandler.execute(repairId);
+                                return resultObj;
+                            } catch (CoreException e) {
+                                e.printStackTrace();
                             }
-                        }catch (CoreException e){
-                            e.printStackTrace();
-                            result.setMsg(e.toString());
-                        }
+                            return null;
+                        }, ServerStart.getInstance().getAsyncThreadPoolExecutor());
+                        repairFuture.whenCompleteAsync((executeResult, e) -> {
+                            try {
+                                RepairData repairData = repairTaskHandler.getRepairService().getRepairData(repairId);
+                                if (e != null) {
+                                    Throwable throwable = (Throwable) e;
+                                    if (((Throwable) e).getCause() != null) {
+                                        throwable = ((Throwable) e).getCause();
+                                    }
+                                    if (throwable instanceof CoreException) {
+                                        repairData.setExecuteResult(((CoreException) throwable).toString());
+                                    } else {
+                                        throwable = new CoreException(ChatErrorCodes.ERROR_GROOVY_UNKNOWN, ExceptionUtils.getFullStackTrace(throwable));
+                                        repairData.setExecuteResult(throwable.toString());
+                                    }
+                                } else {
+                                    if(executeResult instanceof String){
+                                        repairData.setExecuteResult((String) executeResult);
+                                    }else {
+                                        repairData.setExecuteResult(JSON.toJSONString(executeResult));
+                                    }
+                                }
+                                repairData.setLastExecuteTime(ChatUtils.dateString());
+                                repairTaskHandler.getRepairService().updateRepairData(repairData);
+                            } catch (CoreException ex) {
+                                ex.printStackTrace();
+                            }
+                        }, ServerStart.getInstance().getAsyncThreadPoolExecutor());
                     }
                 }
             } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_SCALE)) {
@@ -162,7 +189,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                             }
                         }
                         try {
-                            if(serviceStubManager == null){
+                            if (serviceStubManager == null) {
                                 serviceStubManager = new ServiceStubManager();
                             }
                             Object o = serviceStubManager.call(serviceName, className, methodName, objects);
@@ -180,7 +207,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                     String token = JWTUtils.createToken("crossClusterToken", null, 10800000L);//3小时
                     result.setData(token);
                 }
-            }else if(uriStrs[1].equals(GroovyServletManagerEx.BASE_PARAMS)){
+            } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_PARAMS)) {
                 if (internalFilter(request, result).getCode() == 1) {
                     String publicIP = RequestUtils.getRemoteIp(request);
                     Map map = new HashMap();

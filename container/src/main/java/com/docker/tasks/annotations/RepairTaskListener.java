@@ -17,7 +17,7 @@ public @interface RepairTaskListener {
     public String description() default "";
 
     //create time of task, specify by developer
-    public String createTime() default "";
+    public String createTime();
 
     public static final Integer TYPE_ONETIME_REPAIR = 1;
     public static final Integer TYPE_MULTIPLETIMES_REPAIR = 2;

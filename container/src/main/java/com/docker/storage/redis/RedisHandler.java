@@ -10,6 +10,7 @@ import com.docker.storage.cache.CacheStorageMethod;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import redis.clients.jedis.*;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisMovedDataException;
 
 import java.lang.reflect.Method;
@@ -1209,11 +1210,13 @@ public class RedisHandler {
         try {
             jedis = getJedis();
             return (V) executor.execute(jedis);
+        } catch (JedisConnectionException e) {
+            CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
+            LoggerEx.fatal(TAG, "Redis execute err JedisConnectionException, pleaseCheck,host:" + hosts + " ,errMsg: " + ExceptionUtils.getFullStackTrace(e));
+            throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed. host: " + hosts + ",errMsg:" + e.getMessage());
         } catch (Throwable e) {
-            if (e.getMessage().contains("Could not get a resource from the pool")) {
-                CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
-            }
-            LoggerEx.fatal(TAG, "Redis execute err, pleaseCheck,host:"+ hosts +" ,errMsg: " + e.getMessage());
+//             || e.getMessage().contains("No reachable node")
+            LoggerEx.fatal(TAG, "Redis execute err, pleaseCheck,host:" + hosts + " ,errMsg: " + ExceptionUtils.getFullStackTrace(e));
             e.printStackTrace();
             throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed. host: " + hosts + ",errMsg:" + e.getMessage());
         } finally {
@@ -1333,11 +1336,12 @@ public class RedisHandler {
                 }
                 return method.invoke(pipeline, args);
             }
+        }catch (JedisConnectionException e) {
+            e.printStackTrace();
+            CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
+            LoggerEx.fatal(TAG, "Redis execute err JedisConnectionException, pleaseCheck,host:" + hosts + " ,errMsg: " + ExceptionUtils.getFullStackTrace(e));
         } catch (Throwable t) {
             t.printStackTrace();
-            if (t.getMessage().contains("Could not get a resource from the pool")) {
-                CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
-            }
             LoggerEx.fatal(TAG, "invokePipelineMethod: " + methodName + ", args: " + args + " error, eMsg: " + t.getMessage());
             if (t instanceof JedisMovedDataException && pipeline instanceof JedisClusterPipeline) {
                 LoggerEx.error(TAG, "Have occurred JedisMovedDataException, will refresh cluster!");

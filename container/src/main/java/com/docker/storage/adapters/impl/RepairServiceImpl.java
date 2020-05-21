@@ -31,6 +31,7 @@ public class RepairServiceImpl implements RepairService {
         try {
             Document query = new Document();
             FindIterable<Document> iterable = repairDAO.query(query);
+            iterable.sort(new Document(RepairData.FIELD_CREATETIME, -1));
             MongoCursor<Document> cursor = iterable.iterator();
             List<RepairData> RepairDatas = new ArrayList<>();
             while(cursor.hasNext()) {

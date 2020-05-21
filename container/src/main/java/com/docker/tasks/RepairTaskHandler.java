@@ -44,6 +44,7 @@ public class RepairTaskHandler extends ClassAnnotationGlobalHandler {
 
     @Override
     public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, GroovyRuntime groovyRuntime) {
+        LoggerEx.info(TAG, "I will add repair task");
         if (annotatedClassMap != null) {
             Collection<Class<?>> values = annotatedClassMap.values();
 
@@ -97,5 +98,9 @@ public class RepairTaskHandler extends ClassAnnotationGlobalHandler {
             return groovyObjectEx.invokeRootMethod("repair");
         }
         return null;
+    }
+
+    public RepairServiceImpl getRepairService() {
+        return repairService;
     }
 }
