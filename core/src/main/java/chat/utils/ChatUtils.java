@@ -62,6 +62,20 @@ public class ChatUtils {
 		};
 		costClassMap.put(long.class, longListener);
 		costClassMap.put(Long.class, longListener);
+		CostClassListener floatListener = new CostClassListener() {
+			@Override
+			public Object costClass(String str, Class<?> costClass) {
+				try {
+					return Float.parseFloat(str);
+				} catch (Throwable e) {
+				}
+				if(costClass.equals(float.class))
+					return 0.0;
+				return null;
+			}
+		};
+		costClassMap.put(float.class, floatListener);
+		costClassMap.put(Float.class, floatListener);
 		
 		CostClassListener booleanListener = new CostClassListener() {
 			@Override
