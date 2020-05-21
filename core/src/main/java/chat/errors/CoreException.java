@@ -29,6 +29,11 @@ public class CoreException extends Exception {
         this.logLevel = logLevel;
     }
 
+    public CoreException(String logLevel, int code){
+        this.code = code;
+        this.logLevel = logLevel;
+    }
+
     public CoreException(int code, String[] parameters, String message) {
         this(code, message);
         this.parameters = parameters;

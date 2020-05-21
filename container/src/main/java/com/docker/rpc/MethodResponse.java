@@ -115,7 +115,7 @@ public class MethodResponse extends RPCResponse {
                                         Integer code = jsonObj.getInteger("code");
                                         String message = jsonObj.getString("message");
                                         String logLevel = jsonObj.getString("logLevel");
-                                        if (code != null && message != null) {
+                                        if (code != null) {
                                             exception = new CoreException(code, message, logLevel);
                                         }
                                     }
