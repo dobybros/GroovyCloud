@@ -71,6 +71,7 @@ public class ScriptManager implements ShutdownListener {
     boolean isShutdown = false;
     boolean isLoaded = false;
     private final String versionSeperator = "_v";
+    private DeployServiceVersion deployServiceVersion;
 
     public static final String SERVICE_NOTFOUND = "servicenotfound";
     public static final Boolean DELETELOCAL = false;
@@ -199,7 +200,10 @@ public class ScriptManager implements ShutdownListener {
                 if(dockerStatus.getStatus() != DockerStatus.STATUS_OK){
                     dockerStatus.setStatus(DockerStatus.STATUS_OK);
                     dockerStatusService.update(OnlineServer.getInstance().getServer(), dockerStatus);
-                    LoggerEx.info(TAG, "This dockerStatus reload finish");
+                    LoggerEx.info(TAG, "================ This dockerStatus reload finish =======================");
+                }
+                if(!killProcess){
+                    updateServiceVersion(deployServiceVersion);
                 }
                 Collection<String> keys = scriptRuntimeMap.keySet();
                 for (String key : keys) {
@@ -242,7 +246,31 @@ public class ScriptManager implements ShutdownListener {
         }
 
     }
+    private void updateServiceVersion(DeployServiceVersion deployServiceVersion) {
+        try {
+            List<ServiceVersion> serviceVersionList = serviceVersionService.getServiceVersionsByType(deployServiceVersion.getServerType(), deployServiceVersion.getType());
+            if (serviceVersionList != null && !serviceVersionList.isEmpty()) {
+                for (ServiceVersion serviceVersion : serviceVersionList) {
+                    serviceVersion.setServiceVersions(deployServiceVersion.getServiceVersions());
+                    serviceVersion.setDeployId(deployServiceVersion.getDeployId());
+                    serviceVersionService.addServiceVersion(serviceVersion);
+                }
+            } else {
+                ServiceVersion serviceVersion = new ServiceVersion();
+                List<String> list = new ArrayList<>();
+                list.add(deployServiceVersion.getServerType());
+                serviceVersion.setServerType(list);
+                serviceVersion.set_id(deployServiceVersion.get_id());
+                serviceVersion.setType(deployServiceVersion.getType());
+                serviceVersion.setServiceVersions(deployServiceVersion.getServiceVersions());
+                serviceVersion.setDeployId(deployServiceVersion.getDeployId());
+                serviceVersionService.addServiceVersion(serviceVersion);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
 
+    }
     private void complieService(String theServiceVersion, Set<String> remoteServices, List<Service> services) {
         String zipFile = "groovy.zip";
         try {
@@ -481,7 +509,7 @@ public class ScriptManager implements ShutdownListener {
     }
 
     private List<String> getDeployServiceVersions() throws CoreException {
-        DeployServiceVersion deployServiceVersion = deployServiceVersionService.getServiceVersion(serverType);
+        deployServiceVersion = deployServiceVersionService.getServiceVersion(serverType);
         List<String> finalServiceVersions = new ArrayList<>();
         if (deployServiceVersion != null) {
             if(deployServiceVersion.getDeployId() != null){
