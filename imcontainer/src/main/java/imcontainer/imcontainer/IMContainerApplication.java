@@ -1,6 +1,6 @@
 package imcontainer.imcontainer;
 
-import com.docker.script.GroovyServletScriptDispatcher;
+import com.dobybros.gateway.script.GroovyServletScriptDispatcher;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;

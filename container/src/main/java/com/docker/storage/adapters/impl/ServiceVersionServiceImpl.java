@@ -48,6 +48,31 @@ public class ServiceVersionServiceImpl implements ServiceVersionService {
         return serviceVersions;
     }
 
+    @Override
+    public List<ServiceVersion> getServiceVersionsByType(String serverType, String type) throws CoreException {
+        List<ServiceVersion> serviceVersions = new ArrayList<>();
+//        Document query = new Document().append("serverType", new Document().append("$in", new ArrayList<>().add(serverType)));
+        Document query = new Document();
+//                .append("serverType." + serverType, new Document().append("$exists", true));
+        FindIterable<Document> iterable = null;
+        try {
+            iterable = serviceVersionDAO.query(query);
+        } catch (DBException e) {
+            e.printStackTrace();
+        }
+        MongoCursor<Document> cursor = iterable.iterator();
+        while (cursor.hasNext()) {
+            Document doc = cursor.next();
+            List serverTypes = (ArrayList) doc.get("serverType");
+            if (serverTypes.contains(serverType) && doc.get("type").equals(type)) {
+                ServiceVersion serviceVersion = new ServiceVersion();
+                serviceVersion.fromDocument(doc);
+                serviceVersions.add(serviceVersion);
+            }
+        }
+        return serviceVersions;
+    }
+
     public ServiceVersionDAO getServiceVersionDAO() {
         return serviceVersionDAO;
     }

@@ -1,6 +1,5 @@
 package chat.utils;
 
-import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
@@ -476,6 +475,7 @@ public class ReflectionUtil {
         }
         crc.update(str.getBytes());
         long value = crc.getValue();
+        LoggerEx.info("ReflectionUtil", "Get crc, str: " + str + ",value: " + value);
 //		if(value == 2380642687L)
 //			System.out.print("");
         return value;

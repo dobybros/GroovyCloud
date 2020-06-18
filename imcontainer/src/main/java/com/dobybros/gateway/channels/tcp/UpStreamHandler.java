@@ -120,7 +120,7 @@ public class UpStreamHandler extends IoHandlerAdapter {
 				}
 			} else  {
 				if(message != null)
-					LoggerEx.error(TAG, "Unexpected message type " + message.getClass() + " message " + message + " session " + session);
+					LoggerEx.info(TAG, "Unexpected message type " + message.getClass() + " message " + message + " session " + session);
 			}
 		} catch(Throwable t) {
 			LoggerEx.error(TAG, "Message " + message + " received failed, " + t + " message: " + t.getMessage());

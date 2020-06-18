@@ -24,6 +24,8 @@ public interface CoreErrorCodes {
 	public static final int ERROR_LOCK = -35000;
 	public static final int ERROR_LOCK_CAN_NOT_FOUND = ERROR_LOCK + 1;
 	public static final int ERROR_LOCK_VERIFY_FIELD = ERROR_LOCK + 2;
+	public static final int ERROR_ZOOKEEPER_CLIENT_NULL = ERROR_LOCK + 3;
+	public static final int ERROR_ZOOKEEPER_EXECUTE_FAILED = ERROR_LOCK + 4;
 
 
 

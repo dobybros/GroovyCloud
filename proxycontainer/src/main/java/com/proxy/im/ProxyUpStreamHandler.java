@@ -42,12 +42,14 @@ public class ProxyUpStreamHandler extends IoHandlerAdapter {
             }
         };
         session.setAttribute(ATTRIBUTE_TIMERTASK_IDENTITY, task);
-        // 获取ip
-        String address = session.getRemoteAddress().toString();
-        address = address.replace("/", "");
-        String[] addresses = address.split(":");
-        if (addresses.length > 0)
-            session.setAttribute(ATTRIBUTE_IP, addresses[0]);
+        if(session.getAttribute(ATTRIBUTE_IP) == null){
+            // 获取ip
+            String address = session.getRemoteAddress().toString();
+            address = address.replace("/", "");
+            String[] addresses = address.split(":");
+            if (addresses.length > 0)
+                session.setAttribute(ATTRIBUTE_IP, addresses[0]);
+        }
         TimerEx.schedule(task, TimeUnit.SECONDS.toMillis(8));
         for (GroovyObjectEx<ProxySessionListener> listener : proxyAnnotationHandler.getTcpListeners()) {
             try {
@@ -121,7 +123,7 @@ public class ProxyUpStreamHandler extends IoHandlerAdapter {
                 }
             } else {
                 if (message != null)
-                    LoggerEx.error(TAG, "Unexpected message type " + message.getClass() + " message " + message + " session " + session);
+                    LoggerEx.info(TAG, "Unexpected message type " + message.getClass() + " message " + message + " session " + session);
             }
     }
 

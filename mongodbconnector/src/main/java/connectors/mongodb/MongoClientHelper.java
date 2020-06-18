@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MongoClientHelper {
 	private static final String TAG = MongoClientHelper.class.getSimpleName();
 
-	private String hosts;//"mongodb://localhost:7900,localhost:27018,localhost:27019"
+	private String hosts;//"mongodb://192.168.80.101:27017,192.168.80.101:27018,192.168.80.101:27019,localhost:27018,localhost:27019"
 	
 //	private static MongoClientHelper instance;
 	

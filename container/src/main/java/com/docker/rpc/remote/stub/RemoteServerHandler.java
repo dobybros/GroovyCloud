@@ -31,7 +31,7 @@ public class RemoteServerHandler {
     private RPCClientAdapterMap thisRpcClientAdapterMap;
     private final String TAG = RemoteServerHandler.class.getSimpleName();
 
-    RemoteServerHandler(String toService, ServiceStubManager serviceStubManager){
+    RemoteServerHandler(String toService, ServiceStubManager serviceStubManager) {
         this.toService = toService;
         this.serviceStubManager = serviceStubManager;
         this.remoteServers = new RemoteServers();
@@ -142,9 +142,9 @@ public class RemoteServerHandler {
                     asyncRpcFuture.setRemoteServers(server.getServer(), keptSortedServers, thisRpcClientAdapterMap, request);
                     clientAdapter.callAsync(request);
                     LoggerEx.info(TAG, "Successfully callAsync Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount);
-                    if(asyncRpcFuture != null){
+                    if (asyncRpcFuture != null) {
                         return asyncRpcFuture.getFuture();
-                    }else {
+                    } else {
                         LoggerEx.error(TAG, "Call async method err,asyncRpcFuture is null, callbackFutureId" + callbackFutureId + ",CurrentThread: " + Thread.currentThread());
                     }
                 } else {
@@ -208,7 +208,7 @@ public class RemoteServerHandler {
                     RPCClientAdapter clientAdapter = thisRpcClientAdapterMap.registerServer(ip, port, server.getServer());
                     MethodResponse response = (MethodResponse) clientAdapter.call(request);
                     if (response.getException() != null) {
-                        LoggerEx.error(TAG, "Failed to call Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " return " + response.getReturnObject() + " exception " + response.getException() + " on server " + server + " " + count + "/" + maxCount);
+                        response.getException().log(TAG, "Failed to call Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " return " + response.getReturnObject() + " exception " + response.getException() + " on server " + server + " " + count + "/" + maxCount);
                         throw response.getException();
                     }
                     LoggerEx.info(TAG, "Successfully call Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " return " + response.getReturnObject() + " exception " + response.getException() + " on server " + server + " " + count + "/" + maxCount, System.currentTimeMillis() - time);
@@ -217,7 +217,6 @@ public class RemoteServerHandler {
                     LoggerEx.info(TAG, "No ip " + ip + " or port " + port + ", fail to call Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount);
                 }
             } catch (Throwable t) {
-                t.printStackTrace();
                 if (t instanceof CoreException) {
                     CoreException ce = (CoreException) t;
                     switch (ce.getCode()) {
@@ -228,10 +227,10 @@ public class RemoteServerHandler {
                             throw t;
                     }
                 }
-                LoggerEx.error(TAG, "Fail to Call Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount + " available size " + keptSortedServers.size() + " error " +ExceptionUtils.getFullStackTrace(t) + " exception " + t);
+                LoggerEx.error(TAG, "Fail to Call Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount + " available size " + keptSortedServers.size() + " error " + ExceptionUtils.getFullStackTrace(t) + " exception " + t);
             }
         }
-        throw new CoreException(ChatErrorCodes.ERROR_RPC_CALLREMOTE_FAILED, "Call request " + request + " outside failed with several retries.");
+        throw new CoreException(ChatErrorCodes.ERROR_RPC_CALLREMOTE_FAILED, "Call request " + request + " outside failed with several retries.", CoreException.LEVEL_FATAL);
     }
 
     private void setSortedServers(MethodRequest request) throws CoreException {
@@ -247,36 +246,56 @@ public class RemoteServerHandler {
         if (this.remoteServers.getSortedServers().isEmpty())
             throw new CoreException(ChatErrorCodes.ERROR_LANSERVERS_NOSERVERS, "No server is found for service " + toService + " fromService " + request.getFromService() + " crc " + request.getCrc());
     }
-    public MethodResponse callHttp(MethodRequest request) throws CoreException{
+
+    public MethodResponse callHttp(MethodRequest request) throws CoreException {
         String token = RemoteServersManager.getInstance().getRemoteServerToken(this.serviceStubManager.getHost());
-        if(token != null){
+        if (token != null) {
             String serviceClassMethod = RpcCacheManager.getInstance().getMethodByCrc(request.getCrc());
-            if(serviceClassMethod == null){
+            if (serviceClassMethod == null) {
                 LoggerEx.error(TAG, "Cant find crc in RpcCacheManager, crc: " + request.getCrc());
                 throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_CRC_ILLEGAL, "Cant find crc in RpcCacheManager, crc: " + request.getCrc());
             }
             String[] serviceClassMethods = serviceClassMethod.split("_");
-            if(serviceClassMethods.length == 3){
+            if (serviceClassMethods.length == 3) {
                 Map<String, Object> dataMap = new HashMap<String, Object>();
                 dataMap.put("service", serviceClassMethods[0]);
-                dataMap.put("class", serviceClassMethods[1]);
-                dataMap.put("method", serviceClassMethods[2]);
+                dataMap.put("className", serviceClassMethods[1]);
+                dataMap.put("methodName", serviceClassMethods[2]);
                 dataMap.put("args", request.getArgs());
                 Map<String, Object> headerMap = new HashMap<String, Object>();
                 headerMap.put("crossClusterToken", token);
-                Result result = ScriptHttpUtils.post(JSON.toJSONString(dataMap), this.serviceStubManager.getHost() + "/base/crossClusterAccessService", headerMap, Result.class);
-                if(result != null){
-                    MethodResponse response = new MethodResponse();
-                    MethodMapping methodMapping = request.getServiceStubManager().getMethodMapping(request.getCrc());
-                    if (methodMapping == null || methodMapping.getReturnClass().equals(Object.class)) {
-                        response.setReturnObject(JSON.parse(JSON.toJSONString(result.getData())));
+                int times = 0;
+                while (times <= 3) {
+                    long time = System.currentTimeMillis();
+                    Result result = ScriptHttpUtils.post(JSON.toJSONString(dataMap), this.serviceStubManager.getHost() + "/base/crossClusterAccessService", headerMap, Result.class);
+                    if (result != null && result.success()) {
+                        LoggerEx.info(TAG, "Call remote server success, requestParams: " + dataMap.toString() + ",serverHost: " + this.serviceStubManager.getHost(), System.currentTimeMillis() - time);
+                        MethodResponse response = new MethodResponse();
+                        MethodMapping methodMapping = request.getServiceStubManager().getMethodMapping(request.getCrc());
+                        if (methodMapping == null || methodMapping.getReturnClass().equals(Object.class)) {
+                            response.setReturnObject(JSON.parse(JSON.toJSONString(result.getData())));
+                        } else {
+                            response.setReturnObject(JSON.parseObject(JSON.toJSONString(result.getData()), methodMapping.getGenericReturnClass()));
+                        }
+                        return response;
                     } else {
-                        response.setReturnObject(JSON.parseObject(JSON.toJSONString(result.getData()), methodMapping.getGenericReturnClass()));
+                        times++;
+                        LoggerEx.error(TAG, "Accss remote server failed,essMsg: " + (result == null ? "null" : result.toString()) + ",times: " + times);
+                        try {
+                            Thread.sleep(3000);
+                        }catch (InterruptedException r){
+                            r.printStackTrace();
+                        }
                     }
-                    return response;
                 }
+                MethodResponse response = new MethodResponse();
+                response.setException(new CoreException(ChatErrorCodes.ERROR_RPC_CALLREMOTE_FAILED, "Call request " + request + " outside failed with several retries. dataMap: " + JSON.toJSONString(dataMap), CoreException.LEVEL_FATAL));
+                return response;
+//                else {
+//                    throw new CoreException(ChatErrorCodes.ERROR_REMOTE_RPC_FAILED, "Call remote rpc failed, requestParams: " + dataMap.toString());
+//                }
             }
-        }else {
+        } else {
             LoggerEx.error(TAG, "Remote server is unavailabe, host: " + this.serviceStubManager.getHost());
             throw new CoreException(ChatErrorCodes.ERROR_SERVER_CONNECT_FAILED, "Remote server is unavailabe, host: " + this.serviceStubManager.getHost());
         }

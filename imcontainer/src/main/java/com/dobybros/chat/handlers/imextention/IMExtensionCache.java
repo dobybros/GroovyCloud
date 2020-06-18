@@ -25,12 +25,9 @@ public class IMExtensionCache {
     public Map<String, String> newUserIdMap = new ConcurrentHashMap<>();
     private final String SESSION_PREFIX_USER = "IMEXTENSIONUSER";
     private final String SESSION_PREFIX_NEWUSER = "IMEXTENSIONNEWUSER";
-    private RedisHandler redisHandler = null;
     private String host;
 
     public void init() {
-        RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler) CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, host);
-        redisHandler = cacheStorageAdapter.getRedisHandler();
         TimerEx.schedule(new TimerTaskEx("IMExtensionCache init") {
             @Override
             public void execute() {
@@ -51,7 +48,10 @@ public class IMExtensionCache {
             }
         }, 10000L, 10000L);
     }
-
+    private RedisHandler getRedisHandler(){
+        RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler) CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, host);
+        return cacheStorageAdapter.getRedisHandler();
+    }
     public String saveNewUserIdReturnOld(String userId, String service, Integer terminal, String newUserId) throws CoreException {
         String key = getUserKey(userId, service, terminal);
         newUserIdMap.put(key, newUserId);
@@ -80,7 +80,7 @@ public class IMExtensionCache {
 
 
     private String saveStrReturnOld(String key, String value) throws CoreException {
-        return redisHandler.getSet(SESSION_PREFIX_USER + key, value);
+        return getRedisHandler().getSet(SESSION_PREFIX_USER + key, value);
     }
 
     public void delNewUserId(String newUserId, String service, Integer terminal) throws CoreException {
@@ -93,21 +93,21 @@ public class IMExtensionCache {
     }
 
     private Long saveStrNX(String key, String value) throws CoreException {
-        return redisHandler.setNX(SESSION_PREFIX_USER + key, value);
+        return getRedisHandler().setNX(SESSION_PREFIX_USER + key, value);
     }
 
     private String getStr(String key) throws CoreException {
-        return redisHandler.get(SESSION_PREFIX_USER + key);
+        return getRedisHandler().get(SESSION_PREFIX_USER + key);
     }
 
     private Long delStr(String key) throws CoreException {
-        return redisHandler.del(SESSION_PREFIX_USER + key);
+        return getRedisHandler().del(SESSION_PREFIX_USER + key);
     }
 
     public Long setUserServer(String newUserId, String service, RemoteServers.Server server) throws CoreException {
         String userId = getUserId(newUserId);
         if(userId != null){
-            return redisHandler.hsetObject(SESSION_PREFIX_NEWUSER + getNewUserKey(userId, service), newUserId, server);
+            return getRedisHandler().hsetObject(SESSION_PREFIX_NEWUSER + getNewUserKey(userId, service), newUserId, server);
         }
         return null;
     }
@@ -116,18 +116,18 @@ public class IMExtensionCache {
         if(newUserId != null && service != null){
             String userId = getUserId(newUserId);
             if (userId != null) {
-                return redisHandler.hdel(SESSION_PREFIX_NEWUSER + getNewUserKey(userId, service), newUserId);
+                return getRedisHandler().hdel(SESSION_PREFIX_NEWUSER + getNewUserKey(userId, service), newUserId);
             }
         }
         return null;
     }
 
     public RemoteServers.Server getServer(String userId, String service, String newUserId) throws CoreException {
-        return redisHandler.hgetObject(SESSION_PREFIX_NEWUSER + getNewUserKey(userId, service), newUserId, RemoteServers.Server.class);
+        return getRedisHandler().hgetObject(SESSION_PREFIX_NEWUSER + getNewUserKey(userId, service), newUserId, RemoteServers.Server.class);
     }
 
     public Map<String, RemoteServers.Server> getNewUsers(String userId, String service) throws CoreException {
-        return redisHandler.hgetAllObject(SESSION_PREFIX_NEWUSER + getNewUserKey(userId, service), RemoteServers.Server.class);
+        return getRedisHandler().hgetAllObject(SESSION_PREFIX_NEWUSER + getNewUserKey(userId, service), RemoteServers.Server.class);
     }
 
     private String getUserKey(String userId, String service, Integer terminal) {

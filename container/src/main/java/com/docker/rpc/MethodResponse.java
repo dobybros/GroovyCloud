@@ -114,19 +114,20 @@ public class MethodResponse extends RPCResponse {
                                     if (jsonObj != null) {
                                         Integer code = jsonObj.getInteger("code");
                                         String message = jsonObj.getString("message");
-                                        if(code != null && message != null){
-                                            exception = new CoreException(code, message);
+                                        String logLevel = jsonObj.getString("logLevel");
+                                        if (code != null) {
+                                            exception = new CoreException(code, message, logLevel);
                                         }
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
-                                    LoggerEx.error(TAG, "Parse exception bytes failed, " + ExceptionUtils.getFullStackTrace(e)+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                                    LoggerEx.error(TAG, "Parse exception bytes failed, " + ExceptionUtils.getFullStackTrace(e) + ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                                 }
                             }
                         } catch (Throwable e) {
                             e.printStackTrace();
-                            throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(e)+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
-                        }finally {
+                            throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(e) + ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                        } finally {
                             IOUtils.closeQuietly(bais);
                             IOUtils.closeQuietly(dis.original());
                         }
@@ -164,7 +165,7 @@ public class MethodResponse extends RPCResponse {
                             returnBytes = GZipUtils.compress(returnStr.getBytes("utf8"));
                         } catch (IOException e) {
                             e.printStackTrace();
-                            LoggerEx.error(TAG, "Generate return " + returnStr + " to bytes failed, " + ExceptionUtils.getFullStackTrace(e)+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                            LoggerEx.error(TAG, "Generate return " + returnStr + " to bytes failed, " + ExceptionUtils.getFullStackTrace(e) + ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                         }
                     }
                     if (returnBytes != null) {
@@ -179,12 +180,13 @@ public class MethodResponse extends RPCResponse {
                         JSONObject json = new JSONObject();
                         json.put("code", exception.getCode());
                         json.put("message", exception.getMessage());
+                        json.put("logLevel", exception.getLogLevel());
                         String errorStr = json.toJSONString();//JSON.toJSONString(exception);
                         try {
                             exceptionBytes = GZipUtils.compress(errorStr.getBytes("utf8"));
                         } catch (IOException e) {
                             e.printStackTrace();
-                            LoggerEx.error(TAG, "Generate error " + errorStr + " to bytes failed, " + ExceptionUtils.getFullStackTrace(e)+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                            LoggerEx.error(TAG, "Generate error " + errorStr + " to bytes failed, " + ExceptionUtils.getFullStackTrace(e) + ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                         }
                     }
                     if (exceptionBytes != null) {
@@ -200,7 +202,7 @@ public class MethodResponse extends RPCResponse {
                     setType(MethodRequest.RPCTYPE);
                 } catch (Throwable t) {
                     t.printStackTrace();
-                    throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(t)+ ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
+                    throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "PB parse data failed, " + ExceptionUtils.getFullStackTrace(t) + ",service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                 } finally {
                     IOUtils.closeQuietly(baos);
                     IOUtils.closeQuietly(dis.original());

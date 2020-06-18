@@ -7,6 +7,8 @@ package com.dobybros.gateway.channels.websocket.codec;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Static utility class containing methods used for websocket encoding
@@ -17,6 +19,7 @@ import java.security.NoSuchAlgorithmException;
 class WebSocketUtils {
     
     static final String SessionAttribute = "isWEB";
+    static final String ATTRIBUTE_IP = "IP";
     // Construct a successful websocket handshake response using the key param
     // (See RFC 6455).
     static WebSocketHandShakeResponse buildWSHandshakeResponse(String key){
@@ -30,16 +33,30 @@ class WebSocketUtils {
     
     // Parse the string as a websocket request and return the value from
     // Sec-WebSocket-Key header (See RFC 6455). Return empty string if not found.
-    static String getClientWSRequestKey(String WSRequest) {
+    static Map<String, String> getClientWSRequestKey(String WSRequest) {
         String[] headers = WSRequest.split("\r\n");
         String socketKey = "";
+        String realIp = "";
         for (int i = 0; i < headers.length; i++) {
             if (headers[i].toLowerCase().contains("sec-websocket-key")) {
                 socketKey = (headers[i].split(":")[1]).trim();
-                break;
+                if(realIp != ""){
+                    break;
+                }
+            }else if(headers[i].toLowerCase().contains("x-real-ip")){
+                realIp = (headers[i].split(":")[1]).trim();
+                if(socketKey != ""){
+                    break;
+                }
             }
         }
-        return socketKey;
+        if(socketKey != "" && realIp != ""){
+            Map<String, String> map = new HashMap<>();
+            map.put("x-real-ip", realIp);
+            map.put("sec-websocket-key", socketKey);
+            return map;
+        }
+        return null;
     }    
     
     // 

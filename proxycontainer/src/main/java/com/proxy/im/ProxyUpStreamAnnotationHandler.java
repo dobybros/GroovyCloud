@@ -1,5 +1,6 @@
 package com.proxy.im;
 
+import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.proxy.annotation.ProxyMessageReceived;
 import script.groovy.object.GroovyObjectEx;
@@ -23,6 +24,17 @@ public class ProxyUpStreamAnnotationHandler extends ClassAnnotationGlobalHandler
 
     public void setProxyMessageReceivedListeners(List<GroovyObjectEx<ProxyMessageReceivedListener>> proxyMessageReceivedListeners) {
         this.proxyMessageReceivedListeners = proxyMessageReceivedListeners;
+    }
+
+    @Override
+    public void handleAnnotatedClassesInjectBean(GroovyRuntime groovyRuntime) {
+        for (GroovyObjectEx<ProxyMessageReceivedListener> groovyObjectEx : proxyMessageReceivedListeners) {
+            try {
+                groovyObjectEx = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyObjectEx.getGroovyClass());
+            }catch (CoreException e){
+                LoggerEx.error(TAG, e.getMessage());
+            }
+        }
     }
 
     @Override

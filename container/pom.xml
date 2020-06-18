@@ -46,7 +46,7 @@
                         <!--						</manifestEntries>-->
                     </archive>
                     <excludes>
-                        <exclude>**/*.xml</exclude>
+                        <exclude>**/*.xml </exclude>
                         <exclude>**/*.properties</exclude>
                     </excludes>
                 </configuration>

@@ -1,25 +1,15 @@
 package script.file;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
+import chat.utils.MD5InputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang.StringUtils;
 
-import script.file.FileAdapter.PathEx;
-import chat.utils.MD5InputStream;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class LocalFileHandler extends FileAdapter {
 	
@@ -295,8 +285,17 @@ public class LocalFileHandler extends FileAdapter {
 		return e;
 	}
 
-	
-    public void setRootPath(String rootPath) {
+	@Override
+	public InputStream readInputStream(PathEx path) throws IOException {
+		String ap = getAbsolutePath(path.getPath());
+		File file = new File(ap);
+		if(file.exists()){
+			return new FileInputStream(file);
+		}
+		return null;
+	}
+
+	public void setRootPath(String rootPath) {
         this.rootPath = rootPath;
     }
 

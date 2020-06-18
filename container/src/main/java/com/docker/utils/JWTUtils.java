@@ -1,9 +1,6 @@
 package com.docker.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.impl.DefaultJwtBuilder;
 
 import java.util.Date;
@@ -16,15 +13,16 @@ import java.util.Map;
  */
 public class JWTUtils {
     public static final String secretkey = "GROOVYCLOUDQILIAO";
+
     public static String createToken(String key, Map<String, Object> claims, Long expireTime) throws Exception {
         Map<String, Object> map = new HashMap<>();
         map.put("alg", "HS256");
         map.put("typ", "JWT");
         JwtBuilder jwtBuilder = new DefaultJwtBuilder();
-        if(claims != null){
+        if (claims != null) {
             jwtBuilder.setClaims(claims);
         }
-        if(expireTime != null){
+        if (expireTime != null) {
             jwtBuilder.setExpiration(new Date(System.currentTimeMillis() + expireTime));
         }
         String token = jwtBuilder
@@ -33,8 +31,17 @@ public class JWTUtils {
                 .compact();
         return token;
     }
-    public static Claims getClaims(String key, String token){
-       return Jwts.parser().setSigningKey(JWTUtils.secretkey + key).parseClaimsJws(token).getBody();
+
+    public static Claims getClaims(String key, String token) {
+        return Jwts.parser().setSigningKey(JWTUtils.secretkey + key).parseClaimsJws(token).getBody();
+    }
+
+    public static Claims getClaimsIgnoreExpire(String key, String token) {
+        try {
+            return Jwts.parser().setSigningKey(JWTUtils.secretkey + key).parseClaimsJws(token).getBody();
+        }catch (ExpiredJwtException e){
+            return e.getClaims();
+        }
     }
 }
 

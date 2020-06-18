@@ -3,6 +3,8 @@ package com.docker.storage.cache;
 import chat.logs.LoggerEx;
 import com.docker.storage.cache.handlers.CacheStorageAdapter;
 import com.docker.storage.cache.handlers.RedisCacheStorageHandler;
+import com.docker.storage.redis.RedisListenerHandler;
+import com.docker.utils.GroovyCloudBean;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
@@ -23,17 +25,17 @@ public class CacheStorageFactory {
         if (StringUtils.isBlank(cacheMethod)) {
             cacheMethod = CacheStorageAdapter.DEFAULT_CACHE_METHOD;
         }
-        if (host == null){
-            if (localCacheAdapterMap == null){
+        if (host == null) {
+            if (localCacheAdapterMap == null) {
                 localCacheAdapterMap = new ConcurrentHashMap<>();
             }
-            if(localCacheAdapterMap.get(cacheMethod) != null){
+            if (localCacheAdapterMap.get(cacheMethod) != null) {
                 return localCacheAdapterMap.get(cacheMethod);
-            }else{
-                CacheStorageAdapter cacheStorageAdapter = createCacheStorage(cacheMethod,null);
-                if(cacheStorageAdapter != null){
-                    CacheStorageAdapter cacheStorageAdapterOld = localCacheAdapterMap.putIfAbsent(cacheMethod,cacheStorageAdapter);
-                    if(cacheStorageAdapterOld != null){
+            } else {
+                CacheStorageAdapter cacheStorageAdapter = createCacheStorage(cacheMethod, null);
+                if (cacheStorageAdapter != null) {
+                    CacheStorageAdapter cacheStorageAdapterOld = localCacheAdapterMap.putIfAbsent(cacheMethod, cacheStorageAdapter);
+                    if (cacheStorageAdapterOld != null) {
                         cacheStorageAdapter = cacheStorageAdapterOld;
                     }
                 }
@@ -47,7 +49,7 @@ public class CacheStorageFactory {
                 if (cacheStorageAdapter == null) { //创建cacheStorageAdapter
                     cacheStorageAdapter = createCacheStorage(cacheMethod, host);
                     CacheStorageAdapter cacheStorageAdapterOld = cacheStorageAdapterMap.putIfAbsent(host, cacheStorageAdapter);
-                    if(cacheStorageAdapterOld != null){
+                    if (cacheStorageAdapterOld != null) {
                         cacheStorageAdapter = cacheStorageAdapterOld;
                     }
                     return cacheStorageAdapter;
@@ -59,7 +61,7 @@ public class CacheStorageFactory {
                 CacheStorageAdapter cacheStorageAdapter = createCacheStorage(cacheMethod, host);
                 if (cacheStorageAdapter != null) {
                     CacheStorageAdapter cacheStorageAdapterOld = cacheStorageAdapterMap.putIfAbsent(host, cacheStorageAdapter);
-                    if(cacheStorageAdapterOld != null){
+                    if (cacheStorageAdapterOld != null) {
                         cacheStorageAdapter = cacheStorageAdapterOld;
                     }
                 }
@@ -72,12 +74,13 @@ public class CacheStorageFactory {
             cacheAdapterMap.putIfAbsent(cacheMethod, cacheStorageAdapterMap);
             CacheStorageAdapter cacheStorageAdapter = createCacheStorage(cacheMethod, host);
             CacheStorageAdapter cacheStorageAdapterOld = cacheStorageAdapterMap.putIfAbsent(host, cacheStorageAdapter);
-            if(cacheStorageAdapterOld != null){
+            if (cacheStorageAdapterOld != null) {
                 cacheStorageAdapter = cacheStorageAdapterOld;
             }
             return cacheStorageAdapter;
         }
     }
+
     public void removeCacheStorageAdapter(String cacheMethod, String host) {
         if (StringUtils.isBlank(cacheMethod)) {
             cacheMethod = CacheStorageAdapter.DEFAULT_CACHE_METHOD;
@@ -87,28 +90,52 @@ public class CacheStorageFactory {
             if (cacheStorageAdapterMap != null) {
                 CacheStorageAdapter cacheStorageAdapter = cacheStorageAdapterMap.get(host);
                 if (cacheStorageAdapter != null) {
-                    if(StringUtils.equals(cacheMethod,CacheStorageMethod.METHOD_REDIS)){
-                        RedisCacheStorageHandler redisCacheStorageHandler = (RedisCacheStorageHandler)cacheStorageAdapter;
-                        boolean result =  cacheStorageAdapterMap.remove(host, cacheStorageAdapter);
-                        if (result) {
+                    if (StringUtils.equals(cacheMethod, CacheStorageMethod.METHOD_REDIS)) {
+                        RedisCacheStorageHandler redisCacheStorageHandler = (RedisCacheStorageHandler) cacheStorageAdapterMap.remove(host);
+                        if (redisCacheStorageHandler != null) {
                             redisCacheStorageHandler.disconnect();
                         }
+                        RedisListenerHandler redisListenerHandler = (RedisListenerHandler) GroovyCloudBean.getBean(GroovyCloudBean.REDISLISTENERHANDLER);
+                        redisListenerHandler.setRedisHandler();
                     }
                 }
             }
         }
     }
 
-    public void releaseAllCacheStorageAdapter(String cacheMethod){
-        if(StringUtils.equals(cacheMethod,CacheStorageMethod.METHOD_REDIS)){
+    public void reloadCacheStorageAdapter(String cacheMethod, String host) {
+        if (StringUtils.isBlank(cacheMethod)) {
+            cacheMethod = CacheStorageAdapter.DEFAULT_CACHE_METHOD;
+        }
+        if (host != null) {
             Map<String, CacheStorageAdapter> cacheStorageAdapterMap = cacheAdapterMap.get(cacheMethod);
-            if(cacheStorageAdapterMap != null){
-                for (String host : cacheStorageAdapterMap.keySet()){
+            if (cacheStorageAdapterMap != null) {
+                CacheStorageAdapter cacheStorageAdapter = cacheStorageAdapterMap.get(host);
+                if (cacheStorageAdapter != null) {
+                    if (StringUtils.equals(cacheMethod, CacheStorageMethod.METHOD_REDIS)) {
+                        RedisCacheStorageHandler redisCacheStorageHandler = (RedisCacheStorageHandler) cacheStorageAdapterMap.remove(host);
+                        LoggerEx.warn(TAG, "Will remove redisCacheStorageHandler, hosts: " + host);
+                        if (redisCacheStorageHandler != null) {
+                            redisCacheStorageHandler.disconnect();
+                        }
+                        RedisListenerHandler redisListenerHandler = (RedisListenerHandler) GroovyCloudBean.getBean(GroovyCloudBean.REDISLISTENERHANDLER);
+                        redisListenerHandler.setRedisHandler();
+                    }
+                }
+            }
+        }
+    }
+
+    public void releaseAllCacheStorageAdapter(String cacheMethod) {
+        if (StringUtils.equals(cacheMethod, CacheStorageMethod.METHOD_REDIS)) {
+            Map<String, CacheStorageAdapter> cacheStorageAdapterMap = cacheAdapterMap.get(cacheMethod);
+            if (cacheStorageAdapterMap != null) {
+                for (String host : cacheStorageAdapterMap.keySet()) {
                     try {
                         removeCacheStorageAdapter(cacheMethod, host);
                         LoggerEx.info(TAG, "Close " + cacheMethod + " success, host: " + host);
-                    }catch (Throwable t){
-                        LoggerEx.error(TAG, "Close redis error, redisHost: "+ host + ",errMsg: " + ExceptionUtils.getFullStackTrace(t));
+                    } catch (Throwable t) {
+                        LoggerEx.error(TAG, "Close redis error, redisHost: " + host + ",errMsg: " + ExceptionUtils.getFullStackTrace(t));
                     }
                 }
             }
@@ -129,26 +156,28 @@ public class CacheStorageFactory {
     private CacheStorageAdapter createCacheStorage(Class<?> clazz, String host) {
         Constructor constructor = null;
         try {
-            if(host != null){
+            if (host != null) {
                 constructor = clazz.getConstructor(String.class);
+                LoggerEx.info(TAG, "Get new cacheStorage, host: " + host);
                 return (CacheStorageAdapter) constructor.newInstance(host);
-            }else{
+            } else {
                 constructor = clazz.getConstructor();
+                LoggerEx.info(TAG, "Get new cacheStorage");
                 return (CacheStorageAdapter) constructor.newInstance();
             }
         } catch (NoSuchMethodException e1) {
-            LoggerEx.error(TAG, "No such method by class " + clazz.getSimpleName());
+            LoggerEx.error(TAG, "No such method by class " + clazz.getSimpleName() + ",host: " + host + ",errMsg: " + e1.getMessage());
         } catch (Throwable throwable) {
-            LoggerEx.error(TAG, "Get cache storage handler failed,reason is " + throwable.getMessage());
+            LoggerEx.error(TAG, "Get cache storage handler failed,reason is+ ,host: " + host + ",errMsg: " + throwable.getMessage());
         }
 
         return null;
     }
 
     public static CacheStorageFactory getInstance() {
-        if(instance == null){
-            synchronized (CacheStorageFactory.class){
-                if(instance == null){
+        if (instance == null) {
+            synchronized (CacheStorageFactory.class) {
+                if (instance == null) {
                     instance = new CacheStorageFactory();
                 }
             }

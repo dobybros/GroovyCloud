@@ -1,6 +1,7 @@
 package container.container.bean;
 
 import chat.utils.IPHolder;
+import com.docker.data.DockerStatus;
 import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.http.MyHttpParameters;
 import com.docker.onlineserver.OnlineServerWithStatus;
@@ -9,13 +10,13 @@ import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.rpc.impl.RMIServerImplWrapper;
 import com.docker.script.MyBaseRuntime;
 import com.docker.script.ScriptManager;
-import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
-import com.docker.storage.adapters.impl.ScheduledTaskServiceImpl;
-import com.docker.storage.adapters.impl.ServersServiceImpl;
-import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
+import com.docker.storage.adapters.impl.*;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
+import com.docker.storage.redis.RedisListenerHandler;
 import com.docker.storage.redis.RedisSubscribeHandler;
+import com.docker.storage.zookeeper.ZookeeperFactory;
+import com.docker.tasks.RepairTaskHandler;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.lang.StringUtils;
@@ -56,11 +57,13 @@ public class BeanApp extends ConfigApp{
     private MongoHelper logsHelper;
     private MongoHelper configHelper;
     private MongoHelper scheduledTaskHelper;
+    private MongoHelper repairHelper;
     private DockerStatusDAO dockerStatusDAO;
     private ServersDAO serversDAO;
     private LansDAO lansDAO;
     private SDockerDAO sdockerDAO;
     private ServiceVersionDAO serviceVersionDAO;
+    private DeployServiceVersionDAO deployServiceVersionDAO;
     private GridFSFileHandler fileAdapter;
     private MongoHelper gridfsHelper;
     private DockerStatusServiceImpl dockerStatusService;
@@ -80,9 +83,27 @@ public class BeanApp extends ConfigApp{
     private RMIServerHandler dockerRpcServerAdapterSsl;
     private ServersServiceImpl serversService;
     private ServiceVersionServiceImpl serviceVersionService;
+    private DeployServiceVersionServiceImpl deployServiceVersionService;
     private ScheduledTaskServiceImpl scheduledTaskService;
+    private RepairServiceImpl repairService;
     private ScheduledTaskDAO scheduledTaskDAO;
+    private RepairDAO repairDAO;
     private RedisSubscribeHandler redisSubscribeHandler;
+    private RepairTaskHandler repairTaskHandler;
+    private RedisListenerHandler redisListenerHandler;
+    private ZookeeperFactory zookeeperFactory;
+    public synchronized ZookeeperFactory getZookeeperFactory() {
+        if (instance.zookeeperFactory == null) {
+            instance.zookeeperFactory = new ZookeeperFactory();
+        }
+        return instance.zookeeperFactory;
+    }
+    public synchronized RepairTaskHandler getRepairTaskHandler() {
+        if (instance.repairTaskHandler == null) {
+            instance.repairTaskHandler = new RepairTaskHandler();
+        }
+        return instance.repairTaskHandler;
+    }
     public synchronized RedisSubscribeHandler getRedisSubscribeHandler() {
         if (instance.redisSubscribeHandler == null) {
             instance.redisSubscribeHandler = new RedisSubscribeHandler();
@@ -96,6 +117,18 @@ public class BeanApp extends ConfigApp{
         }
         return instance.scheduledTaskService;
     }
+    public synchronized RedisListenerHandler getRedisListenerHandler() {
+        if (instance.redisListenerHandler == null) {
+            instance.redisListenerHandler = new RedisListenerHandler();
+        }
+        return instance.redisListenerHandler;
+    }
+    public synchronized RepairServiceImpl getRepairService() {
+        if (instance.repairService == null) {
+            instance.repairService = new RepairServiceImpl();
+        }
+        return instance.repairService;
+    }
 
     public synchronized ScheduledTaskDAO getScheduledTaskDAO() {
         if (instance.scheduledTaskDAO == null) {
@@ -103,6 +136,14 @@ public class BeanApp extends ConfigApp{
             instance.scheduledTaskDAO.setMongoHelper(instance.getScheduledTaskHelper());
         }
         return instance.scheduledTaskDAO;
+    }
+
+    public synchronized RepairDAO getRepairDAO() {
+        if (instance.repairDAO == null) {
+            instance.repairDAO = new RepairDAO();
+            instance.repairDAO.setMongoHelper(instance.getRepairHelper());
+        }
+        return instance.repairDAO;
     }
 
     public synchronized ServiceVersionServiceImpl getServiceVersionService() {
@@ -113,12 +154,28 @@ public class BeanApp extends ConfigApp{
         return instance.serviceVersionService;
     }
 
+    public synchronized DeployServiceVersionServiceImpl getDeployServiceVersionService() {
+        if (instance.deployServiceVersionService == null) {
+            instance.deployServiceVersionService = new DeployServiceVersionServiceImpl();
+            instance.deployServiceVersionService.setDeployServiceVersionDAO(instance.getDeployServiceVersionDAO());
+        }
+        return instance.deployServiceVersionService;
+    }
+
+
     public synchronized ServiceVersionDAO getServiceVersionDAO() {
         if (instance.serviceVersionDAO == null) {
             instance.serviceVersionDAO = new ServiceVersionDAO();
             instance.serviceVersionDAO.setMongoHelper(instance.getDockerStatusHelper());
         }
         return instance.serviceVersionDAO;
+    }
+    public synchronized DeployServiceVersionDAO getDeployServiceVersionDAO() {
+        if (instance.deployServiceVersionDAO == null) {
+            instance.deployServiceVersionDAO = new DeployServiceVersionDAO();
+            instance.deployServiceVersionDAO.setMongoHelper(instance.getDockerStatusHelper());
+        }
+        return instance.deployServiceVersionDAO;
     }
 
     public synchronized ServersServiceImpl getServersService() {
@@ -249,7 +306,7 @@ public class BeanApp extends ConfigApp{
             instance.onlineServer.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
             instance.onlineServer.setRpcSslJksPwd(instance.getRpcSslJksPwd());
             instance.onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
-            instance.onlineServer.setStatus(1);
+            instance.onlineServer.setStatus(DockerStatus.STATUS_STARTING);
             if(StringUtils.isNotBlank(instance.getScaleInstanceId())){
                 instance.onlineServer.setScaleInstanceId(instance.getScaleInstanceId());
             }
@@ -392,6 +449,17 @@ public class BeanApp extends ConfigApp{
             instance.scheduledTaskHelper.setPassword(instance.getMongoPassword());
         }
         return instance.scheduledTaskHelper;
+    }
+    public synchronized MongoHelper getRepairHelper() {
+        if (instance.repairHelper == null) {
+            instance.repairHelper = new MongoHelper();
+            instance.repairHelper.setHost(instance.getMongoHost());
+            instance.repairHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
+            instance.repairHelper.setDbName("extras");
+            instance.repairHelper.setUsername(instance.getMongoUsername());
+            instance.repairHelper.setPassword(instance.getMongoPassword());
+        }
+        return instance.repairHelper;
     }
 
     public synchronized MongoHelper getLogsHelper() {

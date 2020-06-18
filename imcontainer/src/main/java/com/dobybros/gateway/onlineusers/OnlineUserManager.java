@@ -32,7 +32,7 @@ public abstract class OnlineUserManager {
     private UserExpireTimer expireTimerTask = new UserExpireTimer();
 
     private ConcurrentHashMap<String, SingleThreadQueue<EventEntity>> queueMap = new ConcurrentHashMap<>();
-    private final Long maxNoChannelTimeout = TimeUnit.MINUTES.toMillis(20);
+    private final Long maxNoChannelTimeout = TimeUnit.MINUTES.toMillis(5);
     /**
      * String is userid
      */

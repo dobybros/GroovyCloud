@@ -44,7 +44,7 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<mainClass>proxycontainer.proxycontainer.ProxyContainerApplication</mainClass>
-							<classpathPrefix>/home/aculearn/disk/lib/groovycloud-libs/</classpathPrefix>
+							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
 					</archive>
 					<excludes>

@@ -12,7 +12,7 @@ public class Lan extends DataObject {
 	public static final String FIELD_LAN_DOMAIN = "domain";
 	public static final String FIELD_LAN_PROTOCOL = "protocol";
 	public static final String FIELD_LAN_TYPE = "type";
-	private Integer type;
+	private String type;
 	public static final Integer TYPE_RPC = 0;
 	public static final Integer TYPE_http = 1;
 	private String domain;
@@ -45,11 +45,11 @@ public class Lan extends DataObject {
 		this.protocol = protocol;
 	}
 
-	public Integer getType() {
+	public String getType() {
 		return type;
 	}
 
-	public void setType(Integer type) {
+	public void setType(String type) {
 		this.type = type;
 	}
 
@@ -59,6 +59,7 @@ public class Lan extends DataObject {
 		domain = dbObj.getString(FIELD_LAN_DOMAIN);
 		protocol = dbObj.getString(FIELD_LAN_PROTOCOL);
 		port = dbObj.getString(FIELD_LAN_PORT);
+		type = dbObj.getString(FIELD_LAN_TYPE);
 	}
 
 	@Override
@@ -70,6 +71,9 @@ public class Lan extends DataObject {
 			dbObj.put(FIELD_LAN_PROTOCOL, protocol);
 		if(port != null)
 			dbObj.put(FIELD_LAN_PORT, port);
+		if(type != null){
+			dbObj.put(FIELD_LAN_TYPE, type);
+		}
 		return dbObj;
 	}
 }

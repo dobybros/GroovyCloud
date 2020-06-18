@@ -33,6 +33,20 @@ public class RedisSubscribeHandler extends ClassAnnotationGlobalHandler {
         redisSubscribeMap.clear();
         MyRedisPubSubAdapter.getInstance().shutdown();
     }
+
+    @Override
+    public void handleAnnotatedClassesInjectBean(GroovyRuntime groovyRuntime) {
+        for (Set<GroovyObjectEx> groovyObjectExes : redisSubscribeMap.values()){
+            for (GroovyObjectEx groovyObjectEx : groovyObjectExes){
+                try {
+                    groovyObjectEx = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyObjectEx.getGroovyClass());
+                }catch (CoreException e){
+                    LoggerEx.error(TAG, e.getMessage());
+                }
+            }
+        }
+    }
+
     @Override
     public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, GroovyRuntime groovyRuntime) {
         if (annotatedClassMap != null) {

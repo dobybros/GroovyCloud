@@ -149,7 +149,7 @@ public class OnlineServer {
         }
         dockerStatus.setTime(ChatUtils.dateString(System.currentTimeMillis()));
         if (status == null)
-            status = DockerStatus.STATUS_OK;
+            status = DockerStatus.STATUS_STARTING;
         dockerStatus.setStatus(status);
         Map<String, Object> info = new HashMap<String, Object>();
         dockerStatus.setInfo(info);
@@ -219,6 +219,11 @@ public class OnlineServer {
             LoggerEx.info(TAG, "Get serverType: " + serverType);
             if (dockerStatusService != null) {
                 dockerStatus = generateDockerStatus(httpPort);
+                try {
+                    dockerStatusService.deleteDockerStatus(OnlineServer.getInstance().getIp(), serverType, OnlineServer.getInstance().getDockerName());
+                }catch(Throwable t){
+                    t.printStackTrace();
+                }
                 dockerStatusService.addDockerStatus(dockerStatus);
             }
 
@@ -298,15 +303,6 @@ public class OnlineServer {
             } catch (Exception e) {
                 e.printStackTrace();
                 LoggerEx.fatal(TAG, "StartHandler " + startHandler + " shutdown failed, " + ExceptionUtils.getFullStackTrace(e));
-            }
-        }
-        if (dockerStatusService != null) {
-            try {
-                dockerStatusService.deleteDockerStatus(server);
-                LoggerEx.info(TAG, "Deleted OnlineServer " + server);
-            } catch (CoreException e) {
-                e.printStackTrace();
-                LoggerEx.fatal(TAG, "Remove online server " + server + " failed, " + ExceptionUtils.getFullStackTrace(e));
             }
         }
         if (tasks != null) {
@@ -516,6 +512,10 @@ public class OnlineServer {
 
     public void setDockerName(String dockerName) {
         this.dockerName = dockerName;
+    }
+
+    public String getDockerName() {
+        return dockerName;
     }
 
     public void setScaleInstanceId(String scaleInstanceId) {

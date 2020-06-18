@@ -1,5 +1,6 @@
 package com.dobybros.gateway.channels.tcp;
 
+import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.dobybros.chat.annotation.MessageReceived;
 import com.dobybros.chat.binary.data.Data;
@@ -24,6 +25,19 @@ public class UpStreamAnnotationHandler extends ClassAnnotationGlobalHandler {
 
 	public void setMessageReceivedMap(Map<Byte, GroovyObjectEx<MessageReceivedListener>> messageReceivedMap) {
 		this.messageReceivedMap = messageReceivedMap;
+	}
+
+	@Override
+	public void handleAnnotatedClassesInjectBean(GroovyRuntime groovyRuntime) {
+		if(messageReceivedMap != null){
+			for (GroovyObjectEx<MessageReceivedListener> groovyObjectEx : messageReceivedMap.values()) {
+				try {
+					groovyObjectEx = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyObjectEx.getGroovyClass());
+				}catch (CoreException e){
+					LoggerEx.error(TAG, e.getMessage());
+				}
+			}
+		}
 	}
 
 	@Override

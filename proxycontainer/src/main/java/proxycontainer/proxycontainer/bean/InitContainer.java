@@ -12,6 +12,7 @@ import com.docker.script.ScriptManager;
 import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import com.docker.utils.AutoReloadProperties;
+import com.docker.utils.GroovyCloudBean;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -36,6 +37,8 @@ public class InitContainer implements CommandLineRunner{
     @Autowired
     ServiceVersionDAO serviceVersionDAO;
     @Autowired
+    DeployServiceVersionDAO deployServiceVersionDAO;
+    @Autowired
     ServersDAO serversDAO;
     @Autowired
     ScheduledTaskDAO scheduledTaskDAO;
@@ -43,6 +46,10 @@ public class InitContainer implements CommandLineRunner{
     LansDAO lansDAO;
     @Autowired
     SDockerDAO sDockerDAO;
+    @Autowired
+    MongoHelper repairHelper;
+    @Autowired
+    RepairDAO repairDAO;
     @Autowired
     MongoHelper logsHelper;
     @Autowired
@@ -72,6 +79,7 @@ public class InitContainer implements CommandLineRunner{
 
     @Override
     public void run(String... args) throws Exception {
+        GroovyCloudBean.map();
         TypeUtils.compatibleWithJavaBean = true;
         System.setProperty("es.set.netty.runtime.available.processors", "false");
         globalLansProperties.init();
@@ -80,9 +88,12 @@ public class InitContainer implements CommandLineRunner{
         scheduledTaskHelper.init();
         dockerStatusDAO.init();
         serviceVersionDAO.init();
+        deployServiceVersionDAO.init();
         serversDAO.init();
         lansDAO.init();
         sDockerDAO.init();
+        repairHelper.init();
+        repairDAO.init();
         scheduledTaskDAO.init();
         logsHelper.init();
         gridfsHelper.init();

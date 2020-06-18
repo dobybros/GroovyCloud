@@ -1,19 +1,24 @@
 package com.docker.script;
 
+import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.json.Result;
 import chat.logs.LoggerEx;
+import chat.main.ServerStart;
 import chat.scheduled.QuartzFactory;
 import chat.utils.ChatUtils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.docker.data.RepairData;
 import com.docker.data.ScheduleTask;
 import com.docker.rpc.remote.stub.ServiceStubManager;
 import com.docker.script.servlet.GroovyServletManagerEx;
 import com.docker.storage.adapters.impl.ScheduledTaskServiceImpl;
+import com.docker.tasks.RepairTaskHandler;
 import com.docker.utils.GroovyCloudBean;
 import com.docker.utils.JWTUtils;
+import com.docker.utils.RequestUtils;
 import com.docker.utils.SpringContextUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -39,11 +44,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @WebServlet(urlPatterns = "/base", asyncSupported = true)
 public class GroovyServletScriptDispatcher extends HttpServlet {
     private static final String TAG = GroovyServletManager.class.getSimpleName();
     ScriptManager scriptManager = null;
+    private ServiceStubManager serviceStubManager = null;
+    private String key = "FSDdfFDWfR324fs98DSF*@#";
+
     public void handle(HttpServletRequest request, HttpServletResponse response) {
         scriptManager = (ScriptManager) GroovyCloudBean.getBean(GroovyCloudBean.SCRIPTMANAGER);
         try {
@@ -69,55 +78,61 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                             throw new CoreException(500, "Version is null, service: " + service);
                         }
                     }
+                    respond(response, result);
                 } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_TIMER)) {
                     List list = handleTimer();
                     result.setData(list);
-                } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERACCESSSERVICE)) {
-                    String token = request.getHeader("crossClusterToken");
-                    if (token == null) {
-                        LoggerEx.error(TAG, "Token is null when Cross-cluster!!!");
-                        result.setMsg("Token is null when Cross-cluster!!!");
-                    }
-                    try {
-                        JWTUtils.getClaims("crossClusterToken", token);
-                    } catch (Throwable e) {
-                        LoggerEx.error(TAG, "Jwt expired or not found when Cross-cluster, please check!!!err: " + ExceptionUtils.getFullStackTrace(e));
-                        result.setMsg("Jwt expired or not found when Cross-cluster, please check!!!");
-                    }
-                    if (result.getMsg() == null) {
-                        String requestStr = IOUtils.toString(request.getInputStream(), Charset.defaultCharset());
-                        CallServiceParams callServiceParams = JSON.parseObject(requestStr, CallServiceParams.class);
-                        if (callServiceParams != null && callServiceParams.checkParamsNotNull()) {
-                            Object[] objects = null;
-                            if (callServiceParams.args != null) {
-                                objects = new Object[callServiceParams.args.size()];
-                                int i = 0;
-                                for (Object o : callServiceParams.args) {
-                                    objects[i] = o;
-                                    i++;
+                    respond(response, result);
+                } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_REPAIR)) {
+                    if (internalFilter(request, result).getCode() == 1) {
+                        String repairId = uriStrs[2];
+                        RepairTaskHandler repairTaskHandler = (RepairTaskHandler) GroovyCloudBean.getBean(GroovyCloudBean.REPAIRTASKHANDLER);
+                        CompletableFuture repairFuture = CompletableFuture.supplyAsync(() -> {
+                            try {
+                                Object resultObj = repairTaskHandler.execute(repairId);
+                                return resultObj;
+                            } catch (CoreException e) {
+                                e.printStackTrace();
+                            }
+                            return null;
+                        }, ServerStart.getInstance().getAsyncThreadPoolExecutor());
+                        repairFuture.whenCompleteAsync((executeResult, e) -> {
+                            try {
+                                RepairData repairData = repairTaskHandler.getRepairService().getRepairData(repairId);
+                                if (e != null) {
+                                    Throwable throwable = (Throwable) e;
+                                    if (((Throwable) e).getCause() != null) {
+                                        throwable = ((Throwable) e).getCause();
+                                    }
+                                    throwable.printStackTrace();
+                                    if (throwable instanceof CoreException) {
+                                        repairData.setExecuteResult(((CoreException) throwable).toString());
+                                    } else {
+                                        throwable = new CoreException(ChatErrorCodes.ERROR_GROOVY_UNKNOWN, ExceptionUtils.getFullStackTrace(throwable));
+                                        repairData.setExecuteResult(throwable.toString());
+                                    }
+                                } else {
+                                    if (executeResult instanceof String) {
+                                        repairData.setExecuteResult((String) executeResult);
+                                    } else {
+                                        repairData.setExecuteResult(JSON.toJSONString(executeResult));
+                                    }
                                 }
+                                repairData.setLastExecuteTime(ChatUtils.dateString());
+                                repairTaskHandler.getRepairService().updateRepairData(repairData);
+                            } catch (CoreException ex) {
+                                ex.printStackTrace();
                             }
-                            Object o = new ServiceStubManager().call(callServiceParams.service, callServiceParams.className, callServiceParams.methodName, objects);
-                            if (o != null) {
-                                result.setData(o);
-                            }
-                        }
+                        }, ServerStart.getInstance().getAsyncThreadPoolExecutor());
                     }
-                } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERCREATETOKEN)) {
-                    String token = JWTUtils.createToken("crossClusterToken", null, 10800000L);//3小时
-                    result.setData(token);
+                    respond(response, result);
                 }
             } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_SCALE)) {
-                String token = request.getHeader("key");
-                if(StringUtils.isBlank(token) || !token.equals("FSDdfFDWfR324fs98DSF*@#")){
-                    LoggerEx.error(TAG, "key is null when scale!!!");
-                    result.setCode(4001);
-                    result.setMsg("key is null when scale!!!");
-                }else {
-                    if(uriStrs.length > 3){
+                if (internalFilter(request, result).getCode() == 1) {
+                    if (uriStrs.length > 3) {
                         JSONObject jsonObject = null;
                         String requestStr = IOUtils.toString(request.getInputStream(), Charset.defaultCharset());
-                        if(requestStr != null){
+                        if (requestStr != null) {
                             jsonObject = JSON.parseObject(requestStr);
                         }
                         String service = uriStrs[2];
@@ -128,7 +143,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                                 ServiceScaleHandler serviceScaleHandler = (ServiceScaleHandler) groovyRuntime.getClassAnnotationHandler(ServiceScaleHandler.class);
                                 if (serviceScaleHandler != null) {
                                     String methodName = uriStrs[3];
-                                    if(uriStrs.length > 4){
+                                    if (uriStrs.length > 4) {
                                         for (int i = 4; i < uriStrs.length; i++) {
                                             methodName += captureName(uriStrs[i]);
                                         }
@@ -136,11 +151,11 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                                     Object resultObject = null;
                                     try {
                                         resultObject = serviceScaleHandler.invoke(methodName, jsonObject);
-                                    }catch (CoreException e){
+                                    } catch (CoreException e) {
                                         result.setCode(e.getCode());
                                         result.setMsg(e.getMessage());
                                     }
-                                    if(result.getMsg() == null){
+                                    if (result.getMsg() == null) {
                                         result.setData(resultObject);
                                     }
                                 }
@@ -148,8 +163,66 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                         }
                     }
                 }
+                respond(response, result);
+            } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERACCESSSERVICE)) {
+                String token = request.getHeader("crossClusterToken");
+                if (token == null) {
+                    LoggerEx.error(TAG, "Token is null when Cross-cluster!!!");
+                    result.setMsg("Token is null when Cross-cluster!!!");
+                }
+                try {
+                    JWTUtils.getClaims("crossClusterToken", token);
+                } catch (Throwable e) {
+                    LoggerEx.error(TAG, "Jwt expired or not found when Cross-cluster, please check!!!err: " + ExceptionUtils.getFullStackTrace(e));
+                    result.setMsg("Jwt expired or not found when Cross-cluster, please check!!!");
+                }
+                if (result.getMsg() == null) {
+                    String requestStr = IOUtils.toString(request.getInputStream(), Charset.defaultCharset());
+                    JSONObject params = JSON.parseObject(requestStr);
+                    String serviceName = params.getString("service");
+                    String className = params.getString("className");
+                    String methodName = params.getString("methodName");
+                    JSONArray args = params.getJSONArray("args");
+                    if (StringUtils.isNotBlank(serviceName) && StringUtils.isNotBlank(className) && StringUtils.isNotBlank(methodName)) {
+                        Object[] objects = null;
+                        if (args != null) {
+                            objects = new Object[args.size()];
+                            int i = 0;
+                            for (Object o : args) {
+                                objects[i] = o;
+                                i++;
+                            }
+                        }
+                        try {
+                            if (serviceStubManager == null) {
+                                serviceStubManager = new ServiceStubManager();
+                            }
+                            Object o = serviceStubManager.call(serviceName, className, methodName, objects);
+                            if (o != null) {
+                                result.setData(o);
+                            }
+                        } catch (Throwable t) {
+                            LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(t));
+                            throw t;
+                        }
+                    }
+                }
+                respond(response, result);
+            } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERCREATETOKEN)) {
+                if (internalFilter(request, result).getCode() == 1) {
+                    String token = JWTUtils.createToken("crossClusterToken", null, 10800000L);//3小时
+                    result.setData(token);
+                }
+                respond(response, result);
+            } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_PARAMS)) {
+                if (internalFilter(request, result).getCode() == 1) {
+                    String publicIP = RequestUtils.getRemoteIp(request);
+                    Map map = new HashMap();
+                    map.put("publicIp", publicIP);
+                    result.setData(map);
+                }
+                respond(response, result);
             }
-            respond(response, result);
         } catch (Throwable e) {
             e.printStackTrace();
             LoggerEx.error(TAG, "Request url " + request.getRequestURL().toString() + " occur error " + ExceptionUtils.getFullStackTrace(e));
@@ -160,12 +233,24 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
             }
         }
     }
+
     private String captureName(String name) {
         char[] cs = name.toCharArray();
         cs[0] -= 32;
         return String.valueOf(cs);
     }
-    private String getServiceVersion(String service) {
+
+    public Result internalFilter(HttpServletRequest request, Result result) {
+        String internalToken = request.getHeader("key");
+        if (StringUtils.isBlank(internalToken) || !internalToken.equals(key)) {
+            LoggerEx.error(TAG, "Cant find key in header!!!");
+            result.setCode(4001);
+            result.setMsg("Cant find key in header!!!");
+        }
+        return result;
+    }
+
+    protected String getServiceVersion(String service) {
         String serviceVersion = null;
         if (!service.contains("_v")) {
             Integer version = scriptManager.getDefalutServiceVersionMap().get(service);
@@ -180,7 +265,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
         return serviceVersion;
     }
 
-    private List handlerService(String service) {
+    protected List handlerService(String service) {
         GroovyRuntime groovyRuntime = getGroovyRuntime(service);
         if (groovyRuntime != null) {
             ServiceMemoryHandler classAnnotationHandler = (ServiceMemoryHandler) groovyRuntime.getClassAnnotationHandler(ServiceMemoryHandler.class);
@@ -255,7 +340,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
         return null;
     }
 
-    private void respond(HttpServletResponse response, Object result) throws Throwable {
+    protected void respond(HttpServletResponse response, Object result) throws Throwable {
         String returnStr = JSON.toJSONString(result);
         response.setContentType("application/json");
         response.getOutputStream().write(returnStr.getBytes(StandardCharsets.UTF_8));

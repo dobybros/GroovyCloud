@@ -115,7 +115,7 @@ public class StorageManager {
                             }
                         } else {
                             if (dblan.getType() != null) {
-                                lanType = dblan.getType();
+                                lanType = Integer.valueOf(dblan.getType());
                             }
                             host = dblan.getProtocol() + "://" + dblan.getDomain() + ":" + dblan.getPort();
                         }

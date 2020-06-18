@@ -2,10 +2,12 @@ package com.docker.script;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import com.docker.data.DockerStatus;
 import com.docker.script.i18n.I18nHandler;
 import com.docker.script.i18n.MessageProperties;
 import com.docker.script.servlet.GroovyServletManagerEx;
 import com.docker.script.servlet.WebServiceAnnotationHandler;
+import com.docker.server.OnlineServer;
 import com.docker.storage.cache.CacheAnnotationHandler;
 import com.docker.storage.cache.CacheStorageFactory;
 import com.docker.storage.cache.CacheStorageMethod;
@@ -15,7 +17,6 @@ import com.docker.storage.ehcache.EhCacheHandler;
 import com.docker.storage.kafka.KafkaConfCenter;
 import com.docker.storage.kafka.KafkaProducerHandler;
 import com.docker.storage.redis.RedisHandler;
-import com.docker.storage.redis.RedisListenerHandler;
 import com.docker.utils.GroovyCloudBean;
 import connectors.mongodb.MongoClientHelper;
 import connectors.mongodb.annotations.handlers.MongoCollectionAnnotationHolder;
@@ -61,7 +62,8 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		this.service = service.toLowerCase();
 		this.config = properties;
 		String enableGroovyMVC = null;
-		addClassAnnotationHandler(new GroovyBeanFactory());
+		GroovyBeanFactory beanFactory = new GroovyBeanFactory();
+		addClassAnnotationHandler(beanFactory);
 		if (properties != null) {
 			enableGroovyMVC = properties.getProperty("web.groovymvc.enable");
 			String mongodbHost = properties.getProperty("db.mongodb.uri");
@@ -130,7 +132,6 @@ public abstract class BaseRuntime extends GroovyRuntime {
 		addClassAnnotationHandler(new RequestPermissionHandler());
 		addClassAnnotationHandler(new CacheAnnotationHandler());
 		addClassAnnotationHandler(new ServiceMemoryHandler());
-		addClassAnnotationHandler(new RedisListenerHandler());
 		addClassAnnotationHandler(new ServiceScaleHandler());
         Object rpcServerHandler = GroovyCloudBean.getBean("dockerRpcServer");
         if (rpcServerHandler != null && rpcServerHandler instanceof ClassAnnotationGlobalHandler)
@@ -138,12 +139,22 @@ public abstract class BaseRuntime extends GroovyRuntime {
         Object rpcServerSslHandler = GroovyCloudBean.getBean("dockerRpcServerSsl");
         if (rpcServerSslHandler != null && rpcServerSslHandler instanceof ClassAnnotationGlobalHandler)
             addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) rpcServerSslHandler);
-        Object upStreamAnnotationHandler = GroovyCloudBean.getBean("upStreamAnnotationHandler");
-        if (upStreamAnnotationHandler != null && upStreamAnnotationHandler instanceof ClassAnnotationGlobalHandler)
-            addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) upStreamAnnotationHandler);
+        if(OnlineServer.getInstance().getType() != DockerStatus.TYPE_NORMAL){
+            Object upStreamAnnotationHandler = GroovyCloudBean.getBean("upStreamAnnotationHandler");
+            if (upStreamAnnotationHandler != null && upStreamAnnotationHandler instanceof ClassAnnotationGlobalHandler)
+                addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) upStreamAnnotationHandler);
+        }
         Object redisSubscribeHandler = GroovyCloudBean.getBean(GroovyCloudBean.REDISSUBSCRIBEHANDLER);
         if (redisSubscribeHandler != null && redisSubscribeHandler instanceof ClassAnnotationGlobalHandler)
             addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) redisSubscribeHandler);
+        if (redisSubscribeHandler != null && redisSubscribeHandler instanceof ClassAnnotationGlobalHandler)
+            addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) redisSubscribeHandler);
+        Object redisListenerHandler = GroovyCloudBean.getBean(GroovyCloudBean.REDISLISTENERHANDLER);
+        if (redisListenerHandler != null && redisListenerHandler instanceof ClassAnnotationGlobalHandler)
+            addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) redisListenerHandler);
+        Object repairTaskHandler = GroovyCloudBean.getBean(GroovyCloudBean.REPAIRTASKHANDLER);
+        if (repairTaskHandler != null && repairTaskHandler instanceof ClassAnnotationGlobalHandler)
+            addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) repairTaskHandler);
 	}
 
 	@Override
@@ -238,14 +249,13 @@ public abstract class BaseRuntime extends GroovyRuntime {
         return mongoDBHandler;
     }
 
-	public RedisHandler getRedisHandler() {
-		if (redisHost != null) {
-			RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler) CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, redisHost);
-			return cacheStorageAdapter.getRedisHandler();
-		}
-		return null;
-	}
-
+    public RedisHandler getRedisHandler() {
+        if (redisHost != null) {
+            RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler) CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, redisHost);
+            return cacheStorageAdapter.getRedisHandler();
+        }
+        return null;
+    }
     public KafkaProducerHandler getKafkaProducerHandler() {
         return kafkaProducerHandler;
     }

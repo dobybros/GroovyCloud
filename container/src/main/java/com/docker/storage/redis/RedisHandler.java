@@ -5,9 +5,12 @@ import chat.logs.LoggerEx;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.docker.errors.CoreErrorCodes;
+import com.docker.storage.cache.CacheStorageFactory;
+import com.docker.storage.cache.CacheStorageMethod;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import redis.clients.jedis.*;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisMovedDataException;
 
 import java.lang.reflect.Method;
@@ -54,7 +57,7 @@ public class RedisHandler {
     }
 
     public RedisHandler connect() {
-        disconnect();
+//        disconnect();
 
         LoggerEx.info(TAG, "JedisPool initializing...");
         JedisPoolConfig config = new JedisPoolConfig();
@@ -134,10 +137,12 @@ public class RedisHandler {
                     t.printStackTrace();
                 }
             }
+            LoggerEx.info(TAG, "Jedis Cluster closed, " + hosts);
             if (pipeline != null && pipeline instanceof JedisClusterPipeline) {
                 JedisClusterPipeline clusterPipeline = (JedisClusterPipeline) pipeline;
                 clusterPipeline.close();
             }
+            LoggerEx.info(TAG, "Jedis pipeline closed, " + hosts);
         } catch (Exception e) {
             LoggerEx.info(TAG, "Jedis Cluster closed exception, " + hosts);
         }
@@ -166,9 +171,8 @@ public class RedisHandler {
             }
         } catch (Exception e) {
             return false;
-        } finally {
-            return true;
         }
+        return true;
     }
 
     public String getHosts() {
@@ -1206,9 +1210,15 @@ public class RedisHandler {
         try {
             jedis = getJedis();
             return (V) executor.execute(jedis);
+        } catch (JedisConnectionException e) {
+            CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
+            LoggerEx.fatal(TAG, "Redis execute err JedisConnectionException, pleaseCheck,host:" + hosts + " ,errMsg: " + ExceptionUtils.getFullStackTrace(e));
+            throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed. host: " + hosts + ",errMsg:" + e.getMessage());
         } catch (Throwable e) {
+//             || e.getMessage().contains("No reachable node")
+            LoggerEx.fatal(TAG, "Redis execute err, pleaseCheck,host:" + hosts + " ,errMsg: " + ExceptionUtils.getFullStackTrace(e));
             e.printStackTrace();
-            throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed." + e.getMessage());
+            throw new CoreException(CoreErrorCodes.ERROR_REDIS, "Redis execute failed. host: " + hosts + ",errMsg:" + e.getMessage());
         } finally {
             if (jedis != null && jedis instanceof ShardedJedis) {
                 ((ShardedJedis) jedis).close();
@@ -1326,9 +1336,13 @@ public class RedisHandler {
                 }
                 return method.invoke(pipeline, args);
             }
+        }catch (JedisConnectionException e) {
+            e.printStackTrace();
+            CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
+            LoggerEx.fatal(TAG, "Redis execute err JedisConnectionException, pleaseCheck,host:" + hosts + " ,errMsg: " + ExceptionUtils.getFullStackTrace(e));
         } catch (Throwable t) {
             t.printStackTrace();
-            LoggerEx.error(TAG, "invokePipelineMethod: " + methodName + ", args: " + args + " error, eMsg: " + t.getMessage());
+            LoggerEx.fatal(TAG, "invokePipelineMethod: " + methodName + ", args: " + args + " error, eMsg: " + t.getMessage());
             if (t instanceof JedisMovedDataException && pipeline instanceof JedisClusterPipeline) {
                 LoggerEx.error(TAG, "Have occurred JedisMovedDataException, will refresh cluster!");
                 JedisClusterPipeline clusterPipeline = (JedisClusterPipeline) pipeline;
