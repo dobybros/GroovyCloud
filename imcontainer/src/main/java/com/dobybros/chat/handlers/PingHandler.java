@@ -1,5 +1,6 @@
 package com.dobybros.chat.handlers;
 
+import chat.logs.LoggerEx;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
 import com.dobybros.chat.channels.Channel;
@@ -27,8 +28,10 @@ public class PingHandler {
     OnlineUserManager onlineUserManager;
     @Resource
     ScriptManager scriptManager;
-    private Boolean useProxy = false;
+    private final String TAG = PingHandler.class.getSimpleName();
+    private Boolean useProxy = true;
     public void init(){
+        LoggerEx.info(TAG, "useProxy: " + useProxy);
         if(!useProxy){
             TimerEx.schedule(new TimerTaskEx() {
                 @Override

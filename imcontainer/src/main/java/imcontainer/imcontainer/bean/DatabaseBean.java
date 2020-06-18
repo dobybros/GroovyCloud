@@ -51,6 +51,11 @@ public class DatabaseBean {
         return instance.getServiceVersionDAO();
     }
 
+    @Bean
+    public DeployServiceVersionDAO deployServiceVersionDAO() {
+        return instance.getDeployServiceVersionDAO();
+    }
+
     //    @Bean(initMethod = "init")
     @Bean
     public ServersDAO serversDAO() {
@@ -103,6 +108,11 @@ public class DatabaseBean {
     @Bean
     public ServiceVersionServiceImpl serviceVersionService() {
         return instance.getServiceVersionService();
+    }
+
+    @Bean
+    public DeployServiceVersionServiceImpl deployServiceVersionService() {
+        return instance.getDeployServiceVersionService();
     }
 
     @Bean

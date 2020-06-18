@@ -13,6 +13,8 @@ import java.util.List;
 public interface ServiceVersionService {
     List<ServiceVersion> getServiceVersions(String serverType) throws CoreException;
 
+    List<ServiceVersion> getServiceVersionsByType(String serverType, String type) throws CoreException;
+
     List<ServiceVersion> getServiceVersionsAll() throws CoreException;
 
     void addServiceVersion(ServiceVersion serviceVersion) throws CoreException;

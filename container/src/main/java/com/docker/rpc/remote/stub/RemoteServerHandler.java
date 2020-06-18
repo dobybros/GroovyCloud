@@ -230,7 +230,7 @@ public class RemoteServerHandler {
                 LoggerEx.error(TAG, "Fail to Call Method " + request.getCrc() + "#" + request.getService() + " args " + Arrays.toString(request.getArgs()) + " on server " + server + " " + count + "/" + maxCount + " available size " + keptSortedServers.size() + " error " + ExceptionUtils.getFullStackTrace(t) + " exception " + t);
             }
         }
-        throw new CoreException(ChatErrorCodes.ERROR_RPC_CALLREMOTE_FAILED, "Call request " + request + " outside failed with several retries.");
+        throw new CoreException(ChatErrorCodes.ERROR_RPC_CALLREMOTE_FAILED, "Call request " + request + " outside failed with several retries.", CoreException.LEVEL_FATAL);
     }
 
     private void setSortedServers(MethodRequest request) throws CoreException {
@@ -264,26 +264,33 @@ public class RemoteServerHandler {
                 dataMap.put("args", request.getArgs());
                 Map<String, Object> headerMap = new HashMap<String, Object>();
                 headerMap.put("crossClusterToken", token);
-                long time = System.currentTimeMillis();
-                Result result = ScriptHttpUtils.post(JSON.toJSONString(dataMap), this.serviceStubManager.getHost() + "/base/crossClusterAccessService", headerMap, Result.class);
-                if (result != null && result.success()) {
-                    LoggerEx.info(TAG, "Call remote server success, requestParams: " + dataMap.toString() + ",serverHost: " + this.serviceStubManager.getHost(), System.currentTimeMillis() - time);
-                    MethodResponse response = new MethodResponse();
-                    MethodMapping methodMapping = request.getServiceStubManager().getMethodMapping(request.getCrc());
-                    if (methodMapping == null || methodMapping.getReturnClass().equals(Object.class)) {
-                        response.setReturnObject(JSON.parse(JSON.toJSONString(result.getData())));
-                    } else {
-                        response.setReturnObject(JSON.parseObject(JSON.toJSONString(result.getData()), methodMapping.getGenericReturnClass()));
-                    }
-                    return response;
-                } else {
-                    LoggerEx.error(TAG, "Accss remote server failed,essMsg: " + (result == null ? "null" : result.toString()));
-                    if(result != null){
+                int times = 0;
+                while (times <= 3) {
+                    long time = System.currentTimeMillis();
+                    Result result = ScriptHttpUtils.post(JSON.toJSONString(dataMap), this.serviceStubManager.getHost() + "/base/crossClusterAccessService", headerMap, Result.class);
+                    if (result != null && result.success()) {
+                        LoggerEx.info(TAG, "Call remote server success, requestParams: " + dataMap.toString() + ",serverHost: " + this.serviceStubManager.getHost(), System.currentTimeMillis() - time);
                         MethodResponse response = new MethodResponse();
-                        response.setException(new CoreException(result.getCode(), result.getMsg()));
+                        MethodMapping methodMapping = request.getServiceStubManager().getMethodMapping(request.getCrc());
+                        if (methodMapping == null || methodMapping.getReturnClass().equals(Object.class)) {
+                            response.setReturnObject(JSON.parse(JSON.toJSONString(result.getData())));
+                        } else {
+                            response.setReturnObject(JSON.parseObject(JSON.toJSONString(result.getData()), methodMapping.getGenericReturnClass()));
+                        }
                         return response;
+                    } else {
+                        times++;
+                        LoggerEx.error(TAG, "Accss remote server failed,essMsg: " + (result == null ? "null" : result.toString()) + ",times: " + times);
+                        try {
+                            Thread.sleep(3000);
+                        }catch (InterruptedException r){
+                            r.printStackTrace();
+                        }
                     }
                 }
+                MethodResponse response = new MethodResponse();
+                response.setException(new CoreException(ChatErrorCodes.ERROR_RPC_CALLREMOTE_FAILED, "Call request " + request + " outside failed with several retries. dataMap: " + JSON.toJSONString(dataMap), CoreException.LEVEL_FATAL));
+                return response;
 //                else {
 //                    throw new CoreException(ChatErrorCodes.ERROR_REMOTE_RPC_FAILED, "Call remote rpc failed, requestParams: " + dataMap.toString());
 //                }

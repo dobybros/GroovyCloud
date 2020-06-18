@@ -46,6 +46,17 @@ public class DockerStatusServiceImpl implements DockerStatusService {
     }
 
     @Override
+    public void deleteDockerStatus(String ip, String serverType, String dockerName) throws CoreException {
+        try {
+            dockerStatusDAO.delete(new Document().append(DockerStatus.FIELD_DOCKERSTATUS_IP, ip).append(DockerStatus.FIELD_DOCKERSTATUS_SERVERTYPE, serverType).append(DockerStatus.FIELD_DOCKERSTATUS_DOCKERNAME, dockerName));
+        } catch (DBException e) {
+            e.printStackTrace();
+            LoggerEx.error(TAG, "Delete online server failed, " + ExceptionUtils.getFullStackTrace(e));
+            throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_DELETE_FAILED, "Delete online server failed, " + e.getMessage());
+        }
+    }
+
+    @Override
     public void deleteDockerStatusByServerType(String serverType) throws CoreException {
         try {
             DeleteResult result = dockerStatusDAO.delete(new Document().append(DockerStatus.FIELD_DOCKERSTATUS_SERVERTYPE, serverType));
@@ -95,6 +106,7 @@ public class DockerStatusServiceImpl implements DockerStatusService {
             throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_UPDATE_FAILED, "Update service " + serviceName + ", version " + serviceVersion + " to server " + server + " failed, " + e.getMessage());
         }
     }
+
     @Override
     public void updateServiceScaleEnable(String server, String serviceName, Integer serviceVersion, boolean scaleEnable) throws CoreException {
         try {
@@ -107,6 +119,7 @@ public class DockerStatusServiceImpl implements DockerStatusService {
             throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_UPDATE_FAILED, "Update service " + serviceName + ", version " + serviceVersion + " to server " + server + " failed, " + e.getMessage());
         }
     }
+
     @Override
     public void updateServiceType(String server, String serviceName, Integer serviceVersion, Integer type) throws CoreException {
         try {
@@ -142,6 +155,28 @@ public class DockerStatusServiceImpl implements DockerStatusService {
         } catch (DBException e) {
             e.printStackTrace();
             throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_UPDATE_FAILED, "Update onlineServer " + server + " failed, " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateStatus(String server, Integer status) throws CoreException {
+        try {
+            Document update = new Document().append(DockerStatus.FIELD_DOCKERSTATUS_STATUS, status);
+            dockerStatusDAO.updateOne(new Document().append(DockerStatus.FIELD_DOCKERSTATUS_SERVER, server), new Document().append("$set", update), false);
+        } catch (DBException e) {
+            e.printStackTrace();
+            throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_UPDATE_FAILED, "Update onlineServer " + server + " failed, " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateDeployId(String server, String deployId) throws CoreException {
+        try {
+            Document update = new Document().append(DockerStatus.FIELD_DEPLOYID, deployId);
+            dockerStatusDAO.updateOne(new Document().append(DockerStatus.FIELD_DOCKERSTATUS_SERVER, server), new Document().append("$set", update), false);
+        } catch (DBException e) {
+            e.printStackTrace();
+            throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_UPDATE_FAILED, "Update onlineServer server" + server + " failed, " + e.getMessage());
         }
     }
 
@@ -322,28 +357,28 @@ public class DockerStatusServiceImpl implements DockerStatusService {
         }
     }
 
-	@Override
-	public List<DockerStatus> getDockerStatusesByType(Integer type) throws CoreException {
-		try {
-			List<DockerStatus> dockerStatuses = new ArrayList<>();
-			Document query = new Document();
-			if (type != null) {
-				query.append(DockerStatus.FIELD_SERVERSTATUS_TYPE, type);
-			}
-			FindIterable<Document> iterable = dockerStatusDAO.query(query);
-			MongoCursor<Document> cursor = iterable.iterator();
-			while (cursor.hasNext()) {
-				Document doc = cursor.next();
-				DockerStatus dockerStatus = new DockerStatus();
-				dockerStatus.fromDocument(doc);
-				dockerStatuses.add(dockerStatus);
-			}
-			return dockerStatuses;
-		} catch (DBException e) {
-			e.printStackTrace();
-			throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_QUERY_FAILED, "Query server present server by type failed, " + e.getMessage());
-		}
-	}
+    @Override
+    public List<DockerStatus> getDockerStatusesByType(Integer type) throws CoreException {
+        try {
+            List<DockerStatus> dockerStatuses = new ArrayList<>();
+            Document query = new Document();
+            if (type != null) {
+                query.append(DockerStatus.FIELD_SERVERSTATUS_TYPE, type);
+            }
+            FindIterable<Document> iterable = dockerStatusDAO.query(query);
+            MongoCursor<Document> cursor = iterable.iterator();
+            while (cursor.hasNext()) {
+                Document doc = cursor.next();
+                DockerStatus dockerStatus = new DockerStatus();
+                dockerStatus.fromDocument(doc);
+                dockerStatuses.add(dockerStatus);
+            }
+            return dockerStatuses;
+        } catch (DBException e) {
+            e.printStackTrace();
+            throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_QUERY_FAILED, "Query server present server by type failed, " + e.getMessage());
+        }
+    }
 
     @Override
     public List<DockerStatus> getDockerStatusesByIp(String ip) throws CoreException {
@@ -355,6 +390,41 @@ public class DockerStatusServiceImpl implements DockerStatusService {
             }
             FindIterable<Document> iterable = dockerStatusDAO.query(query);
             MongoCursor<Document> cursor = iterable.iterator();
+            while (cursor.hasNext()) {
+                Document doc = cursor.next();
+                DockerStatus dockerStatus = new DockerStatus();
+                dockerStatus.fromDocument(doc);
+                dockerStatuses.add(dockerStatus);
+            }
+            return dockerStatuses;
+        } catch (DBException e) {
+            e.printStackTrace();
+            throw new CoreException(ChatErrorCodes.ERROR_ONLINESERVER_QUERY_FAILED, "Query server present server by type failed, " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<DockerStatus> getDockerStatusByCondition(String ip, String dockerName, String serverType, Integer status, String deployId) throws CoreException {
+        try {
+            Document query = new Document();
+            if (StringUtils.isNotBlank(ip)) {
+                query.append(DockerStatus.FIELD_DOCKERSTATUS_IP, ip);
+            }
+            if (StringUtils.isNotBlank(dockerName)) {
+                query.append(DockerStatus.FIELD_DOCKERSTATUS_DOCKERNAME, dockerName);
+            }
+            if (StringUtils.isNotBlank(serverType)) {
+                query.append(DockerStatus.FIELD_DOCKERSTATUS_SERVERTYPE, serverType);
+            }
+            if (status != null) {
+                query.append(DockerStatus.FIELD_DOCKERSTATUS_STATUS, status);
+            }
+            if (StringUtils.isNotBlank(deployId)) {
+                query.append(DockerStatus.FIELD_DEPLOYID, deployId);
+            }
+            FindIterable<Document> iterable = dockerStatusDAO.query(query);
+            MongoCursor<Document> cursor = iterable.iterator();
+            List<DockerStatus> dockerStatuses = new ArrayList<>();
             while (cursor.hasNext()) {
                 Document doc = cursor.next();
                 DockerStatus dockerStatus = new DockerStatus();

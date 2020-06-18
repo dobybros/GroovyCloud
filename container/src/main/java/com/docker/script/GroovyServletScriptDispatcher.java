@@ -78,9 +78,11 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                             throw new CoreException(500, "Version is null, service: " + service);
                         }
                     }
+                    respond(response, result);
                 } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_TIMER)) {
                     List list = handleTimer();
                     result.setData(list);
+                    respond(response, result);
                 } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_REPAIR)) {
                     if (internalFilter(request, result).getCode() == 1) {
                         String repairId = uriStrs[2];
@@ -102,6 +104,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                                     if (((Throwable) e).getCause() != null) {
                                         throwable = ((Throwable) e).getCause();
                                     }
+                                    throwable.printStackTrace();
                                     if (throwable instanceof CoreException) {
                                         repairData.setExecuteResult(((CoreException) throwable).toString());
                                     } else {
@@ -109,9 +112,9 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                                         repairData.setExecuteResult(throwable.toString());
                                     }
                                 } else {
-                                    if(executeResult instanceof String){
+                                    if (executeResult instanceof String) {
                                         repairData.setExecuteResult((String) executeResult);
-                                    }else {
+                                    } else {
                                         repairData.setExecuteResult(JSON.toJSONString(executeResult));
                                     }
                                 }
@@ -122,6 +125,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                             }
                         }, ServerStart.getInstance().getAsyncThreadPoolExecutor());
                     }
+                    respond(response, result);
                 }
             } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_SCALE)) {
                 if (internalFilter(request, result).getCode() == 1) {
@@ -159,6 +163,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                         }
                     }
                 }
+                respond(response, result);
             } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERACCESSSERVICE)) {
                 String token = request.getHeader("crossClusterToken");
                 if (token == null) {
@@ -202,11 +207,13 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                         }
                     }
                 }
+                respond(response, result);
             } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_CROSSCLUSTERCREATETOKEN)) {
                 if (internalFilter(request, result).getCode() == 1) {
                     String token = JWTUtils.createToken("crossClusterToken", null, 10800000L);//3小时
                     result.setData(token);
                 }
+                respond(response, result);
             } else if (uriStrs[1].equals(GroovyServletManagerEx.BASE_PARAMS)) {
                 if (internalFilter(request, result).getCode() == 1) {
                     String publicIP = RequestUtils.getRemoteIp(request);
@@ -214,8 +221,8 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                     map.put("publicIp", publicIP);
                     result.setData(map);
                 }
+                respond(response, result);
             }
-            respond(response, result);
         } catch (Throwable e) {
             e.printStackTrace();
             LoggerEx.error(TAG, "Request url " + request.getRequestURL().toString() + " occur error " + ExceptionUtils.getFullStackTrace(e));
@@ -243,7 +250,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
         return result;
     }
 
-    private String getServiceVersion(String service) {
+    protected String getServiceVersion(String service) {
         String serviceVersion = null;
         if (!service.contains("_v")) {
             Integer version = scriptManager.getDefalutServiceVersionMap().get(service);
@@ -258,7 +265,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
         return serviceVersion;
     }
 
-    private List handlerService(String service) {
+    protected List handlerService(String service) {
         GroovyRuntime groovyRuntime = getGroovyRuntime(service);
         if (groovyRuntime != null) {
             ServiceMemoryHandler classAnnotationHandler = (ServiceMemoryHandler) groovyRuntime.getClassAnnotationHandler(ServiceMemoryHandler.class);
@@ -333,7 +340,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
         return null;
     }
 
-    private void respond(HttpServletResponse response, Object result) throws Throwable {
+    protected void respond(HttpServletResponse response, Object result) throws Throwable {
         String returnStr = JSON.toJSONString(result);
         response.setContentType("application/json");
         response.getOutputStream().write(returnStr.getBytes(StandardCharsets.UTF_8));

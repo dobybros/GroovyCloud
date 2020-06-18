@@ -31,6 +31,8 @@ public class InitContainer implements CommandLineRunner{
     @Autowired
     ServiceVersionDAO serviceVersionDAO;
     @Autowired
+    DeployServiceVersionDAO deployServiceVersionDAO;
+    @Autowired
     ServersDAO serversDAO;
     @Autowired
     ScheduledTaskDAO scheduledTaskDAO;
@@ -71,6 +73,7 @@ public class InitContainer implements CommandLineRunner{
         scheduledTaskHelper.init();
         dockerStatusDAO.init();
         serviceVersionDAO.init();
+        deployServiceVersionDAO.init();
         serversDAO.init();
         lansDAO.init();
         sDockerDAO.init();

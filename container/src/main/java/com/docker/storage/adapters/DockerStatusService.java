@@ -18,6 +18,8 @@ public interface DockerStatusService {
 
     void deleteDockerStatus(String server) throws CoreException;
 
+    void deleteDockerStatus(String ip, String serverType, String dockerName) throws CoreException;
+
     void deleteDockerStatusByServerType(String serverType) throws CoreException;
 
     void addDockerStatus(DockerStatus serverStatus)
@@ -40,6 +42,12 @@ public interface DockerStatusService {
     void update(String server, DockerStatus serverStatus)
             throws CoreException;
 
+    void updateStatus(String server, Integer status)
+            throws CoreException;
+
+    void updateDeployId(String server, String deployId)
+            throws CoreException;
+
     DockerStatus getDockerStatusByServer(String server)
             throws CoreException;
 
@@ -56,4 +64,6 @@ public interface DockerStatusService {
     List<DockerStatus> getDockerStatusesByType(Integer type) throws CoreException;
 
     List<DockerStatus> getDockerStatusesByIp(String ip) throws CoreException;
+
+    List<DockerStatus> getDockerStatusByCondition(String ip, String dockerName, String serverType, Integer status, String deployId) throws CoreException;
 }

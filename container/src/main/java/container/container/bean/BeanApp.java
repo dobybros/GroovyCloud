@@ -1,6 +1,7 @@
 package container.container.bean;
 
 import chat.utils.IPHolder;
+import com.docker.data.DockerStatus;
 import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.http.MyHttpParameters;
 import com.docker.onlineserver.OnlineServerWithStatus;
@@ -62,6 +63,7 @@ public class BeanApp extends ConfigApp{
     private LansDAO lansDAO;
     private SDockerDAO sdockerDAO;
     private ServiceVersionDAO serviceVersionDAO;
+    private DeployServiceVersionDAO deployServiceVersionDAO;
     private GridFSFileHandler fileAdapter;
     private MongoHelper gridfsHelper;
     private DockerStatusServiceImpl dockerStatusService;
@@ -81,6 +83,7 @@ public class BeanApp extends ConfigApp{
     private RMIServerHandler dockerRpcServerAdapterSsl;
     private ServersServiceImpl serversService;
     private ServiceVersionServiceImpl serviceVersionService;
+    private DeployServiceVersionServiceImpl deployServiceVersionService;
     private ScheduledTaskServiceImpl scheduledTaskService;
     private RepairServiceImpl repairService;
     private ScheduledTaskDAO scheduledTaskDAO;
@@ -151,12 +154,28 @@ public class BeanApp extends ConfigApp{
         return instance.serviceVersionService;
     }
 
+    public synchronized DeployServiceVersionServiceImpl getDeployServiceVersionService() {
+        if (instance.deployServiceVersionService == null) {
+            instance.deployServiceVersionService = new DeployServiceVersionServiceImpl();
+            instance.deployServiceVersionService.setDeployServiceVersionDAO(instance.getDeployServiceVersionDAO());
+        }
+        return instance.deployServiceVersionService;
+    }
+
+
     public synchronized ServiceVersionDAO getServiceVersionDAO() {
         if (instance.serviceVersionDAO == null) {
             instance.serviceVersionDAO = new ServiceVersionDAO();
             instance.serviceVersionDAO.setMongoHelper(instance.getDockerStatusHelper());
         }
         return instance.serviceVersionDAO;
+    }
+    public synchronized DeployServiceVersionDAO getDeployServiceVersionDAO() {
+        if (instance.deployServiceVersionDAO == null) {
+            instance.deployServiceVersionDAO = new DeployServiceVersionDAO();
+            instance.deployServiceVersionDAO.setMongoHelper(instance.getDockerStatusHelper());
+        }
+        return instance.deployServiceVersionDAO;
     }
 
     public synchronized ServersServiceImpl getServersService() {
@@ -287,7 +306,7 @@ public class BeanApp extends ConfigApp{
             instance.onlineServer.setRpcSslServerJksPath(instance.getRpcSslServerJksPath());
             instance.onlineServer.setRpcSslJksPwd(instance.getRpcSslJksPwd());
             instance.onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
-            instance.onlineServer.setStatus(1);
+            instance.onlineServer.setStatus(DockerStatus.STATUS_STARTING);
             if(StringUtils.isNotBlank(instance.getScaleInstanceId())){
                 instance.onlineServer.setScaleInstanceId(instance.getScaleInstanceId());
             }

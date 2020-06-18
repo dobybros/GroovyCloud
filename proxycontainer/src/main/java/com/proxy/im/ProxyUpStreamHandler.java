@@ -123,7 +123,7 @@ public class ProxyUpStreamHandler extends IoHandlerAdapter {
                 }
             } else {
                 if (message != null)
-                    LoggerEx.error(TAG, "Unexpected message type " + message.getClass() + " message " + message + " session " + session);
+                    LoggerEx.info(TAG, "Unexpected message type " + message.getClass() + " message " + message + " session " + session);
             }
     }
 

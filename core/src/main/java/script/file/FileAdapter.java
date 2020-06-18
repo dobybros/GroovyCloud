@@ -1,5 +1,10 @@
 package script.file;
 
+import chat.encrypter.EncryptService;
+import chat.logs.LoggerEx;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,12 +12,6 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-
-import chat.encrypter.EncryptService;
-import chat.logs.LoggerEx;
 
 
 /**
@@ -217,6 +216,8 @@ public abstract class FileAdapter {
 	public abstract boolean isDirectoryExist(PathEx path) throws IOException;
 	
 	public abstract FileEntity getFileEntity(PathEx path) throws IOException;
+
+	public abstract InputStream readInputStream(PathEx path) throws IOException;
 	
 	/**
 	 * This is used for generate the download url for directly downloading against file servers. 

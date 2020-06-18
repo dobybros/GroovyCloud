@@ -2,10 +2,12 @@ package com.docker.script;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import com.docker.data.DockerStatus;
 import com.docker.script.i18n.I18nHandler;
 import com.docker.script.i18n.MessageProperties;
 import com.docker.script.servlet.GroovyServletManagerEx;
 import com.docker.script.servlet.WebServiceAnnotationHandler;
+import com.docker.server.OnlineServer;
 import com.docker.storage.cache.CacheAnnotationHandler;
 import com.docker.storage.cache.CacheStorageFactory;
 import com.docker.storage.cache.CacheStorageMethod;
@@ -137,9 +139,11 @@ public abstract class BaseRuntime extends GroovyRuntime {
         Object rpcServerSslHandler = GroovyCloudBean.getBean("dockerRpcServerSsl");
         if (rpcServerSslHandler != null && rpcServerSslHandler instanceof ClassAnnotationGlobalHandler)
             addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) rpcServerSslHandler);
-        Object upStreamAnnotationHandler = GroovyCloudBean.getBean("upStreamAnnotationHandler");
-        if (upStreamAnnotationHandler != null && upStreamAnnotationHandler instanceof ClassAnnotationGlobalHandler)
-            addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) upStreamAnnotationHandler);
+        if(OnlineServer.getInstance().getType() != DockerStatus.TYPE_NORMAL){
+            Object upStreamAnnotationHandler = GroovyCloudBean.getBean("upStreamAnnotationHandler");
+            if (upStreamAnnotationHandler != null && upStreamAnnotationHandler instanceof ClassAnnotationGlobalHandler)
+                addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) upStreamAnnotationHandler);
+        }
         Object redisSubscribeHandler = GroovyCloudBean.getBean(GroovyCloudBean.REDISSUBSCRIBEHANDLER);
         if (redisSubscribeHandler != null && redisSubscribeHandler instanceof ClassAnnotationGlobalHandler)
             addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) redisSubscribeHandler);

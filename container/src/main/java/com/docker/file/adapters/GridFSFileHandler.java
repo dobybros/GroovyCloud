@@ -320,8 +320,16 @@ public class GridFSFileHandler extends FileAdapter {
 		return null;
 	}
 
+	@Override
+	public InputStream readInputStream(PathEx path) throws IOException {
+		GridFSDBFile gridFSDBFile = gridFs.findOne(new BasicDBObject("filename",
+				path.getPath()));
+		if(gridFSDBFile != null){
+			return gridFSDBFile.getInputStream();
+		}
+		return null;
+	}
 
-	
 	public MongoHelper getResourceHelper() {
 		return resourceHelper;
 	}

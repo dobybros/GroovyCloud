@@ -88,7 +88,7 @@ public class ScriptHttpUtils {
 
         } catch (Throwable e) {
             t = e;
-            LoggerEx.error(TAG, "Http post failed, err: " + ExceptionUtils.getFullStackTrace(e));
+            LoggerEx.error(TAG, "Http post failed, url: "+ url+ ",err: " + ExceptionUtils.getFullStackTrace(e));
             e.printStackTrace();
             Result result = new Result();
             if (e instanceof CoreException) {

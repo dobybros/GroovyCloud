@@ -26,10 +26,12 @@ public class GroovyCloudBean {
     public static Object getBean(String name) throws BeansException {
         return SpringContextUtil.getBean(name);
     }
-    public static Object getBean(Class claszz) throws BeansException{
+
+    public static Object getBean(Class claszz) throws BeansException {
         return SpringContextUtil.getBean(classBeanNameMap.get(claszz));
     }
-    public static void map(){
+
+    public static void map() {
         String[] beanNames = SpringContextUtil.getApplicationContext().getBeanDefinitionNames();
         for (int i = 0; i < beanNames.length; i++) {
             classBeanNameMap.put(getBean(beanNames[i]).getClass(), beanNames[i]);

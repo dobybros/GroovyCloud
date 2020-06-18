@@ -15,6 +15,7 @@ import com.dobybros.gateway.channels.tcp.codec.HailProtocalCodecFactory;
 import com.dobybros.gateway.channels.websocket.codec.WebSocketCodecFactory;
 import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
+import com.docker.data.DockerStatus;
 import com.docker.onlineserver.OnlineServerWithStatus;
 import com.docker.script.ScriptManager;
 import com.docker.tasks.Task;
@@ -118,7 +119,7 @@ public class IMBeanApp extends IMConfigApp {
             instance.onlineServer.setWsPort(instance.getUpstreamWsPort());
             instance.onlineServer.setSslTcpPort(instance.getUpstreamSslPort());
             instance.onlineServer.setPublicWsPort(instance.getPublicWsPort());
-            instance.onlineServer.setStatus(1);
+            instance.onlineServer.setStatus(DockerStatus.STATUS_STARTING);
             if(StringUtils.isNotBlank(instance.getScaleInstanceId())){
                 instance.onlineServer.setScaleInstanceId(instance.getScaleInstanceId());
             }
