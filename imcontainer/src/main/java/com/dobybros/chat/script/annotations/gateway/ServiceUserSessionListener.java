@@ -69,6 +69,13 @@ public abstract class ServiceUserSessionListener {
     public void pingTimeoutReceived(Integer terminal) {
     }
 
+    public Object getRoomData() {
+        return null;
+    }
+
+    public void saveRoomData() {
+    }
+
     public String getParentUserId() {
         return parentUserId;
     }
@@ -92,6 +99,7 @@ public abstract class ServiceUserSessionListener {
     public void setService(String service) {
         this.service = service;
     }
+
     public void sendMessage(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {
         gatewayMSGServers.sendMessage(message, excludeTerminal, terminal);
     }

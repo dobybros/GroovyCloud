@@ -37,6 +37,7 @@ public class GroovyRuntime extends ScriptRuntime {
     private ClassLoader parentClassLoader;
     private Class<?> groovyObjectExProxyClass;
     private HashMap<String, ClassHolder> cachedClasses;
+    private Map<String, Class<?>> allClasses;
 
 
     public void addLibPath(String libPath) {
@@ -212,11 +213,13 @@ public class GroovyRuntime extends ScriptRuntime {
         Class[] loadedClasses = runtimeBootListener.getLoadedClasses();
         if (loadedClasses != null) {
             cachedClasses = new HashMap<>();
+            allClasses = new HashMap<>();
             for (Class clazz : loadedClasses) {
                 ClassHolder classHolder = new ClassHolder();
                 classHolder.setParsedClass(clazz);
                 LoggerEx.info(TAG, "Loaded class " + clazz.getName());
                 cachedClasses.put(clazz.getName(), classHolder);
+                allClasses.put(clazz.getName(), clazz);
                 if (annotationHandlers != null) {
                     Collection<ClassAnnotationHandler> handlers = annotationHandlers;
                     for (ClassAnnotationHandler handler : handlers) {
@@ -495,6 +498,10 @@ public class GroovyRuntime extends ScriptRuntime {
 
     public void setCachedClasses(HashMap<String, ClassHolder> cachedClasses) {
         this.cachedClasses = cachedClasses;
+    }
+
+    public Map<String, Class<?>> getAllClasses() {
+        return allClasses;
     }
 
     public Class<?> getClass(String classStr) {

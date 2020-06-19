@@ -124,7 +124,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
         }
 
 
-
+        addClassAnnotationHandler(new RegisterClassAnnotationHandler());
 		addClassAnnotationHandler(new GroovyTimerTaskHandler());
 		addClassAnnotationHandler(new GroovyRedeployMainHandler());
 		addClassAnnotationHandler(new ServerLifeCircleHandler());
