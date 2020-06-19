@@ -5,6 +5,7 @@ import com.docker.data.DockerStatus;
 import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.http.MyHttpParameters;
 import com.docker.onlineserver.OnlineServerWithStatus;
+import com.docker.rpc.QueueSimplexListener;
 import com.docker.rpc.RPCClientAdapterMap;
 import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.rpc.impl.RMIServerImplWrapper;
@@ -42,7 +43,7 @@ import java.util.Map;
  * @Date:2019/5/26 15:41
  */
 
-public class BeanApp extends ConfigApp{
+public class BeanApp extends ConfigApp {
     private static final String TAG = BeanApp.class.getSimpleName();
     private static volatile BeanApp instance;
     private SpringContextUtil springContextUtil;
@@ -92,24 +93,51 @@ public class BeanApp extends ConfigApp{
     private RepairTaskHandler repairTaskHandler;
     private RedisListenerHandler redisListenerHandler;
     private ZookeeperFactory zookeeperFactory;
+
     public synchronized ZookeeperFactory getZookeeperFactory() {
         if (instance.zookeeperFactory == null) {
             instance.zookeeperFactory = new ZookeeperFactory();
         }
         return instance.zookeeperFactory;
     }
+
     public synchronized RepairTaskHandler getRepairTaskHandler() {
         if (instance.repairTaskHandler == null) {
             instance.repairTaskHandler = new RepairTaskHandler();
         }
         return instance.repairTaskHandler;
     }
+
     public synchronized RedisSubscribeHandler getRedisSubscribeHandler() {
         if (instance.redisSubscribeHandler == null) {
             instance.redisSubscribeHandler = new RedisSubscribeHandler();
         }
         return instance.redisSubscribeHandler;
     }
+
+    private QueueSimplexListener queueSimplexListener;
+
+    public synchronized QueueSimplexListener getQueueSimplexListener() {
+        if (instance.queueSimplexListener == null) {
+            try {
+                Class<?> queueSimplexListenerClass = Class.forName("com.docker.rpc.queue.KafkaSimplexListener");
+                instance.queueSimplexListener = (QueueSimplexListener) queueSimplexListenerClass.getDeclaredConstructor().newInstance();
+                Map<String, String> config = new HashMap<>();
+                config.put("bootstrap.servers", instance.getKafkaServers());
+                config.put("producer.key.serializer", instance.getKafkaProducerKeySerializer());
+                config.put("producer.value.serializer", instance.getKafkaProducerValueSerializer());
+                config.put("retries", instance.getKafkaProducerRetries());
+                config.put("linger.ms", instance.getKafkaProducerLingerMs());
+                config.put("consumer.key.serializer", instance.getKafkaConsumerKeySerializer());
+                config.put("consumer.value.serializer", instance.getKafkaConsumerValueSerializer());
+                instance.queueSimplexListener.setConfig(config);
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
+        return instance.queueSimplexListener;
+    }
+
     public synchronized ScheduledTaskServiceImpl getScheduledTaskService() {
         if (instance.scheduledTaskService == null) {
             instance.scheduledTaskService = new ScheduledTaskServiceImpl();
@@ -117,12 +145,14 @@ public class BeanApp extends ConfigApp{
         }
         return instance.scheduledTaskService;
     }
+
     public synchronized RedisListenerHandler getRedisListenerHandler() {
         if (instance.redisListenerHandler == null) {
             instance.redisListenerHandler = new RedisListenerHandler();
         }
         return instance.redisListenerHandler;
     }
+
     public synchronized RepairServiceImpl getRepairService() {
         if (instance.repairService == null) {
             instance.repairService = new RepairServiceImpl();
@@ -170,6 +200,7 @@ public class BeanApp extends ConfigApp{
         }
         return instance.serviceVersionDAO;
     }
+
     public synchronized DeployServiceVersionDAO getDeployServiceVersionDAO() {
         if (instance.deployServiceVersionDAO == null) {
             instance.deployServiceVersionDAO = new DeployServiceVersionDAO();
@@ -255,7 +286,7 @@ public class BeanApp extends ConfigApp{
     }
 
     public synchronized AutoReloadProperties getOauth2ClientProperties() {
-        if(instance.oauth2ClientProperties == null){
+        if (instance.oauth2ClientProperties == null) {
             instance.oauth2ClientProperties = new AutoReloadProperties();
             instance.oauth2ClientProperties.setPath("groovycloud.properties");
         }
@@ -307,7 +338,7 @@ public class BeanApp extends ConfigApp{
             instance.onlineServer.setRpcSslJksPwd(instance.getRpcSslJksPwd());
             instance.onlineServer.setMaxUsers(Integer.valueOf(instance.getMaxUsers()));
             instance.onlineServer.setStatus(DockerStatus.STATUS_STARTING);
-            if(StringUtils.isNotBlank(instance.getScaleInstanceId())){
+            if (StringUtils.isNotBlank(instance.getScaleInstanceId())) {
                 instance.onlineServer.setScaleInstanceId(instance.getScaleInstanceId());
             }
             instance.onlineServer.setType(Integer.valueOf(instance.getType()));
@@ -398,8 +429,9 @@ public class BeanApp extends ConfigApp{
         }
         return instance.httpsScheme;
     }
+
     public synchronized DefaultHttpClient getHttpClient() {
-        if(instance.httpClient == null){
+        if (instance.httpClient == null) {
             MyHttpParameters myHttpParameters = new MyHttpParameters();
             myHttpParameters.setCharset("utf8");
             myHttpParameters.setConnectionTimeout(30000);
@@ -408,6 +440,7 @@ public class BeanApp extends ConfigApp{
         }
         return instance.httpClient;
     }
+
     public synchronized SchemeRegistry getSchemeRegistry() {
         if (instance.schemeRegistry == null) {
             instance.schemeRegistry = new SchemeRegistry();
@@ -450,6 +483,7 @@ public class BeanApp extends ConfigApp{
         }
         return instance.scheduledTaskHelper;
     }
+
     public synchronized MongoHelper getRepairHelper() {
         if (instance.repairHelper == null) {
             instance.repairHelper = new MongoHelper();

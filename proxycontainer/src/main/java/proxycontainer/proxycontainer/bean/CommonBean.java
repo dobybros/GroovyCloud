@@ -7,6 +7,7 @@ import com.dobybros.chat.tasks.OfflineMessageSavingTask;
 import com.dobybros.chat.tasks.RPCMessageSendingTask;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.onlineserver.OnlineServerWithStatus;
+import com.docker.rpc.QueueSimplexListener;
 import com.docker.script.ScriptManager;
 import com.docker.tasks.RepairTaskHandler;
 import com.docker.utils.AutoReloadProperties;
@@ -99,4 +100,8 @@ public class CommonBean {
     }
     @Bean
     public RepairTaskHandler repairTaskHandler(){return instance.getRepairTaskHandler();}
+    @Bean(destroyMethod = "shutdown")
+    public QueueSimplexListener queueSimplexListener(){
+        return instance.getQueueSimplexListener();
+    }
 }

@@ -3,10 +3,12 @@ package imcontainer.imcontainer.bean;
 import chat.utils.IPHolder;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.dobybros.chat.handlers.PingHandler;
+import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
 import com.dobybros.chat.props.GlobalLansProperties;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.onlineserver.OnlineServerWithStatus;
+import com.docker.rpc.QueueSimplexListener;
 import com.docker.rpc.impl.RMIServerHandler;
 import com.docker.script.ScriptManager;
 import com.docker.storage.mongodb.MongoHelper;
@@ -76,6 +78,10 @@ public class InitContainer implements CommandLineRunner{
     OnlineUserManagerImpl onlineUserManager;
     @Autowired
     PingHandler pingHandler;
+    @Autowired
+    QueueSimplexListener queueSimplexListener;
+    @Autowired
+    ProxyContainerDuplexSender proxyContainerDuplexSender;
 
     @Override
     public void run(String... args) throws Exception {
@@ -108,5 +114,7 @@ public class InitContainer implements CommandLineRunner{
         dockerRpcServerAdapter.serverStart();
         dockerRpcServerAdapterSsl.serverStart();
         pingHandler.init();
+        proxyContainerDuplexSender.init();
+        queueSimplexListener.init();
     }
 }

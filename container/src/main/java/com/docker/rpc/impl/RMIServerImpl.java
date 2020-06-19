@@ -13,6 +13,7 @@ import com.docker.rpc.*;
 import com.docker.rpc.async.AsyncCallbackRequest;
 import com.docker.rpc.async.AsyncRpcFuture;
 import com.docker.rpc.async.AsyncRuntimeException;
+import com.docker.rpc.remote.RpcRequestCall;
 import com.docker.rpc.remote.RpcServerInterceptor;
 import com.docker.rpc.remote.skeleton.ServiceSkeletonAnnotationHandler;
 import com.docker.rpc.remote.stub.RpcCacheManager;
@@ -75,56 +76,7 @@ public class RMIServerImpl extends UnicastRemoteObject implements RMIServer {
             throws RemoteException {
         if (serverWrapper.rmiServerHandler == null)
             throw new RemoteException("RPC handler is null");
-        RPCResponse response = null;
-        try {
-            RPCRequest request = null;
-            RPCServerAdapter serverAdapter = null;
-            RPCEntity entity = null;
-            if (MethodRequest.RPCTYPE.equals(type)) {
-                if (serverWrapper.serverMethodInvocation == null)
-                    serverWrapper.serverMethodInvocation = new RPCServerMethodInvocation();
-                request = new MethodRequest();
-
-                request.setEncode(encode);
-                request.setType(type);
-                request.setData(data);
-                request.resurrect();
-                response = serverWrapper.serverMethodInvocation.onCall((MethodRequest) request);
-            } else {
-                GroovyObjectEx<RPCServerAdapter> adapter = serverWrapper.serverAdapterMap.get(type);
-                if (adapter == null)
-                    throw new CoreException(CoreErrorCodes.ERROR_RPC_TYPE_NOSERVERADAPTER, "No server adapter found by type " + type);
-
-                entity = serverWrapper.rmiServerHandler.getRPCEntityForServer(type, adapter.getGroovyClass());
-                serverAdapter = adapter.getObject();
-                request = entity.requestClass.newInstance();
-
-                request.setEncode(encode);
-                request.setType(type);
-                request.setData(data);
-                request.resurrect();
-                response = serverAdapter.onCall(request);
-            }
-            if (response != null) {
-                byte[] responseData = response.getData();
-                if (responseData == null) {
-                    if (response.getEncode() == null)
-                        response.setEncode(RPCBase.ENCODE_PB);
-                    response.persistent();
-                }
-                return response.getData();
-            }
-            return null;
-        } catch (Throwable t) {
-            LoggerEx.error(TAG, "RPC call type " + type + " occur error on server side, " + ExceptionUtils.getFullStackTrace(t));
-            String message = null;
-            if (t instanceof CoreException) {
-                message = ((CoreException) t).getCode() + "|" + t.getMessage();
-            } else {
-                message = t.getMessage();
-            }
-            throw new RemoteException(message, t);
-        }
+        return RpcRequestCall.getInstance().call(serverWrapper, type, encode, data);
     }
 
     @Override

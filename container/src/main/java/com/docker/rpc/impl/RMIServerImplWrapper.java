@@ -152,5 +152,22 @@ public class RMIServerImplWrapper extends ClassAnnotationGlobalHandler {
 	public void setRmiServerHandler(RMIServerHandler rmiServerHandler) {
 		this.rmiServerHandler = rmiServerHandler;
 	}
+
+	public Map<String, GroovyObjectEx<RPCServerAdapter>> getServerAdapterMap() {
+		return serverAdapterMap;
+	}
+
+	public RPCServerMethodInvocation getServerMethodInvocation() {
+		return serverMethodInvocation;
+	}
+
+	public void setServerAdapterMap(Map<String, GroovyObjectEx<RPCServerAdapter>> serverAdapterMap) {
+		this.serverAdapterMap = serverAdapterMap;
+	}
+
+	public void setServerMethodInvocation(RPCServerMethodInvocation serverMethodInvocation) {
+		this.serverMethodInvocation = serverMethodInvocation;
+	}
+
 }
 
