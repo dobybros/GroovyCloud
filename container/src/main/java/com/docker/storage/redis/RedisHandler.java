@@ -1262,6 +1262,20 @@ public class RedisHandler {
         }, RedisContants.PIPELINE_SYNC);
     }
 
+    public void rpushByPipeline(String key, List<Object> objects) {
+        invokePipelineMethod(true, pipelineBase -> {
+            if (objects != null && !objects.isEmpty()) {
+                for (Object o : objects) {
+                    if (o instanceof String) {
+                        pipelineBase.rpush(key, (String) o);
+                    } else {
+                        pipelineBase.rpush(key, JSON.toJSONString(o));
+                    }
+                }
+            }
+        }, RedisContants.PIPELINE_SYNC);
+    }
+
     public <T> List<T> hgetObjectByPipeline(final String key, final List<String> fileds, Class<T> clazz) throws CoreException {
         Object result = invokePipelineMethod(true, pipelineBase -> {
             for (String field : fileds) {
@@ -1336,7 +1350,7 @@ public class RedisHandler {
                 }
                 return method.invoke(pipeline, args);
             }
-        }catch (JedisConnectionException e) {
+        } catch (JedisConnectionException e) {
             e.printStackTrace();
             CacheStorageFactory.getInstance().reloadCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, hosts);
             LoggerEx.fatal(TAG, "Redis execute err JedisConnectionException, pleaseCheck,host:" + hosts + " ,errMsg: " + ExceptionUtils.getFullStackTrace(e));

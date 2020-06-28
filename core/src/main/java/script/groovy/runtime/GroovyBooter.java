@@ -188,7 +188,7 @@ public class GroovyBooter implements RuntimeBootListener {
             if (t instanceof CoreException)
                 throw (CoreException) t;
             else {
-                LoggerEx.error(TAG, "Groovy unknown error " + ExceptionUtils.getFullStackTrace(t));
+                LoggerEx.error(TAG, "Groovy unknown error " + ExceptionUtils.getFullStackTrace(t) + ", path: " + groovyRuntime.getPath());
                 throw new CoreException(ChatErrorCodes.ERROR_GROOVY_UNKNOWN,
                         "Groovy unknown error " + t.getMessage());
             }

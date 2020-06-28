@@ -7,7 +7,7 @@ import com.dobybros.chat.channels.Channel;
 import com.dobybros.chat.open.MSGServers;
 import com.dobybros.chat.open.data.Constants;
 import com.dobybros.chat.open.data.Message;
-import com.dobybros.chat.script.annotations.gateway.ServiceUserSessionListener;
+import com.dobybros.chat.script.annotations.gateway.DataServiceUserSessionListener;
 import com.dobybros.chat.script.annotations.handler.ServiceUserSessionAnnotationHandler;
 import com.dobybros.gateway.channels.data.OutgoingData;
 import com.dobybros.gateway.channels.data.OutgoingMessage;
@@ -252,10 +252,10 @@ public final class GatewayMSGServers extends MSGServers {
 //        onlineUserManager.sendEvent(message, onlineUser);
     }
 
-    public ServiceUserSessionListener getServiceUserSession(GroovyRuntime runtime, String userId, String service) {
+    public DataServiceUserSessionListener getServiceUserSession(GroovyRuntime runtime, String userId, String service) {
         ServiceUserSessionAnnotationHandler handler = (ServiceUserSessionAnnotationHandler) runtime.getClassAnnotationHandler(ServiceUserSessionAnnotationHandler.class);
         if (handler != null) {
-            ServiceUserSessionListener listener = handler.getAnnotatedListener(userId, service);
+            DataServiceUserSessionListener listener = handler.getAnnotatedListener(userId, service);
             return listener;
         }
         return null;

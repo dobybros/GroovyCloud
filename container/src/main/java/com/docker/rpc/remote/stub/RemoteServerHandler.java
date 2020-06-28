@@ -265,7 +265,7 @@ public class RemoteServerHandler {
                 Map<String, Object> headerMap = new HashMap<String, Object>();
                 headerMap.put("crossClusterToken", token);
                 int times = 0;
-                while (times <= 3) {
+                while (times <= 4) {
                     long time = System.currentTimeMillis();
                     Result result = ScriptHttpUtils.post(JSON.toJSONString(dataMap), this.serviceStubManager.getHost() + "/base/crossClusterAccessService", headerMap, Result.class);
                     if (result != null && result.success()) {
@@ -289,7 +289,7 @@ public class RemoteServerHandler {
                     }
                 }
                 MethodResponse response = new MethodResponse();
-                response.setException(new CoreException(ChatErrorCodes.ERROR_RPC_CALLREMOTE_FAILED, "Call request " + request + " outside failed with several retries. dataMap: " + JSON.toJSONString(dataMap), CoreException.LEVEL_FATAL));
+                response.setException(new CoreException(ChatErrorCodes.ERROR_CALLREMOTE_BY_HTTP_FAILED, "Call request " + request + " outside failed with several retries. dataMap: " + JSON.toJSONString(dataMap), CoreException.LEVEL_FATAL));
                 return response;
 //                else {
 //                    throw new CoreException(ChatErrorCodes.ERROR_REMOTE_RPC_FAILED, "Call remote rpc failed, requestParams: " + dataMap.toString());

@@ -9,6 +9,8 @@ import java.util.Map;
 public interface QueueSimplexListener {
     public void send(String key, String type, byte[] data, byte encode);
 
+    public void send(String key, byte[] data);
+
     public void init();
 
     public void setConfig(Map<String, String> config);

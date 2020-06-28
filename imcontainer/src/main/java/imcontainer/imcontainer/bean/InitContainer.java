@@ -115,6 +115,6 @@ public class InitContainer implements CommandLineRunner{
         dockerRpcServerAdapterSsl.serverStart();
         pingHandler.init();
         proxyContainerDuplexSender.init();
-        queueSimplexListener.init();
+//        queueSimplexListener.init();
     }
 }

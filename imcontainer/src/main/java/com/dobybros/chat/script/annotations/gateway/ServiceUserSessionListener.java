@@ -10,19 +10,21 @@ import com.dobybros.gateway.open.GatewayMSGServers;
 
 import java.util.List;
 
-public abstract class ServiceUserSessionListener {
-    private String parentUserId;
+public abstract class ServiceUserSessionListener extends DataServiceUserSessionListener{
 
-    private String userId;
-
-    private String service;
 
     private GatewayMSGServers gatewayMSGServers = GatewayMSGServers.getInstance();
 
     public void sessionCreated() {
+        Object data = getRoomDataFromMonitor();//get RoomData from monitor
+        if(data != null){
+            saveRoomData(data);
+        }
+        restoreData();
     }
 
     public void sessionClosed(int close) {
+        removeMonitorRoomData();
     }
 
     public List<Integer> channelRegistered(Integer terminal) {
@@ -69,43 +71,12 @@ public abstract class ServiceUserSessionListener {
     public void pingTimeoutReceived(Integer terminal) {
     }
 
-    public Object getRoomData() {
-        return null;
-    }
-
-    public void saveRoomData() {
-    }
-
-    public String getParentUserId() {
-        return parentUserId;
-    }
-
-    public void setParentUserId(String parentUserId) {
-        this.parentUserId = parentUserId;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getService() {
-        return service;
-    }
-
-    public void setService(String service) {
-        this.service = service;
-    }
-
     public void sendMessage(Message message, Integer excludeTerminal, Integer terminal) throws CoreException {
         gatewayMSGServers.sendMessage(message, excludeTerminal, terminal);
     }
 
     public void closeClusterSessions(int close) throws CoreException {
-        gatewayMSGServers.closeClusterSessions(parentUserId, userId, service, close);
+        gatewayMSGServers.closeClusterSessions(getParentUserId(), getUserId(), getService(), close);
     }
 
     /**
@@ -125,18 +96,18 @@ public abstract class ServiceUserSessionListener {
 
     public void closeChannel(Integer terminal, int code) throws CoreException {
         if (terminal != null)
-            gatewayMSGServers.closeUserChannel(userId, service, terminal, code);
+            gatewayMSGServers.closeUserChannel(getUserId(), getService(), terminal, code);
     }
 
     public void closeSession() throws CoreException {
-        gatewayMSGServers.closeUserSession(userId, service, Channel.ChannelListener.CLOSE_SHUTDOWN);
+        gatewayMSGServers.closeUserSession(getUserId(), getService(), Channel.ChannelListener.CLOSE_SHUTDOWN);
     }
 
     public boolean isSessionAlive() throws CoreException {
-        return gatewayMSGServers.isUserSessionAlive(userId, service);
+        return gatewayMSGServers.isUserSessionAlive(getUserId(), getService());
     }
 
     public boolean isChannelAlive(Integer terminal) throws CoreException {
-        return gatewayMSGServers.isChannelAlive(userId, service, terminal);
+        return gatewayMSGServers.isChannelAlive(getUserId(), getService(), terminal);
     }
 }

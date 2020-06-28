@@ -52,6 +52,17 @@ public class KafkaSimplexListener implements QueueSimplexListener {
     }
 
     @Override
+    public void send(String key, byte[] data) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("data", data);
+        producer.send(new ProducerRecord(topic, jsonObject.toString().getBytes(Charset.defaultCharset())), (recordMetadata, e) -> {
+            if(e != null){
+                LoggerEx.error(TAG, "Send message to kafka error!, topic: " + topic + ", err: " + ExceptionUtils.getFullStackTrace(e));
+            }
+        });
+    }
+
+    @Override
     public void init() {
         started = true;
         KafkaProducerFactory factory = new DefaultKafkaProducerFactory();

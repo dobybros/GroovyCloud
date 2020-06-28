@@ -108,4 +108,5 @@ public interface ChatErrorCodes {
 	public static final int ERROR_ASYNC_NEEDRETRY= CODE_CORE - 217;
 
 	public static final int ERROR_REMOTE_RPC_FAILED= CODE_CORE - 218;
+	public static final int ERROR_CALLREMOTE_BY_HTTP_FAILED = CODE_CORE - 219;
 }
