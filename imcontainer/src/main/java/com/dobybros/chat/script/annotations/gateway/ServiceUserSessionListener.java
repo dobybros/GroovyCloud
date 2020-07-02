@@ -16,15 +16,19 @@ public abstract class ServiceUserSessionListener extends DataServiceUserSessionL
     private GatewayMSGServers gatewayMSGServers = GatewayMSGServers.getInstance();
 
     public void sessionCreated() {
-        Object data = getRoomDataFromMonitor();//get RoomData from monitor
-        if(data != null){
-            saveRoomData(data);
+        if(backUpMemory()){
+            Object data = getRoomDataFromMonitor();//get RoomData from monitor
+            if(data != null){
+                saveRoomData(data);
+            }
+            restoreData();
         }
-        restoreData();
     }
 
     public void sessionClosed(int close) {
-        removeMonitorRoomData();
+        if(backUpMemory()){
+            removeMonitorRoomData();
+        }
     }
 
     public List<Integer> channelRegistered(Integer terminal) {

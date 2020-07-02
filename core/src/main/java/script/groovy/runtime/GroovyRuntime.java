@@ -1,10 +1,17 @@
 package script.groovy.runtime;
 
 
+import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.model.FileHeader;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -12,6 +19,7 @@ import script.ScriptRuntime;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.classloader.ClassHolder;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
+import script.utils.CmdUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +28,7 @@ import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -116,6 +125,7 @@ public class GroovyRuntime extends ScriptRuntime {
 
         return false;
     }
+
     public boolean addClassAnnotationHandler(ClassAnnotationHandler handler) {
         if (handler != null && !annotationHandlers.contains(handler)) {
             boolean bool = annotationHandlers.add(handler);
@@ -135,6 +145,7 @@ public class GroovyRuntime extends ScriptRuntime {
         }
         return false;
     }
+
     public boolean removeClassAnnotationGlobalHandler(ClassAnnotationGlobalHandler handler) {
         if (handler != null) {
             boolean bool = annotationGlobalHandlers.remove(handler);
@@ -143,6 +154,7 @@ public class GroovyRuntime extends ScriptRuntime {
         }
         return false;
     }
+
     private void closeLibClassloader(URLClassLoader oldLibClassLoader) {
         if (libClassLoader != null) {
             try {
@@ -161,27 +173,73 @@ public class GroovyRuntime extends ScriptRuntime {
 
         if (parentClassLoader == null)
             parentClassLoader = GroovyRuntime.class.getClassLoader();
+        List<URL> urls = new ArrayList<>();
+        File pomFile = new File(path + "pom.xml");
+        if (pomFile.exists()) {
+            try {
+                String pomStr = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
+                if(pomStr.contains("AllThisDependencies")){
+                    final String result = CmdUtils.execute("mvn install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
+                    LoggerEx.info(TAG, "Maven download dependencies success, path: " + pomFile.getAbsolutePath());
+                    int allThisDependenciesIndexStart = pomStr.indexOf("<!--AllThisDependencies");
+                    int allThisDependenciesIndexEnd = pomStr.indexOf("AllThisDependencies-->");
+                    String dependencies = pomStr.substring(allThisDependenciesIndexStart + "<!--AllThisDependencies".length(), allThisDependenciesIndexEnd);
+                    JSONArray allDependencies = JSON.parseArray(dependencies);
+                    if(allDependencies != null && !allDependencies.isEmpty()){
+                        File libsPath = new File(path + "/libs");
+                        if(!libsPath.exists()){
+                            libsPath.mkdirs();
+                        }
+                        for (Object o : allDependencies){
+                            if(o instanceof JSONObject){
+                                JSONObject dependency = (JSONObject)o;
+                                if(StringUtils.isNotBlank((String) dependency.get("groupId")) && StringUtils.isNotBlank((String) dependency.get("artifactId")) && StringUtils.isNotBlank((String) dependency.get("version"))){
+                                    String[] groupDir =  ((String) dependency.get("groupId")).split("\\.");
+                                    String groupDirStr = "";
+                                    for (int i = 0; i < groupDir.length; i++) {
+                                        groupDirStr += groupDir[i] + File.separator;
+                                    }
+                                    if(groupDirStr != ""){
+                                        String jarDir = System.getProperty("user.home") + File.separator + ".m2" + File.separator + "repository" + File.separator + groupDirStr + dependency.get("artifactId") + File.separator + dependency.get("version");
+                                        String jarPath = jarDir + File.separator + dependency.get("artifactId") + "-" +  dependency.get("version") + ".jar";
+                                        CmdUtils.execute("cp " + jarPath + " " + libsPath.getAbsolutePath());
+                                    }
+                                }else {
+                                    LoggerEx.error(TAG, "The dependency is not illegal, dependency: " + JSON.toJSONString(dependency) + ",path: " + pomFile.getAbsolutePath());
+                                }
+
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable e) {
+                LoggerEx.error(TAG, "Maven download dependencies err, path: " + pomFile.getAbsolutePath() + ",errMsg: " + e.getMessage());
+                throw new CoreException(ChatErrorCodes.ERROR_MAVEN_INSTALL_ERROR, "Maven download dependencies err, path: " + pomFile.getAbsolutePath() + ",errMsg: " + e.getMessage());
+            }
+        }
         File libsPath = new File(path + "/libs");
         if (libsPath.exists() && libsPath.isDirectory()) {
-            List<URL> urls = new ArrayList<>();
             Collection<File> jars = FileUtils.listFiles(libsPath,
                     FileFilterUtils.suffixFileFilter(".jar"),
                     FileFilterUtils.directoryFileFilter());
+            String loadJarsPath = "";
             for (File jar : jars) {
                 String path = "jar:file://" + jar.getAbsolutePath() + "!/";
                 try {
                     urls.add(jar.toURI().toURL());
-                    LoggerEx.info(TAG, "Loaded jar " + jar.getAbsolutePath());
+                    loadJarsPath += jar.getAbsolutePath() + ";";
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
-                    LoggerEx.warn(TAG, "MalformedURL " + path + " while load jars, error " + ExceptionUtils.getFullStackTrace(e));
+                    LoggerEx.warn(TAG, "MalformedURL " + path + " while load jars, error " + e.getMessage());
                 }
             }
-            if (!urls.isEmpty()) {
-                URL[] theUrls = new URL[urls.size()];
-                urls.toArray(theUrls);
-                parentClassLoader = new URLClassLoader(theUrls, parentClassLoader);
-            }
+            LoggerEx.info(TAG, "Loaded jars " + loadJarsPath);
+        }
+
+        if (!urls.isEmpty()) {
+            URL[] theUrls = new URL[urls.size()];
+            urls.toArray(theUrls);
+            parentClassLoader = new URLClassLoader(theUrls, parentClassLoader);
         }
 
         if (runtimeBootListener != null) {
@@ -281,11 +339,11 @@ public class GroovyRuntime extends ScriptRuntime {
         if (handlerGlobalMap != null && !handlerGlobalMap.isEmpty()) {
             Collection<ClassAnnotationGlobalHandler> handlers = annotationGlobalHandlers;
             for (ClassAnnotationGlobalHandler annotationHandler : handlers) {
-                if(annotationHandler.isBean()){
+                if (annotationHandler.isBean()) {
                     Map<String, Class<?>> values = handlerGlobalMap.get(annotationHandler);
-                    if(values != null){
-                        for (Class<?> c : values.values()){
-                            if(ReflectionUtil.canBeInitiated(c))
+                    if (values != null) {
+                        for (Class<?> c : values.values()) {
+                            if (ReflectionUtil.canBeInitiated(c))
                                 beanFactory.getClassBean(c);
                         }
                     }
@@ -310,11 +368,11 @@ public class GroovyRuntime extends ScriptRuntime {
         if (handlerMap != null && !handlerMap.isEmpty()) {
             Collection<ClassAnnotationHandler> handlers = annotationHandlers;
             for (ClassAnnotationHandler annotationHandler : handlers) {
-                if(annotationHandler.isBean()){
+                if (annotationHandler.isBean()) {
                     Map<String, Class<?>> values = handlerMap.get(annotationHandler);
-                    if(values != null){
-                        for (Class<?> c : values.values()){
-                            if(ReflectionUtil.canBeInitiated(c))
+                    if (values != null) {
+                        for (Class<?> c : values.values()) {
+                            if (ReflectionUtil.canBeInitiated(c))
                                 beanFactory.getClassBean(c);
                         }
                     }
@@ -340,7 +398,7 @@ public class GroovyRuntime extends ScriptRuntime {
                 Map<String, Class<?>> values = handlerGlobalMap.get(annotationHandler);
                 if (values != null) {
                     try {
-                       annotationHandler.handleAnnotatedClassesInjectBean(this);
+                        annotationHandler.handleAnnotatedClassesInjectBean(this);
                     } catch (Throwable t) {
                         t.printStackTrace();
                         LoggerEx.fatal(TAG,
@@ -396,6 +454,34 @@ public class GroovyRuntime extends ScriptRuntime {
 
     public <T> Object newObject(String groovyPath) {
         return newObject(groovyPath, null);
+    }
+
+    private void unzip(File zipFile, String dir, String passwd) {
+        ZipFile zFile = null;
+        try {
+            zFile = new ZipFile(zipFile);
+            File destDir = new File(dir);
+            if (destDir.isDirectory() && !destDir.exists()) {
+                destDir.mkdir();
+            }
+            if (zFile.isEncrypted()) {
+                zFile.setPassword(passwd.toCharArray());
+            }
+            zFile.extractAll(dir);
+
+            List<FileHeader> headerList = zFile.getFileHeaders();
+            List<File> extractedFileList = new ArrayList<File>();
+            for (FileHeader fileHeader : headerList) {
+                if (!fileHeader.isDirectory()) {
+                    extractedFileList.add(new File(destDir, fileHeader.getFileName()));
+                }
+            }
+            File[] extractedFiles = new File[extractedFileList.size()];
+            extractedFileList.toArray(extractedFiles);
+        } catch (net.lingala.zip4j.exception.ZipException e) {
+            e.printStackTrace();
+            LoggerEx.error(TAG, "password is error,destFile:" + dir);
+        }
     }
 
     public <T> Object newObject(String groovyPath,

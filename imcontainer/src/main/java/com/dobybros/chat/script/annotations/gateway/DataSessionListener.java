@@ -6,9 +6,9 @@ import chat.utils.PropertiesContainer;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
 import com.alibaba.fastjson.JSON;
-import com.docker.rpc.QueueSimplexListener;
 import com.docker.server.OnlineServer;
-import com.docker.utils.GroovyCloudBean;
+import com.docker.storage.kafka.BaseKafkaConfCenter;
+import com.docker.storage.kafka.KafkaProducerHandler;
 import com.docker.utils.ScriptHttpUtils;
 
 import java.nio.charset.Charset;
@@ -21,12 +21,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * Description：
  */
 public class DataSessionListener {
-    private Map<String, TimerTaskEx> serviceTimerMap = new ConcurrentHashMap();
-    private QueueSimplexListener queueSimplexListener = (QueueSimplexListener) GroovyCloudBean.getBean(QueueSimplexListener.class);
-
+    private Map<String, TimerTaskEx> serviceTimerMap = new ConcurrentHashMap<>();
+    private KafkaProducerHandler kafkaProducerHandler = null;
     //store data to monitor by timer
-    public void restoreData(String userId, String service) {
+    void restoreData(String userId, String service) {
         cancelStoreDataTimer(userId, service);
+        if(kafkaProducerHandler == null){
+            kafkaProducerHandler = new KafkaProducerHandler(BaseKafkaConfCenter.getInstance().getKafkaConfCenter());
+            kafkaProducerHandler.connect();
+        }
         TimerTaskEx storeDataTimer = new TimerTaskEx() {
             @Override
             public void execute() {
@@ -35,7 +38,7 @@ public class DataSessionListener {
                 dataMap.put("roomIdService", getRoomIdService(userId, service));
                 dataMap.put("server", OnlineServer.getInstance().getServer());
                 dataMap.put("data", data);
-                queueSimplexListener.send("GatewayMemoryBackUp", JSON.toJSONString(dataMap).getBytes(Charset.defaultCharset()));
+                kafkaProducerHandler.send("GatewayMemoryBackUp", JSON.toJSONString(dataMap).getBytes(Charset.defaultCharset()));
             }
         };
         TimerEx.schedule(storeDataTimer, 30000L, 5000L);
@@ -59,6 +62,10 @@ public class DataSessionListener {
 
     void removeMonitorRoomData(String roomId, String service) {
         cancelStoreDataTimer(roomId, service);
+        if(kafkaProducerHandler != null){
+            kafkaProducerHandler.disconnect();
+            kafkaProducerHandler = null;
+        }
         Result result = ScriptHttpUtils.post(JSON.toJSONString(getMonitorParams(roomId, service)), PropertiesContainer.getInstance().getProperty("gateway.monitor.url") + "/cleardata", getMonitorHeaders(), Result.class);
         if (result == null || !result.success()) {
             TimerEx.schedule(new TimerTaskEx() {
@@ -101,5 +108,9 @@ public class DataSessionListener {
     //get room data
     public Object getRoomData(String userId, String service) {
         return null;
+    }
+
+    public boolean backUpMemory(){
+        return false;
     }
 }

@@ -631,6 +631,13 @@ public class ScriptManager implements ShutdownListener {
     @Override
     public synchronized void shutdown() {
         isShutdown = true;
+        if(!killProcess){
+            try {
+                dockerStatusService.deleteDockerStatus(OnlineServer.getInstance().getServer());
+            } catch (CoreException e) {
+                e.printStackTrace();
+            }
+        }
         Collection<String> keys = scriptRuntimeMap.keySet();
         for (String key : keys) {
             BaseRuntime runtime = scriptRuntimeMap.get(key);

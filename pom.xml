@@ -544,4 +544,11 @@
 
 		</plugins>
 	</build>
+	<distributionManagement>
+		<repository>
+			<id>releases</id>
+			<name>Nexus Release Repository</name>
+			<url>http://deploy.wonderchats.com:8081/nexus/repository/maven-releases/</url>
+		</repository>
+	</distributionManagement>
 </project>
