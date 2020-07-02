@@ -6,11 +6,9 @@ import chat.utils.PropertiesContainer;
 import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
 import com.alibaba.fastjson.JSON;
-import com.docker.rpc.QueueSimplexListener;
 import com.docker.server.OnlineServer;
 import com.docker.storage.kafka.BaseKafkaConfCenter;
 import com.docker.storage.kafka.KafkaProducerHandler;
-import com.docker.utils.GroovyCloudBean;
 import com.docker.utils.ScriptHttpUtils;
 
 import java.nio.charset.Charset;
@@ -22,10 +20,8 @@ import java.util.Map;
  * Description：
  */
 public class DataServiceUserSessionListener {
-    QueueSimplexListener queueSimplexListener = (QueueSimplexListener) GroovyCloudBean.getBean(QueueSimplexListener.class);
     private TimerTaskEx storeDataTimer = null;
     private KafkaProducerHandler kafkaProducerHandler = null;
-    private final String SERVERSERVICESEPARATOR = "###";
     private String parentUserId;
 
     private String userId;
@@ -68,6 +64,7 @@ public class DataServiceUserSessionListener {
         cancelStoreDataTimer();
         if(kafkaProducerHandler != null){
             kafkaProducerHandler.disconnect();
+            kafkaProducerHandler = null;
         }
         Result result = ScriptHttpUtils.post(JSON.toJSONString(getMonitorParams()), PropertiesContainer.getInstance().getProperty("gateway.monitor.url") + "/cleardata", getMonitorHeaders(), Result.class);
         if (result == null || !result.success()) {
