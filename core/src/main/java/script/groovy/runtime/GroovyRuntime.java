@@ -206,7 +206,7 @@ public class GroovyRuntime extends ScriptRuntime {
                                     if (groupDirStr != "") {
                                         String jarDir = System.getProperty("user.home") + File.separator + ".m2" + File.separator + "repository" + File.separator + groupDirStr + dependency.get("artifactId") + File.separator + dependency.get("version");
                                         String jarPath = jarDir + File.separator + dependency.get("artifactId") + "-" + dependency.get("version") + ".jar";
-                                        CmdUtils.execute("cp " + jarPath + " " + libsPath.getAbsolutePath());
+                                        FileUtils.copyFileToDirectory(new File(jarPath), new File(libsPath.getAbsolutePath()));
                                     }
                                 } else {
                                     LoggerEx.error(TAG, "The dependency is not illegal, dependency: " + JSON.toJSONString(dependency) + ",path: " + pomFile.getAbsolutePath());
