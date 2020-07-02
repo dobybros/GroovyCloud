@@ -80,7 +80,7 @@ public class GroovyBooter implements RuntimeBootListener {
             File importPath = new File(path + "/config/imports.groovy");
             StringBuilder importBuilder = null;
             if (importPath.isFile() && importPath.exists()) {
-                LoggerEx.info(TAG, "Start imports " + FilenameUtils.separatorsToUnix(importPath.getAbsolutePath()));
+//                LoggerEx.info(TAG, "Start imports " + FilenameUtils.separatorsToUnix(importPath.getAbsolutePath()));
                 String content = FileUtils.readFileToString(importPath, "utf8");
                 if (!content.endsWith("//THE END\r\n")) {
                     final CommandLine cmdLine = CommandLine.parse("groovy " + FilenameUtils.separatorsToUnix(importPath.getAbsolutePath()));
@@ -108,7 +108,7 @@ public class GroovyBooter implements RuntimeBootListener {
                 FileUtils.writeStringToFile(importPath, content, "utf8");
                 importBuilder = new StringBuilder(content);
                 importBuilder.append("\r\n");
-                LoggerEx.info(TAG, "Generates imports " + FilenameUtils.separatorsToUnix(importPath.getAbsolutePath()));
+//                LoggerEx.info(TAG, "Generates imports " + FilenameUtils.separatorsToUnix(importPath.getAbsolutePath()));
             }
             File loggerPath = new File(path + "/chat/logs/LoggerEx.groovy");
             compileFirstFiles.add(loggerPath);
@@ -121,6 +121,19 @@ public class GroovyBooter implements RuntimeBootListener {
                     FileFilterUtils.directoryFileFilter());
 
             if (importBuilder != null) {
+                //读取文件信息
+                String[] libGroovyFiles = null;
+                File coreFile = new File(path + "coregroovyfiles");
+                if (coreFile.exists()) {
+                    try {
+                        String libGroovyFilesStr = FileUtils.readFileToString(coreFile, "utf-8");
+                        if (libGroovyFilesStr != null) {
+                            libGroovyFiles = libGroovyFilesStr.split("\r\n");
+                        }
+                    } catch (Throwable throwable) {
+                        LoggerEx.warn(TAG, "Read core groovy path failed, reason is " + ExceptionUtils.getFullStackTrace(throwable));
+                    }
+                }
                 for (File file : files) {
                     String absolutePath = FilenameUtils.separatorsToUnix(file.getAbsolutePath());
                     int pathPos = absolutePath.indexOf(path);
@@ -129,39 +142,13 @@ public class GroovyBooter implements RuntimeBootListener {
                         continue;
                     }
                     String key = absolutePath.substring(pathPos + path.length());
-//                    List<String> libPaths = groovyRuntime.getLibPath();
                     boolean ignore = false;
-//                    if (libPaths != null) {
-//                        for (String libPath : libPaths) {
-//                            if (key.startsWith(libPath)) {
-//                                ignore = true;
-////                            LoggerEx.info(TAG, "Ignore lib classes " + key + " while parsing. hit lib " + libPath);
-//                                break;
-//                            }
-//                        }
-//                    } else {
-                        //读取文件信息
-                        String[] libGroovyFiles = null;
-                        File coreFile = new File(path + "coregroovyfiles");
-                        if(coreFile.exists()){
-                            try {
-                                String libGroovyFilesStr = FileUtils.readFileToString(coreFile, "utf-8");
-                                if (libGroovyFilesStr != null) {
-                                    libGroovyFiles = libGroovyFilesStr.split("\r\n");
-                                }
-                            } catch (Throwable throwable) {
-                                LoggerEx.warn(TAG, "Read core groovy path failed, reason is " + ExceptionUtils.getFullStackTrace(throwable));
-                            }
+                    if (libGroovyFiles != null) {
+                        List libGroovyFilesList = Arrays.asList(libGroovyFiles);
+                        if (libGroovyFilesList.contains(key)) {
+                            ignore = true;
                         }
-                        if (libGroovyFiles != null) {
-                            List libGroovyFilesList = Arrays.asList(libGroovyFiles);
-                            if (libGroovyFilesList.contains(key)) {
-                                ignore = true;
-//                            LoggerEx.info(TAG, "Ignore lib classes " + key + " while parsing. hit lib " + libPath);
-//                                break;
-                            }
-                        }
-//                    }
+                    }
                     if (ignore)
                         continue;
                     int pos = key.lastIndexOf(".");

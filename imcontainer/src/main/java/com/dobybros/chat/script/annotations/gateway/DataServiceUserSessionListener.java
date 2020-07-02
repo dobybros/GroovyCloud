@@ -8,13 +8,13 @@ import chat.utils.TimerTaskEx;
 import com.alibaba.fastjson.JSON;
 import com.docker.rpc.QueueSimplexListener;
 import com.docker.server.OnlineServer;
+import com.docker.storage.kafka.BaseKafkaConfCenter;
+import com.docker.storage.kafka.KafkaProducerHandler;
 import com.docker.utils.GroovyCloudBean;
 import com.docker.utils.ScriptHttpUtils;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,6 +24,7 @@ import java.util.Map;
 public class DataServiceUserSessionListener {
     QueueSimplexListener queueSimplexListener = (QueueSimplexListener) GroovyCloudBean.getBean(QueueSimplexListener.class);
     private TimerTaskEx storeDataTimer = null;
+    private KafkaProducerHandler kafkaProducerHandler = null;
     private final String SERVERSERVICESEPARATOR = "###";
     private String parentUserId;
 
@@ -32,15 +33,19 @@ public class DataServiceUserSessionListener {
     private String service;
     public void restoreData() {
         cancelStoreDataTimer();
+        if(kafkaProducerHandler == null){
+            kafkaProducerHandler = new KafkaProducerHandler(BaseKafkaConfCenter.getInstance().getKafkaConfCenter());
+            kafkaProducerHandler.connect();
+        }
         storeDataTimer = new TimerTaskEx() {
             @Override
             public void execute() {
                 Object data = getRoomData();
-                List<Object> dataList = new ArrayList<>();
-                dataList.add(getUserId());
-                dataList.add(getService() + SERVERSERVICESEPARATOR + OnlineServer.getInstance().getServer());
-                dataList.add(data);
-                queueSimplexListener.send("GatewayMemoryBackUp", JSON.toJSONString(dataList).getBytes(Charset.defaultCharset()));
+                Map<String, Object> dataMap = new HashMap<>();
+                dataMap.put("roomIdService", getRoomIdService(userId, service));
+                dataMap.put("server", OnlineServer.getInstance().getServer());
+                dataMap.put("data", data);
+                kafkaProducerHandler.send("GatewayMemoryBackUp", JSON.toJSONString(dataMap).getBytes(Charset.defaultCharset()));
             }
         };
         TimerEx.schedule(storeDataTimer, 20000L, 5000L);
@@ -61,6 +66,9 @@ public class DataServiceUserSessionListener {
     }
     void removeMonitorRoomData() {
         cancelStoreDataTimer();
+        if(kafkaProducerHandler != null){
+            kafkaProducerHandler.disconnect();
+        }
         Result result = ScriptHttpUtils.post(JSON.toJSONString(getMonitorParams()), PropertiesContainer.getInstance().getProperty("gateway.monitor.url") + "/cleardata", getMonitorHeaders(), Result.class);
         if (result == null || !result.success()) {
             TimerEx.schedule(new TimerTaskEx() {
@@ -98,7 +106,9 @@ public class DataServiceUserSessionListener {
     public void saveRoomData(Object data) {
 
     }
-
+    public boolean backUpMemory(){
+        return false;
+    }
     public Object getRoomData() {
         return null;
     }

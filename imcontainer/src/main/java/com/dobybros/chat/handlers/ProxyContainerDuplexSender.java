@@ -29,8 +29,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ProxyContainerDuplexSender {
     @Resource
     RpcProxyContainerDuplexSender rpcProxyContainerDuplexSender;
-    @Resource
-    QueueProxyContainerDuplexSender queueProxyContainerDuplexSender;
+//    @Resource
+//    QueueProxyContainerDuplexSender queueProxyContainerDuplexSender;
     @Resource
     DockerStatusServiceImpl dockerStatusService;
     private final String TAG = ProxyContainerDuplexSender.class.getSimpleName();
@@ -58,7 +58,7 @@ public class ProxyContainerDuplexSender {
                 case ProxyContainerTransportType.TYPE_RPC:
                     return rpcProxyContainerDuplexSender.sendIM(request, server, clientAdapterStatusListener);
                 case ProxyContainerTransportType.TYPE_QUEUE:
-                    queueProxyContainerDuplexSender.sendIM(request, server);
+//                    queueProxyContainerDuplexSender.sendIM(request, server);
                     break;
                 default:
                     break;
@@ -72,7 +72,7 @@ public class ProxyContainerDuplexSender {
                 case ProxyContainerTransportType.TYPE_RPC:
                     return rpcProxyContainerDuplexSender.sendProxy(request, server, clientAdapterStatusListener);
                 case ProxyContainerTransportType.TYPE_QUEUE:
-                    queueProxyContainerDuplexSender.sendProxy(request, server);
+//                    queueProxyContainerDuplexSender.sendProxy(request, server);
                     break;
                 default:
                     break;

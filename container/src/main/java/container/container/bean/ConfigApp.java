@@ -1,5 +1,7 @@
 package container.container.bean;
 
+import com.docker.storage.kafka.BaseKafkaConfCenter;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -26,14 +28,6 @@ public class ConfigApp {
     private String gridUsername;
     private String gridPassword;
 
-    private String kafkaServers;
-    private String kafkaProducerKeySerializer;
-    private String kafkaProducerValueSerializer;
-    private String kafkaProducerRetries;
-    private String kafkaProducerLingerMs;
-    private String kafkaConsumerKeySerializer;
-    private String kafkaConsumerValueSerializer;
-
     private String ipPrefix;
     private String ethPrefix;
     private String type;
@@ -59,8 +53,10 @@ public class ConfigApp {
     public ConfigApp(){
         InputStream inStream = ConfigApp.class.getClassLoader().getResourceAsStream("groovycloud.properties");
         InputStream appInStream = ConfigApp.class.getClassLoader().getResourceAsStream("application.properties");
+        InputStream kafkaProducerInStream = ConfigApp.class.getClassLoader().getResourceAsStream("config/kafka/producer.properties");
         Properties prop = new Properties();
-        Properties apppProp = new Properties();
+        Properties appProp = new Properties();
+        Properties kafkaProducerProp = new Properties();
         try {
             prop.load(inStream);
             mongoHost = prop.getProperty("database.host");
@@ -75,13 +71,7 @@ public class ConfigApp {
             gridDbName = prop.getProperty("gridfs.files.dbname");
             gridUsername = prop.getProperty("gridfs.username");
             gridPassword = prop.getProperty("gridfs.password");
-            kafkaServers = prop.getProperty("bootstrap.servers");
-            kafkaProducerKeySerializer = prop.getProperty("producer.key.serializer");
-            kafkaProducerValueSerializer = prop.getProperty("producer.value.serializer");
-            kafkaProducerRetries = prop.getProperty("retries");
-            kafkaProducerLingerMs = prop.getProperty("linger.ms");
-            kafkaConsumerKeySerializer = prop.getProperty("consumer.key.serializer");
-            kafkaConsumerValueSerializer = prop.getProperty("consumer.value.serializer");
+
             ipPrefix = prop.getProperty("server.ip.prefix");
             ethPrefix = prop.getProperty("server.eth.prefix");
             type = prop.getProperty("type");
@@ -103,14 +93,22 @@ public class ConfigApp {
             dockerName = prop.getProperty("docker.name");
             scaleInstanceId = prop.getProperty("scale.instanceId");
             redisHost = prop.getProperty("db.redis.uri");
-            apppProp.load(appInStream);
-            serverPort = apppProp.getProperty("server.port");
+            appProp.load(appInStream);
+            serverPort = appProp.getProperty("server.port");
+            if(kafkaProducerInStream != null){
+                kafkaProducerProp.load(kafkaProducerInStream);
+                BaseKafkaConfCenter.getInstance().setKafkaConfCenter(kafkaProducerProp, null);
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             try {
                 inStream.close();
                 appInStream.close();
+                if(kafkaProducerInStream != null){
+                    kafkaProducerInStream.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -162,34 +160,6 @@ public class ConfigApp {
 
     public String getGridPassword() {
         return gridPassword;
-    }
-
-    public String getKafkaServers() {
-        return kafkaServers;
-    }
-
-    public String getKafkaProducerKeySerializer() {
-        return kafkaProducerKeySerializer;
-    }
-
-    public String getKafkaProducerValueSerializer() {
-        return kafkaProducerValueSerializer;
-    }
-
-    public String getKafkaProducerRetries() {
-        return kafkaProducerRetries;
-    }
-
-    public String getKafkaProducerLingerMs() {
-        return kafkaProducerLingerMs;
-    }
-
-    public String getKafkaConsumerKeySerializer() {
-        return kafkaConsumerKeySerializer;
-    }
-
-    public String getKafkaConsumerValueSerializer() {
-        return kafkaConsumerValueSerializer;
     }
 
     public String getIpPrefix() {

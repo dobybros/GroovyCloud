@@ -119,15 +119,15 @@ public class KafkaSimplexListener implements QueueSimplexListener {
 
     @Override
     public void setConfig(Map<String, String> config) {
-        producerProperties = new Properties();
-        producerProperties.put(org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, config.get("bootstrap.servers"));
-        producerProperties.put(org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, config.get("producer.key.serializer"));
-        producerProperties.put(org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, config.get("producer.value.serializer"));
-        producerProperties.put(org.apache.kafka.clients.producer.ProducerConfig.RETRIES_CONFIG, config.get("retries"));
-        producerProperties.put(org.apache.kafka.clients.producer.ProducerConfig.LINGER_MS_CONFIG, config.get("linger.ms"));
-        consumerProperties = new Properties();
-        consumerProperties.put(org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, config.get("bootstrap.servers"));
-        consumerProperties.put(org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, config.get("consumer.key.serializer"));
-        consumerProperties.put(org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, config.get("consumer.value.serializer"));
+//        producerProperties = new Properties();
+//        producerProperties.put(org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, config.get("bootstrap.servers"));
+//        producerProperties.put(org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, config.get("producer.key.serializer"));
+//        producerProperties.put(org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, config.get("producer.value.serializer"));
+//        producerProperties.put(org.apache.kafka.clients.producer.ProducerConfig.RETRIES_CONFIG, config.get("retries"));
+//        producerProperties.put(org.apache.kafka.clients.producer.ProducerConfig.LINGER_MS_CONFIG, config.get("linger.ms"));
+//        consumerProperties = new Properties();
+//        consumerProperties.put(org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, config.get("bootstrap.servers"));
+//        consumerProperties.put(org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, config.get("consumer.key.serializer"));
+//        consumerProperties.put(org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, config.get("consumer.value.serializer"));
     }
 }

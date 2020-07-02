@@ -123,13 +123,13 @@ public class BeanApp extends ConfigApp {
                 Class<?> queueSimplexListenerClass = Class.forName("com.docker.rpc.queue.KafkaSimplexListener");
                 instance.queueSimplexListener = (QueueSimplexListener) queueSimplexListenerClass.getDeclaredConstructor().newInstance();
                 Map<String, String> config = new HashMap<>();
-                config.put("bootstrap.servers", instance.getKafkaServers());
-                config.put("producer.key.serializer", instance.getKafkaProducerKeySerializer());
-                config.put("producer.value.serializer", instance.getKafkaProducerValueSerializer());
-                config.put("retries", instance.getKafkaProducerRetries());
-                config.put("linger.ms", instance.getKafkaProducerLingerMs());
-                config.put("consumer.key.serializer", instance.getKafkaConsumerKeySerializer());
-                config.put("consumer.value.serializer", instance.getKafkaConsumerValueSerializer());
+//                config.put("bootstrap.servers", instance.getKafkaServers());
+//                config.put("producer.key.serializer", instance.getKafkaProducerKeySerializer());
+//                config.put("producer.value.serializer", instance.getKafkaProducerValueSerializer());
+//                config.put("retries", instance.getKafkaProducerRetries());
+//                config.put("linger.ms", instance.getKafkaProducerLingerMs());
+//                config.put("consumer.key.serializer", instance.getKafkaConsumerKeySerializer());
+//                config.put("consumer.value.serializer", instance.getKafkaConsumerValueSerializer());
                 instance.queueSimplexListener.setConfig(config);
             } catch (Throwable t) {
                 t.printStackTrace();
