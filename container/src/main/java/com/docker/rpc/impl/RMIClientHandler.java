@@ -41,7 +41,7 @@ public class RMIClientHandler extends RPCClientAdapter {
 //    private AverageCounter averageCounter;
 
     private Long touch;
-    private Long idleCheckPeriod = TimeUnit.SECONDS.toMillis(10);
+    private Long idleCheckPeriod = TimeUnit.SECONDS.toMillis(15);
     private static final String TAG = "RMIClientHandler";
     private Long expireTime;
     private ExpireListener<RPCClientAdapter> expireListener;
@@ -98,7 +98,7 @@ public class RMIClientHandler extends RPCClientAdapter {
         }
 
         public void run() {
-            LoggerEx.info(TAG, "Start monitoring RMI client connection");
+            LoggerEx.info(TAG, "Start monitoring RMI client connection ,rmi: " + rmiId);
             while (isStarted) {
                 if (expireTime != null && expireListener != null) {
                     if (touch + expireTime < System.currentTimeMillis()) {

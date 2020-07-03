@@ -40,6 +40,7 @@ public class DataServiceUserSessionListener {
                 Map<String, Object> dataMap = new HashMap<>();
                 dataMap.put("roomIdService", getRoomIdService(userId, service));
                 dataMap.put("server", OnlineServer.getInstance().getServer());
+                dataMap.put("idc", OnlineServer.getInstance().getLanId());
                 dataMap.put("data", data);
                 kafkaProducerHandler.send("GatewayMemoryBackUp", JSON.toJSONString(dataMap).getBytes(Charset.defaultCharset()));
             }
