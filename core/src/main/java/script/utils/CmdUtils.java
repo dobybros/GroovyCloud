@@ -5,7 +5,7 @@ import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.PumpStreamHandler;
 
-import java.io.ByteArrayOutputStream;
+import java.io.*;
 import java.util.concurrent.TimeUnit;
 
 /**

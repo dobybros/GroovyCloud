@@ -7,6 +7,7 @@ import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
 import groovy.lang.GroovySystem;
 import groovy.lang.MetaClassRegistry;
+import javassist.URLClassPath;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteWatchdog;
@@ -22,9 +23,13 @@ import script.groovy.runtime.classloader.MyGroovyClassLoader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Stack;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -80,7 +85,7 @@ public class GroovyBooter implements RuntimeBootListener {
             File importPath = new File(path + "/config/imports.groovy");
             StringBuilder importBuilder = null;
             if (importPath.isFile() && importPath.exists()) {
-//                LoggerEx.info(TAG, "Start imports " + FilenameUtils.separatorsToUnix(importPath.getAbsolutePath()));
+                LoggerEx.info(TAG, "Start imports " + FilenameUtils.separatorsToUnix(importPath.getAbsolutePath()));
                 String content = FileUtils.readFileToString(importPath, "utf8");
                 if (!content.endsWith("//THE END\r\n")) {
                     final CommandLine cmdLine = CommandLine.parse("groovy " + FilenameUtils.separatorsToUnix(importPath.getAbsolutePath()));
@@ -96,8 +101,6 @@ public class GroovyBooter implements RuntimeBootListener {
 
                     importBuilder = new StringBuilder(content);
                     importBuilder.append("\r\n");
-                } else {
-                    LoggerEx.info(TAG, "Already added imports for " + FilenameUtils.separatorsToUnix(importPath.getAbsolutePath()));
                 }
             } else {
                 String[] strs = new String[]{

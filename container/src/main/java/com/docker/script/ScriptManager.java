@@ -16,6 +16,7 @@ import com.docker.storage.adapters.ServersService;
 import com.docker.storage.adapters.impl.DeployServiceVersionServiceImpl;
 import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
 import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
+import javassist.URLClassPath;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.FileHeader;
 import org.apache.commons.io.FileUtils;
@@ -30,12 +31,13 @@ import script.file.FileAdapter.PathEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.RuntimeBootListener;
 import script.groovy.servlets.grayreleased.GrayReleased;
+import script.utils.CmdUtils;
 import script.utils.ShutdownListener;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
+import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,11 +79,23 @@ public class ScriptManager implements ShutdownListener {
     public static final Boolean DELETELOCAL = false;
     private final int compileOnceNumber = 5;
     private final boolean compileAllService = true;
-    private Integer testCount = 1;
-    private Integer testStatus = 0;
     private String runtimeBootClass;
 
     public void init() {
+        File dockerFile = new File(localPath + "/" + OnlineServer.getInstance().getDockerName());
+        if (dockerFile.exists()) {
+            File[] serviceFiles = dockerFile.listFiles();
+            if(serviceFiles != null){
+                for (File serviceFile : serviceFiles) {
+                    try {
+                        FileUtils.deleteDirectory(new File(localPath + "/" + OnlineServer.getInstance().getDockerName() + "/" + serviceFile.getName() + "/groovy"));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
         if (hotDeployment) {
             TimerEx.schedule(new TimerTaskEx(ScriptManager.class.getSimpleName()) {
                 @Override
@@ -190,19 +204,19 @@ public class ScriptManager implements ShutdownListener {
                     scriptCountDownLatch.await();
                 }
                 if (!services.isEmpty()) {
-                    for(Service service : services){
+                    for (Service service : services) {
                         if (service != null && dockerStatusService != null) {
                             dockerStatusService.addService(OnlineServer.getInstance().getServer(), service);
                         }
                     }
                 }
                 DockerStatus dockerStatus = dockerStatusService.getDockerStatusByServer(OnlineServer.getInstance().getServer());
-                if(dockerStatus.getStatus() != DockerStatus.STATUS_OK){
+                if (dockerStatus.getStatus() != DockerStatus.STATUS_OK) {
                     dockerStatus.setStatus(DockerStatus.STATUS_OK);
                     dockerStatusService.update(OnlineServer.getInstance().getServer(), dockerStatus);
                     LoggerEx.info(TAG, "================ This dockerStatus reload finish =======================");
                 }
-                if(!killProcess){
+                if (!killProcess) {
                     updateServiceVersion(deployServiceVersion);
                 }
                 Collection<String> keys = scriptRuntimeMap.keySet();
@@ -246,6 +260,7 @@ public class ScriptManager implements ShutdownListener {
         }
 
     }
+
     private void updateServiceVersion(DeployServiceVersion deployServiceVersion) {
         try {
             List<ServiceVersion> serviceVersionList = serviceVersionService.getServiceVersionsByType(deployServiceVersion.getServerType(), deployServiceVersion.getType());
@@ -271,6 +286,7 @@ public class ScriptManager implements ShutdownListener {
         }
 
     }
+
     private void complieService(String theServiceVersion, Set<String> remoteServices, List<Service> services) {
         String zipFile = "groovy.zip";
         try {
@@ -329,7 +345,7 @@ public class ScriptManager implements ShutdownListener {
                     String n = localZipFile.getName();
                     n = n.substring(0, n.length() - ".zip".length());
                     localScriptPath = localPath + serverTypePath + service + "/" + n;
-                    FileUtils.deleteDirectory(new File(localScriptPath));
+                    FileUtils.forceDeleteOnExit(new File(localScriptPath));
                     CRC32 crc = new CRC32();
                     crc.update(zipFile.getBytes());
                     long valuePwd = crc.getValue();
@@ -418,18 +434,20 @@ public class ScriptManager implements ShutdownListener {
             }
         }
     }
-    private void handleFailedDeploy(Throwable t){
+
+    private void handleFailedDeploy(Throwable t) {
         try {
             DockerStatus dockerStatus = dockerStatusService.getDockerStatusByServer(OnlineServer.getInstance().getServer());
-            if(dockerStatus != null){
+            if (dockerStatus != null) {
                 dockerStatus.setStatus(DockerStatus.STATUS_FAILED);
                 dockerStatus.setFailedReason(t.getMessage());
                 dockerStatusService.update(OnlineServer.getInstance().getServer(), dockerStatus);
             }
-        }catch(Throwable e){
+        } catch (Throwable e) {
             e.printStackTrace();
         }
     }
+
     private Properties prepareServiceProperties(String localScriptPath, String serviceName) throws Throwable {
         String propertiesPath = localScriptPath + "/config.properties";
         Properties properties = new Properties();
@@ -503,7 +521,7 @@ public class ScriptManager implements ShutdownListener {
         }
         BaseRuntime runtime = scriptRuntimeMap.get(service);
         if (runtime == null) {
-            LoggerEx.error(TAG, "Service " + service + "'s baseRuntime is null, remoteServersManager serviceMaxVersionMap: "+ JSON.toJSONString(RemoteServersManager.getInstance().getServiceMaxVersionMap()) + ",severType: " + serverType);
+            LoggerEx.error(TAG, "Service " + service + "'s baseRuntime is null, remoteServersManager serviceMaxVersionMap: " + JSON.toJSONString(RemoteServersManager.getInstance().getServiceMaxVersionMap()) + ",severType: " + serverType);
         }
         return runtime;
     }
@@ -512,7 +530,7 @@ public class ScriptManager implements ShutdownListener {
         deployServiceVersion = deployServiceVersionService.getServiceVersion(serverType);
         List<String> finalServiceVersions = new ArrayList<>();
         if (deployServiceVersion != null) {
-            if(deployServiceVersion.getDeployId() != null){
+            if (deployServiceVersion.getDeployId() != null) {
                 dockerStatusService.updateDeployId(OnlineServer.getInstance().getServer(), deployServiceVersion.getDeployId());
             }
             Map<String, String> serviceVersions = deployServiceVersion.getServiceVersions();
@@ -631,7 +649,7 @@ public class ScriptManager implements ShutdownListener {
     @Override
     public synchronized void shutdown() {
         isShutdown = true;
-        if(!killProcess){
+        if (!killProcess) {
             try {
                 dockerStatusService.deleteDockerStatus(OnlineServer.getInstance().getServer());
             } catch (CoreException e) {

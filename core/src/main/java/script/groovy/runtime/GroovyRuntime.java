@@ -175,6 +175,8 @@ public class GroovyRuntime extends ScriptRuntime {
             parentClassLoader = GroovyRuntime.class.getClassLoader();
         List<URL> urls = new ArrayList<>();
         File pomFile = new File(path + "pom.xml");
+        String version = String.valueOf(System.currentTimeMillis());
+        String pomLibsPath = path + "/pomlibs/" + version;
         if (pomFile.exists()) {
             try {
                 String pomStr = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
@@ -190,7 +192,7 @@ public class GroovyRuntime extends ScriptRuntime {
                     String dependencies = pomStr.substring(allThisDependenciesIndexStart + "<!--AllThisDependencies".length(), allThisDependenciesIndexEnd);
                     JSONArray allDependencies = JSON.parseArray(dependencies);
                     if (allDependencies != null && !allDependencies.isEmpty()) {
-                        File libsPath = new File(path + "/libs");
+                        File libsPath = new File(pomLibsPath);
                         if (!libsPath.exists()) {
                             libsPath.mkdirs();
                         }
@@ -221,12 +223,21 @@ public class GroovyRuntime extends ScriptRuntime {
                 throw new CoreException(ChatErrorCodes.ERROR_MAVEN_INSTALL_ERROR, "Maven download dependencies err, path: " + pomFile.getAbsolutePath() + ",errMsg: " + e.getMessage());
             }
         }
-        File libsPath = new File(path + "/libs");
-        if (libsPath.exists() && libsPath.isDirectory()) {
-            Collection<File> jars = FileUtils.listFiles(libsPath,
+        Collection<File> jars = new ArrayList<>();
+//        File libsPath = new File(path + "/libs");
+//        if (libsPath.exists() && libsPath.isDirectory()) {
+//            jars.addAll(FileUtils.listFiles(libsPath,
+//                    FileFilterUtils.suffixFileFilter(".jar"),
+//                    FileFilterUtils.directoryFileFilter()));
+//        }
+        File libsPomPath = new File(pomLibsPath);
+        if (libsPomPath.exists() && libsPomPath.isDirectory()) {
+            jars.addAll(FileUtils.listFiles(libsPomPath,
                     FileFilterUtils.suffixFileFilter(".jar"),
-                    FileFilterUtils.directoryFileFilter());
-            String loadJarsPath = "";
+                    FileFilterUtils.directoryFileFilter()));
+        }
+        String loadJarsPath = "";
+        if(!jars.isEmpty()){
             for (File jar : jars) {
                 String path = "jar:file://" + jar.getAbsolutePath() + "!/";
                 try {
