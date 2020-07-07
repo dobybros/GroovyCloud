@@ -16,7 +16,6 @@ import com.docker.storage.adapters.ServersService;
 import com.docker.storage.adapters.impl.DeployServiceVersionServiceImpl;
 import com.docker.storage.adapters.impl.DockerStatusServiceImpl;
 import com.docker.storage.adapters.impl.ServiceVersionServiceImpl;
-import javassist.URLClassPath;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.FileHeader;
 import org.apache.commons.io.FileUtils;
@@ -31,13 +30,9 @@ import script.file.FileAdapter.PathEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.RuntimeBootListener;
 import script.groovy.servlets.grayreleased.GrayReleased;
-import script.utils.CmdUtils;
 import script.utils.ShutdownListener;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -64,6 +59,7 @@ public class ScriptManager implements ShutdownListener {
     private Boolean hotDeployment;
     //加载时，当某个包发生错误是否强制退出进程(开发环境不退出，线上退出)
     private Boolean killProcess;
+    private Boolean useHulkAdmin;
     private String serverType;
     private String remotePath;
     private String localPath;
@@ -216,7 +212,7 @@ public class ScriptManager implements ShutdownListener {
                     dockerStatusService.update(OnlineServer.getInstance().getServer(), dockerStatus);
                     LoggerEx.info(TAG, "================ This dockerStatus reload finish =======================");
                 }
-                if (!killProcess) {
+                if (!useHulkAdmin) {
                     updateServiceVersion(deployServiceVersion);
                 }
                 Collection<String> keys = scriptRuntimeMap.keySet();
@@ -736,6 +732,14 @@ public class ScriptManager implements ShutdownListener {
 
     public void setKillProcess(Boolean killProcess) {
         this.killProcess = killProcess;
+    }
+
+    public Boolean getUseHulkAdmin() {
+        return useHulkAdmin;
+    }
+
+    public void setUseHulkAdmin(Boolean useHulkAdmin) {
+        this.useHulkAdmin = useHulkAdmin;
     }
 
     public Map<String, Integer> getDefalutServiceVersionMap() {

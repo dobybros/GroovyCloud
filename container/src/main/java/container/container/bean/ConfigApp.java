@@ -49,6 +49,7 @@ public class ConfigApp {
     private String fileBucket;
     private String dockerName;
     private String scaleInstanceId;
+    private String useHulkAdmin;
 
     public ConfigApp(){
         InputStream inStream = ConfigApp.class.getClassLoader().getResourceAsStream("groovycloud.properties");
@@ -93,6 +94,7 @@ public class ConfigApp {
             dockerName = prop.getProperty("docker.name");
             scaleInstanceId = prop.getProperty("scale.instanceId");
             redisHost = prop.getProperty("db.redis.uri");
+            useHulkAdmin = prop.getProperty("useHulkAdmin");
             appProp.load(appInStream);
             serverPort = appProp.getProperty("server.port");
             if(kafkaProducerInStream != null){
@@ -241,6 +243,10 @@ public class ConfigApp {
 
     public String getKillProcess() {
         return killProcess;
+    }
+
+    public String getUseHulkAdmin() {
+        return useHulkAdmin;
     }
 
     public String getType() {

@@ -297,7 +297,7 @@ public class RemoteServerHandler {
             }
         } else {
             LoggerEx.error(TAG, "Remote server is unavailabe, host: " + this.serviceStubManager.getHost());
-            throw new CoreException(ChatErrorCodes.ERROR_SERVER_CONNECT_FAILED, "Remote server is unavailabe, host: " + this.serviceStubManager.getHost());
+            throw new CoreException(ChatErrorCodes.ERROR_CALLREMOTE_BY_HTTP_FAILED, "Remote server is unavailabe, host: " + this.serviceStubManager.getHost());
         }
         return null;
     }

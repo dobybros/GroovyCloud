@@ -51,6 +51,7 @@ public class ProxyBeanApp extends IMBeanApp {
             instance.scriptManager.setRuntimeBootClass(instance.getRuntimeBootClass());
             instance.scriptManager.setHotDeployment(Boolean.valueOf(instance.getHotDeployment()));
             instance.scriptManager.setKillProcess(Boolean.valueOf(instance.getKillProcess()));
+            instance.scriptManager.setUseHulkAdmin(Boolean.valueOf(instance.getUseHulkAdmin()));
             instance.scriptManager.setServerType(instance.getServerType());
         }
         return instance.scriptManager;
