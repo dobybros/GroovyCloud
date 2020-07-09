@@ -108,6 +108,7 @@ public abstract class Channel {
 		public static final int CLOSE = 60;
 		public static final int CLOSE_USEREXPIRED = 70;
 		public static final int CLOSE_DESTROYED = 80;
+		public static final int CLOSE_DESTROYED_NOTDELETEMONITORMEMORY = 85;
 		public static final int CLOSE_SHUTDOWN = 90;
 		public static final int CLOSE_MUSTUPGRADE = 100;
 		public static final int CLOSE_PASSWORDCHANGED = 110;

@@ -1117,6 +1117,12 @@ public class RedisHandler {
         });
     }
 
+    public boolean sismembers(String key, String memeber) throws CoreException {
+        return doJedisExecute(jedis -> {
+            return jedis.sismember(key, memeber);
+        });
+    }
+
     public Long srem(String key, String... members) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.srem(key, members);

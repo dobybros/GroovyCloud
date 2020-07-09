@@ -27,7 +27,7 @@ public abstract class ServiceUserSessionListener extends DataServiceUserSessionL
 
     public void sessionClosed(int close) {
         if(backUpMemory()){
-            removeMonitorRoomData();
+            removeMonitorRoomData(close);
         }
     }
 

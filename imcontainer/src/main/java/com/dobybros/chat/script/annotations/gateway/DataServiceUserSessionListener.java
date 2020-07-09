@@ -62,19 +62,21 @@ public class DataServiceUserSessionListener {
         }
         return null;
     }
-    void removeMonitorRoomData() {
+    void removeMonitorRoomData(int close) {
         cancelStoreDataTimer();
         if(kafkaProducerHandler != null){
             kafkaProducerHandler.disconnect();
             kafkaProducerHandler = null;
         }
-        Result result = ScriptHttpUtils.post(JSON.toJSONString(getMonitorParams()), PropertiesContainer.getInstance().getProperty("gateway.monitor.url") + "/cleardata", getMonitorHeaders(), Result.class);
+        Map params = getMonitorParams();
+        params.put("close", close);
+        Result result = ScriptHttpUtils.post(JSON.toJSONString(params), PropertiesContainer.getInstance().getProperty("gateway.monitor.url") + "/cleardata", getMonitorHeaders(), Result.class);
         if (result == null || !result.success()) {
             TimerEx.schedule(new TimerTaskEx() {
                 int tryTimes = 0;
                 @Override
                 public void execute() {
-                    Result theResult = ScriptHttpUtils.post(JSON.toJSONString(getMonitorParams()), PropertiesContainer.getInstance().getProperty("gateway.monitor.url") + "/cleardata", getMonitorHeaders(), Result.class);
+                    Result theResult = ScriptHttpUtils.post(JSON.toJSONString(params), PropertiesContainer.getInstance().getProperty("gateway.monitor.url") + "/cleardata", getMonitorHeaders(), Result.class);
                     if(theResult != null && theResult.success()){
                         this.cancel();
                     }

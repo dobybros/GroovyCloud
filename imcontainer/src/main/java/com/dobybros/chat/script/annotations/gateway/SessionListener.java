@@ -21,7 +21,7 @@ public abstract class SessionListener extends DataSessionListener {
 
     public void sessionClosed(String userId, String service, int close) {
         if(backUpMemory()){
-            removeMonitorRoomData(userId, service);
+            removeMonitorRoomData(userId, service, close);
         }
     }
 
