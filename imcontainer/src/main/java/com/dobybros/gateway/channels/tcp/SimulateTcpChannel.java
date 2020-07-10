@@ -1,19 +1,19 @@
-package com.dobybros.gateway.channels.tcp
+package com.dobybros.gateway.channels.tcp;
 
-import chat.logs.LoggerEx
-import com.dobybros.chat.binary.data.Data
-import com.dobybros.chat.handlers.ProxyContainerDuplexSender
-import com.dobybros.chat.handlers.imextention.IMExtensionCache
-import com.dobybros.chat.rpc.reqres.balancer.IMProxyRequest
-import com.dobybros.gateway.channels.data.OutgoingData
-import com.dobybros.gateway.channels.data.OutgoingMessage
-import com.dobybros.gateway.onlineusers.OnlineServiceUser
-import com.dobybros.gateway.pack.Pack
-import com.docker.rpc.BinaryCodec
-import com.docker.rpc.remote.stub.RemoteServers
-import com.docker.utils.GroovyCloudBean
-import com.docker.utils.SpringContextUtil
-import org.apache.commons.lang.exception.ExceptionUtils
+import chat.logs.LoggerEx;
+import com.dobybros.chat.binary.data.Data;
+import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
+import com.dobybros.chat.handlers.imextention.IMExtensionCache;
+import com.dobybros.chat.rpc.reqres.balancer.IMProxyRequest;
+import com.dobybros.gateway.channels.data.OutgoingData;
+import com.dobybros.gateway.channels.data.OutgoingMessage;
+import com.dobybros.gateway.onlineusers.OnlineServiceUser;
+import com.dobybros.gateway.pack.Pack;
+import com.docker.rpc.BinaryCodec;
+import com.docker.rpc.remote.stub.RemoteServers;
+import com.docker.utils.GroovyCloudBean;
+import com.docker.utils.SpringContextUtil;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 /**
  * @author lick* @date 2019/11/18
@@ -28,7 +28,7 @@ public class SimulateTcpChannel extends TcpChannel {
     private boolean closed = false;
     private int[] lock = new int[0];
     private Short encodeVersion;
-    private String ip
+    private String ip;
 
     public SimulateTcpChannel(Integer terminal) {
         super(terminal);
@@ -80,7 +80,7 @@ public class SimulateTcpChannel extends TcpChannel {
                         contentType = ((OutgoingData) event).getContentType();
                         break;
                     default:
-                        break
+                        break;
                 }
                 sendProxy(request, contentType);
             } catch (Throwable throwable) {
@@ -106,13 +106,13 @@ public class SimulateTcpChannel extends TcpChannel {
                 try {
                     IMProxyRequest request = buildIMProxyRequest();
                     if (close == ChannelListener.CLOSE_IMMEDIATELY) {
-                        request.setChannelStatus(IMProxyRequest.CHANNELSTATUS_CLOSE_IMMEDIATELY)
+                        request.setChannelStatus(IMProxyRequest.CHANNELSTATUS_CLOSE_IMMEDIATELY);
                     } else {
                         request.setChannelStatus(IMProxyRequest.CHANNELSTATUS_CLOSE);
                     }
                     sendProxy(request, null);
                     try {
-                        imExtensionCache.delNewUserId(userId, service, getTerminal())
+                        imExtensionCache.delNewUserId(userId, service, getTerminal());
                     }catch(Throwable t){
                         LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(t));
                     }
@@ -128,9 +128,9 @@ public class SimulateTcpChannel extends TcpChannel {
         return true;
     }
 
-    public void setImMessageSendInvoke(ProxyContainerDuplexSender imMessageSendInvoke) {
-        this.imMessageSendInvoke = imMessageSendInvoke;
-    }
+//    public void setImMessageSendInvoke(ProxyContainerDuplexSender imMessageSendInvoke) {
+//        this.imMessageSendInvoke = imMessageSendInvoke;
+//    }
 
     private void sendProxy(IMProxyRequest request, String contentType) {
         try {
@@ -151,25 +151,25 @@ public class SimulateTcpChannel extends TcpChannel {
         request.setChannelId(getId());
         request.setService(service);
         request.setUserId(userId);
-        request.setEncode(BinaryCodec.ENCODE_JAVABINARY)
+        request.setEncode(BinaryCodec.ENCODE_JAVABINARY);
         return request;
     }
 
     @Override
     public Short getEncodeVersion() {
-        return encodeVersion
+        return encodeVersion;
     }
 
     void setEncodeVersion(Short encodeVersion) {
-        this.encodeVersion = encodeVersion
+        this.encodeVersion = encodeVersion;
     }
 
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
-    RemoteServers.Server getServer() {
-        return server
+    public RemoteServers.Server getServer() {
+        return server;
     }
 
     public void setServer(RemoteServers.Server server) {
@@ -181,11 +181,11 @@ public class SimulateTcpChannel extends TcpChannel {
     }
 
     @Override
-    String getIp() {
-        return ip
+    public String getIp() {
+        return ip;
     }
 
     void setIp(String ip) {
-        this.ip = ip
+        this.ip = ip;
     }
 }

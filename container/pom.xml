@@ -31,6 +31,12 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>4.2.1</version>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
@@ -39,7 +45,8 @@
                             <addClasspath>true</addClasspath>
                             <mainClass>container.container.ContainerApplication</mainClass>
 <!--                            <classpathPrefix>/home/aculearn/disk/lib/groovycloud-libs/</classpathPrefix>-->
-                            <classpathPrefix>lib/</classpathPrefix>  <!--used for windows -->
+                            <classpathPrefix>libs/</classpathPrefix>  <!--used for windows -->
+                            <classpathLayoutType>repository</classpathLayoutType>
                         </manifest>
                         <!--						<manifestEntries>-->
                         <!--							<Class-Path>lib/cloudcore-0.0.1-SNAPSHOT.jar lib/core-0.0.1-SNAPSHOT.jar lib/mongodbconnector-0.0.1-SNAPSHOT.jar</Class-Path>-->

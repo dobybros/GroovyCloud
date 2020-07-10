@@ -20,7 +20,7 @@
     </fileSet>
     <fileSet>
         <directory>src/main/resources</directory>
-        <outputDirectory>conf</outputDirectory>
+        <outputDirectory>src/main/resources</outputDirectory>
     </fileSet>
     <fileSet>
         <directory>${project.build.directory}</directory>
@@ -30,10 +30,22 @@
         </includes>
     </fileSet>
 </fileSets>
-    <dependencySets>
-        <dependencySet>
-            <!-- 将工程的依赖包打包到lib目录下。 -->
-            <outputDirectory>lib</outputDirectory>
-        </dependencySet>
-    </dependencySets>
+    <files>
+        <file>
+            <source>pom.xml</source>
+            <outputDirectory>bin</outputDirectory>
+            <destName>pom.xml</destName>
+        </file>
+        <file>
+            <source>../pom.xml</source>
+            <outputDirectory>./</outputDirectory>
+            <destName>pom.xml</destName>
+        </file>
+    </files>
+<!--    <dependencySets>-->
+<!--        <dependencySet>-->
+<!--            &lt;!&ndash; 将工程的依赖包打包到lib目录下。 &ndash;&gt;-->
+<!--            <outputDirectory>lib</outputDirectory>-->
+<!--        </dependencySet>-->
+<!--    </dependencySets>-->
 </assembly>

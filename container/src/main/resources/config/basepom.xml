@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>basepom</groupId>
+    <artifactId>basepom</artifactId>
+    <version>1.0</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>groovycloud</groupId>
+            <artifactId>core</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>groovycloud</groupId>
+            <artifactId>MongodbConnector</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>groovycloud</groupId>
+            <artifactId>container</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>groovycloud</groupId>
+            <artifactId>imcontainer</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>groovycloud</groupId>
+            <artifactId>proxycontainer</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>4.2.1</version>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
+            </plugin>
+
+        </plugins>
+
+    </build>
+</project>

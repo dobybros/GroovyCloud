@@ -62,6 +62,8 @@ public class OnlineServer {
 
     private String lanId;
 
+    private String libsPath;
+
     /**
      * rpc ssl certificate
      */
@@ -540,5 +542,13 @@ public class OnlineServer {
 
     public void setMaxUserNumber(Long maxUserNumber) {
         this.maxUserNumber = maxUserNumber;
+    }
+
+    public String getLibsPath() {
+        return libsPath;
+    }
+
+    public void setLibsPath(String libsPath) {
+        this.libsPath = libsPath;
     }
 }

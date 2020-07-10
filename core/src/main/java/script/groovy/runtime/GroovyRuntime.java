@@ -4,6 +4,7 @@ package script.groovy.runtime;
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import chat.utils.PropertiesContainer;
 import chat.utils.ReflectionUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -179,12 +180,22 @@ public class GroovyRuntime extends ScriptRuntime {
         String pomLibsPath = path + "/pomlibs/" + version;
         if (pomFile.exists()) {
             try {
+                String mvnJarsDir = null;
+                Object mvnLibsPath = PropertiesContainer.getInstance().getProperty("libs.path");
+                String mvnSettingPath = "";
+                if(mvnLibsPath != null){
+                    if(StringUtils.isNotBlank(String.valueOf(mvnLibsPath))){
+                        mvnJarsDir = mvnLibsPath.toString();
+                        mvnSettingPath = "-s src/main/resources/config/mvnsettings.xml";
+                    }
+                }
                 String pomStr = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
                 if (pomStr.contains("AllThisDependencies")) {
                     try {
-                        CmdUtils.execute("mvn install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
+                        CmdUtils.execute("mvn " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
                     } catch (IOException e) {
-                        CmdUtils.execute("mvn.cmd install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
+                        LoggerEx.error(TAG, "mvn err, errMsg: " + e.getMessage());
+                        CmdUtils.execute("mvn.cmd " + mvnSettingPath +" install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
                     }
                     LoggerEx.info(TAG, "Maven download dependencies success, path: " + pomFile.getAbsolutePath());
                     int allThisDependenciesIndexStart = pomStr.indexOf("<!--AllThisDependencies");
@@ -196,6 +207,10 @@ public class GroovyRuntime extends ScriptRuntime {
                         if (!libsPath.exists()) {
                             libsPath.mkdirs();
                         }
+                        if(mvnJarsDir == null){
+                            mvnJarsDir = System.getProperty("user.home") + File.separator + ".m2" + File.separator + "repository";
+                        }
+                        LoggerEx.info(TAG, "Base maven jars path: " + mvnJarsDir);
                         for (Object o : allDependencies) {
                             if (o instanceof JSONObject) {
                                 JSONObject dependency = (JSONObject) o;
@@ -206,14 +221,13 @@ public class GroovyRuntime extends ScriptRuntime {
                                         groupDirStr += groupDir[i] + File.separator;
                                     }
                                     if (groupDirStr != "") {
-                                        String jarDir = System.getProperty("user.home") + File.separator + ".m2" + File.separator + "repository" + File.separator + groupDirStr + dependency.get("artifactId") + File.separator + dependency.get("version");
+                                        String jarDir = mvnJarsDir + File.separator + groupDirStr + dependency.get("artifactId") + File.separator + dependency.get("version");
                                         String jarPath = jarDir + File.separator + dependency.get("artifactId") + "-" + dependency.get("version") + ".jar";
                                         FileUtils.copyFileToDirectory(new File(jarPath), new File(libsPath.getAbsolutePath()));
                                     }
                                 } else {
                                     LoggerEx.error(TAG, "The dependency is not illegal, dependency: " + JSON.toJSONString(dependency) + ",path: " + pomFile.getAbsolutePath());
                                 }
-
                             }
                         }
                     }

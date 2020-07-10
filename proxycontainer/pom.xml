@@ -37,6 +37,12 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>4.2.1</version>
+				<extensions>true</extensions>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
@@ -44,7 +50,8 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<mainClass>proxycontainer.proxycontainer.ProxyContainerApplication</mainClass>
-							<classpathPrefix>lib/</classpathPrefix>
+							<classpathPrefix>libs/</classpathPrefix>
+							<classpathLayoutType>repository</classpathLayoutType>
 						</manifest>
 					</archive>
 					<excludes>

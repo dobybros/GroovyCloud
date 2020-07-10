@@ -1,4 +1,5 @@
-set JAR_NAME=imcontainer-1.0.jar
+set JAR_NAME=imcontainer
+set JAR_VERSION=1.0
 set xmx64=2000m
 set xms64=2000m
 set G1NewSizePercent=80
@@ -6,9 +7,12 @@ set G1MaxNewSizePercent=90
 set MaxGCPauseMillis=20
 set rmiThreads=200
 set logsFile=logs
+set libsFile=libs
 set binFile=bin
 cd ..
 if not exist %logsFile%(mkdir %logsFile%)
+if not exist %libsFile%(mkdir %libsFile%)
+
 cd %binFile%
 if "%1" == "debug" (
     set JAVA_DEBUG_OPTS= -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n
@@ -19,9 +23,9 @@ if "%1" == "jmx" (
      goto jmx
 )
 set JAVA_MEM_OPTS= -server --add-exports java.base/jdk.internal.ref=ALL-UNNAMED -Dsun.rmi.transport.tcp.maxConnectionThreads=%rmiThreads% -Xmx%xmx64% -Xms%xms64% -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=%G1NewSizePercent% -XX:G1MaxNewSizePercent=%G1MaxNewSizePercent% -XX:MaxGCPauseMillis=%MaxGCPauseMillis% -Djava.awt.headless=true
-set CONFIG_FILES= -Xbootclasspath/a:../conf/
-echo "Starting the %JAR_NAME%"
-java %JAVA_MEM_OPTS% %JAVA_DEBUG_OPTS% %JAVA_JMX_OPTS% %CONFIG_FILES% -jar ../%JAR_NAME%
+set CONFIG_FILES= -Xbootclasspath/a:../src/main/resources/
+
+java %JAVA_MEM_OPTS% %JAVA_DEBUG_OPTS% %JAVA_JMX_OPTS% %CONFIG_FILES% -jar ../%JAR_NAME%-%JAR_VERSION%.jar
 goto end
 :debug
 echo "debug"
