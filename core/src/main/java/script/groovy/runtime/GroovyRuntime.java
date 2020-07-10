@@ -186,7 +186,7 @@ public class GroovyRuntime extends ScriptRuntime {
                 if(mvnLibsPath != null){
                     if(StringUtils.isNotBlank(String.valueOf(mvnLibsPath))){
                         mvnJarsDir = mvnLibsPath.toString();
-                        mvnSettingPath = "-s src/main/resources/config/mvnsettings.xml";
+                        mvnSettingPath = "-s " + PropertiesContainer.getInstance().getProperty("maven.settings.path");
                     }
                 }
                 String pomStr = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
@@ -194,7 +194,6 @@ public class GroovyRuntime extends ScriptRuntime {
                     try {
                         CmdUtils.execute("mvn " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
                     } catch (IOException e) {
-                        LoggerEx.error(TAG, "mvn err, errMsg: " + e.getMessage());
                         CmdUtils.execute("mvn.cmd " + mvnSettingPath +" install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
                     }
                     LoggerEx.info(TAG, "Maven download dependencies success, path: " + pomFile.getAbsolutePath());
