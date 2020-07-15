@@ -9,7 +9,6 @@ import chat.utils.TimerEx;
 import chat.utils.TimerTaskEx;
 import com.alibaba.fastjson.JSON;
 import com.docker.data.*;
-import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.rpc.remote.stub.RemoteServersManager;
 import com.docker.server.OnlineServer;
 import com.docker.storage.adapters.ServersService;
@@ -25,6 +24,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import script.file.FileAdapter;
 import script.file.FileAdapter.FileEntity;
 import script.file.FileAdapter.PathEx;
 import script.groovy.runtime.ClassAnnotationHandler;
@@ -45,8 +45,7 @@ public class ScriptManager implements ShutdownListener {
     private static final String TAG = ScriptManager.class.getSimpleName();
     @Autowired
     private AutowireCapableBeanFactory beanFactory;
-    @Autowired
-    private GridFSFileHandler fileAdapter;
+
     @Autowired
     private ServersService serversService;
     @Autowired
@@ -70,6 +69,7 @@ public class ScriptManager implements ShutdownListener {
     boolean isLoaded = false;
     private final String versionSeperator = "_v";
     private DeployServiceVersion deployServiceVersion;
+    private FileAdapter fileAdapter;
 
     public static final String SERVICE_NOTFOUND = "servicenotfound";
     public static final Boolean DELETELOCAL = false;
@@ -744,5 +744,9 @@ public class ScriptManager implements ShutdownListener {
 
     public Map<String, Integer> getDefalutServiceVersionMap() {
         return defalutServiceVersionMap;
+    }
+
+    public void setFileAdapter(FileAdapter fileAdapter) {
+        this.fileAdapter = fileAdapter;
     }
 }

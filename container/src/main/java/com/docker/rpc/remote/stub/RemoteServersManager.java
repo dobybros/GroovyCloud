@@ -35,6 +35,7 @@ public class RemoteServersManager {
     private Map<String, TimerTaskEx> timerTaskExMap = new ConcurrentHashMap<>();
     private ServiceVersionServiceImpl serviceVersionService;
     private DockerStatusServiceImpl dockerStatusService;
+    private boolean isInit = false;
 
     public RemoteServersManager(ServiceVersionServiceImpl serviceVersionService, DockerStatusServiceImpl dockerStatusService) {
         this.serviceVersionService = serviceVersionService;
@@ -44,7 +45,12 @@ public class RemoteServersManager {
     public RemoteServersManager() {
     }
 
+    public boolean isInit() {
+        return isInit;
+    }
+
     public void init() {
+        isInit = true;
         TimerTaskEx timerTaskEx = new TimerTaskEx("RefreshRemoteServersByHost") {
             @Override
             public void execute() {
@@ -53,7 +59,7 @@ public class RemoteServersManager {
             }
         };
         timerTaskEx.execute();
-        TimerEx.schedule(timerTaskEx, 10000L, 20000L);
+        TimerEx.schedule(timerTaskEx, 10000L, 10000L);
     }
 
     public void addCrossHost(String host) {

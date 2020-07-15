@@ -30,6 +30,7 @@ fi
 mvn -s "$CONFIG_DIR/mvnsettings.xml" clean install -Dmaven.test.skip=true -f "$DEPLOY_DIR/bin/pom.xml"
 rm -rf "$LIBS_DIR/groovycloud"
 mvn -s "$CONFIG_DIR/mvnsettings.xml" clean install -Dmaven.test.skip=true -f "$CONFIG_DIR/basepom.xml"
+echo "Maven install finish!!!"
 cp "$LIBS_DIR/groovycloud/$JAR_NAME/$JAR_VERSION/$JAR_NAME-$JAR_VERSION.jar" "$DEPLOY_DIR"
 JAVA_OPTS=" -Djava.awt.headless=true -Djava.net.preferIPv4Stack=true -Duser.timezone=Asia/Shanghai -Dfile.encoding=utf-8"
 JAVA_DEBUG_OPTS=""
@@ -42,7 +43,7 @@ if [ "$1" = "jmx" ]; then
  fi
  JAVA_MEM_OPTS=""
  BITS=`java -version 2>&1 | grep -i 64-bit`
- JAVA_MEM_OPTS=" -server --add-exports java.base/jdk.internal.ref=ALL-UNNAMED -Dsun.rmi.transport.tcp.maxConnectionThreads=$rmiThreads -Xmx$xmx64 -Xms$xms64 -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=$G1NewSizePercent -XX:G1MaxNewSizePercent=$G1MaxNewSizePercent -XX:MaxGCPauseMillis=$MaxGCPauseMillis -Djava.awt.headless=true"
+ JAVA_MEM_OPTS=" -server --add-exports java.base/jdk.internal.ref=ALL-UNNAMED -Dsun.rmi.transport.tcp.maxConnectionThreads=$rmiThreads -Dsun.rmi.transport.proxy.connectTimeout=5000 -Dsun.rmi.transport.tcp.responseTimeout=5000 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$DEPLOY_DIR -Xmx$xmx64 -Xms$xms64 -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=$G1NewSizePercent -XX:G1MaxNewSizePercent=$G1MaxNewSizePercent -XX:MaxGCPauseMillis=$MaxGCPauseMillis -Djava.awt.headless=true"
 CONFIG_FILES=" -Xbootclasspath/a:$CONF_DIR"
 # nohup java $JAVA_OPTS $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS $CONFIG_FILES -jar $DEPLOY_DIR/$JAR_NAME &>/dev/null 2>&1 &
 java $JAVA_OPTS $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS $CONFIG_FILES -jar $DEPLOY_DIR/$JAR_NAME-$JAR_VERSION.jar

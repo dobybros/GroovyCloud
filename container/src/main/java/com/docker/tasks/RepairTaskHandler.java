@@ -56,18 +56,18 @@ public class RepairTaskHandler extends ClassAnnotationGlobalHandler {
                     String id = repairTaskListener.id();
                     int type = repairTaskListener.type();
                     GroovyObjectEx<?> groovyObj = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
-                    GroovyObjectEx existGroovyObj = groovyObjectExMap.get(id);
-                    boolean newGroovyPath = false;
-                    if(existGroovyObj != null){
-                        if (existGroovyObj.getGroovyPath().equals(groovyObj.getGroovyPath())) {
-                            newGroovyPath = true;
-                        } else {
-                            LoggerEx.error(TAG, "Repair task: " + groovyClass + " has been ignored because of duplicated id: " + id);
-                        }
-                    }else {
-                        newGroovyPath = true;
-                    }
-                    if(newGroovyPath){
+//                    GroovyObjectEx existGroovyObj = groovyObjectExMap.get(id);
+//                    boolean newGroovyPath = false;
+//                    if(existGroovyObj != null){
+//                        if (existGroovyObj.getGroovyPath().equals(groovyObj.getGroovyPath())) {
+//                            newGroovyPath = true;
+//                        } else {
+//                            LoggerEx.error(TAG, "Repair task: " + groovyClass + " has been ignored because of duplicated id: " + id);
+//                        }
+//                    }else {
+//                        newGroovyPath = true;
+//                    }
+//                    if(newGroovyPath){
                         groovyObjectExMap.put(id, groovyObj);
                         try {
                             RepairData repairData = repairService.getRepairData(id);
@@ -86,7 +86,7 @@ public class RepairTaskHandler extends ClassAnnotationGlobalHandler {
                             t.printStackTrace();
                             LoggerEx.error(TAG, "Add repairData error, errMsg:" + t.getMessage());
                         }
-                    }
+//                    }
                 }
             }
         }

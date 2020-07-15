@@ -24,6 +24,8 @@ import org.apache.mina.filter.ssl.KeyStoreFactory;
 import org.apache.mina.filter.ssl.SslContextFactory;
 import org.apache.mina.filter.ssl.SslFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
+import script.file.FileAdapter;
+import script.file.LocalFileHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -133,7 +135,16 @@ public class IMBeanApp extends IMConfigApp {
         if (instance.scriptManager == null) {
             instance.scriptManager = new ScriptManager();
             instance.scriptManager.setLocalPath(instance.getLocalPath());
-            instance.scriptManager.setRemotePath(instance.getRemotePath());
+            FileAdapter fileAdapter = null;
+            if(instance.getRemotePath().startsWith("local:")){
+                fileAdapter = new LocalFileHandler();
+                ((LocalFileHandler)fileAdapter).setRootPath("");
+                instance.scriptManager.setRemotePath(instance.getRemotePath().split("local:")[1]);
+            }else {
+                fileAdapter = getFileAdapter();
+                instance.scriptManager.setRemotePath(instance.getRemotePath());
+            }
+            instance.scriptManager.setFileAdapter(fileAdapter);
             instance.scriptManager.setBaseRuntimeClass(GatewayGroovyRuntime.class);
             instance.scriptManager.setRuntimeBootClass(instance.getRuntimeBootClass());
             instance.scriptManager.setHotDeployment(Boolean.valueOf(instance.getHotDeployment()));

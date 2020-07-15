@@ -475,7 +475,7 @@ public class ReflectionUtil {
         }
         crc.update(str.getBytes());
         long value = crc.getValue();
-        LoggerEx.info("ReflectionUtil", "Get crc, str: " + str + ",value: " + value);
+//        LoggerEx.info("ReflectionUtil", "Get crc, str: " + str + ",value: " + value);
 //		if(value == 2380642687L)
 //			System.out.print("");
         return value;

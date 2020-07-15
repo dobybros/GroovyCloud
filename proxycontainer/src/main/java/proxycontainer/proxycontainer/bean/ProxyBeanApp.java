@@ -6,6 +6,8 @@ import com.proxy.im.ProxyUpStreamHandler;
 import com.proxy.runtime.ProxyGroovyRuntime;
 import imcontainer.imcontainer.bean.IMBeanApp;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
+import script.file.FileAdapter;
+import script.file.LocalFileHandler;
 
 import java.net.InetSocketAddress;
 
@@ -46,7 +48,16 @@ public class ProxyBeanApp extends IMBeanApp {
         if (instance.scriptManager == null) {
             instance.scriptManager = new ScriptManager();
             instance.scriptManager.setLocalPath(instance.getLocalPath());
-            instance.scriptManager.setRemotePath(instance.getRemotePath());
+            FileAdapter fileAdapter = null;
+            if(instance.getRemotePath().startsWith("local:")){
+                fileAdapter = new LocalFileHandler();
+                ((LocalFileHandler)fileAdapter).setRootPath("");
+                instance.scriptManager.setRemotePath(instance.getRemotePath().split("local:")[1]);
+            }else {
+                fileAdapter = getFileAdapter();
+                instance.scriptManager.setRemotePath(instance.getRemotePath());
+            }
+            instance.scriptManager.setFileAdapter(fileAdapter);
             instance.scriptManager.setBaseRuntimeClass(ProxyGroovyRuntime.class);
             instance.scriptManager.setRuntimeBootClass(instance.getRuntimeBootClass());
             instance.scriptManager.setHotDeployment(Boolean.valueOf(instance.getHotDeployment()));

@@ -33,8 +33,11 @@ public class Proxy {
         MethodMapping methodMapping = serviceStubManager.getMethodMapping(crc);
         if (methodMapping != null) {
             return invocationHandler.invoke(methodMapping, request);
+        } else {
+            MethodResponse response = new MethodResponse();
+            response.setException(new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_METHODNOTFOUND, "Method doesn't be found by service_class_method " + RpcCacheManager.getInstance().getMethodByCrc(crc) + ",crc: " + crc));
+            return response;
         }
-        return null;
     }
 
     public static Object getReturnObject(MethodRequest request, MethodResponse response) throws CoreException {

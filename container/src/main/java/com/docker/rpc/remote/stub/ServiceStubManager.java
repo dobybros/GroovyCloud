@@ -62,7 +62,9 @@ public class ServiceStubManager {
             }
             RemoteServersManager.getInstance().addCrossHost(this.host);
         }
-        handle();
+        synchronized (ServiceStubManager.class){
+            handle();
+        }
     }
     public void clearCache() {
         methodMap.clear();
@@ -258,7 +260,7 @@ public class ServiceStubManager {
         this.lanType = lanType;
     }
     private void handle(){
-        if(RemoteServersManager.getRemoteServersManager() == null){
+        if(!RemoteServersManager.getInstance().isInit()){
             ServiceVersionServiceImpl serviceVersionService = (ServiceVersionServiceImpl) GroovyCloudBean.getBean(GroovyCloudBean.SERVICEVERSIONSERVICE);
             DockerStatusServiceImpl dockerStatusService = (DockerStatusServiceImpl)GroovyCloudBean.getBean(GroovyCloudBean.DOCKERSTATUSSERVICE);
             if(serviceVersionService == null || dockerStatusService == null){

@@ -32,13 +32,16 @@ public class MyRedisPubSubAdapter extends RedisPubSubAdapter {
         clusterGrooveAdapter = new ClusterGrooveAdapter();
     }
 
-    private void setHostAndPorts(Set<HostAndPort> hostAndPorts) {
+    private void setHostAndPorts(Set<HostAndPort> hostAndPorts, String passswd) {
         if (redisClusterClient == null) {
             this.hostAndPorts = hostAndPorts;
             if (hostAndPorts != null) {
                 List<RedisURI> redisURIS = new ArrayList<>();
                 for (HostAndPort hostAndPort : hostAndPorts) {
                     RedisURI redisURI = RedisURI.create(hostAndPort.getHost(), hostAndPort.getPort());
+                    if(passswd !=  null){
+                        redisURI.setPassword(passswd);
+                    }
                     redisURIS.add(redisURI);
                 }
                 if (!redisURIS.isEmpty()) {
@@ -68,8 +71,8 @@ public class MyRedisPubSubAdapter extends RedisPubSubAdapter {
         }
     }
 
-    void psubscribe(String[] subscribeChannels, Set<HostAndPort> redisNodes) {
-        setHostAndPorts(redisNodes);
+    void psubscribe(String[] subscribeChannels, Set<HostAndPort> redisNodes, String passwd) {
+        setHostAndPorts(redisNodes, passwd);
         if (commands == null) {
             // 异步订阅
             pubSubConnection = redisClusterClient.connectPubSub();

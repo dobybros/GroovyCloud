@@ -47,6 +47,7 @@ public class RedisHandler {
     private PipelineBase pipeline = null;
     private Map<String, Method> pipelineMethodMap = null;
     private String hosts;
+    private String passwd;
     private Integer type = TYPE_SHARD;
     private Set<HostAndPort> redisNodes = new HashSet<>();
     private String[] subscribeChannels = {"__keyevent@0__:expired", "__keyevent@1__:expired", "__keyevent@2__:expired", "__keyevent@3__:expired", "__keyevent@4__:expired", "__keyevent@5__:expired", "__keyevent@6__:expired", "__keyevent@7__:expired", "__keyevent@8__:expired", "__keyevent@9__:expired", "__keyevent@10__:expired", "__keyevent@11__:expired", "__keyevent@12__:expired", "__keyevent@13__:expired", "__keyevent@14__:expired", "__keyevent@15__:expired"};
@@ -65,20 +66,35 @@ public class RedisHandler {
         config.setMaxIdle(20);// 最大空闲实例数
         config.setMaxWaitMillis(30000L);// 最长等待时间
         config.setTestOnBorrow(true);// 在borrow一个jedis实例时，是否进行有效性检查。为true，则得到的jedis实例均是可用的
-
+        if(hosts.contains("@")){
+            String[] passwdStrs = hosts.split("@");
+            if(passwdStrs.length == 2){
+                hosts = passwdStrs[0];
+                passwd = passwdStrs[1];
+            }
+        }
         String[] detechedStrs = detachHosts(hosts);
         if (type == TYPE_SHARD) {
             String[] strArray = hosts.split(",");// redis.properties中必须包含redis.pool字段，指定redis地址。如果有多个，用逗号分隔。
             List<JedisShardInfo> shardJedis = new ArrayList<JedisShardInfo>();
             for (int i = 0; i < strArray.length; i++) {
+                JedisShardInfo jedisShardInfo = null;
                 if (strArray[i].indexOf(":") > 0) {
                     String host = strArray[i].trim().substring(0,
                             strArray[i].indexOf(":"));
                     int port = Integer.parseInt(strArray[i].substring(strArray[i]
                             .indexOf(":") + 1));
-                    shardJedis.add(new JedisShardInfo(host, port));
+                    jedisShardInfo = new JedisShardInfo(host, port);
+                    if(passwd != null){
+                        jedisShardInfo.setPassword(passwd);
+                    }
+                    shardJedis.add(jedisShardInfo);
                 } else {
-                    shardJedis.add(new JedisShardInfo(strArray[i]));
+                    jedisShardInfo = new JedisShardInfo(strArray[i]);
+                    if(passwd != null){
+                        jedisShardInfo.setPassword(passwd);
+                    }
+                    shardJedis.add(jedisShardInfo);
                 }
             }
             pool = new ShardedJedisPool(config, shardJedis);
@@ -91,7 +107,11 @@ public class RedisHandler {
                 }
             }
             redisNodes = nodes;
-            cluster = new JedisCluster(nodes, config);
+            if(passwd != null){
+                cluster = new JedisCluster(nodes, 3000, 3000, 3, passwd, config);
+            }else {
+                cluster = new JedisCluster(nodes, 3000, 3000, 3, config);
+            }
         }
         pipelineMethodMap = new HashMap<>();
         LoggerEx.info(TAG, "Jedis Cluster connected, " + hosts);
@@ -115,6 +135,9 @@ public class RedisHandler {
                     break;
             }
             clearedHosts = clearedHosts.replace(pName + "://", "");
+            if(passwd != null){
+                clearedHosts = clearedHosts.replace("@" + passwd, "");
+            }
         }
         return clearedHosts.split(",");
     }
@@ -1204,7 +1227,7 @@ public class RedisHandler {
                     Jedis theJedis = jedisArray[0];
                     theJedis.psubscribe(SubscribeListener.getInstance(), subscribeChannels);
                 } else if (jedis instanceof JedisCluster) {
-                    MyRedisPubSubAdapter.getInstance().psubscribe(subscribeChannels, redisNodes);
+                    MyRedisPubSubAdapter.getInstance().psubscribe(subscribeChannels, redisNodes, passwd);
                 }
             }).start();
 

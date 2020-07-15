@@ -192,6 +192,7 @@ public class GroovyRuntime extends ScriptRuntime {
                 String pomStr = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
                 if (pomStr.contains("AllThisDependencies")) {
                     try {
+                        LoggerEx.info(TAG, "maven info: mvn " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
                         CmdUtils.execute("mvn " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
                     } catch (IOException e) {
                         CmdUtils.execute("mvn.cmd " + mvnSettingPath +" install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
