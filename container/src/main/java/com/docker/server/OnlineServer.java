@@ -13,6 +13,7 @@ import com.docker.storage.adapters.SDockersService;
 import com.docker.storage.cache.CacheStorageFactory;
 import com.docker.storage.cache.CacheStorageMethod;
 import com.docker.tasks.Task;
+import connectors.mongodb.MongoClientFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.Document;
@@ -223,7 +224,7 @@ public class OnlineServer {
                 dockerStatus = generateDockerStatus(httpPort);
                 try {
                     dockerStatusService.deleteDockerStatus(OnlineServer.getInstance().getIp(), serverType, OnlineServer.getInstance().getDockerName());
-                }catch(Throwable t){
+                } catch (Throwable t) {
                     t.printStackTrace();
                 }
                 dockerStatusService.addDockerStatus(dockerStatus);
@@ -321,6 +322,7 @@ public class OnlineServer {
             }
         }
         CacheStorageFactory.getInstance().releaseAllCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS);
+        MongoClientFactory.getInstance().releaseAllMongoClient();
 //        if (shutdownList != null) {
 //            LoggerEx.info(TAG, "Deleted shutdownListener " + shutdownList + " size " + shutdownList.size());
 //            for (ShutdownListener shutdownListener : shutdownList) {

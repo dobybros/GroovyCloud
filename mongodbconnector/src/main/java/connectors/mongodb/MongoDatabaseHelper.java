@@ -26,8 +26,7 @@ public class MongoDatabaseHelper {
 				if(handler != null && helper != null) {
 					HashMap<Class<?>, MongoDatabase> map = handler.getDatabaseMap();
 					if(map != null) {
-						MongoDatabase database = map.get(this.getClass());
-						return helper.startSession(database.getName(), option != null ? option : ClientSessionOptions.builder().build());
+						return helper.startSession(option != null ? option : ClientSessionOptions.builder().build());
 					}
 				}
 			}

@@ -29,7 +29,7 @@ public class DatabaseBean {
     }
 
     //    @Bean(initMethod = "init", destroyMethod = "disconnect")
-    @Bean(destroyMethod = "disconnect")
+    @Bean
     public MongoHelper logsHelper() {
         return instance.getLogsHelper();
     }
@@ -94,7 +94,7 @@ public class DatabaseBean {
         return instance.getSdockerDAO();
     }
 
-    @Bean(destroyMethod = "disconnect")
+    @Bean
     public MongoHelper gridfsHelper() {
         return instance.getGridfsHelper();
     }

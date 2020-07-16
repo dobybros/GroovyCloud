@@ -478,8 +478,6 @@ public class BeanApp extends ConfigApp {
             instance.dockerStatusHelper.setHost(instance.getMongoHost());
             instance.dockerStatusHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
             instance.dockerStatusHelper.setDbName(instance.getDbName());
-            instance.dockerStatusHelper.setUsername(instance.getMongoUsername());
-            instance.dockerStatusHelper.setPassword(instance.getMongoPassword());
         }
         return instance.dockerStatusHelper;
     }
@@ -490,8 +488,6 @@ public class BeanApp extends ConfigApp {
             instance.scheduledTaskHelper.setHost(instance.getMongoHost());
             instance.scheduledTaskHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
             instance.scheduledTaskHelper.setDbName("scheduled");
-            instance.scheduledTaskHelper.setUsername(instance.getMongoUsername());
-            instance.scheduledTaskHelper.setPassword(instance.getMongoPassword());
         }
         return instance.scheduledTaskHelper;
     }
@@ -502,8 +498,6 @@ public class BeanApp extends ConfigApp {
             instance.repairHelper.setHost(instance.getMongoHost());
             instance.repairHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
             instance.repairHelper.setDbName("extras");
-            instance.repairHelper.setUsername(instance.getMongoUsername());
-            instance.repairHelper.setPassword(instance.getMongoPassword());
         }
         return instance.repairHelper;
     }
@@ -514,8 +508,6 @@ public class BeanApp extends ConfigApp {
             instance.logsHelper.setHost(instance.getMongoHost());
             instance.logsHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
             instance.logsHelper.setDbName(instance.getLogsDBName());
-            instance.logsHelper.setUsername(instance.getMongoUsername());
-            instance.logsHelper.setPassword(instance.getMongoPassword());
         }
         return instance.logsHelper;
     }
@@ -526,8 +518,6 @@ public class BeanApp extends ConfigApp {
             instance.configHelper.setHost(instance.getMongoHost());
             instance.configHelper.setConnectionsPerHost(Integer.valueOf(instance.getMongoConnectionsPerHost()));
             instance.configHelper.setDbName(instance.getConfigDBName());
-            instance.configHelper.setUsername(instance.getMongoUsername());
-            instance.configHelper.setPassword(instance.getMongoPassword());
         }
         return instance.configHelper;
     }
@@ -562,8 +552,6 @@ public class BeanApp extends ConfigApp {
             instance.gridfsHelper.setHost(instance.getGridHost());
             instance.gridfsHelper.setConnectionsPerHost(Integer.valueOf(instance.getGirdConnectionsPerHost()));
             instance.gridfsHelper.setDbName(instance.getGridDbName());
-            instance.gridfsHelper.setUsername(instance.getGridUsername());
-            instance.gridfsHelper.setPassword(instance.getGridPassword());
         }
         return instance.gridfsHelper;
     }

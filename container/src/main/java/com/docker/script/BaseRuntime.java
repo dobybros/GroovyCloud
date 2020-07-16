@@ -162,16 +162,16 @@ public abstract class BaseRuntime extends GroovyRuntime {
 	    if(service != null) {
 			GroovyServletDispatcher.removeGroovyServletManagerEx(service.toLowerCase());
 		}
-		try {
-			if(mongoDBHandler != null) {
-				MongoClientHelper helper = mongoDBHandler.getMongoClientHelper();
-				if(helper != null) {
-					helper.disconnect();
-				}
-			}
-		} catch(Throwable t) {
-		    LoggerEx.error(TAG, "Close mongo error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
-		}
+//		try {
+//			if(mongoDBHandler != null) {
+//				MongoClientHelper helper = mongoDBHandler.getMongoClientHelper();
+//				if(helper != null) {
+//					helper.disconnect();
+//				}
+//			}
+//		} catch(Throwable t) {
+//		    LoggerEx.error(TAG, "Close mongo error, errMsg: " + ExceptionUtils.getFullStackTrace(t));
+//		}
 //		try {
 //			if (redisHost != null) {
 //				CacheStorageFactory.getInstance().removeCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, redisHost);
