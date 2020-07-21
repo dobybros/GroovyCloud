@@ -9,8 +9,6 @@ import chat.utils.ReflectionUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.model.FileHeader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -483,34 +481,6 @@ public class GroovyRuntime extends ScriptRuntime {
 
     public <T> Object newObject(String groovyPath) {
         return newObject(groovyPath, null);
-    }
-
-    private void unzip(File zipFile, String dir, String passwd) {
-        ZipFile zFile = null;
-        try {
-            zFile = new ZipFile(zipFile);
-            File destDir = new File(dir);
-            if (destDir.isDirectory() && !destDir.exists()) {
-                destDir.mkdir();
-            }
-            if (zFile.isEncrypted()) {
-                zFile.setPassword(passwd.toCharArray());
-            }
-            zFile.extractAll(dir);
-
-            List<FileHeader> headerList = zFile.getFileHeaders();
-            List<File> extractedFileList = new ArrayList<File>();
-            for (FileHeader fileHeader : headerList) {
-                if (!fileHeader.isDirectory()) {
-                    extractedFileList.add(new File(destDir, fileHeader.getFileName()));
-                }
-            }
-            File[] extractedFiles = new File[extractedFileList.size()];
-            extractedFileList.toArray(extractedFiles);
-        } catch (net.lingala.zip4j.exception.ZipException e) {
-            e.printStackTrace();
-            LoggerEx.error(TAG, "password is error,destFile:" + dir);
-        }
     }
 
     public <T> Object newObject(String groovyPath,
