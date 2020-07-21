@@ -341,7 +341,17 @@ public class ScriptManager implements ShutdownListener {
                     String n = localZipFile.getName();
                     n = n.substring(0, n.length() - ".zip".length());
                     localScriptPath = localPath + serverTypePath + service + "/" + n;
-                    FileUtils.deleteDirectory(new File(localScriptPath));
+                    File groovyFile = new File(localScriptPath);
+                    if(groovyFile.exists()){
+                        File[] groovyFiles = groovyFile.listFiles();
+                        if(groovyFiles != null){
+                            for (int i = 0; i < groovyFiles.length; i++) {
+                                try {
+                                    FileUtils.deleteQuietly(groovyFiles[i]);
+                                }catch(Throwable t){}
+                            }
+                        }
+                    }
                     CRC32 crc = new CRC32();
                     crc.update(zipFile.getBytes());
                     long valuePwd = crc.getValue();
