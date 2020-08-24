@@ -11,7 +11,6 @@ import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import script.groovy.servlets.GroovyServletDispatcher;
-
 @ComponentScan(basePackages = {"com", "container", "chat", "script", "connectors"})
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class, DataSourceTransactionManagerAutoConfiguration.class, MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
 public class ContainerApplication {

@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
+
 @WebServlet(urlPatterns = "/", asyncSupported = true)
 public class GroovyServletDispatcher extends HttpServlet {
     /**
@@ -28,9 +29,11 @@ public class GroovyServletDispatcher extends HttpServlet {
         GroovyServletManager oldGroovyServletMap = groovyServletMap.put(rootPath, servletManager);
         //TODO whether need clear memory for oldGroovyServletMap
     }
+
     public static GroovyServletManager getGroovyServletManagerEx(String rootPath) {
         return groovyServletMap.get(rootPath);
     }
+
     public static void removeGroovyServletManagerEx(String rootPath) {
         groovyServletMap.remove(rootPath);
     }
@@ -75,7 +78,7 @@ public class GroovyServletDispatcher extends HttpServlet {
             e.printStackTrace();
             LoggerEx.error(TAG, "Request url " + request.getRequestURL().toString() + " occur error " + ExceptionUtils.getFullStackTrace(e));
             try {
-                response.sendError(500, e.getMessage());
+                response.sendError(504, e.getMessage());
             } catch (IOException e1) {
                 e1.printStackTrace();
             }

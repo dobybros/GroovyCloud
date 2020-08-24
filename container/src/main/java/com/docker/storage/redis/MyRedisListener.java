@@ -5,5 +5,8 @@ package com.docker.storage.redis;
  * Description：
  */
 public abstract class MyRedisListener {
+    public String NXXX = "NX";
+    public String XXXX = "XX";
+    public String EXPX = "PX";
     public RedisHandler redisHandler;
 }

@@ -248,6 +248,13 @@ public class ZookeeperClient {
             treeCache.close();
         }
     }
+    public void closeTreeCacheByPathPrefix(String pathPrefix){
+        for (String path : treeCacheMap.keySet()){
+            if(path.startsWith(pathPrefix)){
+                closeTreeCache(path);
+            }
+        }
+    }
     public boolean checkPathChildrenCache(String path) {
         return pathChildrenCacheMap.containsKey(path);
     }

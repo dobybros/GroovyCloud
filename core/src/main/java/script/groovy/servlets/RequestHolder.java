@@ -311,7 +311,9 @@ public class RequestHolder {
 //                AnalyticsLogger.info(TAG, builder.toString());
         }
     }
-
+    public String[] getPermissions() {
+        return requestUriWrapper.getPermissions();
+    }
     public GroovyServletManager getGroovyServletManager() {
         return groovyServletManager;
     }
