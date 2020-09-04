@@ -1,7 +1,9 @@
 package script.groovy.servlets;
 
-import script.groovy.object.GroovyObjectEx;
 import chat.errors.CoreException;
+import script.groovy.object.GroovyObjectEx;
+
+import java.io.IOException;
 
 public abstract class RequestIntercepter {
 	protected Object proceed(RequestHolder holder) throws CoreException {
@@ -22,7 +24,27 @@ public abstract class RequestIntercepter {
 			} catch (Throwable t1) {
 				t1.printStackTrace();
 			}
+		}finally {
+			try {
+				if(holder.getRequest().getInputStream() != null){
+					try {
+						holder.getRequest().getInputStream().close();
+					}catch (Throwable t){
+						t.printStackTrace();
+					}
+				}
+				if(holder.getResponse().getOutputStream() != null){
+					try {
+						holder.getResponse().getOutputStream().close();
+					}catch(Throwable t){
+						t.printStackTrace();
+					}
+				}
+			}catch (IOException e){
+				e.printStackTrace();
+			}
 		}
+
 	}
 	
 	public abstract void invoke(RequestHolder holder) throws CoreException;

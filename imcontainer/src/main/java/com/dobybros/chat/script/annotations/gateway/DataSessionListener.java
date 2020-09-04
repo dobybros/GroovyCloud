@@ -94,6 +94,7 @@ public class DataSessionListener {
         Map<String, String> params = new HashMap<>();
         params.put("roomIdService", getRoomIdService(roomId, service));
         params.put("server", OnlineServer.getInstance().getServer());
+        params.put("idc", OnlineServer.getInstance().getLanId());
         return params;
     }
     private Map getMonitorHeaders(){

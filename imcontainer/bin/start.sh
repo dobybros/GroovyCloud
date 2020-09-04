@@ -13,7 +13,7 @@ G1NewSizePercent='80'
 #年轻代最大大小占用堆的百分比
 G1MaxNewSizePercent='90'
 #gc最大暂停时间（单位:毫秒）
-MaxGCPauseMillis='20'
+MaxGCPauseMillis='180'
 #rmi线程数量
 rmiThreads='200'
 DEPLOY_DIR=`pwd`

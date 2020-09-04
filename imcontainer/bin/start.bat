@@ -4,14 +4,14 @@ set xmx64=2000m
 set xms64=2000m
 set G1NewSizePercent=80
 set G1MaxNewSizePercent=90
-set MaxGCPauseMillis=20
+set MaxGCPauseMillis=200
 set rmiThreads=200
 set binFile=bin
 cd ..
 call mvn.cmd -s src/main/resources/config/mvnsettings.xml clean install -Dmaven.test.skip=true -f bin/pom.xml
 call rd /s /q "libs/groovycloud"
 call mvn.cmd -s src/main/resources/config/mvnsettings.xml clean install -Dmaven.test.skip=true -f src/main/resources/config/basepom.xml
-call xcopy libs/groovycloud/%JAR_NAME%/%JAR_VERSION%/%JAR_NAME%-%JAR_VERSION%.jar" .
+call copy libs/groovycloud/%JAR_NAME%/%JAR_VERSION%/%JAR_NAME%-%JAR_VERSION%.jar
 cd %binFile%
 if "%1" == "debug" (
     set JAVA_DEBUG_OPTS= -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n
