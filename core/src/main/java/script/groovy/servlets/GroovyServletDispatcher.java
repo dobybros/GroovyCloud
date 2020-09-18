@@ -1,5 +1,7 @@
 package script.groovy.servlets;
 
+import chat.errors.ChatErrorCodes;
+import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
@@ -75,12 +77,24 @@ public class GroovyServletDispatcher extends HttpServlet {
             }
             LoggerEx.info(TAG, "RequestURI " + uri + " method " + request.getMethod() + " from " + request.getRemoteAddr(), System.currentTimeMillis() - time);
         } catch (Throwable e) {
-            e.printStackTrace();
+            boolean moveServer = false;
+            if(e instanceof CoreException){
+                if(((CoreException) e).getCode() == ChatErrorCodes.ERROR_GROOVYSERVLET_SERVLET_NOT_INITIALIZED){
+                    try {
+                        response.sendError(504, e.getMessage());
+                        moveServer = true;
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+            }
             LoggerEx.error(TAG, "Request url " + request.getRequestURL().toString() + " occur error " + ExceptionUtils.getFullStackTrace(e));
-            try {
-                response.sendError(504, e.getMessage());
-            } catch (IOException e1) {
-                e1.printStackTrace();
+            if(!moveServer){
+                try {
+                    response.sendError(500, e.getMessage());
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
             }
         }
     }
