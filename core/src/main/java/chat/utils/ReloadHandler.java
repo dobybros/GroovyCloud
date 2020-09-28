@@ -16,7 +16,6 @@ public abstract class ReloadHandler {
 	private Long period = TimeUnit.SECONDS.toMillis(15);
 	public ReloadHandler() {
 	}
-	
 	public void init() throws IOException {
 		try {
 			load();
@@ -36,18 +35,7 @@ public abstract class ReloadHandler {
 			}
 		}, period, period);
 	};
-	public void init(boolean once) throws IOException {
-		if(once){
-			try {
-				load();
-			} catch (Throwable e) {
-				e.printStackTrace();
-				LoggerEx.error(TAG, "Load in period " + period + " failed, " + ExceptionUtils.getFullStackTrace(e));
-			}
-		}else {
-			init();
-		}
-	};
+
 	public abstract void load() throws Throwable;
 
 	public Long getPeriod() {

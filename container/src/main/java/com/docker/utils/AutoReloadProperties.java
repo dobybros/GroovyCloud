@@ -1,7 +1,9 @@
 package com.docker.utils;
 
+import chat.logs.LoggerEx;
 import chat.utils.ReloadHandler;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
@@ -62,12 +64,12 @@ public class AutoReloadProperties extends Properties{
 	public void init() throws IOException {
 		reloadHandler.init();
 	};
-	public void init(boolean once) throws IOException {
-		if(once){
-			reloadHandler.init(once);
-		}else {
-			reloadHandler.init();
-		}
+	public void initOnce() throws IOException {
+	    try {
+            reloadHandler.load();
+        }catch(Throwable e){
+            LoggerEx.error(TAG, "Load in " + absolutePath + " failed, " + ExceptionUtils.getFullStackTrace(e));
+        }
 	};
 	@Override
 	public String getProperty(String key) {
