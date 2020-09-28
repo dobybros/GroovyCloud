@@ -62,7 +62,13 @@ public class AutoReloadProperties extends Properties{
 	public void init() throws IOException {
 		reloadHandler.init();
 	};
-	
+	public void init(boolean once) throws IOException {
+		if(once){
+			reloadHandler.init(once);
+		}else {
+			reloadHandler.init();
+		}
+	};
 	@Override
 	public String getProperty(String key) {
 		if(properties == null)

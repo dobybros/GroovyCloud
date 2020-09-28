@@ -1,11 +1,10 @@
 package chat.utils;
 
-import java.io.IOException;
-import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
-
 import chat.logs.LoggerEx;
 import org.apache.commons.lang.exception.ExceptionUtils;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 
 public abstract class ReloadHandler {
@@ -37,7 +36,18 @@ public abstract class ReloadHandler {
 			}
 		}, period, period);
 	};
-	
+	public void init(boolean once) throws IOException {
+		if(once){
+			try {
+				load();
+			} catch (Throwable e) {
+				e.printStackTrace();
+				LoggerEx.error(TAG, "Load in period " + period + " failed, " + ExceptionUtils.getFullStackTrace(e));
+			}
+		}else {
+			init();
+		}
+	};
 	public abstract void load() throws Throwable;
 
 	public Long getPeriod() {

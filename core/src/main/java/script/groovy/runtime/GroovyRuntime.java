@@ -231,7 +231,7 @@ public class GroovyRuntime extends ScriptRuntime {
                     }
                 }
             } catch (Throwable e) {
-                LoggerEx.error(TAG, "Maven download dependencies err, path: " + pomFile.getAbsolutePath() + ",errMsg: " + e.getMessage());
+                LoggerEx.error(TAG, "Maven download dependencies err, path: " + pomFile.getAbsolutePath() + ",errMsg: " + ExceptionUtils.getFullStackTrace(e));
                 throw new CoreException(ChatErrorCodes.ERROR_MAVEN_INSTALL_ERROR, "Maven download dependencies err, path: " + pomFile.getAbsolutePath() + ",errMsg: " + e.getMessage());
             }
         }

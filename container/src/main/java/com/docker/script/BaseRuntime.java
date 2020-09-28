@@ -103,7 +103,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
 							MessageProperties messageProperties = new MessageProperties();
 							messageProperties.setAbsolutePath(file.getAbsolutePath());
 							try {
-								messageProperties.init();
+								messageProperties.init(true);
 							} catch (IOException e) {
 								e.printStackTrace();
 							}

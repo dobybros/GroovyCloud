@@ -10,19 +10,19 @@ import java.util.List;
 public abstract class SessionListener extends DataSessionListener {
 
     public void sessionCreated(String userId, String service) {
-        if(backUpMemory()){
-            Object data = getRoomDataFromMonitor(userId, service);//get RoomData from monitor
-            if(data != null){
-                saveRoomData(userId, service, data);
-            }
-            restoreData(userId, service);
-        }
+//        if(backUpMemory()){
+//            Object data = getRoomDataFromMonitor(userId, service);//get RoomData from monitor
+//            if(data != null){
+//                saveRoomData(userId, service, data);
+//            }
+//            restoreData(userId, service);
+//        }
     }
 
     public void sessionClosed(String userId, String service, int close) {
-        if(backUpMemory()){
-            removeMonitorRoomData(userId, service, close);
-        }
+//        if(backUpMemory()){
+//            removeMonitorRoomData(userId, service, close);
+//        }
     }
 
     public List<Integer> channelRegisterd(String userId, String service, Integer terminal) {
