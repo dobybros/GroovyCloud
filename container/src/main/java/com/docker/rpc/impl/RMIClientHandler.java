@@ -6,6 +6,7 @@ import chat.logs.LoggerEx;
 //import chat.utils.AverageCounter;
 import com.docker.rpc.*;
 import com.docker.rpc.async.AsyncCallbackRequest;
+import com.docker.rpc.remote.stub.RpcCacheManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
@@ -409,17 +410,39 @@ public class RMIClientHandler extends RPCClientAdapter {
             LoggerEx.error(TAG, "RMI call failed, " + ExceptionUtils.getFullStackTrace(ce) + " start reconnecting...");
             throw new CoreException(ChatErrorCodes.ERROR_RMICALL_CONNECT_FAILED, "RMI call failed, " + ce.getMessage() + " start reconnecting...");
         } catch (Throwable t) {
+            CoreException theCoreException = null;
             if (t instanceof ServerException) {
                 Throwable remoteException = t.getCause();
                 if (remoteException instanceof RemoteException) {
-                    Throwable coreException = remoteException.getCause();
-                    if (coreException instanceof CoreException) {
-                        throw (CoreException) coreException;
+                    Throwable throwable = remoteException.getCause();
+                    if (throwable instanceof CoreException) {
+                        CoreException coreException = (CoreException)throwable;
+                        if(request instanceof MethodRequest){
+                            theCoreException = new CoreException(coreException.getCode(), coreException.getMessage().concat(" $$client: service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(((MethodRequest)request).getCrc()) + ", fromService: " + ((MethodRequest)request).getFromService()));
+                            theCoreException.setParameters(coreException.getParameters());
+                            theCoreException.setMoreExceptions(coreException.getMoreExceptions());
+                            theCoreException.setData(coreException.getData());
+                            theCoreException.setInfoMap(coreException.getInfoMap());
+                            theCoreException.setLogLevel(coreException.getLogLevel());
+                            coreException = theCoreException;
+                        }
+                        throw coreException;
                     }
                 }
             }
-            if (t instanceof CoreException)
-                throw (CoreException) t;
+            if (t instanceof CoreException){
+                CoreException coreException = (CoreException)t;
+                if(request instanceof MethodRequest){
+                    theCoreException = new CoreException(coreException.getCode(), coreException.getMessage().concat(" $$client: service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(((MethodRequest)request).getCrc()) + ", fromService: " + ((MethodRequest)request).getFromService()));
+                    theCoreException.setParameters(coreException.getParameters());
+                    theCoreException.setMoreExceptions(coreException.getMoreExceptions());
+                    theCoreException.setData(coreException.getData());
+                    theCoreException.setInfoMap(coreException.getInfoMap());
+                    theCoreException.setLogLevel(coreException.getLogLevel());
+                    coreException = theCoreException;
+                }
+                throw coreException;
+            }
             t.printStackTrace();
             LoggerEx.error(TAG, "RMI call failed, " + ExceptionUtils.getFullStackTrace(t));
             throw new CoreException(ChatErrorCodes.ERROR_RMICALL_FAILED, "RMI call failed, " + t.getMessage());

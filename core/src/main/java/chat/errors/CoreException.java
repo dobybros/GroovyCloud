@@ -118,6 +118,14 @@ public class CoreException extends Exception {
         return infoMap.get(key);
     }
 
+    public HashMap<String, Object> getInfoMap() {
+        return infoMap;
+    }
+
+    public void setInfoMap(HashMap<String, Object> infoMap) {
+        this.infoMap = infoMap;
+    }
+
     public Object getData() {
         return data;
     }
