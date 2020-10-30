@@ -32,7 +32,6 @@ public abstract class OnlineUserManager {
     private UserExpireTimer expireTimerTask = new UserExpireTimer();
 
     private ConcurrentHashMap<String, SingleThreadQueue<EventEntity>> queueMap = new ConcurrentHashMap<>();
-    private final Long maxNoChannelTimeout = TimeUnit.MINUTES.toMillis(5);
     /**
      * String is userid
      */
@@ -144,7 +143,7 @@ public abstract class OnlineUserManager {
         onlineUserHolder.setOnlineUserManager(this);
         onlineUserHolder.init();
 
-        TimerEx.schedule(expireTimerTask, TimeUnit.SECONDS.toMillis(10), maxNoChannelTimeout);
+        TimerEx.schedule(expireTimerTask, TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10));
     }
 
     public OnlineUserManager() {
