@@ -100,7 +100,7 @@ public class OnlineServiceUser implements ChannelListener {
     public IMConfig getIMConfig(){
         BaseRuntime runtime = scriptManager.getBaseRuntime(getServiceAndVersion());
         if (runtime != null && runtime instanceof GatewayGroovyRuntime) {
-            ((GatewayGroovyRuntime) runtime).getIMConfig(userInfo.getUserId(), service);
+            return ((GatewayGroovyRuntime) runtime).getIMConfig(userInfo.getUserId(), service);
         }
         return null;
     }
