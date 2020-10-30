@@ -24,7 +24,8 @@ public abstract class RequestIntercepter {
 			} catch (Throwable t1) {
 				t1.printStackTrace();
 			}
-		}finally {
+		}
+		finally {
 			try {
 				if(holder.getRequest().getInputStream() != null){
 					try {

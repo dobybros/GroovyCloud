@@ -55,7 +55,7 @@ public abstract class OnlineUserManager {
                     for (OnlineServiceUser serviceUser : values) {
                         long noChannelTime = serviceUser.getNoChannelTime();
                         if (noChannelTime != -1) {
-                            if (/*!user.keepOnline() && */System.currentTimeMillis() - noChannelTime > maxNoChannelTimeout) {
+                            if (/*!user.keepOnline() && */System.currentTimeMillis() - noChannelTime > serviceUser.getIMConfig().getNoChannelSessionTimeOut()) {
                                 try {
                                     UserInfo info = serviceUser.getUserInfo();
                                     deleteOnlineServiceUser(serviceUser, ChannelListener.CLOSE_USEREXPIRED);

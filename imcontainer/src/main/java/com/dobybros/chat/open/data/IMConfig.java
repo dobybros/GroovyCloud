@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 public class IMConfig {
     private Long pingInterval = TimeUnit.SECONDS.toMillis(8);  //ms
     private Long maxInactiveInterval = TimeUnit.SECONDS.toMillis(60);//ms
+    private Long noChannelSessionTimeOut = TimeUnit.MINUTES.toMillis(5);//ms
 
     public Long getPingInterval() {
         return pingInterval;
@@ -24,5 +25,13 @@ public class IMConfig {
 
     public void setMaxInactiveInterval(Long maxInactiveInterval) {
         this.maxInactiveInterval = maxInactiveInterval;
+    }
+
+    public Long getNoChannelSessionTimeOut() {
+        return noChannelSessionTimeOut;
+    }
+
+    public void setNoChannelSessionTimeOut(Long noChannelSessionTimeOut) {
+        this.noChannelSessionTimeOut = noChannelSessionTimeOut;
     }
 }
