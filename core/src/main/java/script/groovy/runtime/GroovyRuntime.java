@@ -251,13 +251,15 @@ public class GroovyRuntime extends ScriptRuntime {
         String loadJarsPath = "";
         if(!jars.isEmpty()){
             for (File jar : jars) {
-                String path = "jar:file://" + jar.getAbsolutePath() + "!/";
-                try {
-                    urls.add(jar.toURI().toURL());
-                    loadJarsPath += jar.getAbsolutePath() + ";";
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                    LoggerEx.warn(TAG, "MalformedURL " + path + " while load jars, error " + e.getMessage());
+                if (!jar.getAbsolutePath().contains("log4j")) {
+                    String path = "jar:file://" + jar.getAbsolutePath() + "!/";
+                    try {
+                        urls.add(jar.toURI().toURL());
+                        loadJarsPath += jar.getAbsolutePath() + ";";
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
+                        LoggerEx.warn(TAG, "MalformedURL " + path + " while load jars, error " + e.getMessage());
+                    }
                 }
             }
             LoggerEx.info(TAG, "Loaded jars " + loadJarsPath);
@@ -266,7 +268,8 @@ public class GroovyRuntime extends ScriptRuntime {
         if (!urls.isEmpty()) {
             URL[] theUrls = new URL[urls.size()];
             urls.toArray(theUrls);
-            parentClassLoader = new URLClassLoader(theUrls, parentClassLoader);
+//            parentClassLoader = new URLClassLoader(theUrls, parentClassLoader);
+            parentClassLoader = new ParentLastURLClassLoader(theUrls);
         }
 
         if (runtimeBootListener != null) {
