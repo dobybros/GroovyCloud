@@ -271,6 +271,7 @@ public class GroovyRuntime extends ScriptRuntime {
             urls.toArray(theUrls);
 //            parentClassLoader = new URLClassLoader(theUrls, parentClassLoader);
             parentClassLoader = new ParentLastURLClassLoader(theUrls);
+            LoggerEx.info(TAG, "------ use parent last url class loader ------");
         }
 
         if (runtimeBootListener != null) {
