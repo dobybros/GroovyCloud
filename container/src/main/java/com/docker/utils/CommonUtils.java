@@ -4,7 +4,6 @@ import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.docker.errors.CoreErrorCodes;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
@@ -34,7 +33,7 @@ public class CommonUtils {
 		}
 	}
 	
-	static SimpleDateFormat gmtFormatter = new SimpleDateFormat("yyyy/MM/dd"); 
+	public static SimpleDateFormat gmtFormatter = new SimpleDateFormat("yyyy/MM/dd");
 	static {
 		gmtFormatter.setTimeZone(TimeZone.getTimeZone("GMT"));
 	}

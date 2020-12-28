@@ -105,7 +105,7 @@ public class MethodRequest extends RPCRequest {
                             throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_SKELETON_NULL, "Skeleton handler is not for service " + service + " on method service_class_method: " + RpcCacheManager.getInstance().getMethodByCrc(crc));
                         MethodMapping methodMapping = serviceSkeletonAnnotationHandler.getMethodMapping(crc);
                         if(methodMapping == null){
-                            LoggerEx.error(TAG, "All methodMappings: " + JSON.toJSONString(serviceSkeletonAnnotationHandler.getMethodMap().keySet()));
+                            LoggerEx.error(TAG, "All methodMappings: " + fromServerName + " " + fromService + " " + service);
                             throw new CoreException(ChatErrorCodes.ERROR_METHODREQUEST_METHODNOTFOUND, "Method doesn't be found by service_class_method " + RpcCacheManager.getInstance().getMethodByCrc(crc) + ",crc: " + crc);
                         }
 

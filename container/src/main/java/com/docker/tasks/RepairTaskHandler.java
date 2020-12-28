@@ -22,40 +22,47 @@ import java.util.concurrent.ConcurrentHashMap;
  * Description：
  */
 public class RepairTaskHandler extends ClassAnnotationGlobalHandler {
-    private final String TAG = RepairTaskHandler.class.getSimpleName();
-    private Map<String, GroovyObjectEx> groovyObjectExMap = new ConcurrentHashMap<>();
-    private RepairServiceImpl repairService = (RepairServiceImpl) GroovyCloudBean.getBean(GroovyCloudBean.REPAIRSERVICE);
+	private final String TAG = RepairTaskHandler.class.getSimpleName();
+	private Map<String, GroovyObjectEx> groovyObjectExMap = new ConcurrentHashMap<>();
+	private RepairServiceImpl repairService = (RepairServiceImpl) GroovyCloudBean.getBean(GroovyCloudBean.REPAIRSERVICE);
 
-    @Override
-    public Class<? extends Annotation> handleAnnotationClass(GroovyRuntime groovyRuntime) {
-        return RepairTaskListener.class;
-    }
+	@Override
+	public Class<? extends Annotation> handleAnnotationClass(GroovyRuntime groovyRuntime) {
+		return RepairTaskListener.class;
+	}
 
-    @Override
-    public void handleAnnotatedClassesInjectBean(GroovyRuntime groovyRuntime) {
-        for (GroovyObjectEx groovyObjectEx : groovyObjectExMap.values()) {
-            try {
-                groovyObjectEx = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyObjectEx.getGroovyClass());
-            }catch (CoreException e){
-                LoggerEx.error(TAG, e.getMessage());
-            }
-        }
-    }
+	@Override
+	public void handleAnnotatedClassesInjectBean(GroovyRuntime groovyRuntime) {
+		for (GroovyObjectEx groovyObjectEx : groovyObjectExMap.values()) {
+			try {
+				groovyObjectEx = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyObjectEx.getGroovyClass());
+			} catch (CoreException e) {
+				LoggerEx.error(TAG, e.getMessage());
+			}
+		}
+	}
 
-    @Override
-    public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, GroovyRuntime groovyRuntime) {
-        LoggerEx.info(TAG, "I will add repair task");
-        if (annotatedClassMap != null) {
-            Collection<Class<?>> values = annotatedClassMap.values();
+	@Override
+	public void handleAnnotatedClasses(Map<String, Class<?>> annotatedClassMap, GroovyRuntime groovyRuntime) {
+		LoggerEx.info(TAG, "I will add repair task");
+		if (annotatedClassMap != null) {
+			Collection<Class<?>> values = annotatedClassMap.values();
 
-            for (Class<?> groovyClass : values) {
-                RepairTaskListener repairTaskListener = groovyClass.getAnnotation(RepairTaskListener.class);
-                if (repairTaskListener != null) {
-                    String description = repairTaskListener.description();
-                    String createTime = repairTaskListener.createTime();
-                    String id = repairTaskListener.id();
-                    int type = repairTaskListener.type();
-                    GroovyObjectEx<?> groovyObj = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
+			for (Class<?> groovyClass : values) {
+				RepairTaskListener repairTaskListener = groovyClass.getAnnotation(RepairTaskListener.class);
+				if (repairTaskListener != null) {
+					String description = repairTaskListener.description();
+					String createTime = repairTaskListener.createTime();
+					String id = repairTaskListener.id();
+					int type = repairTaskListener.type();
+					String serverName = null;
+					if (groovyClass.getName() != null) {
+						int endIndex = groovyClass.getName().indexOf('.');
+						if (endIndex != -1) {
+							serverName = groovyClass.getName().substring(0, endIndex);
+						}
+					}
+					GroovyObjectEx<?> groovyObj = ((GroovyBeanFactory) groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 //                    GroovyObjectEx existGroovyObj = groovyObjectExMap.get(id);
 //                    boolean newGroovyPath = false;
 //                    if(existGroovyObj != null){
@@ -68,39 +75,40 @@ public class RepairTaskHandler extends ClassAnnotationGlobalHandler {
 //                        newGroovyPath = true;
 //                    }
 //                    if(newGroovyPath){
-                        groovyObjectExMap.put(id, groovyObj);
-                        try {
-                            RepairData repairData = repairService.getRepairData(id);
-                            if (repairData == null) {
-                                repairData = new RepairData(id, description, createTime, type, "null", "http://" + OnlineServer.getInstance().getIp() + ":" + OnlineServer.getInstance().getHttpPort());
-                                repairData.setExecuteResult("null");
-                                repairService.addRepairData(repairData);
-                            } else {
-                                repairData.setServerUri("http://" + OnlineServer.getInstance().getIp() + ":" + OnlineServer.getInstance().getHttpPort());
-                                repairData.setCreateTime(createTime);
-                                repairData.setDescription(description);
-                                repairData.setType(type);
-                                repairService.updateRepairData(repairData);
-                            }
-                        } catch (Throwable t) {
-                            t.printStackTrace();
-                            LoggerEx.error(TAG, "Add repairData error, errMsg:" + t.getMessage());
-                        }
+					groovyObjectExMap.put(id, groovyObj);
+					try {
+						RepairData repairData = repairService.getRepairData(id);
+						if (repairData == null) {
+							repairData = new RepairData(id, description, createTime, type, "null", "http://" + OnlineServer.getInstance().getIp() + ":" + OnlineServer.getInstance().getHttpPort(), serverName);
+							repairData.setExecuteResult("null");
+							repairService.addRepairData(repairData);
+						} else {
+							repairData.setServerUri("http://" + OnlineServer.getInstance().getIp() + ":" + OnlineServer.getInstance().getHttpPort());
+							repairData.setCreateTime(createTime);
+							repairData.setDescription(description);
+							repairData.setServerName(serverName);
+							repairData.setType(type);
+							repairService.updateRepairData(repairData);
+						}
+					} catch (Throwable t) {
+						t.printStackTrace();
+						LoggerEx.error(TAG, "Add repairData error, errMsg:" + t.getMessage());
+					}
 //                    }
-                }
-            }
-        }
-    }
+				}
+			}
+		}
+	}
 
-    public Object execute(String id) throws CoreException {
-        GroovyObjectEx groovyObjectEx = groovyObjectExMap.get(id);
-        if (groovyObjectEx != null) {
-            return groovyObjectEx.invokeRootMethod("repair");
-        }
-        return null;
-    }
+	public Object execute(String id) throws CoreException {
+		GroovyObjectEx groovyObjectEx = groovyObjectExMap.get(id);
+		if (groovyObjectEx != null) {
+			return groovyObjectEx.invokeRootMethod("repair");
+		}
+		return null;
+	}
 
-    public RepairServiceImpl getRepairService() {
-        return repairService;
-    }
+	public RepairServiceImpl getRepairService() {
+		return repairService;
+	}
 }
