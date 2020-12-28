@@ -7,6 +7,7 @@ import chat.utils.DataInputStreamEx;
 import chat.utils.DataOutputStreamEx;
 import chat.utils.GZipUtils;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.docker.rpc.remote.MethodMapping;
 import com.docker.rpc.remote.skeleton.ServiceSkeletonAnnotationHandler;
 import com.docker.rpc.remote.stub.RpcCacheManager;
@@ -219,7 +220,7 @@ public class MethodRequest extends RPCRequest {
                 if(argCount > 0) {
                     String json = null;
                     if(argsTmpStr == null)
-                        json = JSON.toJSONString(args);
+                        json = JSON.toJSONString(args, SerializerFeature.DisableCircularReferenceDetect);
                     else
                         json = argsTmpStr;
                     try {
