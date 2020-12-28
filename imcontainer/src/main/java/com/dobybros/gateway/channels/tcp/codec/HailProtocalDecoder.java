@@ -15,6 +15,7 @@ import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class HailProtocalDecoder implements ProtocolDecoder {
 	private final static String TAG = "DECODER";
@@ -26,7 +27,7 @@ public class HailProtocalDecoder implements ProtocolDecoder {
 	private int maxPackLength = 48 * 1024;
 
 	public HailProtocalDecoder() {
-		this(Charset.defaultCharset());
+		this(StandardCharsets.UTF_8);
 		//Charset.forName("UTF-8")
 	}
 

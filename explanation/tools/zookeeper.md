@@ -17,7 +17,7 @@ class RoomZK {
 
     public void markRoomStatus(String roomId, Integer status, boolean stopWatch) {
         if (zookeeperClient.checkExists().forPath(getPath(roomId)) == null) {
-            zookeeperClient.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(getPath(roomId), status.toString().getBytes(Charset.defaultCharset()))
+            zookeeperClient.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(getPath(roomId), status.toString().getBytes("utf-8"))
         } 
     }
 }

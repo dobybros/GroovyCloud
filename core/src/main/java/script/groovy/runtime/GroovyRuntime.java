@@ -27,7 +27,7 @@ import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,7 +35,7 @@ public class GroovyRuntime extends ScriptRuntime {
     private static final String TAG = GroovyRuntime.class.getSimpleName();
     private ArrayList<ClassAnnotationHandler> annotationHandlers = new ArrayList<>();
     private ArrayList<ClassAnnotationGlobalHandler> annotationGlobalHandlers = new ArrayList<>();
-    private ConcurrentHashMap<Object, ClassAnnotationHandler> annotationHandlerMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Object, ClassAnnotationHandler>  annotationHandlerMap= new ConcurrentHashMap<>();
     private ConcurrentHashMap<Object, ClassAnnotationGlobalHandler> annotationGlobalHandlerMap = new ConcurrentHashMap<>();
     private GroovyBeanFactory beanFactory;
     private List<FieldInjectionListener> fieldInjectionListeners;
@@ -187,7 +187,7 @@ public class GroovyRuntime extends ScriptRuntime {
                         mvnSettingPath = "-s " + PropertiesContainer.getInstance().getProperty("maven.settings.path");
                     }
                 }
-                String pomStr = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
+                String pomStr = FileUtils.readFileToString(pomFile, StandardCharsets.UTF_8);
                 if (pomStr.contains("AllThisDependencies")) {
                     try {
                         LoggerEx.info(TAG, "maven info: mvn " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));

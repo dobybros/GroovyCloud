@@ -20,7 +20,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import script.file.FileAdapter;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.util.*;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
@@ -441,7 +440,7 @@ public class DeployServiceUtils {
         try {
             File pomFile = new File(projectPath + "/pom.xml");
             if(pomFile.exists()){
-                String pomContent = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
+                String pomContent = FileUtils.readFileToString(pomFile, "utf-8");
                 if (pomContent != null) {
                     pomContent = pomContent.replaceAll("", "");
                     if (pomContent.contains("<!--CoreStart-->") && pomContent.contains("<!--CoreEnd-->")) {
@@ -471,7 +470,7 @@ public class DeployServiceUtils {
         List list = new ArrayList();
         try {
             File pomFile = new File(projectPath + "/pom.xml");
-            String pomContent = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
+            String pomContent = FileUtils.readFileToString(pomFile, "utf-8");
             if (pomContent != null) {
                 pomContent = pomContent.replaceAll(" ", "");
                 if (pomContent.contains("<!--GroovyGrapesStart!!!CantDelete-->") && pomContent.contains("<!--GroovyGrapesEnd!!!CantDelete-->")) {

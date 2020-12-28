@@ -11,7 +11,7 @@ import com.docker.storage.kafka.BaseKafkaConfCenter;
 import com.docker.storage.kafka.KafkaProducerHandler;
 import com.docker.utils.ScriptHttpUtils;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +40,7 @@ public class DataSessionListener {
                 dataMap.put("address", "http://" + OnlineServer.getInstance().getIp() + ":" + OnlineServer.getInstance().getHttpPort());
                 dataMap.put("idc", OnlineServer.getInstance().getLanId());
                 dataMap.put("data", data);
-                kafkaProducerHandler.send("GatewayMemoryBackUp", JSON.toJSONString(dataMap).getBytes(Charset.defaultCharset()));
+                kafkaProducerHandler.send("GatewayMemoryBackUp", JSON.toJSONString(dataMap).getBytes(StandardCharsets.UTF_8));
             }
         };
         TimerEx.schedule(storeDataTimer, 30000L, 5000L);

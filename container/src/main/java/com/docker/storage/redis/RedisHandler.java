@@ -495,6 +495,12 @@ public class RedisHandler {
         });
     }
 
+    public String set(String key, String value) throws CoreException {
+        return doJedisExecute(jedis -> {
+            return jedis.set(key, value);
+        });
+    }
+
     public Long setNX(String key, String value) throws CoreException {
         return doJedisExecute(jedis -> {
             return jedis.setnx(key, value);

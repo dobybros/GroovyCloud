@@ -23,7 +23,7 @@ import com.docker.script.BaseRuntime;
 import com.docker.utils.GroovyCloudBean;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -122,7 +122,7 @@ public class ProxyOnlineServiceUser extends OnlineServiceUser {
             case Constants.MESSAGE_TYPE_CLOSECLUSTERSESSION:
                 try {
                     if (event.getData() != null) {
-                        String contentStr = new String(event.getData(), Charset.defaultCharset());
+                        String contentStr = new String(event.getData(), StandardCharsets.UTF_8);
                         Map contentMap = JSONObject.parseObject(contentStr);
                         if (contentMap != null) {
                             Integer close = (Integer) contentMap.get("close");

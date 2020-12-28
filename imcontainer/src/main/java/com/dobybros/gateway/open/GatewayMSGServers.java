@@ -20,7 +20,7 @@ import org.apache.commons.lang.StringUtils;
 import script.groovy.runtime.GroovyRuntime;
 import script.memodb.ObjectId;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -196,7 +196,7 @@ public final class GatewayMSGServers extends MSGServers {
         message.setReceiverIds(receiverIds);
         Map<String, Integer> contentMap = new HashMap<>();
         contentMap.put("close", close);
-        message.setData(JSON.toJSONString(contentMap).getBytes(Charset.defaultCharset()));
+        message.setData(JSON.toJSONString(contentMap).getBytes(StandardCharsets.UTF_8));
         serviceUser.pushToCrossServer(message, null);
     }
 

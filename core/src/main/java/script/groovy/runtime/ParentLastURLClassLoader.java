@@ -32,39 +32,33 @@ public class ParentLastURLClassLoader extends ClassLoader
      * This class delegates (child then parent) for the findClass method for a URLClassLoader.
      * We need this because findClass is protected in URLClassLoader
      */
-    private static class ChildURLClassLoader extends URLClassLoader
-    {
+    private static class ChildURLClassLoader extends URLClassLoader {
         private FindClassClassLoader realParent;
 
-        public ChildURLClassLoader(URL[] urls, FindClassClassLoader realParent )
-        {
+        ChildURLClassLoader(URL[] urls, FindClassClassLoader realParent) {
             super(urls, null);
 
             this.realParent = realParent;
         }
 
         @Override
-        public Class<?> findClass(String name) throws ClassNotFoundException
-        {
+        public Class<?> findClass(String name) throws ClassNotFoundException {
 
             Class<?> loaded = super.findLoadedClass(name);
             if( loaded != null )
                 return loaded;
-            try
-            {
+            try {
                 // first try to use the URLClassLoader findClass
                 return super.findClass(name);
             }
-            catch( ClassNotFoundException e )
-            {
+            catch( ClassNotFoundException e ) {
                 // if that fails, we ask our real parent classloader to load the class (we give up)
                 return realParent.loadClass(name);
             }
         }
     }
 
-    public ParentLastURLClassLoader(URL[] classpath)
-    {
+    public ParentLastURLClassLoader(URL[] classpath) {
 //        super(Thread.currentThread().getContextClassLoader());
 //
 //        URL[] urls = classpath.toArray(new URL[classpath.size()]);
@@ -73,15 +67,12 @@ public class ParentLastURLClassLoader extends ClassLoader
     }
 
     @Override
-    protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
-    {
-        try
-        {
+    protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        try {
             // first we try to find a class inside the child classloader
             return childClassLoader.findClass(name);
         }
-        catch( ClassNotFoundException e )
-        {
+        catch( ClassNotFoundException e ) {
             // didn't find it, try the parent
             return super.loadClass(name, resolve);
         }

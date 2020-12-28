@@ -65,3 +65,4 @@ java $JAVA_OPTS $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS $CONFIG_FILES -ja
  echo "PID: $PIDS"
  #echo "STDOUT: $STDOUT_FILE"
  #mvn install -DskipTests
+ #mvn deploy -DskipTests

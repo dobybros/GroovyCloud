@@ -38,7 +38,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -131,7 +130,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                 if (internalFilter(request, result).getCode() == 1) {
                     if (uriStrs.length > 3) {
                         JSONObject jsonObject = null;
-                        String requestStr = IOUtils.toString(request.getInputStream(), Charset.defaultCharset());
+                        String requestStr = IOUtils.toString(request.getInputStream(), "utf-8");
                         if (requestStr != null) {
                             jsonObject = JSON.parseObject(requestStr);
                         }
@@ -177,7 +176,7 @@ public class GroovyServletScriptDispatcher extends HttpServlet {
                     result.setMsg("Jwt expired or not found when Cross-cluster, please check!!!");
                 }
                 if (result.getMsg() == null) {
-                    String requestStr = IOUtils.toString(request.getInputStream(), Charset.defaultCharset());
+                    String requestStr = IOUtils.toString(request.getInputStream(), "utf-8");
                     JSONObject params = JSON.parseObject(requestStr);
                     String serviceName = params.getString("service");
                     String className = params.getString("className");

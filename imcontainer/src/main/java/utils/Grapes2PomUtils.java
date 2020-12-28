@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +45,7 @@ public class Grapes2PomUtils {
                 FileInputStream inputStream = new FileInputStream(tempFile);
                 tempFile.deleteOnExit();
                 File pomFile = new File(file.getAbsolutePath() + "/pom.xml");
-                String content = FileUtils.readFileToString(pomFile, Charset.defaultCharset());
+                String content = FileUtils.readFileToString(pomFile, StandardCharsets.UTF_8);
                 int index = content.indexOf("<dependencies>");
                 int position = 0;
                 StringBuilder stringBuilder = new StringBuilder();
@@ -88,7 +88,7 @@ public class Grapes2PomUtils {
             if (configDirectFile.exists()) {
                 File configFile = new File(configDirectFile + "/imports.groovy");
                 if (configFile.exists()) {
-                    String grapesConfig = FileUtils.readFileToString(configFile, Charset.defaultCharset());
+                    String grapesConfig = FileUtils.readFileToString(configFile, "utf-8");
                     if (grapesConfig != null) {
                         String[] grabs = grapesConfig.replaceAll(" ", "").split("@Grab");
                         list = new ArrayList<GrpesObject>();

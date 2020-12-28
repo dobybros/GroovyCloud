@@ -29,11 +29,9 @@ import script.file.FileAdapter.FileEntity;
 import script.file.FileAdapter.PathEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.RuntimeBootListener;
-import script.groovy.servlets.grayreleased.GrayReleased;
 import script.utils.ShutdownListener;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -460,7 +458,7 @@ public class ScriptManager implements ShutdownListener {
         File propertiesFile = new File(propertiesPath);
         if (propertiesFile.exists() && propertiesFile.isFile()) {
             InputStream is = FileUtils.openInputStream(propertiesFile);
-            InputStreamReader reader = new InputStreamReader(is, Charset.defaultCharset());
+            InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8");
             properties.load(reader);
             reader.close();
             IOUtils.closeQuietly(is);
@@ -548,80 +546,6 @@ public class ScriptManager implements ShutdownListener {
             }
         }
         return finalServiceVersions;
-    }
-
-    private List<String> getServiceVersions() throws CoreException {
-        List<ServiceVersion> serviceVersions = serviceVersionService.getServiceVersions(serverType);
-
-        Map<String, List<String>> serviceVersionFinalMap = new ConcurrentHashMap<>();
-        Map<String, Integer> defaultVersionMap = new ConcurrentHashMap<>();
-        for (ServiceVersion serviceVersion : serviceVersions) {
-            Map<String, Integer> serviceFinalMap = new ConcurrentHashMap<>();
-            Map<String, String> serviceVersionMap = serviceVersion.getServiceVersions();
-            if (serviceVersionMap != null) {
-                for (String serviceName : serviceVersionMap.keySet()) {
-                    if (serviceVersion.getType().equals(GrayReleased.defaultVersion)) {
-                        if (serviceFinalMap.get(serviceName) == null) {
-                            if (StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
-                                defaultVersionMap.put(serviceName, -1);
-                            } else {
-                                defaultVersionMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
-                            }
-                        } else {
-                            if (!StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
-                                if (Integer.parseInt(serviceVersionMap.get(serviceName)) > defaultVersionMap.get(serviceName)) {
-                                    defaultVersionMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
-                                }
-                            }
-                        }
-                    }
-                    if (serviceFinalMap.get(serviceName) == null) {
-                        if (StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
-                            serviceFinalMap.put(serviceName, -1);
-                        } else {
-                            serviceFinalMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
-                        }
-                    } else {
-                        if (!StringUtils.isEmpty(serviceVersionMap.get(serviceName))) {
-                            if (Integer.parseInt(serviceVersionMap.get(serviceName)) > serviceFinalMap.get(serviceName)) {
-                                serviceFinalMap.put(serviceName, Integer.valueOf(serviceVersionMap.get(serviceName)));
-                            }
-                        }
-                    }
-                }
-                List<String> newServiceVersionList = new ArrayList<>();
-                if (serviceFinalMap.size() > 0) {
-                    for (String serviceName : serviceFinalMap.keySet()) {
-                        if (serviceFinalMap.get(serviceName) != -1) {
-                            newServiceVersionList.add(serviceName + "_v" + serviceFinalMap.get(serviceName).toString());
-                        } else {
-                            newServiceVersionList.add(serviceName);
-                        }
-                    }
-                }
-                if (newServiceVersionList.size() > 0) {
-                    serviceVersionFinalMap.put(serviceVersion.getType(), newServiceVersionList);
-                }
-            }
-        }
-        if (!defaultVersionMap.isEmpty()) {
-            defalutServiceVersionMap = defaultVersionMap;
-        }
-        if (serviceVersionFinalMap.size() > 0) {
-            List<String> serviceVersionFinalList = new ArrayList<>();
-            for (String type : serviceVersionFinalMap.keySet()) {
-                List<String> serviceVersionList = serviceVersionFinalMap.get(type);
-                if (serviceVersionList != null && serviceVersionList.size() > 0) {
-                    for (String serviceVersion : serviceVersionList) {
-                        if (!serviceVersionFinalList.contains(serviceVersion)) {
-                            serviceVersionFinalList.add(serviceVersion);
-                        }
-                    }
-                }
-            }
-            return serviceVersionFinalList;
-        }
-        return null;
     }
 
     private void unzip(File zipFile, String dir, String passwd) throws CoreException {

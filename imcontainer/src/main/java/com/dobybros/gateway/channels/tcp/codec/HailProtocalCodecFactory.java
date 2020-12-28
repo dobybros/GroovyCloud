@@ -6,13 +6,14 @@ import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class HailProtocalCodecFactory implements ProtocolCodecFactory {
 	private final HailProtocalEncoder encoder;
 	private final HailProtocalDecoder decoder;
 
 	public HailProtocalCodecFactory(){
-		this(Charset.defaultCharset());
+		this(StandardCharsets.UTF_8);
 	}
 	
 	public HailProtocalCodecFactory(Charset charset) {

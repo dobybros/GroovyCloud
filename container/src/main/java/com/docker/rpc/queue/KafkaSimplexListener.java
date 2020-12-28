@@ -17,7 +17,7 @@ import org.apache.logging.log4j.core.appender.mom.kafka.DefaultKafkaProducerFact
 import org.apache.logging.log4j.core.appender.mom.kafka.KafkaProducerFactory;
 
 import javax.annotation.Resource;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
@@ -44,7 +44,7 @@ public class KafkaSimplexListener implements QueueSimplexListener {
         jsonObject.put("type", type);
         jsonObject.put("data", data);
         jsonObject.put("encode", encode);
-        producer.send(new ProducerRecord(topic, jsonObject.toString().getBytes(Charset.defaultCharset())), (recordMetadata, e) -> {
+        producer.send(new ProducerRecord(topic, jsonObject.toString().getBytes(StandardCharsets.UTF_8)), (recordMetadata, e) -> {
             if(e != null){
                 LoggerEx.error(TAG, "Send message to kafka error!, topic: " + topic + ", err: " + ExceptionUtils.getFullStackTrace(e));
             }
@@ -55,7 +55,7 @@ public class KafkaSimplexListener implements QueueSimplexListener {
     public void send(String key, byte[] data) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("data", data);
-        producer.send(new ProducerRecord(topic, jsonObject.toString().getBytes(Charset.defaultCharset())), (recordMetadata, e) -> {
+        producer.send(new ProducerRecord(topic, jsonObject.toString().getBytes(StandardCharsets.UTF_8)), (recordMetadata, e) -> {
             if(e != null){
                 LoggerEx.error(TAG, "Send message to kafka error!, topic: " + topic + ", err: " + ExceptionUtils.getFullStackTrace(e));
             }
@@ -75,7 +75,7 @@ public class KafkaSimplexListener implements QueueSimplexListener {
             ConsumerRecords<String, byte[]> records =
                     consumer.poll(Duration.ofMillis(1000));
             for (ConsumerRecord<String, byte[]> record : records) {
-                JSONObject jsonObject = JSON.parseObject(new String(record.value(), Charset.defaultCharset()));
+                JSONObject jsonObject = JSON.parseObject(new String(record.value()));
                 if(jsonObject != null){
                     try {
                         String type = jsonObject.getString("type");

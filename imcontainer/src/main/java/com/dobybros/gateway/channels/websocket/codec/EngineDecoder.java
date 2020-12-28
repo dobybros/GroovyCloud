@@ -14,6 +14,7 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class EngineDecoder extends WebSocketDecoder {
 	private final AttributeKey CONTEXT = new AttributeKey(getClass(), "context");
@@ -25,7 +26,7 @@ public class EngineDecoder extends WebSocketDecoder {
 	private int maxPackLength = 48 * 1024;
 
 	public EngineDecoder() {
-		this(Charset.defaultCharset());
+		this(StandardCharsets.UTF_8);
 		//Charset.forName("UTF-8")
 	}
 
