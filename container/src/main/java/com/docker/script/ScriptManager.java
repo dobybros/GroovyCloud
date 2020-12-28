@@ -32,6 +32,7 @@ import script.groovy.runtime.RuntimeBootListener;
 import script.utils.ShutdownListener;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -458,7 +459,7 @@ public class ScriptManager implements ShutdownListener {
         File propertiesFile = new File(propertiesPath);
         if (propertiesFile.exists() && propertiesFile.isFile()) {
             InputStream is = FileUtils.openInputStream(propertiesFile);
-            InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8");
+            InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
             properties.load(reader);
             reader.close();
             IOUtils.closeQuietly(is);
