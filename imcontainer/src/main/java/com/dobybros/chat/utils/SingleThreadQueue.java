@@ -87,7 +87,11 @@ public class SingleThreadQueue<T> extends RunnableEx {
 	public void offer(T t) {
 		queue.offer(t);
 	}
-	
+
+	public boolean remove(T t) {
+		return queue.remove(t);
+	}
+
 	public void start() {
 		if(handler == null)
 			throw new NullPointerException("handler for SingleThreadQueue is a must. but is null");

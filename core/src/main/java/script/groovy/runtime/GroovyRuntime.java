@@ -184,7 +184,11 @@ public class GroovyRuntime extends ScriptRuntime {
                 if(mvnLibsPath != null){
                     if(StringUtils.isNotBlank(String.valueOf(mvnLibsPath))){
                         mvnJarsDir = mvnLibsPath.toString();
-                        mvnSettingPath = "-s " + PropertiesContainer.getInstance().getProperty("maven.settings.path");
+                        String mvnSettings = (String) PropertiesContainer.getInstance().getProperty("maven.settings.path");
+                        if(!StringUtils.isBlank(mvnSettings)) {
+                            mvnSettingPath = "-s " + mvnSettings;
+                        }
+
                     }
                 }
                 String pomStr = FileUtils.readFileToString(pomFile, Charset.defaultCharset());

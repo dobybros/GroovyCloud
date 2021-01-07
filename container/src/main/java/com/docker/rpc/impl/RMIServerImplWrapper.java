@@ -112,7 +112,10 @@ public class RMIServerImplWrapper extends ClassAnnotationGlobalHandler {
 			StringBuilder uriLogs = new StringBuilder(
 					"\r\n---------------------------------------\r\n");
 
-			Map<String, GroovyObjectEx<RPCServerAdapter>> newServerAdapterMap = new ConcurrentHashMap<>();
+			if(this.serverAdapterMap == null) {
+				this.serverAdapterMap = new ConcurrentHashMap<>();
+			}
+//			Map<String, GroovyObjectEx<RPCServerAdapter>> newServerAdapterMap = this.serverAdapterMap == null ? new ConcurrentHashMap<>() : this.serverAdapterMap;
 			Set<String> keys = annotatedClassMap.keySet();
 			for (String key : keys) {
 				Class<?> groovyClass = annotatedClassMap.get(key);
@@ -128,13 +131,16 @@ public class RMIServerImplWrapper extends ClassAnnotationGlobalHandler {
 							GroovyObjectEx<RPCServerAdapter> serverAdapter = ((GroovyBeanFactory)groovyRuntime.getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 							if (serverAdapter != null) {
 								uriLogs.append("RPCServerHandler " + rpcType + "#" + groovyClass + "\r\n");
-								newServerAdapterMap.put(rpcType, serverAdapter);
+								serverAdapterMap.put(rpcType, serverAdapter);
 							}
 						}
 					}
 				}
 			}
-			this.serverAdapterMap = newServerAdapterMap;
+//			if(this.serverAdapterMap == null) {
+//				this.serverAdapterMap = newServerAdapterMap;
+//			}
+			rmiServerHandler.clearTypeEntityMap();
 			uriLogs.append("---------------------------------------");
 			LoggerEx.info(TAG, uriLogs.toString());
 		}
