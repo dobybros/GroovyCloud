@@ -6,7 +6,7 @@ import java.util.Set;
 public class HashTree<K, V> {
 	private HashMap<K, HashTree<K, V>> parentMap;
 	private HashMap<K, V> kvMap;
-	private HashMap<String, Object> parameters;
+	public HashMap<String, Object> parameters;
 	
 	public HashTree() {
 		parentMap = new HashMap<K, HashTree<K,V>>();

@@ -1,6 +1,7 @@
 package script.groovy.runtime;
 
 import chat.errors.CoreException;
+import chat.logs.LoggerEx;
 import org.apache.commons.lang.StringUtils;
 import script.groovy.annotation.Bean;
 import script.groovy.object.GroovyObjectEx;
@@ -116,6 +117,7 @@ public class GroovyBeanFactory extends ClassAnnotationHandler {
 		if (annotatedClassMap != null) {
 			Collection<Class<?>> values = annotatedClassMap.values();
 			for (Class<?> groovyClass : values) {
+				long time = System.currentTimeMillis();
 				Bean bean = groovyClass.getAnnotation(Bean.class);
 				String name = getGroovyRuntime().processAnnotationString(bean.name());
 				if (StringUtils.isBlank(name)) {
@@ -157,6 +159,8 @@ public class GroovyBeanFactory extends ClassAnnotationHandler {
 				} catch (CoreException e) {
 					e.printStackTrace();
 				}
+				LoggerEx.info(TAG, "class " + groovyClass.getName() +",Spend time: " + (System.currentTimeMillis() - time));
+
 			}
 		}
 //		ConcurrentHashMap<String, Class<?>> oldProxyClassMap = proxyClassMap;
@@ -168,7 +172,9 @@ public class GroovyBeanFactory extends ClassAnnotationHandler {
 		beanMap = newBeanMap;
 //		if (oldBeanMap != null)
 //			oldBeanMap.clear();
-
+		long time = System.currentTimeMillis();
 		GroovyObjectEx.fillGroovyObjects(beanMap.values(), getGroovyRuntime());
+		LoggerEx.info(TAG, "fillGroovyObjects " +",Spend time: " + (System.currentTimeMillis() - time));
+
 	}
 }

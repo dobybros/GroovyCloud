@@ -1,32 +1,25 @@
 package script.groovy.object;
 
+import chat.errors.CoreException;
 import chat.errors.GroovyErrorCodes;
 import chat.logs.LoggerEx;
 import chat.utils.ReflectionUtil;
 import groovy.lang.GroovyObject;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.*;
-
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.codehaus.groovy.runtime.NullObject;
-import org.springframework.aop.framework.ReflectiveMethodInvocation;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.lang.Nullable;
 import script.groovy.annotation.Bean;
 import script.groovy.runtime.FieldInjectionListener;
 import script.groovy.runtime.GroovyBeanFactory;
 import script.groovy.runtime.GroovyRuntime;
-import chat.errors.CoreException;
 import script.groovy.runtime.MethodInterceptor;
 import script.groovy.runtime.classloader.ClassHolder;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
 
 public class GroovyObjectEx<T> {
     private static final String TAG = GroovyObjectEx.class.getSimpleName();
@@ -133,6 +126,7 @@ public class GroovyObjectEx<T> {
             Field[] fields = ReflectionUtil.getFields(gObj.getClass());
             if (fields != null) {
                 for (Field field : fields) {
+                    long time = System.currentTimeMillis();
                     //Bean handler
                     Bean bean = field.getAnnotation(Bean.class);
                     if (bean != null) {
@@ -196,6 +190,7 @@ public class GroovyObjectEx<T> {
                             }
                         }
                     }
+                    LoggerEx.info(TAG, "ClassName: " + gObj.getClass().getName() + " field: " + field.getName() + " spend time: " + (System.currentTimeMillis() - time));
                 }
             }
         }

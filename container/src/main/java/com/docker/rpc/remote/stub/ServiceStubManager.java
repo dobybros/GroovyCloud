@@ -32,6 +32,7 @@ public class ServiceStubManager {
     private static final String TAG = ServiceStubManager.class.getSimpleName();
     private ConcurrentHashMap<String, Boolean> classScanedMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Long, MethodMapping> methodMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap serviceClassProxyCacheMap = new ConcurrentHashMap<>();
     private String host;
     private Class<?> serviceStubProxyClass;
     //sure is ssl
@@ -104,6 +105,7 @@ public class ServiceStubManager {
         Method[] methods = ReflectionUtil.getMethods(clazz);
         if (methods != null) {
             for (Method method : methods) {
+                long time = System.currentTimeMillis();
                 MethodMapping mm = new MethodMapping(method);
                 long value = ReflectionUtil.getCrc(method, service);
                 if (methodMap.containsKey(value)) {
@@ -145,7 +147,7 @@ public class ServiceStubManager {
                 }
                 methodMap.put(value, mm);
 //                RemoteProxy.cacheMethodCrc(method, value);
-                LoggerEx.info("SCAN", "Mapping crc " + value + " for class " + clazz.getName() + " method " + method.getName() + " for service " + service);
+                LoggerEx.info("ServiceStubManager", "Mapping crc " + value + " for class " + clazz.getName() + " method " + method.getName() + " for service " + service + " spend time: " + (System.currentTimeMillis() - time));
             }
         }
     }
@@ -188,30 +190,44 @@ public class ServiceStubManager {
     public <T> T getService(String service, Class<T> adapterClass, Integer version) {
         if (service == null)
             throw new NullPointerException("Service can not be nulll");
-        T adapterService = null;
-        //TODO should cache adapterService. class as Key, value is adapterService,every class -> adaService
-        scanClass(adapterClass, service);
-        if (serviceStubProxyClass != null) {
-            try {
-                Method getProxyMethod = serviceStubProxyClass.getMethod("getProxy", Class.class, ServiceStubManager.class, RemoteServerHandler.class);
-                if (getProxyMethod != null) {
-                    //远程service
-                    adapterService = (T) getProxyMethod.invoke(null, adapterClass, this, getRemoteServerHandler(service));
-                } else {
-                    LoggerEx.error(TAG, "getProxy method doesn't be found for " + adapterClass + " in service " + service);
-                }
-            } catch (Throwable t) {
-                t.printStackTrace();
-                LoggerEx.error(TAG, "Generate proxy object for " + adapterClass + " in service " + service + " failed, " + ExceptionUtils.getFullStackTrace(t));
-            }
 
-        } else {
-            try {
-                RemoteProxy proxy = new RemoteProxy(this, getRemoteServerHandler(service));
-                adapterService = (T) proxy.getProxy(adapterClass);
-            } catch (Throwable e) {
-                e.printStackTrace();
-                LoggerEx.warn(TAG, "Initiate moduleClass " + adapterClass + " failed, " + ExceptionUtils.getFullStackTrace(e));
+        String key = service + "_" + adapterClass.getName();
+        T adapterService = (T) serviceClassProxyCacheMap.get(key);
+        if(adapterService == null) {
+            synchronized (this) {
+                adapterService = (T) serviceClassProxyCacheMap.get(key);
+                if (adapterService == null) {
+                    scanClass(adapterClass, service);
+                    if (serviceStubProxyClass != null) {
+                        try {
+                            Method getProxyMethod = serviceStubProxyClass.getMethod("getProxy", Class.class, ServiceStubManager.class, RemoteServerHandler.class);
+                            if (getProxyMethod != null) {
+                                //远程service
+                                long time = System.currentTimeMillis();
+                                adapterService = (T) getProxyMethod.invoke(null, adapterClass, this, getRemoteServerHandler(service));
+                                LoggerEx.info(TAG, "get RemoteService: " + (System.currentTimeMillis() - time) + " adapterClass: " + adapterClass.getName());
+                            } else {
+                                LoggerEx.error(TAG, "getProxy method doesn't be found for " + adapterClass + " in service " + service);
+                            }
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                            LoggerEx.error(TAG, "Generate proxy object for " + adapterClass + " in service " + service + " failed, " + ExceptionUtils.getFullStackTrace(t));
+                        }
+
+                    } else {
+                        try {
+                            RemoteProxy proxy = new RemoteProxy(this, getRemoteServerHandler(service));
+                            adapterService = (T) proxy.getProxy(adapterClass);
+                        } catch (Throwable e) {
+                            e.printStackTrace();
+                            LoggerEx.warn(TAG, "Initiate moduleClass " + adapterClass + " failed, " + ExceptionUtils.getFullStackTrace(e));
+                        }
+                    }
+                    Object old = serviceClassProxyCacheMap.putIfAbsent(key, adapterService);
+                    if(old != null) {
+                        adapterService = (T) old;
+                    }
+                }
             }
         }
         return adapterService;

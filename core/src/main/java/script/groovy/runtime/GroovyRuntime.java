@@ -403,8 +403,10 @@ public class GroovyRuntime extends ScriptRuntime {
                     Map<String, Class<?>> values = handlerMap.get(annotationHandler);
                     if (values != null) {
                         for (Class<?> c : values.values()) {
-                            if (ReflectionUtil.canBeInitiated(c))
+                            if (ReflectionUtil.canBeInitiated(c)){
                                 beanFactory.getClassBean(c);
+                            }
+
                         }
                     }
                 }

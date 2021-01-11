@@ -10,10 +10,10 @@ public class I18nHandler {
 
     private Map<String, MessageProperties> msgPropertyMap = new ConcurrentHashMap<>();
 
-    public String getI18nMessage(String locale, String key, String[] parameters, String defaultValue) {
+    public String getI18nMessage(String language, String key, String[] parameters, String defaultValue) {
         if (key != null) {
-            locale = locale == null ? "en_US" : locale;
-            MessageProperties messageProperties = this.getMsgPropertyMap().get(locale);
+            language = language == null ? "en_US" : language;
+            MessageProperties messageProperties = this.getMsgPropertyMap().get(language);
             if (messageProperties == null) {
                 messageProperties = this.getMsgPropertyMap().get("en_US");
             }
