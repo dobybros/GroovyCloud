@@ -73,8 +73,8 @@ public class ScriptManager implements ShutdownListener {
 
     public static final String SERVICE_NOTFOUND = "servicenotfound";
     public static final Boolean DELETELOCAL = false;
-    private final int compileOnceNumber = 5;
-    private final boolean compileAllService = true;
+    private final int compileOnceNumber = 1;
+    private final boolean compileAllService = false;
     private String runtimeBootClass;
 
     public void init() {
