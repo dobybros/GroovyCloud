@@ -126,7 +126,6 @@ public class GroovyObjectEx<T> {
             Field[] fields = ReflectionUtil.getFields(gObj.getClass());
             if (fields != null) {
                 for (Field field : fields) {
-                    long time = System.currentTimeMillis();
                     //Bean handler
                     Bean bean = field.getAnnotation(Bean.class);
                     if (bean != null) {
@@ -190,7 +189,6 @@ public class GroovyObjectEx<T> {
                             }
                         }
                     }
-                    LoggerEx.info(TAG, "ClassName: " + gObj.getClass().getName() + " field: " + field.getName() + " spend time: " + (System.currentTimeMillis() - time));
                 }
             }
         }

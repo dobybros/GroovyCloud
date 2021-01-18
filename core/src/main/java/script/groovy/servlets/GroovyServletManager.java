@@ -1,18 +1,11 @@
 package script.groovy.servlets;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import chat.errors.ChatErrorCodes;
+import chat.errors.CoreException;
+import chat.logs.LoggerEx;
+import chat.utils.ChatUtils;
+import chat.utils.HashTree;
 import org.apache.commons.lang.StringUtils;
-
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.runtime.ClassAnnotationHandler;
 import script.groovy.runtime.GroovyBeanFactory;
@@ -20,11 +13,16 @@ import script.groovy.runtime.GroovyRuntime;
 import script.groovy.runtime.classloader.MyGroovyClassLoader;
 import script.groovy.servlet.annotation.ControllerMapping;
 import script.groovy.servlet.annotation.RequestMapping;
-import chat.errors.ChatErrorCodes;
-import chat.errors.CoreException;
-import chat.logs.LoggerEx;
-import chat.utils.ChatUtils;
-import chat.utils.HashTree;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 public class GroovyServletManager extends ClassAnnotationHandler {
 	public static final String RESPONSETYPE_JSON = "json";
 	public static final String RESPONSETYPE_DOWNLOAD = "download";

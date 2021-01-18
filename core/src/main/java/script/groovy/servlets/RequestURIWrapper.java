@@ -1,31 +1,28 @@
 package script.groovy.servlets;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.lang.reflect.Proxy;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import chat.errors.ChatErrorCodes;
+import chat.errors.CoreException;
+import chat.logs.LoggerEx;
+import chat.utils.ChatUtils;
+import com.alibaba.fastjson.JSON;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
 import script.groovy.object.GroovyObjectEx;
 import script.groovy.object.GroovyObjectEx.GroovyObjectListener;
 import script.groovy.servlet.annotation.PathVariable;
 import script.groovy.servlet.annotation.RequestHeader;
 import script.groovy.servlet.annotation.RequestParam;
-import chat.errors.ChatErrorCodes;
-import chat.errors.CoreException;
-import chat.logs.LoggerEx;
-import chat.utils.ChatUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.*;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class RequestURIWrapper implements GroovyObjectListener{
 	private static final String TAG = RequestURIWrapper.class.getSimpleName();
@@ -35,7 +32,7 @@ public class RequestURIWrapper implements GroovyObjectListener{
 	private LinkedHashMap<Parameter, HandleRequest> parameters = new LinkedHashMap<>();
 	private String[] permissions;
 	private Boolean asyncSupported;
-	
+
 	public static interface HandleRequest {
 	}
 	
@@ -51,15 +48,30 @@ public class RequestURIWrapper implements GroovyObjectListener{
 	}
 	
 	private static Map<Class<?>, HandleRequestParameterClass> paramClassHandlerMap = new HashMap<>();
+	private static Map<Class<?>, HandleRequestBodyClass> bodyClassHandlerMap = new HashMap<>();
 	public static interface HandleRequestParameterClass extends HandleRequest {
 		public Object handle(Parameter param, RequestHolder requestHolder) throws CoreException;
+	}
+
+	public static interface HandleRequestBodyClass extends HandleRequest {
+		public BodyData handle(RequestHolder requestHolder) throws CoreException;
+	}
+	public static class RequestBodyDataHandler implements HandleRequestBodyClass{
+		@Override
+		public BodyData handle(RequestHolder requestHolder) throws CoreException {
+			try {
+				return new RequestBodyFastJsonData(JSON.parseObject(IOUtils.toString(requestHolder.getRequest().getInputStream(), StandardCharsets.UTF_8)));
+			}catch (Throwable throwable){
+				throw new CoreException(ChatErrorCodes.ERROR_PARSE_REQUEST_FAILED, "Parse request body failed, errMsg: " + throwable.getCause());
+			}
+		}
 	}
 	static {
 		paramClassHandlerMap.put(HttpServletRequest.class, new HttpServletRequestHandler());
 		paramClassHandlerMap.put(HttpServletResponse.class, new HttpServletResponseHandler());
 		paramClassHandlerMap.put(RequestHolder.class, new RequestHolderHandler());
+		bodyClassHandlerMap.put(BodyData.class, new RequestBodyDataHandler());
 	}
-	
 	public static class HttpServletRequestHandler implements HandleRequestParameterClass {
 		@Override
 		public Object handle(Parameter param, RequestHolder requestHolder) throws CoreException {
@@ -202,6 +214,13 @@ public class RequestURIWrapper implements GroovyObjectListener{
 						handled = true;
 					}
 				}
+				if(!handled){
+					HandleRequestBodyClass requestBodyClass = bodyClassHandlerMap.get(typeClass);
+					if(requestBodyClass != null){
+						this.parameters.put(param, requestBodyClass);
+						handled = true;
+					}
+				}
 				if(!handled) {
 					this.parameters.put(param, null);
 				}
@@ -222,6 +241,12 @@ public class RequestURIWrapper implements GroovyObjectListener{
 					args[i] = annotationHandler.handle(param, annotation, requestHolder);
 				} else if(handler instanceof HandleRequestParameterClass) {
 					args[i] = ((HandleRequestParameterClass) handler).handle(param, requestHolder);
+				}else if(handler instanceof HandleRequestBodyClass){
+					if(BodyDataThreadLocal.threadLocal.get() == null){
+						BodyData bodyData = ((HandleRequestBodyClass) handler).handle(requestHolder);
+						BodyDataThreadLocal.threadLocal.set(bodyData);
+					}
+					args[i] = BodyDataThreadLocal.threadLocal.get();
 				}
 			} else {
 				RequestHolder.ParameterHandler parameterHandler = requestHolder.getParameterHandler();
@@ -294,5 +319,21 @@ public class RequestURIWrapper implements GroovyObjectListener{
 
 	public void setAsyncSupported(Boolean asyncSupported) {
 		this.asyncSupported = asyncSupported;
+	}
+
+	public BodyData getBodyData(RequestHolder requestHolder) throws CoreException {
+		if(BodyDataThreadLocal.threadLocal.get() == null){
+			for (Parameter parameter : this.parameters.keySet()){
+				if(parameter.getParameterizedType().equals(BodyData.class)){
+					HandleRequest handler = this.parameters.get(parameter);
+					BodyData bodyData = ((HandleRequestBodyClass) handler).handle(requestHolder);
+					BodyDataThreadLocal.threadLocal.set(bodyData);
+				}
+			}
+		}
+		return BodyDataThreadLocal.threadLocal.get();
+	}
+	private static class BodyDataThreadLocal{
+		private static ThreadLocal<BodyData> threadLocal = new ThreadLocal<BodyData>();
 	}
 }

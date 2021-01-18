@@ -11,7 +11,7 @@ import java.util.HashMap;
 
 
 public class MongoDatabaseHelper {
-	protected ClientSession startSession() {
+	public ClientSession startSession() {
 		return startSession(null);
 	}
 

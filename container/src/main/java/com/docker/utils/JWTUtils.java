@@ -33,7 +33,7 @@ public class JWTUtils {
     }
 
     public static Claims getClaims(String key, String token) {
-        return Jwts.parser().setSigningKey(JWTUtils.secretkey + key).parseClaimsJws(token).getBody();
+        return Jwts.parser().setSigningKey(secretkey + key).parseClaimsJws(token).getBody();
     }
 
     public static Claims getClaimsIgnoreExpire(String key, String token) {

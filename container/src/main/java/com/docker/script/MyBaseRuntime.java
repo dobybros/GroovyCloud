@@ -13,7 +13,12 @@ import com.docker.script.annotations.ServiceNotFoundListener;
 import com.docker.script.i18n.I18nHandler;
 import com.docker.server.OnlineServer;
 import com.docker.storage.adapters.LansService;
+import com.docker.storage.cache.CacheStorageFactory;
+import com.docker.storage.cache.CacheStorageMethod;
+import com.docker.storage.cache.handlers.RedisCacheStorageHandler;
+import com.docker.storage.redis.RedisHandler;
 import com.docker.storage.zookeeper.ZookeeperFactory;
+import com.docker.storage.zookeeper.ZookeeperHandler;
 import com.docker.utils.GroovyCloudBean;
 import com.docker.utils.ScriptUtils;
 import groovy.lang.GroovyObject;
@@ -291,14 +296,40 @@ public class MyBaseRuntime extends BaseRuntime {
 
             @Override
             public void inject(JavaBean annotation, Field field, Object obj) {
-                if (!field.isAccessible()) {
-                    field.setAccessible(true);
+                field.setAccessible(true);
+                Class<?> fieldClass = field.getType();
+                Object o = null;
+                if(fieldClass.equals(RedisHandler.class)){
+                    String redisHost = getRedisHost();
+                    if(StringUtils.isBlank(redisHost)){
+                        LoggerEx.error(TAG, "Cant find db.redis.uri, cant get redisHandler, service: " + getService());
+                    }else {
+                        RedisCacheStorageHandler cacheStorageAdapter = (RedisCacheStorageHandler) CacheStorageFactory.getInstance().getCacheStorageAdapter(CacheStorageMethod.METHOD_REDIS, redisHost);
+                        o = cacheStorageAdapter.getRedisHandler();
+                    }
+                }else if(fieldClass.equals(ZookeeperHandler.class)){
+                    String zookeeperHost = getConfig().getProperty("db.zk.uri");
+                    if(StringUtils.isBlank(zookeeperHost)){
+                        LoggerEx.error(TAG, "Cant find db.zk.uri, cant get zookeeperHandler, service: " + getService());
+                    }else {
+                        ZookeeperFactory zookeeperFactory = (ZookeeperFactory) GroovyCloudBean.getBean(ZookeeperFactory.class);
+                        o = zookeeperFactory.client(zookeeperHost);
+                    }
+                }
+                try {
+                    if(o != null){
+                        field.set(obj, TypeUtils.cast(o, field.getType(), ParserConfig.getGlobalInstance()));
+                        return;
+                    }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    LoggerEx.error(TAG, "Set field " + field.getName() + " for javaBean class " + field.getType() + " in class " + obj.getClass());
                 }
                 Class fromBeanClass = annotation.fromBeanClass();
                 if (!fromBeanClass.equals(JavaBean.class)) {
                     String methodName = getMethodName(fromBeanClass, annotation.methodName());
                     String[] params = annotation.params();
-                    Object o = GroovyCloudBean.getBean(fromBeanClass);
+                    o = GroovyCloudBean.getBean(fromBeanClass);
                     Class[] classes = new Class[params.length];
                     String[] paramsConfig = new String[params.length];
                     for (int i = 0; i < params.length; i++) {
@@ -325,9 +356,11 @@ public class MyBaseRuntime extends BaseRuntime {
                 }else {
                     Class beanClass = annotation.beanClass();
                     if(!beanClass.equals(JavaBean.class)){
-                        Object o = GroovyCloudBean.getBean(beanClass);
+                        o = GroovyCloudBean.getBean(beanClass);
                         try {
-                            field.set(obj, TypeUtils.cast(o, field.getType(), ParserConfig.getGlobalInstance()));
+                            if(o != null){
+                                field.set(obj, TypeUtils.cast(o, field.getType(), ParserConfig.getGlobalInstance()));
+                            }
                         } catch (Throwable e) {
                             e.printStackTrace();
                             LoggerEx.error(TAG, "Set field " + field.getName() + " for javaBean key " + beanClass.getSimpleName() + " class " + field.getType() + " in class " + obj.getClass());

@@ -223,6 +223,7 @@ public class RequestHolder {
                         GrayReleased.grayReleasedThreadLocal.set(grayReleased);
                         RequestIntercepter theInterceptor = interceptor.getObject();
                         if (theInterceptor != null) {
+
                             if (isAysnc()) {
                                 this.asyncContext = request.startAsync();
 //                                asyncContext.addListener(new MyAsyncListener(request.getRequestURI()));
@@ -314,6 +315,11 @@ public class RequestHolder {
     public String[] getPermissions() {
         return requestUriWrapper.getPermissions();
     }
+
+    public BodyData getBodyData() throws CoreException {
+        return requestUriWrapper.getBodyData(this);
+    }
+
     public GroovyServletManager getGroovyServletManager() {
         return groovyServletManager;
     }
@@ -378,4 +384,5 @@ public class RequestHolder {
             LoggerEx.info(TAG, "Async request start, uri: " + uri);
         }
     }
+
 }
