@@ -32,6 +32,7 @@ public class RequestURIWrapper implements GroovyObjectListener{
 	private LinkedHashMap<Parameter, HandleRequest> parameters = new LinkedHashMap<>();
 	private String[] permissions;
 	private Boolean asyncSupported;
+	private BodyData bodyData;
 
 	public static interface HandleRequest {
 	}
@@ -242,11 +243,12 @@ public class RequestURIWrapper implements GroovyObjectListener{
 				} else if(handler instanceof HandleRequestParameterClass) {
 					args[i] = ((HandleRequestParameterClass) handler).handle(param, requestHolder);
 				}else if(handler instanceof HandleRequestBodyClass){
-					if(BodyDataThreadLocal.threadLocal.get() == null){
-						BodyData bodyData = ((HandleRequestBodyClass) handler).handle(requestHolder);
-						BodyDataThreadLocal.threadLocal.set(bodyData);
+					if(this.bodyData == null){
+						args[i] = ((HandleRequestBodyClass) handler).handle(requestHolder);
+					}else {
+						args[i] = this.bodyData;
+						this.bodyData = null;
 					}
-					args[i] = BodyDataThreadLocal.threadLocal.get();
 				}
 			} else {
 				RequestHolder.ParameterHandler parameterHandler = requestHolder.getParameterHandler();
@@ -322,18 +324,13 @@ public class RequestURIWrapper implements GroovyObjectListener{
 	}
 
 	public BodyData getBodyData(RequestHolder requestHolder) throws CoreException {
-		if(BodyDataThreadLocal.threadLocal.get() == null){
-			for (Parameter parameter : this.parameters.keySet()){
-				if(parameter.getParameterizedType().equals(BodyData.class)){
-					HandleRequest handler = this.parameters.get(parameter);
-					BodyData bodyData = ((HandleRequestBodyClass) handler).handle(requestHolder);
-					BodyDataThreadLocal.threadLocal.set(bodyData);
-				}
+		for (Parameter parameter : this.parameters.keySet()){
+			if(parameter.getParameterizedType().equals(BodyData.class)){
+				HandleRequest handler = this.parameters.get(parameter);
+				this.bodyData = ((HandleRequestBodyClass) handler).handle(requestHolder);
+				break;
 			}
 		}
-		return BodyDataThreadLocal.threadLocal.get();
-	}
-	private static class BodyDataThreadLocal{
-		private static ThreadLocal<BodyData> threadLocal = new ThreadLocal<BodyData>();
+		return this.bodyData;
 	}
 }
