@@ -19,10 +19,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
 public class GroovyServletManager extends ClassAnnotationHandler {
 	public static final String RESPONSETYPE_JSON = "json";
 	public static final String RESPONSETYPE_DOWNLOAD = "download";
@@ -111,7 +109,6 @@ public class GroovyServletManager extends ClassAnnotationHandler {
 				if(forceParsingUris)
 					break;
 			}
-			
 			RequestURIWrapper old = theTree.get(requestMethod);
 			if (old == null) {
 				requestUriWrapper.setMethod(groovyMethod);
@@ -119,7 +116,7 @@ public class GroovyServletManager extends ClassAnnotationHandler {
 				theTree.put(requestMethod, requestUriWrapper);
 				uriLogs.append("Mapped " + ChatUtils.toString(uris, "/") + "#" + requestMethod + ": " + groovyPath + "#" + groovyMethod + "\r\n");
 			} else {
-				LoggerEx.error(TAG, "The uri " + ChatUtils.toString(uris)
+				LoggerEx.warn(TAG, "The uri " + ChatUtils.toString(uris)
 						+ " has already mapped on " + old.getGroovyPath()
 						+ "#" + old.getMethod() + ", the newer "
 						+ groovyPath + "#" + requestMethod
