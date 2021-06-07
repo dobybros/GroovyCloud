@@ -31,6 +31,8 @@ public class RepairServiceImpl implements RepairService {
         try {
             Document query = new Document();
             FindIterable<Document> iterable = repairDAO.query(query);
+            //TODO : 这里的sort为后面的排序字段，并没有多字段排序的结果，如果想使用多字段排序写法应该是：
+            // iterable.sort(new Document(RepairData.FIELD_SERVERNAME, -1).append(RepairData.FIELD_CREATETIME, -1));
             iterable.sort(new Document(RepairData.FIELD_SERVERNAME, -1));
             iterable.sort(new Document(RepairData.FIELD_CREATETIME, -1));
             MongoCursor<Document> cursor = iterable.iterator();
