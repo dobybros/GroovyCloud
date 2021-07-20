@@ -44,7 +44,6 @@ public class RedisHandler {
     private ShardedJedisPool pool = null;
     private Boolean isSubscribe = false;
     private JedisCluster cluster = null;
-    private PipelineBase pipeline = null;
     private Map<String, Method> pipelineMethodMap = null;
     private String hosts;
     private String passwd;
@@ -161,11 +160,6 @@ public class RedisHandler {
                 }
             }
             LoggerEx.info(TAG, "Jedis Cluster closed, " + hosts);
-            if (pipeline != null && pipeline instanceof JedisClusterPipeline) {
-                JedisClusterPipeline clusterPipeline = (JedisClusterPipeline) pipeline;
-                clusterPipeline.close();
-            }
-            LoggerEx.info(TAG, "Jedis pipeline closed, " + hosts);
         } catch (Exception e) {
             LoggerEx.info(TAG, "Jedis Cluster closed exception, " + hosts);
         }
@@ -1369,6 +1363,7 @@ public class RedisHandler {
 
     private Object invokePipelineMethod(Boolean needTryAgain, PipelineExcutor excutor, String methodName, Object... args) {
         ShardedJedis shardedJedis = null;
+        PipelineBase pipeline = null;
         try {
             if (type == TYPE_SHARD) {
                 shardedJedis = pool.getResource();
