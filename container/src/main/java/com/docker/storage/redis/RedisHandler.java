@@ -98,23 +98,40 @@ public class RedisHandler {
             }
             pool = new ShardedJedisPool(config, shardJedis);
         } else if (type == TYPE_CLUSTER) {
-            Set<HostAndPort> nodes = new HashSet<HostAndPort>();
+            ArrayList<HostAndPort> nodes = new ArrayList<>();
             for (String host : detechedStrs) {
                 String[] splitedHost = host.split(":");
                 if (splitedHost.length > 1) {
                     nodes.add(new HostAndPort(splitedHost[0], Integer.parseInt(splitedHost[1])));
                 }
             }
-            redisNodes = nodes;
-            if(passwd != null){
-                cluster = new JedisCluster(nodes, 3000, 3000, 3, passwd, config);
-            }else {
-                cluster = new JedisCluster(nodes, 3000, 3000, 3, config);
-            }
+            createCluster(nodes, config, nodes.size());
         }
         pipelineMethodMap = new HashMap<>();
         LoggerEx.info(TAG, "Jedis Cluster connected, " + hosts);
         return this;
+    }
+
+    private void createCluster(ArrayList<HostAndPort> nodes, JedisPoolConfig config, Integer retryCount) {
+        try {
+            if (retryCount != nodes.size())
+                nodes.add(nodes.remove(0));
+            redisNodes = new LinkedHashSet<>(nodes);
+            if(passwd != null){
+                cluster = new JedisCluster(redisNodes, 3000, 3000, 3, passwd, config);
+            }else {
+                cluster = new JedisCluster(redisNodes, 3000, 3000, 3, config);
+            }
+        } catch (JedisConnectionException e) {
+            --retryCount;
+            if (retryCount > 0) {
+                LoggerEx.error(TAG, "create redis cluster error JedisConnectionException, will retry " + retryCount + ", current node: " + redisNodes + ", eMsg: " + e.getMessage());
+                createCluster(nodes, config, retryCount);
+            } else {
+                LoggerEx.fatal(TAG, "create redis cluster error JedisConnectionException, will not retry " + retryCount + ", current node: " + redisNodes + ", eMsg: " + e.getMessage());
+                throw e;
+            }
+        }
     }
 
     private String[] detachHosts(String hosts) {

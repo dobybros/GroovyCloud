@@ -21,7 +21,7 @@
 
     <!-- 文件保存日志的相关配置，同步 -->
     <appender name="logFile"  class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/home/lick/projects/GroovyCloud/container/logs/server.log</file>
+        <file>logs/server.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>
                 logs/server.%d{yyyy-MM-dd}.log
