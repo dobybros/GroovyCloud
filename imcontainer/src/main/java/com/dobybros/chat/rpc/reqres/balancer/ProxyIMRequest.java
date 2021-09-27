@@ -74,7 +74,8 @@ public class ProxyIMRequest extends RPCRequest {
                             throw new CoreException(ChatErrorCodes.ERROR_RPC_DECODE_FAILED, "ProxyIMRequest PB parse data failed, " + ExceptionUtils.getFullStackTrace(e)+ ",service_userId: " + service + "_" + userId);
                         } finally {
                             IOUtils.closeQuietly(bais);
-                            IOUtils.closeQuietly(dis.original());
+                            if (dis != null)
+                                IOUtils.closeQuietly(dis.original());
                         }
                         break;
                     default:
@@ -122,7 +123,8 @@ public class ProxyIMRequest extends RPCRequest {
                     throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, "ProxyIMRequest PB parse data failed, " + ExceptionUtils.getFullStackTrace(t)+ ",service_userId: " + service + "_" + userId);
                 } finally {
                     IOUtils.closeQuietly(baos);
-                    IOUtils.closeQuietly(dis.original());
+                    if (dis != null)
+                        IOUtils.closeQuietly(dis.original());
                 }
                 break;
             default:

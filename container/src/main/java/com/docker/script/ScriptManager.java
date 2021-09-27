@@ -407,19 +407,16 @@ public class ScriptManager implements ShutdownListener {
                             String servicePath = serverTypePath + service;
                             File localFile = new File(localPath + servicePath);
                             File temp = null;
-                            Collection<File> filelist = FileUtils.listFiles(localFile, new String[]{"groovy", "zip"}, true);
-                            try {
-
-                                if (filelist != null) {
-                                    for (File file1 : filelist) {
+                            Collection<File> fileList = FileUtils.listFiles(localFile, new String[]{"groovy", "zip"}, true);
+                            if (fileList != null)
+                                for (File file1 : fileList) {
+                                    try {
                                         file1.delete();
+                                    } catch (Throwable t) {
+                                        LoggerEx.error(TAG, "delete file failed, file" + file1.getName());
                                     }
                                 }
-                                LoggerEx.info(TAG, "delete localFile: " + localFile + " success");
-                            } catch (Exception e) {
-                                LoggerEx.error(TAG, "delete file failed");
-                                throw e;
-                            }
+                            LoggerEx.info(TAG, "delete localFile: " + localFile + " success");
                         }
                         LoggerEx.info(TAG, "=====Notice!!! The service: " + theServiceVersion + " has being redeployed====");
                     }

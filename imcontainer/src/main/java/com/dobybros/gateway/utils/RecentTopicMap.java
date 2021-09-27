@@ -17,7 +17,6 @@ public class RecentTopicMap {
 	private SendingTopicExpireTimer expireTimerTask = new SendingTopicExpireTimer();
 	
 	class SendingTopicExpireTimer extends TimerTaskEx {
-		private final String TAG = SendingTopicExpireTimer.class.getSimpleName();
 
 		@Override
 		public void execute() {

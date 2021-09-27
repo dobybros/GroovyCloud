@@ -63,7 +63,7 @@ public abstract class CommonEventHandler implements EventHandler {
                                 Boolean notSaveOfflineMessage = message.getNotSaveOfflineMessage();
                                 if(notSaveOfflineMessage == null || !notSaveOfflineMessage) {
                                     OfflineMessage offlineMessage = new OfflineMessage();
-                                    offlineMessage.setMessage(message.clone());
+                                    offlineMessage.setMessage(message.cloneNew());
                                     offlineMessageSavingTask.addMessage(offlineMessage);
                                 }
                                 received = true;
@@ -78,7 +78,7 @@ public abstract class CommonEventHandler implements EventHandler {
 //                            Boolean notSaveOfflineMessage = message.getNotSaveOfflineMessage();
 //                            if(notSaveOfflineMessage == null || !notSaveOfflineMessage) {
 //                                OfflineMessage offlineMessage = new OfflineMessage();
-//                                offlineMessage.setMessage(message.clone());
+//                                offlineMessage.setMessage(message.cloneNew());
 //                                offlineMessageSavingTask.addMessage(offlineMessage);
 //                            }
 //                        }

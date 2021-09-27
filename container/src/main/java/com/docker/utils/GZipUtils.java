@@ -1,5 +1,7 @@
 package com.docker.utils;
 
+import chat.logs.LoggerEx;
+
 import java.io.*;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -58,18 +60,20 @@ public abstract class GZipUtils {
      * @throws Exception 
      */  
     public static void compress(File file, boolean delete) throws IOException {  
-        FileInputStream fis = new FileInputStream(file);  
-        FileOutputStream fos = new FileOutputStream(file.getPath() + EXT);  
-  
-        compress(fis, fos);  
-  
-        fis.close();  
-        fos.flush();  
-        fos.close();  
-  
-        if (delete) {  
-            file.delete();  
-        }  
+        try (FileInputStream fis = new FileInputStream(file); FileOutputStream fos = new FileOutputStream(file.getPath() + EXT)) {
+            compress(fis, fos);
+
+            fis.close();
+            fos.flush();
+            fos.close();
+
+        } catch (Throwable t) {
+            LoggerEx.error("GZip utils", "compress file " + file.getAbsolutePath() + " error, eMsg: " + t.getMessage());
+        }
+
+        if (delete) {
+            file.delete();
+        }
     }  
   
     /** 
@@ -162,19 +166,18 @@ public abstract class GZipUtils {
      *            是否删除原始文件 
      * @throws Exception 
      */  
-    public static void decompress(File file, boolean delete) throws IOException {  
-        FileInputStream fis = new FileInputStream(file);  
-        FileOutputStream fos = new FileOutputStream(file.getPath().replace(EXT, ""));
-        try {
+    public static void decompress(File file, boolean delete) throws IOException {
+
+        try (FileInputStream fis = new FileInputStream(file);FileOutputStream fos = new FileOutputStream(file.getPath().replace(EXT, ""));) {
             decompress(fis, fos);
             fos.flush();
-        } finally {
             fis.close();
             fos.close();
-
-            if (delete) {
-                file.delete();
-            }
+        } catch (Throwable t) {
+            LoggerEx.error("GZip utils", "compress file " + file.getAbsolutePath() + " error, eMsg: " + t.getMessage());
+        }
+        if (delete) {
+            file.delete();
         }
     }
   

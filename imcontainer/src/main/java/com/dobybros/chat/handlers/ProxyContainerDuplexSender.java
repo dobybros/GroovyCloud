@@ -100,7 +100,7 @@ public class ProxyContainerDuplexSender {
                             if(type != null && contentTypes != null){
                                 for (String contentType : contentTypes){
                                     Integer typeOld = serviceTypeMap.get(contentType);
-                                    if(typeOld != null && typeOld != type){
+                                    if(typeOld != null && !typeOld.equals(type)){
                                         LoggerEx.error(TAG, "Service: " + serviceName + " contentType: " + contentType + "are defined different type");
                                     }
                                     serviceTypeMap.put(contentType, type);

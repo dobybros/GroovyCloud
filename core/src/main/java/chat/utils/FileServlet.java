@@ -17,22 +17,20 @@
 
 package chat.utils;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.zip.GZIPOutputStream;
+import chat.logs.LoggerEx;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URLDecoder;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * FYI
@@ -47,7 +45,7 @@ import javax.servlet.http.HttpServletResponse;
 public class FileServlet extends HttpServlet {
 
     // Constants ----------------------------------------------------------------------------------
-
+    private static final String TAG = "core-FileServlet";
     private static final int DEFAULT_BUFFER_SIZE = 10240; // ..bytes = 10KB.
     private static final long DEFAULT_EXPIRE_TIME = 604800000L; // ..ms = 1 week.
     private static final String MULTIPART_BOUNDARY = "MULTIPART_BYTERANGES";
@@ -93,7 +91,11 @@ public class FileServlet extends HttpServlet {
         throws ServletException, IOException
     {
         // Process request without content.
-        processRequest(request, response, false);
+        try {
+            processRequest(request, response, false);
+        } catch (UnknownHostException uhex) {
+            LoggerEx.fatal(TAG, "do header error, unknown host, eMsg:" + uhex.getMessage());
+        }
     }
 
     /**
@@ -104,7 +106,11 @@ public class FileServlet extends HttpServlet {
         throws ServletException, IOException
     {
         // Process request with content.
-        processRequest(request, response, true);
+        try {
+            processRequest(request, response, true);
+        } catch (UnknownHostException uhex) {
+            LoggerEx.fatal(TAG, "do get error, unknown host, eMsg:" + uhex.getMessage());
+        }
     }
 
     /**
@@ -290,14 +296,10 @@ public class FileServlet extends HttpServlet {
 
         // Send requested file (part(s)) to client ------------------------------------------------
 
-        // Prepare streams.
-        RandomAccessFile input = null;
-        OutputStream output = null;
+        // Prepare streams. Open streams.
+        try (RandomAccessFile input = new RandomAccessFile(file, "r"); OutputStream responseOutput = response.getOutputStream()) {
 
-        try {
-            // Open streams.
-            input = new RandomAccessFile(file, "r");
-            output = response.getOutputStream();
+            OutputStream output = responseOutput;
 
             if (ranges.isEmpty() || ranges.get(0) == full) {
 
@@ -361,10 +363,6 @@ public class FileServlet extends HttpServlet {
                     sos.println("--" + MULTIPART_BOUNDARY + "--");
                 }
             }
-        } finally {
-            // Gently close streams.
-            close(output);
-            close(input);
         }
     }
 

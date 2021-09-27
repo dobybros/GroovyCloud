@@ -43,7 +43,7 @@ public abstract class OnlineUserManager {
 
 
     private class UserExpireTimer extends TimerTaskEx {
-        private final String TAG = UserExpireTimer.class.getSimpleName();
+        private final String USER_EXPIRE_TAG = UserExpireTimer.class.getSimpleName();
 
         @Override
         public void execute() {
@@ -58,9 +58,9 @@ public abstract class OnlineUserManager {
                                 try {
                                     UserInfo info = serviceUser.getUserInfo();
                                     deleteOnlineServiceUser(serviceUser, ChannelListener.CLOSE_USEREXPIRED);
-                                    LoggerEx.info(TAG, "User " + info.getUserId() + "|" + info.getService() + " expired");
+                                    LoggerEx.info(USER_EXPIRE_TAG, "User " + info.getUserId() + "|" + info.getService() + " expired");
                                 } catch (Throwable e) {
-                                    LoggerEx.error(TAG, "User " + user + " onDestroy(DestroyType.Expired) failed, " + e.getMessage());
+                                    LoggerEx.error(USER_EXPIRE_TAG, "User " + user + " onDestroy(DestroyType.Expired) failed, " + e.getMessage());
                                 }
                             }
                         }

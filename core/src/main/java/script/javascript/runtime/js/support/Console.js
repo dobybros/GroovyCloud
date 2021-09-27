@@ -5,7 +5,7 @@
 var Console = (function() {
 	var logger = Java.type('chat.logs.LoggerEx');
 
-	_console = function() {}
+	var _console = function() {}
 	_console.prototype.log = function(msg) {
 		logger.info("js", msg);
 	}

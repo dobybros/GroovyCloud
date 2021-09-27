@@ -73,7 +73,7 @@ public class RedisHandler {
             }
         }
         String[] detechedStrs = detachHosts(hosts);
-        if (type == TYPE_SHARD) {
+        if (type.equals(TYPE_SHARD)) {
             String[] strArray = hosts.split(",");// redis.properties中必须包含redis.pool字段，指定redis地址。如果有多个，用逗号分隔。
             List<JedisShardInfo> shardJedis = new ArrayList<JedisShardInfo>();
             for (int i = 0; i < strArray.length; i++) {
@@ -97,7 +97,7 @@ public class RedisHandler {
                 }
             }
             pool = new ShardedJedisPool(config, shardJedis);
-        } else if (type == TYPE_CLUSTER) {
+        } else if (type.equals(TYPE_CLUSTER)) {
             ArrayList<HostAndPort> nodes = new ArrayList<>();
             for (String host : detechedStrs) {
                 String[] splitedHost = host.split(":");
@@ -1275,9 +1275,9 @@ public class RedisHandler {
 
     private JedisCommands getJedis() {
         JedisCommands jedis = null;
-        if (type == TYPE_SHARD) {
+        if (type.equals(TYPE_SHARD)) {
             jedis = pool.getResource();
-        } else if (type == TYPE_CLUSTER) {
+        } else if (type.equals(TYPE_CLUSTER)) {
             jedis = cluster;
         }
         return jedis;
@@ -1382,10 +1382,10 @@ public class RedisHandler {
         ShardedJedis shardedJedis = null;
         PipelineBase pipeline = null;
         try {
-            if (type == TYPE_SHARD) {
+            if (type.equals(TYPE_SHARD)) {
                 shardedJedis = pool.getResource();
                 pipeline = shardedJedis.pipelined();
-            } else if (type == TYPE_CLUSTER) {
+            } else if (type.equals(TYPE_CLUSTER)) {
                 pipeline = JedisClusterPipeline.pipelined(cluster);
             }
             if (excutor != null)

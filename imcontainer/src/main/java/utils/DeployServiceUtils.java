@@ -192,30 +192,31 @@ public class DeployServiceUtils {
         //合并properties
         if (needMergeProperties) {
             Properties mainProperties = new Properties();
-            FileInputStream fin = new FileInputStream(deployPropertiesFile);
-            mainProperties.load(fin);
 
 //            String[] libPaths = libPath.split(",");
-            for (String libP : libPaths) {
-                File libPropertiesFile = new File(libP + "/src/main/groovy/config.properties");
-                if (libPropertiesFile.exists() && libPropertiesFile.isFile()) {
-                    Properties libProperties = new Properties();
-                    FileInputStream fin2 = new FileInputStream(libPropertiesFile);
-                    libProperties.load(fin2);
-                    Set<String> propertyNames = libProperties.stringPropertyNames();
+            try (FileInputStream fin = new FileInputStream(deployPropertiesFile)) {
+                mainProperties.load(fin);
 
-                    FileWriter fout = new FileWriter(deployPropertiesFile, true);
-                    fout.write("\r\n\r\n");
-                    fout.write("#merge \r\n");
-                    for (String key : propertyNames) {
-                        String value = mainProperties.getProperty(key);
-                        if (value == null) {
-                            fout.write(key + "=" + libProperties.getProperty(key) + "\r\n");
+                for (String libP : libPaths) {
+                    File libPropertiesFile = new File(libP + "/src/main/groovy/config.properties");
+                    if (libPropertiesFile.exists() && libPropertiesFile.isFile()) {
+                        Properties libProperties = new Properties();
+
+                        try (FileInputStream fin2 = new FileInputStream(libPropertiesFile); FileWriter fout = new FileWriter(deployPropertiesFile, true)) {
+
+                            libProperties.load(fin2);
+                            Set<String> propertyNames = libProperties.stringPropertyNames();
+
+                            fout.write("\r\n\r\n");
+                            fout.write("#merge \r\n");
+                            for (String key : propertyNames) {
+                                String value = mainProperties.getProperty(key);
+                                if (value == null) {
+                                    fout.write(key + "=" + libProperties.getProperty(key) + "\r\n");
+                                }
+                            }
                         }
                     }
-                    fout.close();
-                    fin2.close();
-                    fin.close();
                 }
             }
         }
@@ -401,7 +402,7 @@ public class DeployServiceUtils {
 
     //由doZip调用,递归完成目录文件读取
     private static void handleDir(File root, File dir, ZipOutputStream zipOut, File zipFile) throws IOException {
-        FileInputStream fileIn;
+
         File[] files;
 
         files = dir.listFiles();
@@ -418,18 +419,19 @@ public class DeployServiceUtils {
                 if (fileName.isDirectory()) {
                     handleDir(root, fileName, zipOut, zipFile);
                 } else if (!fileName.getAbsolutePath().equals(zipFile.getAbsolutePath())) {
-                    fileIn = new FileInputStream(fileName);
-                    String zipPath = FilenameUtils.separatorsToUnix(fileName.getAbsolutePath()).substring(FilenameUtils.separatorsToUnix(root.getAbsolutePath()).length());
-                    if (zipPath.startsWith("/")) {
-                        zipPath = zipPath.substring(1);
-                    }
-                    zipOut.putNextEntry(new ZipEntry(zipPath));
+                    try (FileInputStream fileIn = new FileInputStream(fileName)) {
+                        String zipPath = FilenameUtils.separatorsToUnix(fileName.getAbsolutePath()).substring(FilenameUtils.separatorsToUnix(root.getAbsolutePath()).length());
+                        if (zipPath.startsWith("/")) {
+                            zipPath = zipPath.substring(1);
+                        }
+                        zipOut.putNextEntry(new ZipEntry(zipPath));
 
-                    while ((readedBytes = fileIn.read(buf)) > 0) {
-                        zipOut.write(buf, 0, readedBytes);
-                    }
+                        while ((readedBytes = fileIn.read(buf)) > 0) {
+                            zipOut.write(buf, 0, readedBytes);
+                        }
 
-                    zipOut.closeEntry();
+                        zipOut.closeEntry();
+                    }
                 }
             }
         }

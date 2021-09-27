@@ -38,20 +38,22 @@ public class AutoReloadProperties extends Properties{
 				} else if(absolutePath != null){
 					file = new File(absolutePath);
 				}
-				long modified = file.lastModified();
-				if(lastModified == null || lastModified != modified) {
-					lastModified = modified; 
-					Properties properties = new Properties();
-					InputStream is = FileUtils.openInputStream(file);
-					try {
-						properties.load(new InputStreamReader(is, "UTF-8"));
-					} finally {
-						is.close();
-					}
-					AutoReloadProperties.this.properties = properties;
-					onLoad();
-					if(reloadListener != null) {
-						reloadListener.reloaded();
+				if (file != null) {
+					long modified = file.lastModified();
+					if(lastModified == null || lastModified != modified) {
+						lastModified = modified;
+						Properties properties = new Properties();
+						InputStream is = FileUtils.openInputStream(file);
+						try {
+							properties.load(new InputStreamReader(is, "UTF-8"));
+						} finally {
+							is.close();
+						}
+						AutoReloadProperties.this.properties = properties;
+						onLoad();
+						if(reloadListener != null) {
+							reloadListener.reloaded();
+						}
 					}
 				}
 			}

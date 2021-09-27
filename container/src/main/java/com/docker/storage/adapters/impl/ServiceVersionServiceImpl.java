@@ -29,21 +29,20 @@ public class ServiceVersionServiceImpl implements ServiceVersionService {
 //        Document query = new Document().append("serverType", new Document().append("$in", new ArrayList<>().add(serverType)));
         Document query = new Document();
 //                .append("serverType." + serverType, new Document().append("$exists", true));
-        FindIterable<Document> iterable = null;
         try {
-            iterable = serviceVersionDAO.query(query);
+            FindIterable<Document> iterable = serviceVersionDAO.query(query);
+            MongoCursor<Document> cursor = iterable.iterator();
+            while (cursor.hasNext()) {
+                Document doc = cursor.next();
+                List serverTypes = (ArrayList) doc.get("serverType");
+                if (serverTypes.contains(serverType)) {
+                    ServiceVersion serviceVersion = new ServiceVersion();
+                    serviceVersion.fromDocument(doc);
+                    serviceVersions.add(serviceVersion);
+                }
+            }
         } catch (DBException e) {
             e.printStackTrace();
-        }
-        MongoCursor<Document> cursor = iterable.iterator();
-        while (cursor.hasNext()) {
-            Document doc = cursor.next();
-            List serverTypes = (ArrayList) doc.get("serverType");
-            if (serverTypes.contains(serverType)) {
-                ServiceVersion serviceVersion = new ServiceVersion();
-                serviceVersion.fromDocument(doc);
-                serviceVersions.add(serviceVersion);
-            }
         }
         return serviceVersions;
     }
@@ -54,21 +53,20 @@ public class ServiceVersionServiceImpl implements ServiceVersionService {
 //        Document query = new Document().append("serverType", new Document().append("$in", new ArrayList<>().add(serverType)));
         Document query = new Document();
 //                .append("serverType." + serverType, new Document().append("$exists", true));
-        FindIterable<Document> iterable = null;
         try {
-            iterable = serviceVersionDAO.query(query);
+            FindIterable<Document> iterable = serviceVersionDAO.query(query);
+            MongoCursor<Document> cursor = iterable.iterator();
+            while (cursor.hasNext()) {
+                Document doc = cursor.next();
+                List serverTypes = (ArrayList) doc.get("serverType");
+                if (serverTypes.contains(serverType) && doc.get("type").equals(type)) {
+                    ServiceVersion serviceVersion = new ServiceVersion();
+                    serviceVersion.fromDocument(doc);
+                    serviceVersions.add(serviceVersion);
+                }
+            }
         } catch (DBException e) {
             e.printStackTrace();
-        }
-        MongoCursor<Document> cursor = iterable.iterator();
-        while (cursor.hasNext()) {
-            Document doc = cursor.next();
-            List serverTypes = (ArrayList) doc.get("serverType");
-            if (serverTypes.contains(serverType) && doc.get("type").equals(type)) {
-                ServiceVersion serviceVersion = new ServiceVersion();
-                serviceVersion.fromDocument(doc);
-                serviceVersions.add(serviceVersion);
-            }
         }
         return serviceVersions;
     }

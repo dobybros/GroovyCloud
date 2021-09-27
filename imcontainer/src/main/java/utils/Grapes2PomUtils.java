@@ -40,40 +40,42 @@ public class Grapes2PomUtils {
         try {
             List list = getGrapesObject(file);
             if(list != null && !list.isEmpty()){
+
                 File tempFile = File.createTempFile("temp", ".temp", file);
-                FileOutputStream outputStream = new FileOutputStream(tempFile);
-                FileInputStream inputStream = new FileInputStream(tempFile);
-                tempFile.deleteOnExit();
                 File pomFile = new File(file.getAbsolutePath() + "/pom.xml");
                 String content = FileUtils.readFileToString(pomFile, StandardCharsets.UTF_8);
-                int index = content.indexOf("<dependencies>");
-                int position = 0;
-                StringBuilder stringBuilder = new StringBuilder();
-                String contents = null;
-                if (index != -1) {
-                    position = index + "<dependencies>".length() + 1;
-                    stringBuilder = contacePom(list, stringBuilder);
-                } else {
-                    position = content.indexOf("</project>");
-                    stringBuilder.append("<dependencies>" + flag);
-                    stringBuilder = contacePom(list, stringBuilder);
-                    stringBuilder.append("</dependencies>" + flag);
+
+                try (FileOutputStream outputStream = new FileOutputStream(tempFile);
+                     FileInputStream inputStream = new FileInputStream(tempFile);
+                     RandomAccessFile rw = new RandomAccessFile(pomFile, "rw")) {
+
+                    tempFile.deleteOnExit();
+                    int index = content.indexOf("<dependencies>");
+                    int position = 0;
+                    StringBuilder stringBuilder = new StringBuilder();
+                    String contents = null;
+                    if (index != -1) {
+                        position = index + "<dependencies>".length() + 1;
+                        stringBuilder = contacePom(list, stringBuilder);
+                    } else {
+                        position = content.indexOf("</project>");
+                        stringBuilder.append("<dependencies>" + flag);
+                        stringBuilder = contacePom(list, stringBuilder);
+                        stringBuilder.append("</dependencies>" + flag);
+                    }
+                    contents = stringBuilder.toString();
+
+                    rw.seek(position);
+                    int tmp = 0;
+                    while ((tmp = rw.read()) != -1) {
+                        outputStream.write(tmp);
+                    }
+                    rw.seek(position);
+                    rw.write(contents.getBytes());
+                    while ((tmp = inputStream.read()) != -1) {
+                        rw.write(tmp);
+                    }
                 }
-                contents = stringBuilder.toString();
-                RandomAccessFile rw = new RandomAccessFile(pomFile, "rw");
-                rw.seek(position);
-                int tmp = 0;
-                while ((tmp = rw.read()) != -1) {
-                    outputStream.write(tmp);
-                }
-                rw.seek(position);
-                rw.write(contents.getBytes());
-                while ((tmp = inputStream.read()) != -1) {
-                    rw.write(tmp);
-                }
-                rw.close();
-                outputStream.close();
-                inputStream.close();
             }
         } catch (Throwable t) {
             ExceptionUtils.getFullStackTrace(t);

@@ -159,7 +159,7 @@ public class Message {
 		this.notSaveOfflineMessage = notSaveOfflineMessage;
 	}
 	
-	public Message clone() {
+	public Message cloneNew() {
 		Message message = cloneWithEmptyReceiveIds();
 		if(receiverIds != null)
 			message.receiverIds = new HashSet<String>(receiverIds);

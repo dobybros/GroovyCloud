@@ -1,21 +1,20 @@
 package script.filter;
 
+import chat.logs.LoggerEx;
+import org.apache.commons.lang.StringUtils;
+import script.filter.annotations.JsonFilterClass;
+import script.groovy.object.GroovyObjectEx;
+import script.groovy.runtime.ClassAnnotationHandler;
+import script.groovy.runtime.GroovyBeanFactory;
+import script.groovy.runtime.GroovyRuntime;
+import script.groovy.runtime.classloader.MyGroovyClassLoader;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.lang.StringUtils;
-
-import script.filter.annotations.JsonFilterClass;
-import script.groovy.object.GroovyObjectEx;
-import script.groovy.runtime.ClassAnnotationHandler;
-import script.groovy.runtime.GroovyBeanFactory;
-import script.groovy.runtime.GroovyRuntime;
-import chat.logs.LoggerEx;
-import script.groovy.runtime.classloader.MyGroovyClassLoader;
 
 public class JsonFilterFactory extends ClassAnnotationHandler{
 	private static final String TAG = JsonFilterFactory.class.getSimpleName();
@@ -139,7 +138,7 @@ public class JsonFilterFactory extends ClassAnnotationHandler{
 						}
 						GroovyObjectEx<JsonFilter> serverAdapter = ((GroovyBeanFactory)getGroovyRuntime().getClassAnnotationHandler(GroovyBeanFactory.class)).getClassBean(groovyClass);
 						if (serverAdapter != null) {
-							if (StringUtils.isBlank(filterKey)) {
+							if (StringUtils.isBlank(filterKey) && targetClass != null) {
 								filterKey = targetClass.getName();
 							}
 							newFilterMap.put(filterKey, serverAdapter);

@@ -23,7 +23,7 @@ public class SDocker extends DataObject {
 
     @Override
     public Document toDocument() {
-        Document dbObj = null;
+        Document dbObj = super.toDocument();
         if (ip != null)
             dbObj.put(FIELD_SDOCKER_IP, ip);
         if (port != null)

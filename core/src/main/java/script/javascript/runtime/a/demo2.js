@@ -10,7 +10,7 @@ function minus() {
 }
 
 function fibonacci1() {
-	for(j = 0; j < 10000; j++) {
+	for(var j = 0; j < 10000; j++) {
 		var i;
 		var fib = []; //Initialize array!
 		
@@ -26,7 +26,7 @@ function fibonacci1() {
 }
 
 function fibonacci() {
-	for(j = 0; j < 10000; j++) {
+	for(var j = 0; j < 10000; j++) {
 		var i;
 		var fib = []; //Initialize array!
 		
@@ -42,7 +42,7 @@ function fibonacci() {
 }
 
 function fibonacci2() {
-	for(j = 0; j < 10000; j++) {
+	for(var j = 0; j < 10000; j++) {
 		var i;
 		var fib = []; //Initialize array!
 		
@@ -58,7 +58,7 @@ function fibonacci2() {
 }
 
 function fibonacci3() {
-	for(j = 0; j < 10000; j++) {
+	for(var j = 0; j < 10000; j++) {
 		var i;
 		var fib = []; //Initialize array!
 		

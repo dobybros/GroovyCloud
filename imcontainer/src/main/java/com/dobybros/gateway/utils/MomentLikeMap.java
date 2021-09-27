@@ -16,7 +16,6 @@ public class MomentLikeMap {
 	private MomentLikeExpireTimer expireTimerTask = new MomentLikeExpireTimer();
 	
 	class MomentLikeExpireTimer extends TimerTaskEx {
-		private final String TAG = MomentLikeExpireTimer.class.getSimpleName();
 
 		@Override
 		public void execute() {

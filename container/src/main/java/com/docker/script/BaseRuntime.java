@@ -139,7 +139,7 @@ public abstract class BaseRuntime extends GroovyRuntime {
         Object rpcServerSslHandler = GroovyCloudBean.getBean("dockerRpcServerSsl");
         if (rpcServerSslHandler != null && rpcServerSslHandler instanceof ClassAnnotationGlobalHandler)
             addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) rpcServerSslHandler);
-        if(OnlineServer.getInstance().getType() != DockerStatus.TYPE_NORMAL){
+        if (!OnlineServer.getInstance().getType().equals(DockerStatus.TYPE_NORMAL)){
             Object upStreamAnnotationHandler = GroovyCloudBean.getBean("upStreamAnnotationHandler");
             if (upStreamAnnotationHandler != null && upStreamAnnotationHandler instanceof ClassAnnotationGlobalHandler)
                 addClassAnnotationGlobalHandler((ClassAnnotationGlobalHandler) upStreamAnnotationHandler);

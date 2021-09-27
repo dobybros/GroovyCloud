@@ -50,7 +50,8 @@ public class IMProxyResponse extends RPCResponse {
                             throw new CoreException(ChatErrorCodes.ERROR_RPC_DECODE_FAILED, "ProxyIMRequest PB parse data failed, " + ExceptionUtils.getFullStackTrace(e));
                         } finally {
                             IOUtils.closeQuietly(bais);
-                            IOUtils.closeQuietly(dis.original());
+                            if (dis != null)
+                                IOUtils.closeQuietly(dis.original());
                         }
                         break;
                     default:
@@ -86,7 +87,8 @@ public class IMProxyResponse extends RPCResponse {
                     throw new CoreException(ChatErrorCodes.ERROR_RPC_ENCODE_FAILED, " IMProxyResponse PB parse data failed, " + ExceptionUtils.getFullStackTrace(t));
                 } finally {
                     IOUtils.closeQuietly(baos);
-                    IOUtils.closeQuietly(dis.original());
+                    if (dis != null)
+                        IOUtils.closeQuietly(dis.original());
                 }
                 break;
             default:

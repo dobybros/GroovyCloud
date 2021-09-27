@@ -177,7 +177,8 @@ public class ScriptHttpUtils {
             return result;
         } finally {
             try {
-                httpClient.close();
+                if (httpClient != null)
+                    httpClient.close();
                 if (response != null) {
                     response.close();
                 }
@@ -319,7 +320,8 @@ public class ScriptHttpUtils {
             return result;
         } finally {
             try {
-                httpClient.close();
+                if (httpClient != null)
+                    httpClient.close();
                 if (response != null) {
                     response.close();
                 }

@@ -161,7 +161,7 @@ public class RequestUtils {
 		if(session != null) {
 			terminal = (String) session.getAttribute(CoreHttpConstants.SESSION_TERMINAL);
 		}
-		if(terminal == null)
+		if(terminal == null && request != null)
 			terminal = request.getHeader(CoreHttpConstants.SESSION_TERMINAL);
 		return terminal;
 	}
@@ -172,11 +172,13 @@ public class RequestUtils {
 			String userId = (String) session.getAttribute(CoreHttpConstants.SESSION_USERID);
 			return userId;
 		} else {
-			Cookie[] cookies = request.getCookies();
-			if (cookies != null) {
-				for (Cookie cookie : cookies) {
-					if (cookie.getName().equals("aclaccount")) {
-						return cookie.getValue();
+			if (request != null) {
+				Cookie[] cookies = request.getCookies();
+				if (cookies != null) {
+					for (Cookie cookie : cookies) {
+						if (cookie.getName().equals("aclaccount")) {
+							return cookie.getValue();
+						}
 					}
 				}
 			}

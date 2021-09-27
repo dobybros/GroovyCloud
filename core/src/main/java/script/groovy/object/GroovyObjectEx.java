@@ -145,7 +145,10 @@ public class GroovyObjectEx<T> {
                                 gClass = field.getType();
                             }
                         }
-                        gClass = groovyRuntime.getClass(gClass.getName());
+                        if (gClass != null)
+                            gClass = groovyRuntime.getClass(gClass.getName());
+                        else
+                            LoggerEx.error(TAG, "can not sure is or not has log, gclass is null, can not get name");
                         GroovyObjectEx<?> beanValue;
                         if (StringUtils.isBlank(beanName)) {
                             beanValue = beanFactory.getBean(gClass);

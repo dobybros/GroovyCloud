@@ -218,7 +218,7 @@ public class GroovyRuntime extends ScriptRuntime {
                                     for (int i = 0; i < groupDir.length; i++) {
                                         groupDirStr += groupDir[i] + File.separator;
                                     }
-                                    if (groupDirStr != "") {
+                                    if (!groupDirStr.equals("")) {
                                         String jarDir = mvnJarsDir + File.separator + groupDirStr + dependency.get("artifactId") + File.separator + dependency.get("version");
                                         String jarPath = jarDir + File.separator + dependency.get("artifactId") + "-" + dependency.get("version") + ".jar";
                                         FileUtils.copyFileToDirectory(new File(jarPath), new File(libsPath.getAbsolutePath()));

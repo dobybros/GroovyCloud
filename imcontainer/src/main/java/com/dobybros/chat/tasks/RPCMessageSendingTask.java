@@ -42,7 +42,7 @@ public class RPCMessageSendingTask extends Task {
 	private OfflineMessageSavingTask offlineMessageSavingTask;
 
 	@Resource
-	private OnlineServerWithStatus onlineServer;
+	private OnlineServerWithStatus onlineServerWithStatus;
 	
 	@Resource
 	private ScriptManager scriptManager;
@@ -122,7 +122,7 @@ public class RPCMessageSendingTask extends Task {
 										ServerInfo serverInfo = userInfo.getServerInfo();
 										if (serverInfo != null) {
 											server = serverInfo.getServer();
-											if (lanId.equals(onlineServer.getLanId())) {
+											if (lanId.equals(onlineServerWithStatus.getLanId())) {
 												ip = serverInfo.getIp();
 												port = serverInfo.getRpcPort();
 											} else {
@@ -138,12 +138,12 @@ public class RPCMessageSendingTask extends Task {
 										userStatus.setDeviceInfoMap(userInfo.getDevices());
 										if(server != null && ip != null && port != null) {
 											// 用户在线，发送消息
-											if(onlineServer.getServer().equals(server))
+											if(onlineServerWithStatus.getServer().equals(server))
 												throw new CoreException(IMCoreErrorCodes.ERROR_SEND_MESSAGE_TO_OWN, "Send message error, the message is sending to users own chat.");
 											MessageSendingSingleThreadQueueWrapper serverTransporter = getServerQueue(server, ip, port, lanId);
 											if(serverTransporter != null) {
 //											message.setSequence(System.currentTimeMillis());
-												message.setServer(onlineServer.getServer());
+												message.setServer(onlineServerWithStatus.getServer());
 //											serverTransporter.offerAndStart(message);
 												serverTransporter.add(targetId, message.cloneWithEmptyReceiveIds(), userStatus);
 												if(!wrappers.contains(serverTransporter)) {
@@ -276,7 +276,7 @@ public class RPCMessageSendingTask extends Task {
 								
 								if(t instanceof CoreException) {
 //									OfflineMessage offlineMessage = new OfflineMessage();
-//									offlineMessage.setMessage(message.clone());
+//									offlineMessage.setMessage(message.cloneNew());
 //									offlineMessageSavingTask.addMessage(offlineMessage);
 
 									//User wasn't be found, save offline message only
@@ -298,12 +298,14 @@ public class RPCMessageSendingTask extends Task {
 								offlineMessageSavingTask.addMessage(offlineMessage);
 								for (String targetId : offlineTargetIds) {
 									try {
-										UserInfoAdapter adapter = offlineUserInfoAdapterMap.get(targetId);
-										if (adapter != null) {
-											long unread = adapter.increaseUnreadCount(targetId, clonedMessage.getReceiverService(), 1);
-											UserStatus userStatus = userStatusMap.get(targetId);
-											if (userStatus != null)
-												userStatus.setOfflineUnreadCount(Integer.valueOf((int) unread));
+										if (offlineUserInfoAdapterMap != null) {
+											UserInfoAdapter adapter = offlineUserInfoAdapterMap.get(targetId);
+											if (adapter != null) {
+												long unread = adapter.increaseUnreadCount(targetId, clonedMessage.getReceiverService(), 1);
+												UserStatus userStatus = userStatusMap.get(targetId);
+												if (userStatus != null)
+													userStatus.setOfflineUnreadCount(Integer.valueOf((int) unread));
+											}
 										}
 									} catch (Throwable t) {
 										LoggerEx.error(TAG, "increase unread count error, targetId: " + targetId + ", eMsg: " + t.getMessage());

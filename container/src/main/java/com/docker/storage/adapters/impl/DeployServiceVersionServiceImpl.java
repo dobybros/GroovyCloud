@@ -27,7 +27,7 @@ public class DeployServiceVersionServiceImpl implements DeployServiceVersionServ
     public DeployServiceVersion getServiceVersion(String serverType) throws CoreException {
         try {
             Document query = new Document();
-            query.append(DeployServiceVersion.SERVERTYPE, serverType);
+            query.append(DeployServiceVersion.DEPLOY_SERVERTYPE, serverType);
             FindIterable iterable = deployServiceVersionDAO.query(query);
             MongoCursor<Document> cursor = iterable.iterator();
             if(cursor.hasNext()){
@@ -77,7 +77,7 @@ public class DeployServiceVersionServiceImpl implements DeployServiceVersionServ
     public DeployServiceVersion getDeployServiceVersionByDeployId(String deployId) throws CoreException {
         try {
             Document query = new Document();
-            query.append(DeployServiceVersion.DEPLOYID, deployId);
+            query.append(DeployServiceVersion.DEPLOY_ID, deployId);
             FindIterable iterable = deployServiceVersionDAO.query(query);
             MongoCursor<Document> cursor = iterable.iterator();
             if(cursor.hasNext()){
@@ -153,7 +153,7 @@ public class DeployServiceVersionServiceImpl implements DeployServiceVersionServ
             Document query = new Document();
             query.append(DeployServiceVersion.ID, id);
             Document update = new Document();
-            update.append("$set", new Document().append(DeployServiceVersion.DEPLOYID, deployId));
+            update.append("$set", new Document().append(DeployServiceVersion.DEPLOY_ID, deployId));
             deployServiceVersionDAO.updateOne(query, update, false);
         } catch (DBException e) {
             e.printStackTrace();
@@ -165,7 +165,7 @@ public class DeployServiceVersionServiceImpl implements DeployServiceVersionServ
     public void deleteService(String serverType, String service) throws CoreException {
         try {
             Document query = new Document();
-            query.append(DeployServiceVersion.SERVERTYPE, serverType);
+            query.append(DeployServiceVersion.DEPLOY_SERVERTYPE, serverType);
             Document update = new Document();
             update.append("$unset", new Document().append("serviceVersions." + service, "0"));
             deployServiceVersionDAO.updateOne(query, update, false);
@@ -179,7 +179,7 @@ public class DeployServiceVersionServiceImpl implements DeployServiceVersionServ
     public void addService(String serverType, String service, String version) throws CoreException{
         try {
             Document query = new Document();
-            query.append(DeployServiceVersion.SERVERTYPE, serverType);
+            query.append(DeployServiceVersion.DEPLOY_SERVERTYPE, serverType);
             Document update = new Document();
             update.append("$set", new Document().append("serviceVersions." + service, version));
             deployServiceVersionDAO.updateOne(query, update, false);
@@ -195,7 +195,7 @@ public class DeployServiceVersionServiceImpl implements DeployServiceVersionServ
             Document query = new Document();
             query.append("_id", id);
             Document update = new Document();
-            update.append("$set", new Document().append(DeployServiceVersion.BASEJARVERSIONS + "." + baseJar, version));
+            update.append("$set", new Document().append(DeployServiceVersion.DEPLOY_BASE_JAR_VERSIONS + "." + baseJar, version));
             deployServiceVersionDAO.updateOne(query, update, false);
         } catch (DBException e) {
             e.printStackTrace();
@@ -209,7 +209,7 @@ public class DeployServiceVersionServiceImpl implements DeployServiceVersionServ
             Document query = new Document();
             query.append("_id", id);
             Document update = new Document();
-            update.append("$set", new Document().append(DeployServiceVersion.BASEJARVERSIONS, baseJarVersions));
+            update.append("$set", new Document().append(DeployServiceVersion.DEPLOY_BASE_JAR_VERSIONS, baseJarVersions));
             deployServiceVersionDAO.updateOne(query, update, false);
         } catch (DBException e) {
             e.printStackTrace();
@@ -223,7 +223,7 @@ public class DeployServiceVersionServiceImpl implements DeployServiceVersionServ
             Document query = new Document();
             query.append("_id", id);
             Document update = new Document();
-            update.append("$set", new Document().append(DeployServiceVersion.SERVERS, servers));
+            update.append("$set", new Document().append(DeployServiceVersion.DEPLOY_SERVERS, servers));
             deployServiceVersionDAO.updateOne(query, update, false);
         } catch (DBException e) {
             e.printStackTrace();

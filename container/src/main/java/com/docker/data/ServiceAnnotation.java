@@ -10,11 +10,11 @@ import java.util.Map;
  */
 public class ServiceAnnotation {
     private final String TAG = ServiceAnnotation.class.getSimpleName();
-    public static final String TYPE = "type";
-    public static final String ANNOTATIONPARAMS = "params";
-    public static final String CLASSNAME = "classname";
-    public static final String METHODNAME = "methodname";
-    public static final String ASYNC = "async";
+    public static final String ANNOTATION_TYPE = "type";
+    public static final String ANNOTATION_PARAMS = "params";
+    public static final String ANNOTATION_CLASSNAME = "classname";
+    public static final String ANNOTATION_METHODNAME = "methodname";
+    public static final String ANNOTATION_ASYNC = "async";
     private String type; //serviceAnnotationType, name of Annotation, like TransactionTry
     private Map<String, Object> annotationParams;
     private String className;
@@ -23,22 +23,22 @@ public class ServiceAnnotation {
 
     public void fromDocument(Document document) {
 
-        type = document.getString(TYPE);
-        annotationParams = document.get(ANNOTATIONPARAMS, Map.class);
-        className = document.getString(CLASSNAME);
-        methodName = document.getString(METHODNAME);
-        if(document.get(ASYNC) != null){
-            async = document.getBoolean(ASYNC);
+        type = document.getString(ANNOTATION_TYPE);
+        annotationParams = document.get(ANNOTATION_PARAMS, Map.class);
+        className = document.getString(ANNOTATION_CLASSNAME);
+        methodName = document.getString(ANNOTATION_METHODNAME);
+        if(document.get(ANNOTATION_ASYNC) != null){
+            async = document.getBoolean(ANNOTATION_ASYNC);
         }
     }
 
     public Document toDocument() {
         CleanDocument document = new CleanDocument();
-        document.append(TYPE, type)
-                .append(ANNOTATIONPARAMS, annotationParams)
-                .append(CLASSNAME, className)
-                .append(METHODNAME, methodName)
-                .append(ASYNC, async);
+        document.append(ANNOTATION_TYPE, type)
+                .append(ANNOTATION_PARAMS, annotationParams)
+                .append(ANNOTATION_CLASSNAME, className)
+                .append(ANNOTATION_METHODNAME, methodName)
+                .append(ANNOTATION_ASYNC, async);
         return document;
     }
 

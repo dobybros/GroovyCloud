@@ -230,19 +230,16 @@ public class GridFSFileHandler extends FileAdapter {
 	@Override
 	public FileEntity saveFile(File file, PathEx path,
                                FileReplaceStrategy strategy, SaveFileCachedListener listener, boolean isNeedMd5) throws IOException {
-	    InputStream is = null;
-	    try {
-	        is = FileUtils.openInputStream(file);
+	    try (InputStream is = FileUtils.openInputStream(file)) {
 	        if(isNeedMd5) {
-	            MD5InputStream fis = new MD5InputStream(is);
-                FileEntity entity = saveFile(fis, file.length(), path, strategy, listener);
-                entity.setMd5(fis.getHashString());
-                return entity;
-            } else { 
+	        	try (MD5InputStream fis = new MD5InputStream(is)) {
+					FileEntity entity = saveFile(fis, file.length(), path, strategy, listener);
+					entity.setMd5(fis.getHashString());
+					return entity;
+				}
+			} else {
                 return saveFile(is, file.length(), path, strategy, listener);
             }
-	    } finally {
-	        is.close();
 	    }
 	}
 	

@@ -1,6 +1,6 @@
 var ArrayList = (function ArrayList(){  
       
-    _arrayList = function() {
+    var _arrayList = function() {
     	this.arr=[];	
     }
     _arrayList.prototype.size=function(){  

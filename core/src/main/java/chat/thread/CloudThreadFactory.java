@@ -15,7 +15,6 @@ public class CloudThreadFactory implements ThreadFactory {
     //set name
     private final String prefix;
     private final boolean daemoThread;
-    private final ThreadGroup threadGroup;
     public CloudThreadFactory(){
         this(null);
     }
@@ -25,13 +24,11 @@ public class CloudThreadFactory implements ThreadFactory {
     public CloudThreadFactory(String prefix, boolean daemo){
         this.prefix = (StringUtils.isNotBlank(prefix) ? prefix : "cloudThread") + "-" + poolNum.incrementAndGet() + "-thread-";
         daemoThread = daemo;
-        SecurityManager s = System.getSecurityManager();
-        threadGroup = (s == null) ? Thread.currentThread().getThreadGroup() : s.getThreadGroup();
     }
     @Override
     public Thread newThread(Runnable runnable) {
         String name = prefix + threadNum.getAndIncrement();
-        Thread thread = new Thread(threadGroup, runnable, name, 0);
+        Thread thread = new Thread(runnable, name);
         thread.setDaemon(daemoThread);
         return thread;
     }

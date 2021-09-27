@@ -1,20 +1,15 @@
 package script.javascript.runtime;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.List;
-
-import javax.script.Compilable;
-import javax.script.CompiledScript;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-
 import chat.errors.ChatErrorCodes;
 import chat.errors.CoreException;
 import chat.utils.FileExtensionFilter;
 import script.ScriptRuntime;
+
+import javax.script.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.List;
 
 public class JavascriptRuntime extends ScriptRuntime {
 	private ScriptEngineManager scriptEngineManager;
@@ -32,8 +27,7 @@ public class JavascriptRuntime extends ScriptRuntime {
 		FileExtensionFilter filter = new FileExtensionFilter().filter(file);
 		List<File> files = filter.getFiles();
 		for(File theFile : files) {
-			try {
-				FileReader reader = new FileReader(theFile.getAbsolutePath().replaceAll("\\\\", "/"));
+			try (FileReader reader = new FileReader(theFile.getAbsolutePath().replaceAll("\\\\", "/"))) {
 				if (scriptEngine instanceof Compilable) {
 					System.out.println("Compiling.... " + theFile);
 					Compilable compEngine = (Compilable) scriptEngine;
@@ -42,7 +36,7 @@ public class JavascriptRuntime extends ScriptRuntime {
 				} else {
 					scriptEngine.eval(reader);
 				}
-			} catch (FileNotFoundException | ScriptException e) {
+			} catch (IOException | ScriptException e) {
 				e.printStackTrace();
 				throw new CoreException(ChatErrorCodes.ERROR_JAVASCRIPT_LOADFILE_FAILED, "Load js file " + theFile + " failed, " + e.getMessage());
 			}

@@ -11,13 +11,13 @@ import java.util.Map;
  */
 public class DeployServiceVersion {
     public static final String ID = "_id";
-    public static final String SERVERTYPE = "serverType";
-    public static final String TYPE = "type";
-    public static final String GROOVYCLOUTYPE = "groovyCloudType";
-    public static final String SERVICEVERSIONS = "serviceVersions";
-    public static final String BASEJARVERSIONS = "baseJarVersions";
-    public static final String SERVERS = "servers";
-    public static final String DEPLOYID = "deployId";
+    public static final String DEPLOY_SERVERTYPE = "serverType";
+    public static final String DEPLOY_TYPE = "type";
+    public static final String DEPLOY_GROOVY_CLOUD_TYPE = "groovyCloudType";
+    public static final String DEPLOY_SERVICE_VERSIONS = "serviceVersions";
+    public static final String DEPLOY_BASE_JAR_VERSIONS = "baseJarVersions";
+    public static final String DEPLOY_SERVERS = "servers";
+    public static final String DEPLOY_ID = "deployId";
     private String _id;
     private String serverType;
     private String groovyCloudType;
@@ -94,24 +94,24 @@ public class DeployServiceVersion {
 
     public void fromDocument(Document dbObj) {
         _id = dbObj.getString(ID);
-        type = dbObj.getString(TYPE);
-        serverType =  dbObj.getString(SERVERTYPE);
-        serviceVersions = (Map<String, String>)dbObj.get(SERVICEVERSIONS);
-        groovyCloudType = dbObj.getString(GROOVYCLOUTYPE);
-        baseJarVersions = (Map<String, String>) dbObj.get(BASEJARVERSIONS);
-        servers = (Map<String, Map<String, Object>>) dbObj.get(SERVERS);
-        deployId = dbObj.getString(DEPLOYID);
+        type = dbObj.getString(DEPLOY_TYPE);
+        serverType =  dbObj.getString(DEPLOY_SERVERTYPE);
+        serviceVersions = (Map<String, String>)dbObj.get(DEPLOY_SERVICE_VERSIONS);
+        groovyCloudType = dbObj.getString(DEPLOY_GROOVY_CLOUD_TYPE);
+        baseJarVersions = (Map<String, String>) dbObj.get(DEPLOY_BASE_JAR_VERSIONS);
+        servers = (Map<String, Map<String, Object>>) dbObj.get(DEPLOY_SERVERS);
+        deployId = dbObj.getString(DEPLOY_ID);
     }
     public Document toDocument() {
         Document dbObj = new CleanDocument();
        dbObj.append(ID, _id)
-               .append(TYPE, type)
-               .append(SERVERTYPE, serverType)
-               .append(SERVICEVERSIONS, serviceVersions)
-               .append(GROOVYCLOUTYPE, groovyCloudType)
-               .append(DEPLOYID, deployId)
-               .append(BASEJARVERSIONS, baseJarVersions)
-               .append(SERVERS, servers);
+               .append(DEPLOY_TYPE, type)
+               .append(DEPLOY_SERVERTYPE, serverType)
+               .append(DEPLOY_SERVICE_VERSIONS, serviceVersions)
+               .append(DEPLOY_GROOVY_CLOUD_TYPE, groovyCloudType)
+               .append(DEPLOY_ID, deployId)
+               .append(DEPLOY_BASE_JAR_VERSIONS, baseJarVersions)
+               .append(DEPLOY_SERVERS, servers);
         return dbObj;
     }
 }

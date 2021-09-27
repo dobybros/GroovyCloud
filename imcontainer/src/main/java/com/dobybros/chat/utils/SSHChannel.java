@@ -88,7 +88,6 @@ public class SSHChannel {
 	}
 	
 	public synchronized String exec(String command) throws CoreException {
-		BufferedReader reader = null;
 		Channel channel = null;
 		StringBuffer commandInfo = new StringBuffer();
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -101,16 +100,19 @@ public class SSHChannel {
 				((ChannelExec) channel).setPty(true);
 				channel.connect();
 				InputStream in = channel.getInputStream();
-				reader = new BufferedReader(new InputStreamReader(in));
-				String buf = null;
-				while ((buf = reader.readLine()) != null) {
-					commandInfo.append(buf);
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+					String buf = null;
+					while ((buf = reader.readLine()) != null) {
+						commandInfo.append(buf);
+					}
 				}
 			}
 		} catch (IOException | JSchException e) {
 			while(retryCount > 0) {
 				try {
-					Thread.sleep((MAX_RETRY - retryCount) * 1000L);
+//					Thread.sleep((MAX_RETRY - retryCount) * 1000L);
+					// maybe I need release the lock, so use wait.
+					this.wait((MAX_RETRY - retryCount) * 1000L);
 				} catch (InterruptedException e1) {
 					e1.printStackTrace();
 				} 
@@ -121,13 +123,6 @@ public class SSHChannel {
 			LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(e));
 			throw new CoreException(ChatErrorCodes.ERROR_SSH_EXEC_FAILED, new String[]{command}, e.getMessage());
 		} finally {
-			try {
-				if (reader != null)
-					reader.close();
-			} catch (IOException e) {
-				LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(e));
-				throw new CoreException(e.getMessage());
-			}
 			if (channel != null)
 				channel.disconnect();
 			System.out.println(command + " === " + baos.toString());

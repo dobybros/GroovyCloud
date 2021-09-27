@@ -81,7 +81,7 @@ public class RMIServerImplWrapper extends ClassAnnotationGlobalHandler {
 			throw new CoreException(CoreErrorCodes.ERROR_RPC_TYPE_NOMAPPING, "No server adapter found by type " + type);
 
 		if(request instanceof MethodRequest) {
-			if(serverMethodInvocation != null)
+			if(serverMethodInvocation == null)
 				serverMethodInvocation = new RPCServerMethodInvocation();
 			RPCResponse response = serverMethodInvocation.onCall((MethodRequest) request);
 			return response;

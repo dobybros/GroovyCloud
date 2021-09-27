@@ -383,20 +383,15 @@ public class TalentUtils {
         if (StringUtils.isBlank(localeStr)) {
             bundle = getBundle(Locale.ENGLISH);
         } else {
-            if (localeStr != null) {
-                Locale locale = new Locale(localeStr);
-                
-                try {
-                    bundle = getBundle(locale);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(e));
-                    bundle = getBundle(Locale.ENGLISH);
-                }
-            } else {
-                LoggerEx.error(TAG, "Missing locale info in request ");
-                bundle = getBundle(Locale.ENGLISH);
-            }
+			Locale locale = new Locale(localeStr);
+
+			try {
+				bundle = getBundle(locale);
+			} catch (Exception e) {
+				e.printStackTrace();
+				LoggerEx.error(TAG, ExceptionUtils.getFullStackTrace(e));
+				bundle = getBundle(Locale.ENGLISH);
+			}
         }
         
         try{

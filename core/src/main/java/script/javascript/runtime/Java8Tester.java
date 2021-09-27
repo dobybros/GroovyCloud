@@ -1,21 +1,13 @@
 package script.javascript.runtime;
 
+import chat.utils.FileExtensionFilter;
+import chat.utils.IteratorEx;
+
+import javax.script.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-
-import javax.script.Bindings;
-import javax.script.Compilable;
-import javax.script.CompiledScript;
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import javax.script.SimpleBindings;
-
-import chat.utils.FileExtensionFilter;
-import chat.utils.IteratorEx;
 
 public class Java8Tester {
 	static ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
@@ -26,8 +18,9 @@ public class Java8Tester {
 		FileExtensionFilter filter = new FileExtensionFilter(new IteratorEx<File>() {
 			@Override
 			public boolean iterate(File theFile) {
-				try {
-					FileReader reader = new FileReader(theFile.getAbsolutePath().replaceAll("\\\\", "/"));
+				if (theFile != null)
+				try (FileReader reader = new FileReader(theFile.getAbsolutePath().replaceAll("\\\\", "/"));) {
+//					FileReader reader = new FileReader(theFile.getAbsolutePath().replaceAll("\\\\", "/"));
 					if (nashorn instanceof Compilable) {
 						System.out.println("Compiling.... " + theFile);
 						Compilable compEngine = (Compilable) nashorn;
@@ -36,7 +29,7 @@ public class Java8Tester {
 					} else {
 						nashorn.eval(reader);
 					}
-				} catch (FileNotFoundException | ScriptException e) {
+				} catch (ScriptException | IOException e) {
 					e.printStackTrace();
 				}
 				return true;

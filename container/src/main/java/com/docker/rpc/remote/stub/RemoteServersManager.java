@@ -207,7 +207,7 @@ public class RemoteServersManager {
                                                                             if (service.getVersion() > serverOld.getVersion()) {
                                                                                 servers.clear();
                                                                                 canAddService = true;
-                                                                            } else if (service.getVersion() == serverOld.getVersion()) {
+                                                                            } else if (service.getVersion().equals(serverOld.getVersion())) {
                                                                                 canAddService = true;
                                                                             }
                                                                             break;

@@ -10,7 +10,7 @@ import java.util.Random;
  */
 public class RedisLock {
     //加锁标志
-    public static final String LOCKED = "TRUE";
+    public static final String REDIS_LOCKED = "TRUE";
     public static final long ONE_MILLI_NANOS = 1000000L;
     //默认超时时间（毫秒）
     public static final long DEFAULT_TIME_OUT = 3000;
@@ -34,7 +34,7 @@ public class RedisLock {
         timeout *= ONE_MILLI_NANOS;
         try {
             while ((System.nanoTime() - nano) < timeout) {
-                if (jedis.setnx(key, LOCKED) == 1) {
+                if (jedis.setnx(key, REDIS_LOCKED) == 1) {
                     jedis.expire(key, EXPIRE);
                     locked = true;
                     return locked;

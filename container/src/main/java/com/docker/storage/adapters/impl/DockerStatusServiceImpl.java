@@ -324,7 +324,7 @@ public class DockerStatusServiceImpl implements DockerStatusService {
                         for (ServiceAnnotation serviceAnnotationDocument : serviceTemp.getServiceAnnotations()) {
                             JSONObject serviceAnnotation = JSON.parseObject(serviceAnnotationDocument.toDocument().toJson());
                             if (types != null && id != null) {
-                                if (types.contains(serviceAnnotation.getString("type")) && serviceAnnotation.getJSONObject("params").getString("id") == id) {
+                                if (types.contains(serviceAnnotation.getString("type")) && serviceAnnotation.getJSONObject("params").getString("id").equals(id)) {
                                     if (!serviceNames.contains(serviceTemp.getService())) {
                                         services.add(serviceTemp);
                                         serviceNames.add(serviceTemp.getService());
@@ -339,7 +339,7 @@ public class DockerStatusServiceImpl implements DockerStatusService {
                                     }
 //                                break;
                             } else {
-                                if (serviceAnnotation.getJSONObject("params").getString("id") == id)
+                                if (serviceAnnotation.getJSONObject("params").getString("id").equals(id))
                                     if (!serviceNames.contains(serviceTemp.getService())) {
                                         services.add(serviceTemp);
                                         serviceNames.add(serviceTemp.getService());
