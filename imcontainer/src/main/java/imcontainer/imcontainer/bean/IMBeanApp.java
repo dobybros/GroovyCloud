@@ -7,9 +7,10 @@ import com.dobybros.chat.script.annotations.gateway.GatewayGroovyRuntime;
 import com.dobybros.chat.services.impl.ConsumeQueueService;
 import com.dobybros.chat.tasks.OfflineMessageSavingTask;
 import com.dobybros.chat.tasks.RPCMessageSendingTask;
-import com.dobybros.gateway.channels.tcp.UpStreamHandler;
-import com.dobybros.gateway.channels.tcp.codec.HailProtocalCodecFactory;
-import com.dobybros.gateway.channels.websocket.codec.WebSocketCodecFactory;
+import com.dobybros.gateway.channels.websocket.netty.WebSocketChannelInitializer;
+import com.dobybros.gateway.channels.websocket.netty.WebSocketManager;
+import com.dobybros.gateway.channels.websocket.netty.WebSocketProperties;
+import com.dobybros.gateway.channels.websocket.netty.handler.IMWebSocketHandler;
 import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.data.DockerStatus;
@@ -18,22 +19,11 @@ import com.docker.script.ScriptManager;
 import com.docker.tasks.Task;
 import container.container.bean.BeanApp;
 import org.apache.commons.lang.StringUtils;
-import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.ssl.KeyStoreFactory;
-import org.apache.mina.filter.ssl.SslContextFactory;
-import org.apache.mina.filter.ssl.SslFilter;
-import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
 import script.file.FileAdapter;
 import script.file.LocalFileHandler;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 //import com.dobybros.chat.log.LogIndexQueue;
 //import com.dobybros.chat.storage.mongodb.daos.BulkLogDAO;
@@ -46,21 +36,6 @@ import java.util.Map;
 public class IMBeanApp extends IMConfigApp {
     private static volatile IMBeanApp instance;
     private GlobalLansProperties globalLansProperties;
-    private UpStreamHandler upstreamHandler;
-    private ProtocolCodecFilter tcpCodecFilter;
-    private DefaultIoFilterChainBuilder tcpFilterChainBuilder;
-    private NioSocketAcceptorEx tcpIoAcceptor;
-    private ProtocolCodecFilter sslTcpCodecFilter;
-    private HailProtocalCodecFactory hailProtocalCodecFactory;
-    private KeyStoreFactory keystoreFactory;
-    private SslContextFactory sslContextFactory;
-    private SslFilter sslFilter;
-    private DefaultIoFilterChainBuilder sslTcpFilterChainBuilder;
-    private NioSocketAcceptorEx sslTcpIoAcceptor;
-    private WebSocketCodecFactory webSocketCodecFactory;
-    private ProtocolCodecFilter wsCodecFilter;
-    private DefaultIoFilterChainBuilder wsFilterChainBuilder;
-    private NioSocketAcceptorEx wsIoAcceptor;
     private ConsumeQueueService bulkLogQueueService;
     private ConsumeOfflineMessageHandler consumeOfflineMessageHandler;
     private OfflineMessageSavingTask offlineMessageSavingTask;
@@ -74,6 +49,9 @@ public class IMBeanApp extends IMConfigApp {
     private ProxyContainerDuplexSender proxyContainerDuplexSender;
     private RpcProxyContainerDuplexSender rpcProxyContainerDuplexSender;
     private QueueProxyContainerDuplexSender queueProxyContainerDuplexSender;
+    private WebSocketProperties webSocketProperties;
+    private WebSocketManager webSocketManager;
+    private WebSocketChannelInitializer webSocketChannelInitializer;
 
     public synchronized IMExtensionCache getIMExtensionCache() {
         if(instance.imExtensionCache == null){
@@ -208,123 +186,6 @@ public class IMBeanApp extends IMConfigApp {
         return instance.bulkLogQueueService;
     }
 
-    public synchronized NioSocketAcceptorEx getWsIoAcceptor() {
-        if(instance.wsIoAcceptor == null){
-            instance.wsIoAcceptor = new NioSocketAcceptorEx();
-            instance.wsIoAcceptor.setHandler(instance.getUpstreamHandler());
-            instance.wsIoAcceptor.setFilterChainBuilder(instance.getWsFilterChainBuilder());
-            instance.wsIoAcceptor.setReuseAddress(true);
-            instance.wsIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamWsPort())));
-        }
-        return instance.wsIoAcceptor;
-    }
-
-    public synchronized DefaultIoFilterChainBuilder getWsFilterChainBuilder() {
-        if(instance.wsFilterChainBuilder == null){
-            instance.wsFilterChainBuilder = new DefaultIoFilterChainBuilder();
-            Map map = new LinkedHashMap();
-//            map.put("sslFilter", instance.getSslFilter());
-            map.put("codecFilter", instance.getWsCodecFilter());
-            instance.wsFilterChainBuilder.setFilters(map);
-        }
-        return instance.wsFilterChainBuilder;
-    }
-
-    public synchronized ProtocolCodecFilter getWsCodecFilter() {
-        if(instance.wsCodecFilter == null){
-            instance.wsCodecFilter = new ProtocolCodecFilter(getWebSocketCodecFactory());
-        }
-        return instance.wsCodecFilter;
-    }
-
-    public synchronized WebSocketCodecFactory getWebSocketCodecFactory() {
-        if(instance.webSocketCodecFactory == null){
-            instance.webSocketCodecFactory = new WebSocketCodecFactory();
-        }
-        return instance.webSocketCodecFactory;
-    }
-
-    public synchronized NioSocketAcceptorEx getSslTcpIoAcceptor() {
-        if(instance.sslTcpIoAcceptor == null){
-            instance.sslTcpIoAcceptor = new NioSocketAcceptorEx();
-            instance.sslTcpIoAcceptor.setHandler(instance.getUpstreamHandler());
-            instance.sslTcpIoAcceptor.setFilterChainBuilder(instance.getSslTcpFilterChainBuilder());
-            instance.sslTcpIoAcceptor.setReuseAddress(true);
-            instance.sslTcpIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamSslPort())));
-        }
-        return instance.sslTcpIoAcceptor;
-    }
-
-    public DefaultIoFilterChainBuilder getSslTcpFilterChainBuilder() {
-        if(instance.sslTcpFilterChainBuilder == null){
-            instance.sslTcpFilterChainBuilder = new DefaultIoFilterChainBuilder();
-            Map map = new LinkedHashMap();
-            map.put("codecFilter", instance.getSslTcpCodecFilter());
-            map.put("sslFilter", instance.getSslFilter());
-            instance.sslTcpFilterChainBuilder.setFilters(map);
-        }
-        return instance.sslTcpFilterChainBuilder;
-    }
-
-    public synchronized SslFilter getSslFilter() {
-        if(instance.sslFilter == null){
-            try {
-                instance.sslFilter = new SslFilter(getSslContextFactory().newInstance());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return instance.sslFilter;
-    }
-
-    public synchronized SslContextFactory getSslContextFactory() {
-        if(instance.sslContextFactory == null){
-            instance.sslContextFactory = new SslContextFactory();
-            try {
-                instance.sslContextFactory.setKeyManagerFactoryKeyStore(instance.getKeystoreFactory().newInstance());
-                instance.sslContextFactory.setProtocol("TLSV1.2");
-                instance.sslContextFactory.setKeyManagerFactoryAlgorithm("SunX509");
-                instance.sslContextFactory.setKeyManagerFactoryKeyStorePassword(instance.getKeymanagerPwd());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return instance.sslContextFactory;
-    }
-
-    public synchronized KeyStoreFactory getKeystoreFactory() {
-        if(instance.keystoreFactory == null){
-            instance.keystoreFactory = new KeyStoreFactory();
-            instance.keystoreFactory.setPassword(instance.getKeystorePwd());
-            URL keystorePathUrl = null;
-            try {
-                keystorePathUrl = new URL(instance.getKeystorePath());
-                instance.keystoreFactory.setDataUrl(keystorePathUrl);
-            }catch (IOException e){
-                e.printStackTrace();
-            }
-        }
-        return instance.keystoreFactory;
-    }
-
-    public synchronized ProtocolCodecFilter getSslTcpCodecFilter() {
-        if(instance.sslTcpCodecFilter == null){
-            instance.sslTcpCodecFilter = new ProtocolCodecFilter(getHailProtocalCodecFactory());
-        }
-        return instance.sslTcpCodecFilter;
-    }
-
-    public synchronized NioSocketAcceptorEx getTcpIoAcceptor() {
-        if(instance.tcpIoAcceptor == null){
-            instance.tcpIoAcceptor = new NioSocketAcceptorEx();
-            instance.tcpIoAcceptor.setHandler(instance.getUpstreamHandler());
-            instance.tcpIoAcceptor.setFilterChainBuilder(instance.getTcpFilterChainBuilder());
-            instance.tcpIoAcceptor.setReuseAddress(true);
-            instance.tcpIoAcceptor.setDefaultLocalAddress(new InetSocketAddress(Integer.valueOf(instance.getUpstreamPort())));
-        }
-        return instance.tcpIoAcceptor;
-    }
-
     public synchronized GlobalLansProperties getGlobalLansProperties() {
         if(instance.globalLansProperties == null){
             instance.globalLansProperties = new GlobalLansProperties();
@@ -332,38 +193,32 @@ public class IMBeanApp extends IMConfigApp {
         }
         return instance.globalLansProperties;
     }
-    public synchronized UpStreamHandler getUpstreamHandler() {
-        if(instance.upstreamHandler == null){
-            instance.upstreamHandler = new UpStreamHandler();
-            instance.upstreamHandler.setReadIdleTime(720);
-            instance.upstreamHandler.setWriteIdleTime(720);
+
+    /********** netty websocket start *********/
+    public synchronized WebSocketProperties getWebSocketProperties() {
+        if (instance.webSocketProperties == null) {
+            instance.webSocketProperties = new WebSocketProperties(Integer.valueOf(instance.getPublicWsPort()),
+                    Integer.valueOf(instance.getUpstreamWsPort()));
         }
-        return instance.upstreamHandler;
+        return instance.webSocketProperties;
     }
 
-    public synchronized HailProtocalCodecFactory getHailProtocalCodecFactory() {
-        if(instance.hailProtocalCodecFactory == null){
-            instance.hailProtocalCodecFactory = new HailProtocalCodecFactory();
-        }
-        return instance.hailProtocalCodecFactory;
+    public synchronized WebSocketChannelInitializer getWebSocketChannelInitializer() {
+        if (instance.webSocketChannelInitializer == null)
+            instance.webSocketChannelInitializer = new WebSocketChannelInitializer(instance.getWebSocketProperties(), IMWebSocketHandler.class);
+        return instance.webSocketChannelInitializer;
     }
 
-    public synchronized ProtocolCodecFilter getTcpCodecFilter() {
-        if(instance.tcpCodecFilter == null){
-            instance.tcpCodecFilter = new ProtocolCodecFilter(getHailProtocalCodecFactory());
+    public synchronized WebSocketManager getWebSocketManager() {
+        if (instance.webSocketManager == null) {
+            instance.webSocketManager = new WebSocketManager(instance.getWebSocketProperties(), instance.getWebSocketChannelInitializer());
         }
-        return instance.tcpCodecFilter;
+        return instance.webSocketManager;
     }
+    /********** netty websocket end *********/
 
-    public synchronized DefaultIoFilterChainBuilder getTcpFilterChainBuilder() {
-        if(instance.tcpFilterChainBuilder == null){
-            instance.tcpFilterChainBuilder = new DefaultIoFilterChainBuilder();
-            Map map = new LinkedHashMap();
-            map.put("codecFilter", instance.getTcpCodecFilter());
-            instance.tcpFilterChainBuilder.setFilters(map);
-        }
-        return instance.tcpFilterChainBuilder;
-    }
+
+
     public static IMBeanApp getInstance(){
         if(instance == null){
             synchronized (IMBeanApp.class){
@@ -375,4 +230,5 @@ public class IMBeanApp extends IMConfigApp {
         }
         return instance;
     }
+
 }

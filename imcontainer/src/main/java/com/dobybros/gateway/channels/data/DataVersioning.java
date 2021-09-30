@@ -3,18 +3,17 @@ package com.dobybros.gateway.channels.data;
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
 import com.dobybros.chat.binary.data.Data;
-import com.dobybros.gateway.channels.tcp.codec.HailProtocalDecoder;
+import com.dobybros.gateway.channels.websocket.data.ChannelContext;
 import com.dobybros.gateway.pack.HailPack;
 import com.dobybros.gateway.pack.Pack;
-import org.apache.mina.core.session.IoSession;
 
 public class DataVersioning{
 	private static final String TAG = DataVersioning.class.getSimpleName();
 
-	public static Pack getDataPack(IoSession session, Data data) {
-		Byte version = HailProtocalDecoder.getVersion(session);
-		Short encodeVersion = HailProtocalDecoder.getEncodeVersion(session);
-		Byte encode = HailProtocalDecoder.getEncode(session);
+	public static Pack getDataPack(ChannelContext context, Data data) {
+		Byte version = context.getPackVersion();
+		Short encodeVersion = context.getEncodeVersion();
+		Byte encode = context.getEncode();
 		data.setEncodeVersion(encodeVersion);
 		data.setEncode(encode);
 		HailPack hailPack = new HailPack(data);
@@ -22,8 +21,8 @@ public class DataVersioning{
 		return hailPack;
 	}
 	
-	public static Result getResultData(IoSession session, int code, String description, String forId) {
-		Short encodeVersion = HailProtocalDecoder.getEncodeVersion(session);
+	public static Result getResultData(ChannelContext context, int code, String description, String forId) {
+		Short encodeVersion = context.getEncodeVersion();
 		Result data = (Result) get(encodeVersion, Pack.TYPE_OUT_RESULT);
 		data.setCode(code);
 		data.setDescription(description);
@@ -37,10 +36,10 @@ public class DataVersioning{
 		data.setForId(forId);
 		return data;
 	}
-	public static Pack getResult(IoSession session, int code, String description, String forId) {
-		Byte version = HailProtocalDecoder.getVersion(session);
-		Short encodeVersion = HailProtocalDecoder.getEncodeVersion(session);
-		Byte encode = HailProtocalDecoder.getEncode(session);
+	public static Pack getResult(ChannelContext context, int code, String description, String forId) {
+		Byte version = context.getPackVersion();
+		Short encodeVersion = context.getEncodeVersion();
+		Byte encode = context.getEncode();
 		return getResult(version, encode, encodeVersion, code, description, forId);
 	}
 	

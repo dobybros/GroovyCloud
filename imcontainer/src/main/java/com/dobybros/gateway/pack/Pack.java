@@ -2,8 +2,8 @@ package com.dobybros.gateway.pack;
 
 import chat.logs.LoggerEx;
 import com.dobybros.chat.binary.data.Data;
+import io.netty.buffer.ByteBuf;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.mina.core.buffer.IoBuffer;
 
 public abstract class Pack {
 	public static final byte TYPE_IN_SERVER =  2;
@@ -42,9 +42,9 @@ public abstract class Pack {
 	public Pack(Data data) {
 		setData(data);
 	}
-	
-	public abstract void readHeadFromIoBuffer(IoBuffer buf);
-	public abstract void persistent(IoBuffer buf);
+
+	public abstract void readHeadFromByteBuf(ByteBuf buf);
+	public abstract void persistentToByteBuf(ByteBuf buf);
 	
 	public void setData(Data data) {
 		if(data.getData() == null) {

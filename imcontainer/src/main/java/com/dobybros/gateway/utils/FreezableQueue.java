@@ -2,6 +2,7 @@ package com.dobybros.gateway.utils;
 
 import chat.errors.CoreException;
 import chat.logs.LoggerEx;
+import chat.utils.ConcurrentHashSet;
 import com.dobybros.chat.binary.data.Data;
 import com.dobybros.chat.data.OfflineMessage;
 import com.dobybros.chat.open.data.Message;
@@ -19,7 +20,6 @@ import com.dobybros.gateway.onlineusers.PushInfo;
 import com.dobybros.gateway.onlineusers.PushInfo.SpecialHandler;
 import com.docker.server.OnlineServer;
 import com.docker.utils.SpringContextUtil;
-import org.apache.mina.util.ConcurrentHashSet;
 
 import java.util.*;
 
@@ -228,7 +228,8 @@ public class FreezableQueue {
 	
 	private void removeReceivedOfflineMessageIds() {
 		if(receivedOfflineMessageIds != null) {
-			ConcurrentHashSet<String> removeIds = new ConcurrentHashSet<>(receivedOfflineMessageIds);//receivedOfflineMessageIds 是一个动态变化的数据， 所以先复制一份到另外一个set中进行删除操作。 
+			ConcurrentHashSet<String> removeIds = new ConcurrentHashSet<>();//receivedOfflineMessageIds 是一个动态变化的数据， 所以先复制一份到另外一个set中进行删除操作。
+			removeIds.addAll(receivedOfflineMessageIds);
 			if(removeIds.isEmpty())
 				return;
 			try {

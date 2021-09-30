@@ -1,16 +1,15 @@
 package com.dobybros.gateway.pack;
 
 import com.dobybros.chat.binary.data.Data;
-import com.dobybros.gateway.channels.tcp.codec.HailProtocalDecoder;
-import org.apache.mina.core.session.IoSession;
+import com.dobybros.gateway.channels.websocket.data.ChannelContext;
 
 
 public class PackVersioning {
 
-	public static Pack get(IoSession session) {
-		Byte version = HailProtocalDecoder.getVersion(session);
-		Short encodeVersion = HailProtocalDecoder.getEncodeVersion(session);
-		Byte encode = HailProtocalDecoder.getEncode(session);
+	public static Pack get(ChannelContext context) {
+		Byte version = context.getPackVersion();
+		Short encodeVersion = context.getEncodeVersion();
+		Byte encode = context.getEncode();
 		return get(version, encode, encodeVersion);
 	}
 	

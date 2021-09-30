@@ -1,7 +1,7 @@
 package com.dobybros.gateway.pack;
 
 import com.dobybros.chat.binary.data.Data;
-import org.apache.mina.core.buffer.IoBuffer;
+import io.netty.buffer.ByteBuf;
 
 
 public class HailPack extends Pack {
@@ -75,22 +75,16 @@ public class HailPack extends Pack {
 	}
 
 	@Override
-	public void readHeadFromIoBuffer(IoBuffer buf) {
-		//version = buf.get(); 在解包的地方已经读取。 
-		//encodeVersion = buf.getShort();
-//		encode = buf.get();
-		type = buf.get();
-		length = buf.getInt();
+	public void readHeadFromByteBuf(ByteBuf buf) {
+		type = buf.readByte();
+		length = buf.readInt();
 	}
 
 	@Override
-	public void persistent(IoBuffer buf) {
-//		buf.put(version);
-//		buf.putShort(encodeVersion);
-//		buf.put(encode);
-		buf.put((byte) type);
-		buf.putInt(length);
-		if(length > 0)
-			buf.put(content);
+	public void persistentToByteBuf(ByteBuf buf) {
+		buf.writeByte(type);
+		buf.writeInt(length);
+		if (length > 0)
+			buf.writeBytes(content);
 	}
 }

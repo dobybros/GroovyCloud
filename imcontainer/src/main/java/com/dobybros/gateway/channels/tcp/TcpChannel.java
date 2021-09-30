@@ -4,12 +4,10 @@ import chat.logs.LoggerEx;
 import com.dobybros.chat.binary.data.Data;
 import com.dobybros.chat.channels.Channel;
 import com.dobybros.gateway.channels.data.DataVersioning;
-import com.dobybros.gateway.channels.tcp.codec.HailProtocalDecoder;
+import com.dobybros.gateway.channels.websocket.data.ChannelContext;
 import com.dobybros.gateway.onlineusers.OnlineServiceUser;
 import com.dobybros.gateway.onlineusers.OnlineUser;
 import com.dobybros.gateway.pack.Pack;
-import org.apache.mina.core.future.WriteFuture;
-import org.apache.mina.core.session.IoSession;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -18,7 +16,7 @@ public class TcpChannel extends Channel {
 	protected static final String TAG = "TCP";
 	private Long pingTime = 0L;
 	private Long pingInterval = TimeUnit.SECONDS.toMillis(8);
-	private IoSession session;
+	private ChannelContext channelContext;
 	private OnlineUser onlineUser;
 	private Map<String, OnlineServiceUser> onlineServiceUsers;
 	public TcpChannel(Integer terminal) {
@@ -36,13 +34,13 @@ public class TcpChannel extends Channel {
 	}
 
 	private void sendEvent(final Data message) {
-		if(message == null || session.isClosing())
+		if(message == null || !channelContext.channelIsActive())
 			return;
 		
 		try {
-			Pack hailPack = DataVersioning.getDataPack(session, message);
+			Pack hailPack = DataVersioning.getDataPack(channelContext, message);
 //			synchronized (session) {
-				WriteFuture writeFuture = session.write(hailPack);
+			channelContext.write(hailPack);
 //			}
 		} catch (Throwable e) {
 			e.printStackTrace();
@@ -53,9 +51,8 @@ public class TcpChannel extends Channel {
 	@Override
 	public boolean close(int close) {
 		try {
-			if(!session.isClosing()) {
-				if(session != null)
-					session.close(false);
+			if(channelContext != null && channelContext.channelIsActive()) {
+				channelContext.close();
 			}
 			channelClosed(close);
 		} catch (Throwable t) {
@@ -67,15 +64,15 @@ public class TcpChannel extends Channel {
 
 	@Override
 	public void setAttribute(String key, String value) {
-		if (session != null)
-			session.setAttribute(key, value);
+		if (channelContext != null)
+			channelContext.setAttribute(key, value);
 	}
 
 	@Override
 	public String getAttribute(String key) {
-		if (session != null) {
+		if (channelContext != null) {
 			try {
-				return (String) session.getAttribute(key);
+				return (String) channelContext.getAttribute(key);
 			} catch (Throwable t) {
 				t.printStackTrace();
 				LoggerEx.error(TAG, "Get attribute error, key: " +  key + ", eMsg: " + t.getMessage());
@@ -85,13 +82,6 @@ public class TcpChannel extends Channel {
 		return null;
 	}
 
-	public IoSession getSession() {
-		return session;
-	}
-
-	public void setSession(IoSession session) {
-		this.session = session;
-	}
 
 	public OnlineUser getOnlineUser() {
 		return onlineUser;
@@ -110,7 +100,7 @@ public class TcpChannel extends Channel {
 	}
 	@Override
 	public Short getEncodeVersion(){
-		return HailProtocalDecoder.getEncodeVersion(session);
+		return channelContext != null ? channelContext.getEncodeVersion() : null;
 	}
 
 	public Long getPingTime() {
@@ -129,6 +119,14 @@ public class TcpChannel extends Channel {
 		this.pingInterval = pingInterval;
 	}
 	public String getIp(){
-		return (String) session.getAttribute(UpStreamHandler.ATTRIBUTE_IP);
+		return channelContext != null ? channelContext.getIp() : null;
+	}
+
+	public ChannelContext getChannelContext() {
+		return channelContext;
+	}
+
+	public void setChannelContext(ChannelContext channelContext) {
+		this.channelContext = channelContext;
 	}
 }

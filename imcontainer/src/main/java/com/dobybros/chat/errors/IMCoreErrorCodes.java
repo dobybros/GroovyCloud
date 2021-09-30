@@ -407,6 +407,7 @@ public interface IMCoreErrorCodes {
 	public static final int ERROR_PASSIVE_DEVICE_REJECT = CODE_CORE + 366;
 	public static final int ERROR_REMOTESERVERS_FULL = CODE_CORE + 367;
 	public static final int ERROR_SERVER_NOT_MATCH = CODE_CORE + 368;
+	public static final int ERROR_START_WEBSOCKET_FAILED = CODE_CORE + 369;
 	//vip权限错误
 	public static final int ERROR_HAVENT_GOT_VIP_PERMISSION = CODE_MEMBERSHIP + 1;
 	public static final int ERROR_APPROVE_GROUP_APPLICATION_EXCEEDED_MAX_MEMBER_COUNT = CODE_MEMBERSHIP + 2;

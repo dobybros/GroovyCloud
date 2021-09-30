@@ -2,24 +2,13 @@ package proxycontainer.proxycontainer.bean;
 
 import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
 import com.dobybros.chat.handlers.RpcProxyContainerDuplexSender;
-import com.dobybros.gateway.channels.tcp.codec.HailProtocalCodecFactory;
+import com.dobybros.gateway.channels.websocket.netty.WebSocketChannelInitializer;
+import com.dobybros.gateway.channels.websocket.netty.WebSocketManager;
 import com.dobybros.gateway.eventhandler.MessageEventHandler;
 import com.proxy.im.ProxyAnnotationHandler;
 import com.proxy.im.ProxyUpStreamAnnotationHandler;
-import com.proxy.im.ProxyUpStreamHandler;
-import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.ssl.KeyStoreFactory;
-import org.apache.mina.filter.ssl.SslContextFactory;
-import org.apache.mina.filter.ssl.SslFilter;
-import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
-import org.springframework.beans.factory.config.CustomEditorConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.beans.PropertyEditor;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @Auther: lick
@@ -37,78 +26,14 @@ public class TcpBean {
         return new ProxyUpStreamAnnotationHandler();
     }
 
-    @Bean
-    public ProxyUpStreamHandler proxyUpStreamHandler() {
-        return instance.getProxyUpStreamHandler();
-    }
-
-    @Bean
-    public CustomEditorConfigurer customEditorConfigurer() {
-        CustomEditorConfigurer customEditorConfigurer = new CustomEditorConfigurer();
-        Map<Class<?>, Class<? extends PropertyEditor>> map = new HashMap<>();
-        map.put(java.net.SocketAddress.class, org.apache.mina.integration.beans.InetSocketAddressEditor.class);
-        customEditorConfigurer.setCustomEditors(map);
-        return customEditorConfigurer;
-    }
-
-    @Bean
-    public ProtocolCodecFilter tcpCodecFilter() {
-        return instance.getTcpCodecFilter();
-    }
-
-    //TODO 检查
-    @Bean
-    public DefaultIoFilterChainBuilder tcpFilterChainBuilder() {
-        return instance.getTcpFilterChainBuilder();
-    }
-
-    @Bean(destroyMethod = "unbind")
-    public NioSocketAcceptorEx tcpIoAcceptor() {
-        return instance.getTcpIoAcceptor();
-    }
-
-    @Bean
-    public HailProtocalCodecFactory hailProtocalCodecFactory() {
-        return instance.getHailProtocalCodecFactory();
-    }
-
-    @Bean
-    public ProtocolCodecFilter sslTcpCodecFilter() {
-        return instance.getSslTcpCodecFilter();
-    }
-
-    @Bean
-    public KeyStoreFactory keystoreFactory() {
-        return instance.getKeystoreFactory();
-    }
-    @Bean
-    public SslContextFactory sslContextFactory() {
-        return instance.getSslContextFactory();
-    }
-    @Bean
-    public SslFilter sslFilter() {
-        return instance.getSslFilter();
-    }
-    @Bean
-    public DefaultIoFilterChainBuilder sslTcpFilterChainBuilder() {
-        return instance.getSslTcpFilterChainBuilder();
-    }
-    @Bean(destroyMethod = "unbind")
-    public NioSocketAcceptorEx sslTcpIoAcceptor() {
-        return instance.getSslTcpIoAcceptor();
-    }
-    @Bean
-    public ProtocolCodecFilter wsCodecFilter() {
-        return instance.getWsCodecFilter();
-    }
-    @Bean
-    public DefaultIoFilterChainBuilder wsFilterChainBuilder() {
-        return instance.getWsFilterChainBuilder();
-    }
-    @Bean
-    public NioSocketAcceptorEx wsIoAcceptor() {
-        return instance.getWsIoAcceptor();
-    }
+//    @Bean
+//    public CustomEditorConfigurer customEditorConfigurer() {
+//        CustomEditorConfigurer customEditorConfigurer = new CustomEditorConfigurer();
+//        Map<Class<?>, Class<? extends PropertyEditor>> map = new HashMap<>();
+//        map.put(java.net.SocketAddress.class, org.apache.mina.integration.beans.InetSocketAddressEditor.class);
+//        customEditorConfigurer.setCustomEditors(map);
+//        return customEditorConfigurer;
+//    }
     @Bean
     public MessageEventHandler messageEventHandler(){
         return instance.getMessageEventHandler();
@@ -125,4 +50,14 @@ public class TcpBean {
     public RpcProxyContainerDuplexSender rpcProxyContainerDuplexSender(){
         return instance.getRpcProxyContainerDuplexSender();
     }
+    /*   netty websocket start   */
+    @Bean
+    public WebSocketChannelInitializer webSocketChannelInitializer() {
+        return instance.getWebSocketChannelInitializer();
+    }
+    @Bean(destroyMethod = "close")
+    public WebSocketManager webSocketManager() {
+        return instance.getWebSocketManager();
+    }
+    /*   netty websocket end   */
 }

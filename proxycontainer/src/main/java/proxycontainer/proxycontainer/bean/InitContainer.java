@@ -4,6 +4,7 @@ import chat.utils.IPHolder;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.dobybros.chat.handlers.ProxyContainerDuplexSender;
 import com.dobybros.chat.props.GlobalLansProperties;
+import com.dobybros.gateway.channels.websocket.netty.WebSocketManager;
 import com.dobybros.gateway.onlineusers.impl.OnlineUserManagerImpl;
 import com.docker.file.adapters.GridFSFileHandler;
 import com.docker.onlineserver.OnlineServerWithStatus;
@@ -13,7 +14,6 @@ import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.*;
 import com.docker.utils.AutoReloadProperties;
 import com.docker.utils.GroovyCloudBean;
-import org.apache.mina.transport.socket.nio.NioSocketAcceptorEx;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -57,10 +57,6 @@ public class InitContainer implements CommandLineRunner{
     @Autowired
     GridFSFileHandler fileAdapter;
     @Autowired
-    NioSocketAcceptorEx tcpIoAcceptor;
-    @Autowired
-    NioSocketAcceptorEx wsIoAcceptor;
-    @Autowired
     IPHolder ipHolder;
     @Autowired
     AutoReloadProperties oauth2ClientProperties;
@@ -76,6 +72,8 @@ public class InitContainer implements CommandLineRunner{
     OnlineUserManagerImpl onlineUserManager;
     @Autowired
     ProxyContainerDuplexSender proxyContainerDuplexSender;
+    @Autowired
+    WebSocketManager webSocketManager;
 
     @Override
     public void run(String... args) throws Exception {
@@ -98,8 +96,6 @@ public class InitContainer implements CommandLineRunner{
         logsHelper.init();
         gridfsHelper.init();
         fileAdapter.init();
-        tcpIoAcceptor.bind();
-        wsIoAcceptor.bind();
         ipHolder.init();
         oauth2ClientProperties.init();
         onlineServer.start();
@@ -108,5 +104,6 @@ public class InitContainer implements CommandLineRunner{
         dockerRpcServerAdapter.serverStart();
         dockerRpcServerAdapterSsl.serverStart();
         proxyContainerDuplexSender.init();
+        webSocketManager.start();
     }
 }
