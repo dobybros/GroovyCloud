@@ -23,7 +23,7 @@
 
 	<properties>
 		<java.version>11</java.version>
-		<mina.version>2.1.2</mina.version>
+		<mina.version>2.1.5</mina.version>
 	</properties>
 	<!--<dependencyManagement>-->
 	<dependencies>
