@@ -1378,6 +1378,49 @@ public class RedisHandler {
         return null;
     }
 
+    public List<Object> hmgetByPipeline(final List<String> keys, final String prefixKey, final String... field) throws CoreException {
+        Object result = invokePipelineMethod(true, pipelineBase -> {
+            if (StringUtils.isBlank(prefixKey))
+                for (String key : keys) {
+                    pipelineBase.hmget(key, field);
+                }
+            else
+                for (String key : keys) {
+                    pipelineBase.hmget(prefixKey + key, field);
+                }
+        }, RedisContants.PIPELINE_SYNC_AND_RETURN_ALL);
+        if (result instanceof List)
+            return (List) result;
+        return null;
+    }
+
+    public Map<String, String> hmsetByPipeline(final HashMap<String, Map<String, String>> hashMap, final String prefixKey) throws CoreException {
+        List<String> keys = new ArrayList<>();
+        Object result = invokePipelineMethod(true, pipelineBase -> {
+            if (StringUtils.isBlank(prefixKey))
+                for (String key : hashMap.keySet()) {
+                    keys.add(key);
+                    Map<String, String> value = hashMap.get(key);
+                    pipelineBase.hmset(key, value);
+                }
+            else
+                for (String key : hashMap.keySet()) {
+                    keys.add(key);
+                    Map<String, String> value = hashMap.get(key);
+                    pipelineBase.hmset(prefixKey + key, value);
+                }
+        }, RedisContants.PIPELINE_SYNC_AND_RETURN_ALL);
+        Map<String, String> resultMap = new HashMap<>();
+        if (result instanceof List) {
+            for (int i = 0; i < keys.size(); i++) {
+                String key = keys.get(i);
+                String value = (String) ((List<?>) result).get(i);
+                resultMap.put(key, value);
+            }
+        }
+        return resultMap;
+    }
+
     private Object invokePipelineMethod(Boolean needTryAgain, PipelineExcutor excutor, String methodName, Object... args) {
         ShardedJedis shardedJedis = null;
         PipelineBase pipeline = null;
