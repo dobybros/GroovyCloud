@@ -1226,6 +1226,25 @@ public class RedisHandler {
         return null;
     }
 
+    /**
+     * run lua script
+     * warn: if use many key in shard redis, these keys must in same shard, so only support one key currently.
+     */
+    public Object eval(String script, String key, String value) throws CoreException {
+        if (StringUtils.isNotBlank(script) && StringUtils.isNotBlank(key)) {
+            return doJedisExecute(jedis -> {
+                if (jedis instanceof JedisCluster) {
+                    return ((JedisCluster) jedis).eval(script, 1, key, value);
+                } else if (jedis instanceof ShardedJedis) {
+                    Jedis shardJ = ((ShardedJedis) jedis).getShard(key);
+                    return shardJ.eval(script, 1, key, value);
+                }
+                return null;
+            });
+        }
+        return null;
+    }
+
     void subscribe() {
         boolean canExecute = false;
         if (!isSubscribe) {
