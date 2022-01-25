@@ -15,6 +15,7 @@ import com.docker.storage.mongodb.MongoHelper;
 import com.docker.storage.mongodb.daos.DockerStatusDAO;
 import com.docker.storage.mongodb.daos.ServiceVersionDAO;
 import com.docker.utils.GroovyCloudBean;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.core.io.ClassPathResource;
 import script.groovy.servlets.Tracker;
@@ -178,7 +179,13 @@ public class ServiceStubManager {
 
     public Object call(String service, String className, String method, Object... args) throws CoreException {
         MethodRequest request = getMethodRequest(service, className, method, args);
-        MethodResponse response = getRemoteServerHandler(service).call(request);
+        RemoteServerHandler remoteServerHandler = getRemoteServerHandler(service);
+        MethodResponse response = null;
+        if (lanType != null && lanType.equals(Lan.TYPE_http) && StringUtils.isNotBlank(host)) {
+            response = remoteServerHandler.callHttpByParams(service, className, method, args);
+        } else {
+            response = remoteServerHandler.call(request);
+        }
         return Proxy.getReturnObject(request, response);
     }
 

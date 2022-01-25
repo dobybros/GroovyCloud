@@ -301,4 +301,43 @@ public class RemoteServerHandler {
         }
         return null;
     }
+
+    public MethodResponse callHttpByParams(String service, String className, String method, Object... args) throws CoreException {
+        String token = RemoteServersManager.getInstance().getRemoteServerToken(this.serviceStubManager.getHost());
+        if (token != null) {
+            Map<String, Object> dataMap = new HashMap<String, Object>();
+            dataMap.put("service", service);
+            dataMap.put("className", className);
+            dataMap.put("methodName", method);
+            dataMap.put("args", args);
+            Map<String, Object> headerMap = new HashMap<String, Object>();
+            headerMap.put("crossClusterToken", token);
+            int times = 0;
+            while (times <= 3) {
+                long time = System.currentTimeMillis();
+                Result result = ScriptHttpUtils.post(JSON.toJSONString(dataMap), this.serviceStubManager.getHost() + "/base/crossClusterAccessService", headerMap, Result.class);
+                if (result != null && result.success()) {
+                    LoggerEx.info(TAG, "Call remote server by params success, requestParams: " + dataMap.toString() + ",serverHost: " + this.serviceStubManager.getHost(), System.currentTimeMillis() - time);
+                    MethodResponse response = new MethodResponse();
+                    response.setReturnObject(JSON.parse(JSON.toJSONString(result.getData())));
+                    return response;
+                } else {
+                    times++;
+                    LoggerEx.error(TAG, "Accss remote server by params failed,essMsg: " + (result == null ? "null" : result.toString()) + ",times: " + times);
+                    try {
+                        Thread.sleep(3000);
+                    }catch (InterruptedException r){
+                        r.printStackTrace();
+                    }
+                }
+            }
+            MethodResponse response = new MethodResponse();
+            response.setException(new CoreException(ChatErrorCodes.ERROR_CALLREMOTE_BY_HTTP_FAILED, "Call params service" + service +
+                    " className " + className + " method " + method + " args " + args + " outside failed with several retries. dataMap: " + JSON.toJSONString(dataMap), CoreException.LEVEL_FATAL));
+            return response;
+        } else {
+            LoggerEx.error(TAG, "Remote server is unavailabe, host: " + this.serviceStubManager.getHost());
+            throw new CoreException(ChatErrorCodes.ERROR_CALLREMOTE_BY_HTTP_FAILED, "Remote server is unavailabe, host: " + this.serviceStubManager.getHost());
+        }
+    }
 }
