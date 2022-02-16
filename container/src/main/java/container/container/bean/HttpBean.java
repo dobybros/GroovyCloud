@@ -6,6 +6,8 @@ import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -48,5 +50,12 @@ public class HttpBean{
     @Bean
     public DefaultHttpClient httpClient(){
         return instance.getHttpClient();
+    }
+
+    @Bean
+    public ConfigurableServletWebServerFactory webServerFactory(){
+        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
+        factory.addConnectorCustomizers(connector -> connector.setProperty("relaxedPathChars", "[]{}^`"));
+        return factory;
     }
 }
