@@ -8,7 +8,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
+import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.net.InetSocketAddress;
@@ -21,6 +23,7 @@ public class NettyChannelContext extends ChannelContext {
 
     public static final String TAG = NettyChannelContext.class.getSimpleName();
     public static final AttributeKey<NettyChannelContext> NETTY_CHANNEL_CONTEXT_KEY = AttributeKey.valueOf("nettyChannelContext");
+    public static final AttributeKey<String> NETTY_CHANNEL_REAL_IP_KEY = AttributeKey.valueOf("nettyChannelRealIp");
 
     private ChannelHandlerContext channelHandlerContext;
 
@@ -78,7 +81,12 @@ public class NettyChannelContext extends ChannelContext {
     public String getContextIp() {
         try {
             if (channelHandlerContext != null) {
-                return  ((InetSocketAddress)channelHandlerContext.channel().remoteAddress()).getAddress().getHostAddress();
+                Attribute<String> attribute = channelHandlerContext.attr(NettyChannelContext.NETTY_CHANNEL_REAL_IP_KEY);
+                String ip = attribute.get();
+                if (StringUtils.isBlank(ip)) {
+                    ip = ((InetSocketAddress)channelHandlerContext.channel().remoteAddress()).getAddress().getHostAddress();
+                }
+                return ip;
             }
         } catch (Throwable t) {
             LoggerEx.warn(TAG, "get ip error, eMsg: " + t.getMessage());

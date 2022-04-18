@@ -1,5 +1,6 @@
 package com.dobybros.gateway.channels.websocket.netty.handler;
 
+import chat.logs.LoggerEx;
 import com.dobybros.gateway.channels.websocket.data.NettyChannelContext;
 import groovy.transform.CompileStatic;
 import io.netty.channel.ChannelFuture;
@@ -9,6 +10,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.Attribute;
+import org.apache.commons.lang3.StringUtils;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
@@ -196,5 +198,18 @@ public abstract class AbstractWebSocketServerHandler extends ChannelInboundHandl
      * @param request FullHttpRequest
      */
     protected void afterHandShaker(ChannelHandlerContext ctx, FullHttpRequest request) {
+        // 设置真正的ip，配置了nginx后需要设置
+        try {
+            Attribute<String> attribute = ctx.attr(NettyChannelContext.NETTY_CHANNEL_REAL_IP_KEY);
+            String ip = attribute.get();
+            if (StringUtils.isBlank(ip)) {
+                HttpHeaders headers = request.headers();
+                ip = headers.get("X-Real-IP");
+                if (StringUtils.isNotBlank(ip))
+                    attribute.set(ip);
+            }
+        } catch (Exception e) {
+            LoggerEx.warn(TAG, "set realIp failed from X-Real-IP, eMsg: " + e.getMessage());
+        }
     }
 }
