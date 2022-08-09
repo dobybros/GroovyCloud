@@ -6,7 +6,6 @@ import java.lang.annotation.*;
 @Retention(value = RetentionPolicy.RUNTIME)
 @Documented
 public @interface DBDocument {
-	@Deprecated
 	public String collectionClass() default "";
 	public Class<?> collection() default Object.class;
 //	public String[] collectionClasses() default {};

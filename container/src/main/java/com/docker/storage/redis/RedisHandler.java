@@ -1208,6 +1208,15 @@ public class RedisHandler {
         return null;
     }
 
+    public Long zcard(String key) throws CoreException {
+        if (key != null) {
+            return doJedisExecute(jedis -> {
+                return jedis.zcard(key);
+            });
+        }
+        return null;
+    }
+
     public Set<Tuple> zrangebyscoreWithScore(String key, double minScore, double maxScore) throws CoreException {
         if (key != null) {
             return doJedisExecute(jedis -> {
@@ -1230,14 +1239,18 @@ public class RedisHandler {
      * run lua script
      * warn: if use many key in shard redis, these keys must in same shard, so only support one key currently.
      */
-    public Object eval(String script, String key, String value) throws CoreException {
+    public Object eval(String script, String key, String... values) throws CoreException {
         if (StringUtils.isNotBlank(script) && StringUtils.isNotBlank(key)) {
             return doJedisExecute(jedis -> {
+                List<String> paramsList = new ArrayList<>();
+                paramsList.add(key);
+                paramsList.addAll(Arrays.asList(values));
+                String[] params = paramsList.toArray(new String[0]);
                 if (jedis instanceof JedisCluster) {
-                    return ((JedisCluster) jedis).eval(script, 1, key, value);
+                    return ((JedisCluster) jedis).eval(script, 1, params);
                 } else if (jedis instanceof ShardedJedis) {
                     Jedis shardJ = ((ShardedJedis) jedis).getShard(key);
-                    return shardJ.eval(script, 1, key, value);
+                    return shardJ.eval(script, 1, params);
                 }
                 return null;
             });

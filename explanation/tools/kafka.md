@@ -1,7 +1,8 @@
 ##前提是在集群中运行KafkaService
 ### 1.生产者
 ##### 1.1引入
-KafkaService为一个中间件Service，需要通过rpc远程调用	
+KafkaService为一个中间件Service，需要通过rpc远程调用
+注意：新加一个kafkaListener或者topic时，需要重启kafkaService所在的server	
 ##### 1.2 一般使用举例	
 ```$xslt
 public class TCClassRoomService{

@@ -189,12 +189,31 @@ public class GroovyRuntime extends ScriptRuntime {
                 }
                 String pomStr = FileUtils.readFileToString(pomFile, StandardCharsets.UTF_8);
                 if (pomStr.contains("AllThisDependencies")) {
+//                    try {
+//                        LoggerEx.info(TAG, "maven info: mvn " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
+//                        CmdUtils.execute("mvn " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
+//                    } catch (IOException e) {
+//                        CmdUtils.execute("mvn.cmd " + mvnSettingPath +" install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
+//                    }
                     try {
                         LoggerEx.info(TAG, "maven info: mvn " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
                         CmdUtils.execute("mvn " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
                     } catch (IOException e) {
-                        CmdUtils.execute("mvn.cmd " + mvnSettingPath +" install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
+                        try {
+                            CmdUtils.execute("mvn.cmd " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
+                        } catch (IOException e1) {
+                            try {
+                                CmdUtils.execute("/usr/local/bin/mvn " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
+                            } catch (Throwable throwable) {
+                                try {
+                                    CmdUtils.execute("/usr/share/maven/bin/mvn " + mvnSettingPath + " install -DskipTests -f " + FilenameUtils.separatorsToUnix(pomFile.getAbsolutePath()));
+                                } catch (Throwable ex) {
+                                    LoggerEx.error(TAG, "mvn download error:" + ex);
+                                }
+                            }
+                        }
                     }
+
                     LoggerEx.info(TAG, "Maven download dependencies success, path: " + pomFile.getAbsolutePath());
                     int allThisDependenciesIndexStart = pomStr.indexOf("<!--AllThisDependencies");
                     int allThisDependenciesIndexEnd = pomStr.indexOf("AllThisDependencies-->");
